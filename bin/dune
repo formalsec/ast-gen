@@ -1,0 +1,4 @@
+(executable
+ (public_name ast_gen)
+ (name main)
+ (libraries ast_gen cmdliner))
