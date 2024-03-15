@@ -4,7 +4,7 @@ open Cmdliner
 let main (filename : string) : int =
   match Js_parser.from_file filename with
   | Ok ast ->
-      let ast' = Test.program ast in
+      let ast' = Normalizer.program ast in
       let json_ast = Json_translator.program None ast' in
       Format.printf "Js ast:@\n %a@." (Yojson.pretty_print ~std:true) json_ast;
       0
@@ -12,6 +12,8 @@ let main (filename : string) : int =
       Format.eprintf "%s@." msg;
       1
 
+
+(* setup comand line interface using CMDLiner library*)
 let input_file : string Term.t =
   let doc = "" in
   let docv = "FILE" in
