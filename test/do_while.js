@@ -1,4 +1,7 @@
+// just a test
+
 do_while_label1: do {
+  // and another
   a1 = 4;
   a2 = 0;
   inner_label: do {

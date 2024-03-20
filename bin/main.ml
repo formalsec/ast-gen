@@ -4,9 +4,7 @@ open Cmdliner
 let main (filename : string) : int =
   match Js_parser.from_file filename with
   | Ok ast ->
-      let ast' = Normalizer.program ast in
-      let json_ast = Json_translator.program None ast' in
-      Format.printf "Js ast:@\n %a@." (Yojson.pretty_print ~std:true) json_ast;
+      let _ = Normalizer.normalize ast in
       0
   | Error msg ->
       Format.eprintf "%s@." msg;
