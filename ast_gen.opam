@@ -4,11 +4,11 @@ synopsis: "A short synopsis"
 description: "A longer description"
 maintainer: ["Maintainer Name"]
 authors: ["Author Name"]
-license: "LICENSE"
+license: "GPL-3.0-only"
 tags: ["topics" "to describe" "your" "project"]
-homepage: "https://github.com/username/reponame"
+homepage: "https://github.com/formalsec/ast-gen"
 doc: "https://url/to/documentation"
-bug-reports: "https://github.com/username/reponame/issues"
+bug-reports: "https://github.com/formalsec/ast-gen/issues"
 depends: [
   "ocaml"
   "dune" {>= "3.12"}
@@ -31,4 +31,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/username/reponame.git"
+dev-repo: "git+https://github.com/formalsec/ast-gen.git"

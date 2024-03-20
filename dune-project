@@ -5,13 +5,13 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github formalsec/ast-gen))
 
 (authors "Author Name")
 
 (maintainers "Maintainer Name")
 
-(license LICENSE)
+(license "GPL-3.0-only")
 
 (documentation https://url/to/documentation)
 
