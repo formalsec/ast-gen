@@ -50,11 +50,32 @@ module rec Statement : sig
   end
 
   module Switch : sig
-    type 'M t = unit
+    module Case : sig
+      type 'M t = 'M * 'M t'
+
+      and 'M t' = {
+        test: 'M Expression.t option;
+        consequent: 'M Statement.t list;
+      }
+
+      val build : 'M -> 'M Expression.t option -> 'M Statement.t list -> 'M Statement.Switch.Case.t
+    end
+
+    type 'M t = {
+      discriminant: 'M Expression.t;
+      cases: 'M Case.t list;
+    }
+    
+    val build : 'M -> 'M Expression.t -> 'M Case.t list -> 'M Statement.t 
   end
   
   module While : sig
-    type 'M t = unit
+    type 'M t = {
+      test : 'M Expression.t;
+      body : 'M Statement.t list;
+    }
+
+    val build : 'M -> 'M Expression.t -> 'M Statement.t list -> 'M Statement.t
   end
 
   module Try : sig
@@ -155,23 +176,54 @@ end = struct
       } in
       (metadata, if_info)
 
-    (* let build metadata :  test' consequent' alternate' = 
-      let if_info = {
-        test = test';
-        consequent = consequent';
-        alternate = alternate';
-      } in
-      
-      (metadata, if_info) *)
   end
   
 
   module Switch = struct
-    type 'M t = unit
+    module Case = struct
+      type 'M t = 'M * 'M t'
+
+      and 'M t' = {
+        test: 'M Expression.t option;
+        consequent: 'M Statement.t list;
+      }
+
+      let build (metadata : 'M) (test' : 'M Expression.t option) (consequent': 'M Statement.t list) : 'M Statement.Switch.Case.t = 
+        let case_info = {
+          test = test';
+          consequent = consequent';
+        } in
+        (metadata, case_info)
+
+    end
+
+    type 'M t = {
+      discriminant: 'M Expression.t;
+      cases: 'M Case.t list;
+    }
+
+    let build (metadata : 'M) (discriminant' : 'M Expression.t) (cases' : 'M Case.t list) : 'M Statement.t =
+      let switch_info = Statement.Switch {
+        discriminant = discriminant';
+        cases = cases';
+      } in
+      (metadata, switch_info)
+
   end
   
   module While = struct
-    type 'M t = unit
+    type 'M t = {
+      test : 'M Expression.t;
+      body : 'M Statement.t list;
+    }
+
+    (* val build : 'M -> 'M Expression.t -> 'M Statement.t list -> 'M Statement.t *)
+    let build (metadata : 'M) (test' : 'M Expression.t) (body' : 'M Statement.t list) : 'M Statement.t =
+      let while_info = Statement.While {
+        test = test';
+        body = body';
+      } in 
+      (metadata, while_info)
   end
 
   module Try = struct
@@ -271,15 +323,29 @@ and Expression : sig
   **)
 
   module Literal : sig
+    module Value : sig 
+      type t =
+        | String  of string
+        | Number  of float
+        | BigInt  of int64 option
+        | Boolean of bool
+        | Null    of unit
+    end
+
     type 'M t = {
-      value : int 
+      value : Value.t; 
+      raw : string
     }
 
-    val build : 'M -> int -> 'M Expression.t
+    val build : 'M -> Value.t -> string -> 'M Expression.t
   end
 
   module Identifier : sig
-    type 'M t = unit
+    type 'M t = {
+      name : string
+    }
+
+    val build : 'M -> string -> 'M Expression.t
   end
 
   module LogicalExpression : sig
@@ -315,18 +381,34 @@ and Expression : sig
 
 end = struct
   module Literal = struct
+    module Value = struct
+      type t =
+        | String  of string
+        | Number  of float
+        | BigInt  of int64 option
+        | Boolean of bool
+        | Null    of unit
+    end
+
     type 'M t = {
-      value : int 
+      value : Value.t; 
+      raw : string
     }
-    
-    let build (metadata : 'M) (value' : int) : 'M Expression.t =
-      let literal_info = Expression.Literal { value = value' } in
+
+    let build (metadata : 'M) (value' : Value.t) (raw' : string) : 'M Expression.t =
+      let literal_info = Expression.Literal { value = value'; raw = raw' } in
       (metadata, literal_info)
 
   end
 
   module Identifier = struct
-    type 'M t = unit
+    type 'M t = {
+      name : string
+    }
+
+    let build (metadata : 'M) (name' : string) : 'M Expression.t =
+      let identifier_info = Expression.Identifier { name = name' } in
+      (metadata, identifier_info)
   end
 
   module LogicalExpression = struct
