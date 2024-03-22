@@ -94,15 +94,6 @@ module rec Statement : sig
     type 'M t = unit
   end
 
-  (* module Block : sig
-    type 'M t' = {
-      body : 'M Statement.t list;
-    }
-
-    type 'M t = 'M * 'M t'
-    val build : 'M -> 'M Statement.t list -> 'M t
-  end *)
-
   (* --------- assignment statements --------- *)
   module AssignArray : sig
     type 'M t = unit
@@ -144,7 +135,6 @@ module rec Statement : sig
     | Catch   of 'M Catch.t 
     | VarDecl of 'M VarDecl.t
     | Return  of 'M Return.t
-    (* | Block   of 'M Block.t *)
     
     (* ---- assignment statements ---- *)
     | AssignArray    of 'M AssignArray.t
@@ -242,19 +232,6 @@ end = struct
     type 'M t = unit
   end
 
-  (* module Block = struct
-    type 'M t' = {
-      body : 'M Statement.t list;
-    }
-
-    type 'M t = 'M * 'M t'
-
-    let build metadata statements = 
-      let block_info = { body = statements } in
-      (metadata, block_info)
-      
-  end *)
-
   (* --------- assignment statements --------- *)
   module AssignArray = struct
     type 'M t = unit
@@ -296,7 +273,6 @@ end = struct
     | Catch   of 'M Catch.t 
     | VarDecl of 'M VarDecl.t
     | Return  of 'M Return.t
-    (* | Block   of 'M Block.t *)
     
     (* ---- assignment statements ---- *)
     | AssignArray    of 'M AssignArray.t
@@ -315,94 +291,165 @@ and Expression : sig
   (**
   ==================== Expression Grammar ====================
 
-  Expression ::= Literal(...) | Identifier(...) | LogicalExpression(...) 
-               | BinaryExpression(...) | UnaryExpression(...) | ThisExpression(...) 
+  Expression ::= Literal(...) | Identifier(...) | Logical(...) 
+               | Binary(...) | Unary(...) | This(...) 
                | TemplateLiteral(...)
   
   ============================================================
   **)
 
   module Literal : sig
-    module Value : sig 
-      type t =
-        | String  of string
-        | Number  of float
-        | BigInt  of int64 option
-        | Boolean of bool
-        | Null    of unit
-    end
+    type value = 
+      | String  of string
+      | Number  of float
+      | BigInt  of int64 option
+      | Boolean of bool
+      | Null    of unit
 
-    type 'M t = {
-      value : Value.t; 
+
+    type t = {
+      value : value; 
       raw : string
     }
 
-    val build : 'M -> Value.t -> string -> 'M Expression.t
+    val build : 'M -> value -> string -> 'M Expression.t
   end
 
   module Identifier : sig
-    type 'M t = {
+    type t = {
       name : string
     }
 
     val build : 'M -> string -> 'M Expression.t
   end
 
-  module LogicalExpression : sig
-    type 'M t = unit
+  module Logical : sig
+    type operator =
+      | Or
+      | And
+      | NullishCoalesce
+    
+    type 'M t = {
+      operator : operator;
+      left : 'M Expression.t;
+      right : 'M Expression.t
+    }
+
+    val build : 'M -> operator -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
   end
 
-  module BinaryExpression : sig
-    type 'M t = unit
+  module Binary : sig
+    type operator = 
+      | Equal
+      | NotEqual
+      | StrictEqual
+      | StrictNotEqual
+      | LessThan
+      | LessThanEqual
+      | GreaterThan
+      | GreaterThanEqual
+      | LShift
+      | RShift
+      | RShift3
+      | Plus
+      | Minus
+      | Mult
+      | Exp
+      | Div
+      | Mod
+      | BitOr
+      | Xor
+      | BitAnd
+      | In
+      | Instanceof
+    
+    type 'M t = {
+      operator : operator;
+      left : 'M Expression.t;
+      right : 'M Expression.t;
+    }
+
+    val build : 'M -> operator -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
   end
 
-  module UnaryExpression : sig
-    type 'M t = unit
+  module Unary : sig
+    type operator =
+      | Minus
+      | Plus
+      | Not
+      | BitNot
+      | Typeof
+      | Void
+      | Delete
+      | Await
+
+    type 'M t = {
+      operator : operator;
+      argument : 'M Expression.t;
+    }
+
+    val build : 'M -> operator -> 'M Expression.t -> 'M Expression.t
   end
 
-  module ThisExpression : sig
-    type 'M t = unit
+  module This : sig
+    type t = unit
+    val build : 'M -> 'M Expression.t
   end
 
   module TemplateLiteral : sig
-    type 'M t = unit
+    module Element : sig
+      type value = {
+        raw: string;
+        cooked: string;
+      }
+
+      and 'M t = 'M * t'
+
+      and t' = {
+        value: value;
+        tail: bool;
+      }
+    end
+
+    type 'M t = {
+      quasis: 'M Element.t list;
+      expressions: 'M Expression.t list;
+    }
   end
 
   type 'M t' = 
-    | Literal           of 'M Literal.t 
-    | Identifier        of 'M Identifier.t 
-    | LogicalExpression of 'M LogicalExpression.t
-    | BinaryExpression  of 'M BinaryExpression.t
-    | UnaryExpression   of 'M UnaryExpression.t
-    | ThisExpression    of 'M ThisExpression.t
-    | TemplateLiteral   of 'M TemplateLiteral.t 
+    | Literal         of    Literal.t 
+    | Identifier      of    Identifier.t 
+    | Logical         of 'M Logical.t
+    | Binary          of 'M Binary.t
+    | Unary           of 'M Unary.t
+    | This            of    This.t
+    | TemplateLiteral of 'M TemplateLiteral.t 
 
   type 'M t = 'M * 'M t'
 
 end = struct
   module Literal = struct
-    module Value = struct
-      type t =
-        | String  of string
-        | Number  of float
-        | BigInt  of int64 option
-        | Boolean of bool
-        | Null    of unit
-    end
+    type value = 
+      | String  of string
+      | Number  of float
+      | BigInt  of int64 option
+      | Boolean of bool
+      | Null    of unit
 
-    type 'M t = {
-      value : Value.t; 
+    type t = {
+      value : value; 
       raw : string
     }
 
-    let build (metadata : 'M) (value' : Value.t) (raw' : string) : 'M Expression.t =
+    let build (metadata : 'M) (value' : value) (raw' : string) : 'M Expression.t =
       let literal_info = Expression.Literal { value = value'; raw = raw' } in
       (metadata, literal_info)
 
   end
 
   module Identifier = struct
-    type 'M t = {
+    type t = {
       name : string
     }
 
@@ -411,34 +458,127 @@ end = struct
       (metadata, identifier_info)
   end
 
-  module LogicalExpression = struct
-    type 'M t = unit
+  module Logical = struct
+    type operator =
+      | Or
+      | And
+      | NullishCoalesce
+    
+    type 'M t = {
+      operator : operator;
+      left : 'M Expression.t;
+      right : 'M Expression.t
+    }
+
+    let build (metadata : 'M) (operator' : operator) (left' : 'M Expression.t) (right' : 'M Expression.t) : 'M Expression.t = 
+      let logical_info = Expression.Logical {
+        operator = operator';
+        left = left';
+        right = right';
+      } in
+      (metadata, logical_info)
   end
 
-  module BinaryExpression = struct
-    type 'M t = unit
+  module Binary = struct
+    type operator = 
+      | Equal
+      | NotEqual
+      | StrictEqual
+      | StrictNotEqual
+      | LessThan
+      | LessThanEqual
+      | GreaterThan
+      | GreaterThanEqual
+      | LShift
+      | RShift
+      | RShift3
+      | Plus
+      | Minus
+      | Mult
+      | Exp
+      | Div
+      | Mod
+      | BitOr
+      | Xor
+      | BitAnd
+      | In
+      | Instanceof
+    
+    type 'M t = {
+      operator : operator;
+      left : 'M Expression.t;
+      right : 'M Expression.t
+    }
+
+    let build (metadata : 'M) (operator' : operator) (left' : 'M Expression.t) (right' : 'M Expression.t) : 'M Expression.t = 
+      let binary_info = Expression.Binary {
+        operator = operator';
+        left = left';
+        right = right';
+      } in
+      (metadata, binary_info)
   end
 
-  module UnaryExpression = struct
-    type 'M t = unit
+  module Unary = struct
+    type operator =
+      | Minus
+      | Plus
+      | Not
+      | BitNot
+      | Typeof
+      | Void
+      | Delete
+      | Await
+
+    type 'M t = {
+      operator : operator;
+      argument : 'M Expression.t;
+    }
+
+    let build (metadata : 'M) (operator' : operator) (argument' : 'M Expression.t) : 'M Expression.t = 
+      let unary_info = Expression.Unary {
+        operator = operator';
+        argument = argument';
+      } in
+      (metadata, unary_info)
   end
 
-  module ThisExpression = struct
-    type 'M t = unit
+  module This = struct
+    type t = unit
+
+    let build (metadata: 'M) : 'M Expression.t =
+      (metadata, Expression.This ())
   end
 
   module TemplateLiteral = struct
-    type 'M t = unit
+    module Element = struct
+      type value = {
+        raw: string;
+        cooked: string;
+      }
+
+      and 'M t = 'M * t'
+
+      and t' = {
+        value: value;
+        tail: bool;
+      }
+    end
+
+    type 'M t = {
+      quasis: 'M Element.t list;
+      expressions: 'M Expression.t list;
+    }
   end
 
   type 'M t' = 
-    | Literal           of 'M Literal.t 
-    | Identifier        of 'M Identifier.t 
-    | LogicalExpression of 'M LogicalExpression.t
-    | BinaryExpression  of 'M BinaryExpression.t
-    | UnaryExpression   of 'M UnaryExpression.t
-    | ThisExpression    of 'M ThisExpression.t
-    | TemplateLiteral   of 'M TemplateLiteral.t 
+    | Literal         of    Literal.t 
+    | Identifier      of    Identifier.t 
+    | Logical         of 'M Logical.t
+    | Binary          of 'M Binary.t
+    | Unary           of 'M Unary.t
+    | This            of    This.t
+    | TemplateLiteral of 'M TemplateLiteral.t 
 
   type 'M t = 'M * 'M t'
      
