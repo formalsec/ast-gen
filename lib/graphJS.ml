@@ -78,16 +78,38 @@ module rec Statement : sig
     val build : 'M -> 'M Expression.t -> 'M Statement.t list -> 'M Statement.t
   end
 
-  module Try : sig
-    type 'M t = unit
-  end
 
   module Catch : sig
-    type 'M t = unit
+    type 'M t' = {
+      param : string;
+      body : 'M Statement.t list;
+    }
+
+    type 'M t = 'M * 'M t'
+
+    val build : 'M -> string -> 'M Statement.t list -> 'M t
+  end
+
+  module Try : sig
+    type 'M t = {
+      body : 'M Statement.t list;
+      handler : 'M Catch.t option;
+      finalizer : 'M Statement.t list option;
+    }
+
+    val build : 'M -> 'M Statement.t list -> 'M Statement.Catch.t option -> 'M Statement.t list option -> 'M Statement.t
   end
 
   module VarDecl : sig
-    type 'M t = unit
+    type kind =
+      | Var
+      | Let
+      | Const
+
+    type 'M t = {
+      kind : kind;
+      id : string;
+    }
   end
 
   module Return : sig
@@ -95,6 +117,10 @@ module rec Statement : sig
   end
 
   (* --------- assignment statements --------- *)
+  module AssignExpr : sig
+    type 'M t = unit
+  end
+
   module AssignArray : sig
     type 'M t = unit
   end
@@ -137,6 +163,7 @@ module rec Statement : sig
     | Return  of 'M Return.t
     
     (* ---- assignment statements ---- *)
+    | AssignExpr     of 'M AssignExpr.t
     | AssignArray    of 'M AssignArray.t
     | AssignObject   of 'M AssignObject.t
     | AssignNew      of 'M AssignNew.t
@@ -216,16 +243,49 @@ end = struct
       (metadata, while_info)
   end
 
-  module Try = struct
-    type 'M t = unit
+  module Catch = struct
+    type 'M t' = {
+      param : string;
+      body : 'M Statement.t list;
+    }
+
+    type 'M t = 'M * 'M t'
+
+    let build (metadata : 'M)(param' : string) (body' : 'M Statement.t list) : 'M t =
+      let build_info = {
+        param = param';
+        body = body';
+      } in
+      
+      (metadata, build_info)
   end
 
-  module Catch = struct
-    type 'M t = unit
+  module Try = struct
+    type 'M t = {
+      body : 'M Statement.t list;
+      handler : 'M Catch.t option;
+      finalizer : 'M Statement.t list option;
+    }
+
+    let build (metadata : 'M) (body' : 'M Statement.t list) (handler' : 'M Statement.Catch.t option) (finalizer' : 'M Statement.t list option) : 'M Statement.t =
+      let try_info = Statement.Try {
+        body = body';
+        handler = handler';
+        finalizer = finalizer';
+      } in
+      (metadata, try_info)
   end
 
   module VarDecl = struct
-    type 'M t = unit
+    type kind =
+      | Var
+      | Let
+      | Const
+
+    type 'M t = {
+      kind : kind;
+      id : string;
+    }
   end
 
   module Return = struct
@@ -233,6 +293,10 @@ end = struct
   end
 
   (* --------- assignment statements --------- *)
+  module AssignExpr = struct
+    type 'M t = unit
+  end
+
   module AssignArray = struct
     type 'M t = unit
   end
@@ -275,6 +339,7 @@ end = struct
     | Return  of 'M Return.t
     
     (* ---- assignment statements ---- *)
+    | AssignExpr     of 'M AssignExpr.t
     | AssignArray    of 'M AssignArray.t
     | AssignObject   of 'M AssignObject.t
     | AssignNew      of 'M AssignNew.t
