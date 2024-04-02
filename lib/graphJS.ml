@@ -1,3 +1,5 @@
+module Ast = Flow_ast
+
 module Location = struct
   type position = {
     line : int;
@@ -23,9 +25,111 @@ module Location = struct
 
 end
 
+module Operator = struct
+  module Assignment = struct
+    type t = PlusAssign | MinusAssign | MultAssign | ExpAssign | DivAssign |
+             ModAssign | LShiftAssign | RShiftAssign | RShift3Assign | BitOrAssign |
+             BitXorAssign | BitAndAssign | NullishAssign | AndAssign | OrAssign
+    
+    let translate (op : Ast.Expression.Assignment.operator) : t = 
+      match op with 
+        | PlusAssign -> PlusAssign       | MinusAssign -> MinusAssign
+        | MultAssign -> MultAssign       | ExpAssign -> ExpAssign
+        | DivAssign -> DivAssign         | ModAssign -> ModAssign
+        | LShiftAssign -> LShiftAssign   | RShiftAssign -> RShiftAssign
+        | RShift3Assign -> RShift3Assign | BitOrAssign -> BitOrAssign
+        | BitXorAssign -> BitXorAssign   | BitAndAssign -> BitAndAssign
+        | NullishAssign -> NullishAssign | AndAssign -> AndAssign
+        | OrAssign -> OrAssign
+  end
+
+  module Logical = struct
+    type t =  Or | And | NullishCoalesce
+    
+    let translate (op : Ast.Expression.Logical.operator) : t =
+      match op with
+        | Or -> Or | And -> And | NullishCoalesce -> NullishCoalesce
+  end
+
+  module Binary = struct
+    type t = Equal | NotEqual | StrictEqual | StrictNotEqual | LessThan | LessThanEqual |
+             GreaterThan | GreaterThanEqual | LShift | RShift | RShift3 | Plus |
+             Minus | Mult | Exp | Div | Mod | BitOr | Xor | BitAnd | In | Instanceof
+
+    let translate (op : Ast.Expression.Binary.operator) : t =
+      match op with
+        | Equal -> Equal             | NotEqual -> NotEqual
+        | StrictEqual -> StrictEqual | StrictNotEqual -> StrictNotEqual
+        | LessThan -> LessThan       | LessThanEqual -> LessThanEqual
+        | GreaterThan -> GreaterThan | GreaterThanEqual -> GreaterThanEqual
+        | LShift -> LShift           | RShift -> RShift
+        | RShift3 -> RShift3         | Plus -> Plus
+        | Minus -> Minus             | Mult -> Mult
+        | Exp -> Exp                 | Div -> Div
+        | Mod -> Mod                 | BitOr -> BitOr
+        | Xor -> Xor                 | BitAnd -> BitAnd
+        | In -> In                   | Instanceof -> Instanceof
+  end 
+
+  module Unary = struct
+    type t = Minus | Plus | Not | BitNot | Typeof | Void | Delete
+
+    let translate (op : Ast.Expression.Unary.operator) : t =
+      match op with
+        | Minus -> Minus   | Plus -> Plus
+        | Not -> Not       | BitNot -> BitNot
+        | Typeof -> Typeof | Void -> Void
+        | Delete -> Delete
+        | Await -> failwith "await operator is not an unary expression"
+        
+  end
+end
 
 
-module rec Statement : sig
+module rec Identifier : sig
+  type t' = {
+    name : string
+  }
+
+  type 'M t = 'M * t'
+
+  val build : 'M -> string -> 'M t
+  val build_random : 'M -> 'M t
+  val to_expression: 'M t -> 'M Expression.t
+
+end = struct
+  type t' = {
+    name : string
+  }
+
+  type 'M t = 'M * t'
+
+  let count : int ref = ref 1
+
+  let build (metadata : 'M) (name' : string) : 'M t =
+    let identifier_info = {
+      name = name'
+    } in
+    (metadata, identifier_info)
+  
+  let build_random (metadata : 'M) : 'M t =
+    let name' = "v" ^ string_of_int !count in
+    count := !count + 1;
+
+    let identifier_info = {
+      name = name'
+    } in
+    (metadata, identifier_info)
+
+  let to_expression (identifier : 'M t) : 'M Expression.t =
+    match identifier with
+      | metadata, {name} -> 
+        let identifier_info = Expression.Identifier { name = name } in
+        (metadata, identifier_info)
+
+end
+
+and Statement : sig
   (**  
   ==================== Statement Grammar =====================
 
@@ -81,13 +185,14 @@ module rec Statement : sig
 
   module Catch : sig
     type 'M t' = {
-      param : string;
+      (* TODO : change param type ??identifier?? *)
+      param : 'M Identifier.t option;
       body : 'M Statement.t list;
     }
 
     type 'M t = 'M * 'M t'
 
-    val build : 'M -> string -> 'M Statement.t list -> 'M t
+    val build : 'M -> 'M Identifier.t option -> 'M Statement.t list -> 'M t
   end
 
   module Try : sig
@@ -108,49 +213,91 @@ module rec Statement : sig
 
     type 'M t = {
       kind : kind;
-      id : string;
+      id : 'M Identifier.t;
     }
+
+    val build : 'M -> kind -> 'M Identifier.t -> 'M Statement.t
   end
 
   module Return : sig
-    type 'M t = unit
+    type 'M t = {
+      argument : 'M Expression.t option
+    }
+
+    val build : 'M -> 'M Expression.t option -> 'M Statement.t
   end
 
   (* --------- assignment statements --------- *)
-  module AssignExpr : sig
-    type 'M t = unit
+  module AssignSimple : sig
+    type 'M t = {
+      operator : Operator.Assignment.t option;
+      left : 'M Identifier.t;
+      right : 'M Expression.t;
+    }
+
+    val build : 'M -> Operator.Assignment.t option -> 'M Identifier.t -> 'M Expression.t -> 'M Statement.t
   end
 
   module AssignArray : sig
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      array : 'M Expression.t list;
+    }
+
+    val build : 'M -> 'M Identifier.t -> 'M Expression.t list -> 'M Statement.t
   end
 
   module AssignObject : sig
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      properties : 'M Expression.t * 'M Expression.t list;
+    }
   end
 
   module AssignNew : sig
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      callee : 'M Identifier.t;
+      arguments : 'M Expression.t list;
+    }
   end
 
   module AssignFunCall : sig
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      callee : 'M Identifier.t;
+      arguments : 'M Expression.t list;
+    }
   end
 
   module AssignMetCall : sig
-    type 'M t = unit
-  end
-
-  module AssignSimple : sig
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      callee : 'M Identifier.t;
+      arguments : 'M Expression.t list;
+    }
   end
 
   module AssignMember : sig
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      obj : 'M Expression.t;
+      property : 'M Expression.t;
+    }
   end
 
   module AssignFunction : sig
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      body : 'M Statement.t list;
+    } 
   end
 
   type 'M t' = 
@@ -163,13 +310,12 @@ module rec Statement : sig
     | Return  of 'M Return.t
     
     (* ---- assignment statements ---- *)
-    | AssignExpr     of 'M AssignExpr.t
+    | AssignSimple   of 'M AssignSimple.t
     | AssignArray    of 'M AssignArray.t
     | AssignObject   of 'M AssignObject.t
     | AssignNew      of 'M AssignNew.t
     | AssignFunCall  of 'M AssignFunCall.t
     | AssignMetCall  of 'M AssignMetCall.t
-    | AssignSimple   of 'M AssignSimple.t
     | AssignMember   of 'M AssignMember.t
     | AssignFunction of 'M AssignFunction.t
   
@@ -245,13 +391,13 @@ end = struct
 
   module Catch = struct
     type 'M t' = {
-      param : string;
+      param : 'M Identifier.t option;
       body : 'M Statement.t list;
     }
 
     type 'M t = 'M * 'M t'
 
-    let build (metadata : 'M)(param' : string) (body' : 'M Statement.t list) : 'M t =
+    let build (metadata : 'M) (param' : 'M Identifier.t option) (body' : 'M Statement.t list) : 'M t =
       let build_info = {
         param = param';
         body = body';
@@ -274,6 +420,7 @@ end = struct
         finalizer = finalizer';
       } in
       (metadata, try_info)
+
   end
 
   module VarDecl = struct
@@ -284,49 +431,112 @@ end = struct
 
     type 'M t = {
       kind : kind;
-      id : string;
+      id : 'M Identifier.t;
     }
+
+    let build (metadata : 'M) (kind' : kind) (id' : 'M Identifier.t) : 'M Statement.t =
+      let variabledecl_info = Statement.VarDecl {
+        kind = kind';
+        id = id';
+      } in
+      (metadata, variabledecl_info)
+    
   end
 
   module Return = struct
-    type 'M t = unit
+    type 'M t = {
+      argument : 'M Expression.t option
+    }
+
+    let build (metadata : 'M) (argument' : 'M Expression.t option) : 'M Statement.t =
+      let return_info = Statement.Return {argument = argument'} in
+      (metadata, return_info)
   end
 
   (* --------- assignment statements --------- *)
-  module AssignExpr = struct
-    type 'M t = unit
+  module AssignSimple = struct
+    type 'M t = {
+      operator : Operator.Assignment.t option;
+      left : 'M Identifier.t;
+      right : 'M Expression.t;
+    }
+
+    let build (metadata : 'M) (operator' : Operator.Assignment.t option) (left' : 'M Identifier.t) (right' : 'M Expression.t) : 'M Statement.t =
+      let assign_info = Statement.AssignSimple {
+        operator = operator';
+        left = left';
+        right = right';
+      } 
+      in
+      (metadata, assign_info)
   end
 
   module AssignArray = struct
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      array : 'M Expression.t list;
+    }
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (array' : 'M Expression.t list) : 'M Statement.t =
+      let assign_info = Statement.AssignArray {
+        left = left';
+        array = array';
+      } 
+      in
+      (metadata, assign_info)
   end
 
   module AssignObject = struct
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      properties : 'M Expression.t * 'M Expression.t list;
+    }
   end
 
   module AssignNew = struct
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      callee : 'M Identifier.t;
+      arguments : 'M Expression.t list;
+    }
   end
 
   module AssignFunCall = struct
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      callee : 'M Identifier.t;
+      arguments : 'M Expression.t list;
+    }
   end
 
   module AssignMetCall = struct
-    type 'M t = unit
-  end
-
-  module AssignSimple = struct
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      callee : 'M Identifier.t;
+      arguments : 'M Expression.t list;
+    }
   end
 
   module AssignMember = struct
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      obj : 'M Expression.t;
+      property : 'M Expression.t;
+    }
   end
 
   module AssignFunction = struct
-    type 'M t = unit
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      body : 'M Statement.t list;
+    } 
   end
 
   type 'M t' = 
@@ -339,13 +549,12 @@ end = struct
     | Return  of 'M Return.t
     
     (* ---- assignment statements ---- *)
-    | AssignExpr     of 'M AssignExpr.t
+    | AssignSimple   of 'M AssignSimple.t
     | AssignArray    of 'M AssignArray.t
     | AssignObject   of 'M AssignObject.t
     | AssignNew      of 'M AssignNew.t
     | AssignFunCall  of 'M AssignFunCall.t
     | AssignMetCall  of 'M AssignMetCall.t
-    | AssignSimple   of 'M AssignSimple.t
     | AssignMember   of 'M AssignMember.t
     | AssignFunction of 'M AssignFunction.t
   
@@ -380,80 +589,33 @@ and Expression : sig
     val build : 'M -> value -> string -> 'M Expression.t
   end
 
-  module Identifier : sig
-    type t = {
-      name : string
-    }
-
-    val build : 'M -> string -> 'M Expression.t
-  end
-
-  module Logical : sig
-    type operator =
-      | Or
-      | And
-      | NullishCoalesce
-    
+  module Logical : sig 
     type 'M t = {
-      operator : operator;
+      operator : Operator.Logical.t;
       left : 'M Expression.t;
       right : 'M Expression.t
     }
 
-    val build : 'M -> operator -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
+    val build : 'M -> Operator.Logical.t -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
   end
 
-  module Binary : sig
-    type operator = 
-      | Equal
-      | NotEqual
-      | StrictEqual
-      | StrictNotEqual
-      | LessThan
-      | LessThanEqual
-      | GreaterThan
-      | GreaterThanEqual
-      | LShift
-      | RShift
-      | RShift3
-      | Plus
-      | Minus
-      | Mult
-      | Exp
-      | Div
-      | Mod
-      | BitOr
-      | Xor
-      | BitAnd
-      | In
-      | Instanceof
-    
+  module Binary : sig    
     type 'M t = {
-      operator : operator;
+      operator : Operator.Binary.t;
       left : 'M Expression.t;
       right : 'M Expression.t;
     }
 
-    val build : 'M -> operator -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
+    val build : 'M -> Operator.Binary.t -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
   end
 
   module Unary : sig
-    type operator =
-      | Minus
-      | Plus
-      | Not
-      | BitNot
-      | Typeof
-      | Void
-      | Delete
-      | Await
-
     type 'M t = {
-      operator : operator;
+      operator : Operator.Unary.t;
       argument : 'M Expression.t;
     }
 
-    val build : 'M -> operator -> 'M Expression.t -> 'M Expression.t
+    val build : 'M -> Operator.Unary.t -> 'M Expression.t -> 'M Expression.t
   end
 
   module This : sig
@@ -484,7 +646,7 @@ and Expression : sig
 
   type 'M t' = 
     | Literal         of    Literal.t 
-    | Identifier      of    Identifier.t 
+    | Identifier      of    Identifier.t' 
     | Logical         of 'M Logical.t
     | Binary          of 'M Binary.t
     | Unary           of 'M Unary.t
@@ -513,29 +675,14 @@ end = struct
 
   end
 
-  module Identifier = struct
-    type t = {
-      name : string
-    }
-
-    let build (metadata : 'M) (name' : string) : 'M Expression.t =
-      let identifier_info = Expression.Identifier { name = name' } in
-      (metadata, identifier_info)
-  end
-
-  module Logical = struct
-    type operator =
-      | Or
-      | And
-      | NullishCoalesce
-    
+  module Logical = struct    
     type 'M t = {
-      operator : operator;
+      operator : Operator.Logical.t;
       left : 'M Expression.t;
       right : 'M Expression.t
     }
 
-    let build (metadata : 'M) (operator' : operator) (left' : 'M Expression.t) (right' : 'M Expression.t) : 'M Expression.t = 
+    let build (metadata : 'M) (operator' : Operator.Logical.t) (left' : 'M Expression.t) (right' : 'M Expression.t) : 'M Expression.t = 
       let logical_info = Expression.Logical {
         operator = operator';
         left = left';
@@ -545,37 +692,13 @@ end = struct
   end
 
   module Binary = struct
-    type operator = 
-      | Equal
-      | NotEqual
-      | StrictEqual
-      | StrictNotEqual
-      | LessThan
-      | LessThanEqual
-      | GreaterThan
-      | GreaterThanEqual
-      | LShift
-      | RShift
-      | RShift3
-      | Plus
-      | Minus
-      | Mult
-      | Exp
-      | Div
-      | Mod
-      | BitOr
-      | Xor
-      | BitAnd
-      | In
-      | Instanceof
-    
     type 'M t = {
-      operator : operator;
+      operator : Operator.Binary.t;
       left : 'M Expression.t;
       right : 'M Expression.t
     }
 
-    let build (metadata : 'M) (operator' : operator) (left' : 'M Expression.t) (right' : 'M Expression.t) : 'M Expression.t = 
+    let build (metadata : 'M) (operator' : Operator.Binary.t) (left' : 'M Expression.t) (right' : 'M Expression.t) : 'M Expression.t = 
       let binary_info = Expression.Binary {
         operator = operator';
         left = left';
@@ -585,22 +708,12 @@ end = struct
   end
 
   module Unary = struct
-    type operator =
-      | Minus
-      | Plus
-      | Not
-      | BitNot
-      | Typeof
-      | Void
-      | Delete
-      | Await
-
     type 'M t = {
-      operator : operator;
+      operator : Operator.Unary.t;
       argument : 'M Expression.t;
     }
 
-    let build (metadata : 'M) (operator' : operator) (argument' : 'M Expression.t) : 'M Expression.t = 
+    let build (metadata : 'M) (operator' : Operator.Unary.t) (argument' : 'M Expression.t) : 'M Expression.t = 
       let unary_info = Expression.Unary {
         operator = operator';
         argument = argument';
@@ -638,7 +751,7 @@ end = struct
 
   type 'M t' = 
     | Literal         of    Literal.t 
-    | Identifier      of    Identifier.t 
+    | Identifier      of    Identifier.t' 
     | Logical         of 'M Logical.t
     | Binary          of 'M Binary.t
     | Unary           of 'M Unary.t

@@ -1,249 +1,272 @@
 module Ast = Flow_ast
-(* open GraphJS  *)
+open GraphJS 
 
-type normalization_return = {
-  statements : Location.t Statement.t list;
-  expression : Location.t Expression.t option; 
-};;
+let (<<) f g x = f(g(x));;
 
-let empty_normalization : normalization_return = {statements = []; expression = None};;
+let map_default f x value =
+  match value with
+    | Some value -> f value
+    | None -> x
+
+type norm_stmt_t = Location.t Statement.t list;;
+type norm_expr_t = Location.t Statement.t list * Location.t Expression.t option;;
+
+let empty_stmt_return : norm_stmt_t = [];;
+let empty_expr_return : norm_expr_t = ([], None);;
+
+let loc_f = Location.convert_flow_loc;;
+
+
+
 
 let rec normalize ((loc, _) as program : ('M, 'T) Ast.Program.t) : Location.t Program.t = 
-  let norm_program = normalize_program program in
-  let location = Location.convert_flow_loc loc in 
-  let program' = Program.build location norm_program.statements in
+  let prog_stmts = normalize_program program in
+  let location   = loc_f loc in 
+  let program'   = Program.build location prog_stmts in
   program';
 
-and normalize_program (_ , ({ Ast.Program.statements; _ })) : normalization_return =
+and normalize_program (_ , ({ Ast.Program.statements; _ })) : norm_stmt_t =
   let statements' = List.map normalize_statement statements in
-  let flat_stmts = flat_statements statements' in
+  List.flatten statements'
 
-  {statements = flat_stmts; expression = None};
+and normalize_statement (stmt : ('a, 'b) Ast.Statement.t) : norm_stmt_t =
+  let ns  = normalize_statement in
+  let ne  = normalize_expression in
 
-and normalize_statement (stmt : ('a, 'b) Ast.Statement.t) : normalization_return =
   match stmt with
     (* ----- B L O C K ----- *)
     | _, Ast.Statement.Block {body; _} -> 
-      let norm_body = List.map normalize_statement body in
-      let body' = flat_statements norm_body in
-      { statements = body' ; expression = None}
+      let body_stmts = List.map ns body in
+      List.flatten body_stmts;
     
     (* ----- I F ----- *)
     | loc, Ast.Statement.If {test; consequent; alternate; _} ->
-      let norm_test = normalize_expression test in
-      let test' = match norm_test.expression with
-        | Some expression -> expression;
-        | None -> failwith "if test statment normalization didnt return an expression"
-      in
+      let test_stmts, test_expr = ne test in
+      let cons_stmts = ns consequent in
+      let altn_stmts = Option.map normalize_alternate alternate in
+
+      let location = loc_f loc in 
+      let if_stmt = Statement.If.build location (Option.get test_expr) cons_stmts altn_stmts in
       
-      let norm_consequent = normalize_statement consequent in
-      let consequent' = norm_consequent.statements in
-      
-      let alternate' = match alternate with 
-        | Some (_, {body; _}) -> 
-            let norm_alternate = normalize_statement body in 
-            Some (norm_alternate.statements)
-        | None -> None
-      in
-      
-      (* build if statement *)
-      let location = Location.convert_flow_loc loc in 
-      let if_statement = Statement.If.build location test' consequent' alternate' in
-      
-      (* return *)
-      {statements = norm_test.statements @ [if_statement]; expression = None};
+      test_stmts @ [if_stmt]
     
     (* ----- W H I L E ----- *)
     | loc, Ast.Statement.While { test; body; _ } -> 
-      let norm_test = normalize_expression test in
-      let test' = match norm_test.expression with
-        | Some expression -> expression;
-        | None -> failwith "if test expression normalization didn't produce any result"
-      in
-      let norm_body = normalize_statement body in
-      let body' = norm_body.statements in
+      let test_stmts, test_expr = ne test in
+      let body_stmts = ns body in
 
-      (* build while statement*)
-      let location = Location.convert_flow_loc loc in
-      let while_statement = Statement.While.build location test' body' in
+      let location = loc_f loc in
+      let while_stmt= Statement.While.build location (Option.get test_expr) body_stmts in
 
-      (* TODO : normWhileStatement performs some computations 
-                over the norm_test.statements *)
-      (* return *)
-      {statements = norm_test.statements @ [while_statement]; expression = None};
+      (* TODO : normWhileStatement performs some computations over the norm_test.statements *)
+      (test_stmts @ [while_stmt])
     
     (* all this will be transformed into while statments *) 
     (* TODO *)
-    | _, Ast.Statement.For _ (* {init; test; update; body} *) -> 
-      empty_normalization
+    | _, Ast.Statement.For _ (* {init; test; update; body} *) -> empty_stmt_return
 
     (* TODO *)
-    | _, Ast.Statement.ForIn _ -> empty_normalization
+    | _, Ast.Statement.ForIn _ -> empty_stmt_return
     
     (* TODO *)
-    | _, Ast.Statement.ForOf _ -> empty_normalization
+    | _, Ast.Statement.ForOf _ -> empty_stmt_return
     
     (* TODO *)
-    | _, Ast.Statement.DoWhile _ -> empty_normalization
+    | _, Ast.Statement.DoWhile _ -> empty_stmt_return
     
     (* ----- S W I T C H ----- *)
     | loc, Ast.Statement.Switch  { discriminant; cases; _ } -> 
-      let norm_discriminant = normalize_expression discriminant in
-      let discriminant' = match norm_discriminant.expression with
-        | Some discriminant -> discriminant
-        | None -> failwith "switch discriminant expression normalization didn't produce any result"
-      in
+      let dicr_stmts, dicr_expr = ne discriminant in 
+      (* normalize cases *)
+      let cases', tests_stmts = List.split (List.map normalize_case cases) in
 
-      let norm_cases = List.map normalize_switch_case cases in
-      let cases' = List.map snd norm_cases in 
+      let location = loc_f loc in
+      let switch = Statement.Switch.build location (Option.get dicr_expr) cases' in
 
-      (* build switch case *)
-      let location = Location.convert_flow_loc loc in
-      let switch_statement = Statement.Switch.build location discriminant' cases' in
-
-      (* return *)
-      let previous_statements = norm_discriminant.statements @ List.flatten (List.map fst norm_cases) in
-      { statements = previous_statements @ [switch_statement]; expression = None }
+      (* statements generated from the normalization of the 
+         discriminant and the test expression of each case*)
+      let previous_stmts = dicr_stmts @ List.flatten tests_stmts in
+      previous_stmts @ [switch]
     
     (* ----- T R Y - C A T C H ----- *)
-    (* TODO *)
     | loc, Ast.Statement.Try {block; handler; finalizer; _} -> 
-      let norm_block = normalize_statement (block_to_statement block) in
-      let block' = norm_block.statements in
-      
+      let block_stmts = ns (block_to_statement block) in
+      let fnlzr_stmts = Option.map (ns << block_to_statement) finalizer in
+
       (* process catch clause *)
-      let (handler', norm_handler) = match handler with 
-        | Some (loc, {Ast.Statement.Try.CatchClause.body; _}) -> 
-          (* TODO : patterns over param *)
-          let norm_param = empty_normalization in
-          let norm_body = normalize_statement (block_to_statement body) in
-          let body = norm_body.statements in
-
-          (* build catch statement *)
-          let location = Location.convert_flow_loc loc in
-          let catch_statement = Statement.Catch.build location "TODO" body in 
-
-          (Some catch_statement, { statements = norm_param.statements; expression = None})
-        | None -> (None, empty_normalization)
-      in
-
-      let finalizer' = match finalizer with
-        | Some finalizer -> let norm_finalizer = normalize_statement (block_to_statement finalizer) in 
-                            Some norm_finalizer.statements
-        | None           -> None
-      in
-
+      let handler', handler_stmts = map_default normalize_catch (None, empty_stmt_return) handler in
+    
       (* build try statement*)
-      let location = Location.convert_flow_loc loc in
-      let try_statement = Statement.Try.build location block' handler' finalizer' in
+      let location = loc_f loc in
+      let try_statement = Statement.Try.build location block_stmts handler' fnlzr_stmts in
 
-      (* return *)
-      {statements = norm_handler.statements @ [try_statement]; expression = None}
+      handler_stmts @ [try_statement]
 
     (* ----- V A R I A B L E   D E C L A R A T I O N ----- *)
-    | _, Ast.Statement.VariableDeclaration _ (* {kind; declarations; _} *) -> 
-
-      (* TODO : different identifier patterns *)
-      empty_normalization
+    (* TODO *)
+    | _, Ast.Statement.VariableDeclaration _ (* {kind; declarations; _} *) ->
+      empty_stmt_return
     
-    | _ -> empty_normalization
+    (* ----- R E T U R N ----- *)
+    | loc, Ast.Statement.Return {argument; _} -> 
+      let arg_stmts, arg_expr = map_default ne ([], None) argument in
 
-and normalize_expression (expr : ('a, 'b) Ast.Expression.t) : normalization_return =
+      let location = loc_f loc in
+      let return = Statement.Return.build location arg_expr in 
+
+      arg_stmts @ [return]
+    
+    
+    | _, Ast.Statement.Expression {expression; _} -> 
+      fst (ne expression)
+            
+    | loc, _ -> 
+      let loc_info = Loc.debug_to_string loc in
+      failwith ("Unknown statement type to normalize (object on " ^ loc_info ^ ")")
+    
+and normalize_expression (expr : ('a, 'b) Ast.Expression.t) : norm_expr_t =
+  let ne = normalize_expression in
   match expr with
   (* ----- L I T E R A L ----- *)
   | loc, Ast.Expression.StringLiteral {value; raw; _} -> 
-    let location = Location.convert_flow_loc loc in
+    let location = loc_f loc in
     let value' = Expression.Literal.String value in 
-    (* build null literal expression *)
-    let string_expression = Expression.Literal.build location value' raw in 
-    {statements = []; expression = Some string_expression}
+    let literal = Expression.Literal.build location value' raw in 
+    ([], Some literal);
 
   | loc, Ast.Expression.NumberLiteral {value; raw; _} -> 
-    let location = Location.convert_flow_loc loc in
+    let location = loc_f loc in
     let value' = Expression.Literal.Number value in 
-    (* build null literal expression *)
-    let string_expression = Expression.Literal.build location value' raw in 
-    {statements = []; expression = Some string_expression}
+    let literal = Expression.Literal.build location value' raw in 
+    ([], Some literal);
 
   | loc, Ast.Expression.BigIntLiteral {value; raw; _} -> 
-    let location = Location.convert_flow_loc loc in
+    let location = loc_f loc in
     let value = Expression.Literal.BigInt value in 
-    (* build null literal expression *)
-    let string_expression = Expression.Literal.build location value raw in 
-    {statements = []; expression = Some string_expression}
+    let literal = Expression.Literal.build location value raw in 
+    ([], Some literal);
 
   | loc, Ast.Expression.BooleanLiteral {value; _} -> 
-    let location = Location.convert_flow_loc loc in
+    let location = loc_f loc in
     let value' = Expression.Literal.Boolean value in 
     let raw = if value then "true" else "false" in 
-    (* build null literal expression *)
-    let string_expression = Expression.Literal.build location value' raw in 
-    {statements = []; expression = Some string_expression}
+    let literal = Expression.Literal.build location value' raw in 
+    ([], Some literal);
 
   | loc, Ast.Expression.NullLiteral _ -> 
-    let location = Location.convert_flow_loc loc in
+    let location = loc_f loc in
     let value = Expression.Literal.Null () in
-    (* build null literal expression *)
-    let null_expression = Expression.Literal.build location value "null" in
-    { statements = []; expression = Some null_expression}
+    let literal = Expression.Literal.build location value "null" in
+    ([], Some literal);
   
   (* ----- T E M P L A T E    L I T E R A L ----- *)
-  | _, Ast.Expression.TemplateLiteral _ -> empty_normalization 
+  | _, Ast.Expression.TemplateLiteral _ -> empty_expr_return 
 
   (* ----- I D E N T I F I E R ----- *)
   | _, Ast.Expression.Identifier (loc, { name; _ }) -> 
-    (* build identifier expression *)
-    let location = Location.convert_flow_loc loc in 
-    let identifier_expression = Expression.Identifier.build location name in
-    { statements = []; expression = Some identifier_expression}
+    let location = loc_f loc in
+    let identifier = Identifier.to_expression (Identifier.build location name) in 
+    ([], Some identifier)
 
   (* ----- L O G I C A L ----- *)
   (* TODO *)
-  | _, Ast.Expression.Logical _ -> empty_normalization
+  | _, Ast.Expression.Logical _ -> empty_expr_return
   
   (* ----- B I N A R Y ----- *)
   (* TODO *)
-  | _, Ast.Expression.Binary _ -> empty_normalization
+  | _, Ast.Expression.Binary _ -> empty_expr_return
   
   (* ----- U N A R Y ----- *)
   (* TODO *)
-  | _, Ast.Expression.Unary _ -> empty_normalization
+  | loc, Ast.Expression.Unary {operator; argument; _} -> 
+    let operator' = Operator.Unary.translate operator in 
+    let arg_stmts, arg_expr = ne argument in
+
+    let location = loc_f loc in
+    let unary = Expression.Unary.build location operator' (Option.get arg_expr) in 
+
+    (arg_stmts, Some unary)
 
   (* ----- T H I S ----- *)
   | loc, Ast.Expression.This _ -> 
-    (* build this expression *)
-    let location = Location.convert_flow_loc loc in
-    let this_expression = Expression.This.build location in
-    {statements = []; expression = Some this_expression}
+    let location = loc_f loc in
+    let this = Expression.This.build location in
+    ([], Some this)
+  
+  (* ----- A S S I G N   S I M P L E ----- *)
+  | loc, Ast.Expression.Assignment {operator; left; right; _} ->
+    let operator' = Option.map Operator.Assignment.translate operator in
+    let left' = normalize_pattern left in 
+    let right_stmts, right_expr = ne right in
 
-   
-  | _ ->
-    let value = Expression.Literal.String "dummy" in
-    let expression = Expression.Literal.build Location.empty value "dummy" in 
-    {statements = []; expression = Some expression}
+    let location = loc_f loc in 
+    let assignment = Statement.AssignSimple.build location operator' left' (Option.get right_expr) in
+    (* TODO : graph.js normalizer has some special cases depending on the parent *)
 
-and normalize_switch_case (loc, {Ast.Statement.Switch.Case.test; consequent; _}) : Location.t Statement.t list * Location.t Statement.Switch.Case.t = 
-  let (test_stmts, test') = match test with 
-    | Some test' ->
-      let norm_test = normalize_expression test' in
-      norm_test.statements, norm_test.expression
-    | None -> [], None
-  in
-  let norm_consequent = List.map normalize_statement consequent in
-  let consequent' = flat_statements norm_consequent in
+    (right_stmts @ [assignment], None)
 
-  (* build case *)
-  let location = Location.convert_flow_loc loc in
-  let switch_case = Statement.Switch.Case.build location test' consequent' in
-  (test_stmts, switch_case)
+  (* ----- A S S I G N   A R R A Y -----*)
+  (* TODO : simplify *)
+  | loc, Ast.Expression.Array {elements; _} -> 
 
-and flat_statements (returns : normalization_return list) : Location.t Statement.t list =
-  let statements = List.map (fun norm_return -> norm_return.statements) returns in 
-  List.flatten statements
+    (* TODO : other cases *)
+    let normalize_element (element : ('a, 'b) Ast.Expression.Array.element) = match element with
+      | Ast.Expression.Array.Expression expr -> ne expr
+      | _ -> failwith "normalize array element case not defined"
+    in  
 
-and flat_expressions = ()
+    let location = loc_f loc in
+    (* TODO : check parent type and build identifier accordingly 
+      var x = [1, 2, 3] == REPETITIVE var v1; v1 = [1, 2, 3]; var x; var x = v1;
+                           BETTER     var x; x = [1, 2, 3]
+    *)
+    let identifer = Identifier.build_random location in
+    let declaration = Statement.VarDecl.build location Statement.VarDecl.Var identifer in 
+    
+    let elems_stmts, elems_exprs = List.split (List.map normalize_element elements) in 
+    let elems_stmts = List.flatten elems_stmts in 
+    let elems_exprs = List.map Option.get (List.filter Option.is_none elems_exprs) in 
+    let assignment = Statement.AssignArray.build location identifer elems_exprs in
 
-and block_to_statement (loc, {Ast.Statement.Block.body; comments}) : ('a, 'b) Ast.Statement.t =
+    (elems_stmts @ [declaration; assignment] , Some (Identifier.to_expression identifer))
+  
+  | loc, _ -> 
+    let loc_info = Loc.debug_to_string loc in
+    failwith ("Unknown expression type to normalize (object on " ^ loc_info ^ ")")
+
+and normalize_alternate (_, {Ast.Statement.If.Alternate.body; _}) : norm_stmt_t = 
+  normalize_statement body
+
+and normalize_pattern (pattern : ('a, 'b) Ast.Pattern.t) : Location.t Identifier.t =
+  match pattern with
+    | _, Ast.Pattern.Identifier {name = (loc, {Ast.Identifier.name; _}); _} -> 
+      let location = loc_f loc in
+      Identifier.build location name
+
+    (* TODO : need to look to other cases *)
+    | _ -> failwith "pattern not implemented"
+
+and normalize_case (loc, {Ast.Statement.Switch.Case.test; consequent; _}) : Location.t Statement.Switch.Case.t * norm_stmt_t = 
+  let ns = normalize_statement in
+  let ne = normalize_expression in
+
+  let test_stmts, test_expr = map_default ne ([], None) test in
+  let cnsq_stmts = List.flatten (List.map ns consequent) in 
+
+  let location = loc_f loc in
+  let case = Statement.Switch.Case.build location test_expr cnsq_stmts in
+  (case, test_stmts)
+
+and normalize_catch (loc, { Ast.Statement.Try.CatchClause.param; body; _}) : Location.t Statement.Catch.t option * norm_stmt_t = 
+    let param' = Option.map normalize_pattern param in 
+    let body_stmts = normalize_statement (block_to_statement body) in 
+
+    let location = loc_f loc in
+    let catch = Statement.Catch.build location param' body_stmts in
+    (Some catch, body_stmts)
+  
+
+and block_to_statement (loc, {Ast.Statement.Block.body; comments}) : (Loc.t, Loc.t) Ast.Statement.t =
   let block_info = Ast.Statement.Block {
     body = body;
     comments = comments;
