@@ -4,7 +4,9 @@ open Cmdliner
 let main (filename : string) : int =
   match Js_parser.from_file filename with
   | Ok ast ->
-      let _ = Normalizer.normalize ast in
+      let norm_program = Normalizer.normalize ast in
+      let js_program = Pp.print_js norm_program in 
+      print_endline js_program;
       0
   | Error msg ->
       Format.eprintf "%s@." msg;
