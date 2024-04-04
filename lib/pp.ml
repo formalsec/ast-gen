@@ -103,7 +103,13 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
     | _, AssignFunCall _ -> identation_str ^ "(AssignFunCall)" ^ ";\n"
     | _, AssignMetCall _ -> identation_str ^ "(AssignMetCall)" ^ ";\n"
     | _, AssignMember _ -> identation_str ^ "(AssignMember)" ^ ";\n"
-    | _, AssignFunction _ -> identation_str ^ "(AssignFunction)" ^ ";\n"
+    | _, AssignFunction {left; params; body} ->
+      let left' = print_js_expr (Identifier.to_expression left) in 
+      let params' = List.map print_js_param params in 
+      let new_identation = identation + spaces_per_identation in
+      let body' = print_js_stmts body new_identation in 
+
+      identation_str ^ left' ^ " = function (" ^ (String.concat ", " params') ^ ") {\n" ^ body' ^ "}\n"
 
   and print_js_expr (expr : m Expression.t): string =
   match expr with 
@@ -139,8 +145,8 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
   
   | _, Unary {operator; argument} ->
     let operator' = match operator with
-      | Minus -> "--"
-      | Plus -> "++"
+      | Minus -> "-"
+      | Plus -> "+"
       | Not -> "!"
       | BitNot -> "~"
       | Typeof -> "typeof "
@@ -163,6 +169,11 @@ and print_js_case (_, {Statement.Switch.Case.test; consequent}) (identation : in
   let consequent' = print_js_stmts consequent new_identation in 
 
   identation_str ^ test' ^ consequent' ^ "\n"
+
+and print_js_param (_, {Statement.AssignFunction.Param.argument; default}) : string =
+  let argument' = print_js_expr (Identifier.to_expression argument) in 
+  let default' = map_default (fun def -> " = " ^ print_js_expr def) "" default in  
+  argument' ^ default'
 
 and catch_to_stmt (loc, {Statement.Catch.param; body}) : m Statement.t = 
   let catch_info = Statement.Catch (loc, { param = param; body = body }) in

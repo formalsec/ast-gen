@@ -260,18 +260,22 @@ and Statement : sig
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      callee : 'M Identifier.t;
+      callee : 'M Expression.t;
       arguments : 'M Expression.t list;
     }
+
+    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Expression.t list -> 'M Statement.t
   end
 
   module AssignFunCall : sig
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      callee : 'M Identifier.t;
+      callee : 'M Expression.t;
       arguments : 'M Expression.t list;
     }
+
+    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Expression.t list -> 'M Statement.t
   end
 
   module AssignMetCall : sig
@@ -293,11 +297,25 @@ and Statement : sig
   end
 
   module AssignFunction : sig
+    module Param : sig 
+      type 'M t' = {
+        argument : 'M Identifier.t;
+        default : 'M Expression.t option;
+      }
+
+      type 'M t = 'M * 'M t'
+
+      val build : 'M -> 'M Identifier.t -> 'M Expression.t option -> 'M t
+    end
+    
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
+      params : 'M Param.t list;
       body : 'M Statement.t list;
     } 
+
+    val build : 'M -> 'M Identifier.t -> 'M Param.t list -> 'M Statement.t list -> 'M Statement.t
   end
 
   type 'M t' = 
@@ -499,18 +517,34 @@ end = struct
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      callee : 'M Identifier.t;
+      callee : 'M Expression.t;
       arguments : 'M Expression.t list;
     }
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (callee' : 'M Expression.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
+      let assign_info = Statement.AssignNew {
+        left = left';
+        callee = callee';
+        arguments = arguments';
+      } in 
+      (metadata, assign_info)
   end
 
   module AssignFunCall = struct
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      callee : 'M Identifier.t;
+      callee : 'M Expression.t;
       arguments : 'M Expression.t list;
     }
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (callee' : 'M Expression.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
+      let assign_info = Statement.AssignNew {
+        left = left';
+        callee = callee';
+        arguments = arguments';
+      } in 
+      (metadata, assign_info)
   end
 
   module AssignMetCall = struct
@@ -532,11 +566,36 @@ end = struct
   end
 
   module AssignFunction = struct
+    module Param = struct
+      type 'M t' = {
+        argument : 'M Identifier.t;
+        default : 'M Expression.t option;
+      }
+
+      type 'M t = 'M * 'M t'
+
+      let build (metadata : 'M) (argument' : 'M Identifier.t) (default' : 'M Expression.t option) : 'M t =
+        let param_info = {
+          argument = argument';
+          default = default';
+        } in
+        (metadata, param_info)
+    end
+
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
+      params : 'M Param.t list;
       body : 'M Statement.t list;
     } 
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (params' : 'M Param.t list) (body' : 'M Statement.t list) : 'M Statement.t =
+      let assign_info = Statement.AssignFunction {
+        left = left';
+        params = params';
+        body = body';
+      } in 
+      (metadata, assign_info)
   end
 
   type 'M t' = 
