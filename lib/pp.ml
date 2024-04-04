@@ -99,8 +99,18 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       identation_str ^ left' ^ " = " ^ array' ^ ";\n"
 
     | _, AssignObject _ -> identation_str ^ "(AssignObject)" ^ ";\n"
-    | _, AssignNew _ -> identation_str ^ "(AssignNew)" ^ ";\n"
-    | _, AssignFunCall _ -> identation_str ^ "(AssignFunCall)" ^ ";\n"
+    | _, AssignNew {left; callee; arguments} -> 
+      let left' = print_js_expr (Identifier.to_expression left) in 
+      let callee' = print_js_expr callee in 
+      let arguments' = List.map print_js_expr arguments in 
+      identation_str ^ left' ^ " = new " ^ callee' ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
+
+    | _, AssignFunCall {left; callee; arguments} -> 
+      let left' = print_js_expr (Identifier.to_expression left) in 
+      let callee' = print_js_expr callee in 
+      let arguments' = List.map print_js_expr arguments in 
+      identation_str ^ left' ^ " = " ^ callee' ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
+
     | _, AssignMetCall _ -> identation_str ^ "(AssignMetCall)" ^ ";\n"
     | _, AssignMember _ -> identation_str ^ "(AssignMember)" ^ ";\n"
     | _, AssignFunction {left; params; body} ->

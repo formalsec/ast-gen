@@ -539,7 +539,7 @@ end = struct
     }
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (callee' : 'M Expression.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
-      let assign_info = Statement.AssignNew {
+      let assign_info = Statement.AssignFunCall {
         left = left';
         callee = callee';
         arguments = arguments';

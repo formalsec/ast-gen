@@ -257,7 +257,7 @@ and normalize_expression (expr : ('M, 'T) Ast.Expression.t) : norm_expr_t =
     (* TODO : check the parent to check it is already an assignment -> avoid repetition *)
     let id = Identifier.build_random loc in
     let decl = Statement.VarDecl.build loc _const id in
-    let assign = Statement.AssignNew.build loc id (Option.get callee_expr) args_exprs in
+    let assign = Statement.AssignFunCall.build loc id (Option.get callee_expr) args_exprs in
 
     (callee_stmts @ (List.flatten args_stmts) @ [decl; assign] , Some (Identifier.to_expression id))
 
