@@ -1,16 +1,8 @@
 
 open GraphJS 
+open Aux
 
 type m = Location.t
-
-let (<<) f g x = f(g(x));;
-let flip f x y = f y x
-
-let map_default f x value =
-  match value with
-    | Some value -> f value
-    | None -> x
-
 let spaces_per_identation = 3;;
 
 
@@ -69,6 +61,10 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
     | _, Return {argument} -> 
       let argument' = map_default print_js_expr "" argument in
       identation_str ^ "return " ^ argument' ^ ";\n" 
+
+    | _, Throw {argument} -> 
+      let argument' = map_default print_js_expr "" argument in
+      identation_str ^ "throw " ^ argument' ^ ";\n" 
 
     | _, AssignSimple {operator; left; right} -> 
       let operator' = match operator with 
@@ -165,9 +161,21 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
     in
     let argument' = print_js_expr argument in
     operator' ^ argument'
-
+  | _, Update {operator; argument; prefix} ->
+    let operator' = match operator with
+      | Increment -> "++"
+      | Decrement -> "--"
+    in
+    let argument' = print_js_expr argument in 
+    if prefix then operator' ^ argument' else argument' ^ operator'
   | _, This _ -> "this"
-  | _, TemplateLiteral _ -> "(TemplateLiteral)"
+  | _, Super _ -> "super"
+  | _, TemplateLiteral {quasis; expressions} -> 
+    let quasis' = List.map (fun (_, {Expression.TemplateLiteral.Element.value={raw;_}; _})-> raw) quasis in 
+    let expressions' = List.map print_js_expr expressions in 
+    
+    let quasi_expr = List.map (fun (raw, expr) -> raw ^ (if expr != "" then "${" ^ expr ^ "}" else "")) (List.combine quasis' (expressions' @ [""])) in
+    "`" ^ String.concat "" quasi_expr ^ "`"
 
 and print_js_stmts (stmts : m Statement.t list) (identation : int): string =
   String.concat "" (List.map (flip print_js_stmt identation) stmts)

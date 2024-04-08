@@ -1,19 +1,11 @@
 module Ast = Flow_ast
 open GraphJS
-
-let (<<) f g x = f(g(x));;
-let identity x = x 
-
-let map_default f x value =
-  match value with
-    | Some value -> f value
-    | None -> x
+open Aux
 
 type m = Location.t;;
 type norm_stmt_t = m Statement.t list;;
 type norm_expr_t = m Statement.t list * m Expression.t option;;
 
-let empty_stmt_return : norm_stmt_t = [];;
 let empty_expr_return : norm_expr_t = ([], None);;
 
 let loc_f = Location.convert_flow_loc;;
@@ -33,16 +25,10 @@ type context = {
 }
 let empty_context : context = { identifier = None; is_assignment = false } 
 
-
-let rec normalize ((loc, _) as program : ('M, 'T) Ast.Program.t) : m Program.t = 
-  let prog_stmts = normalize_program program in
-  let location   = loc_f loc in 
-  let program'   = Program.build location prog_stmts in
-  program';
-
-and normalize_program (_ , ({ Ast.Program.statements; _ })) : norm_stmt_t =
-  let statements' = List.map (normalize_statement empty_context) statements in
-  List.flatten statements'
+let rec normalize (loc , { Ast.Program.statements; _ }) : m Program.t = 
+  let statements' = List.flatten (List.map (normalize_statement empty_context) statements) in
+  let program' = Program.build (loc_f loc) statements' in 
+  program'
 
 and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : norm_stmt_t =
   let ns  = normalize_statement empty_context in
@@ -74,13 +60,13 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       (test_stmts @ [while_stmt])
     
     (* all this will be transformed into while statments *) 
-    | _, Ast.Statement.For _ (* {init; test; update; body} *) -> empty_stmt_return
+    (* | _, Ast.Statement.For _ (* {init; test; update; body} *) -> empty_stmt_return
 
     | _, Ast.Statement.ForIn _ -> empty_stmt_return
     
     | _, Ast.Statement.ForOf _ -> empty_stmt_return
     
-    | _, Ast.Statement.DoWhile _ -> empty_stmt_return
+    | _, Ast.Statement.DoWhile _ -> empty_stmt_return *)
     
     (* --------- S W I T C H --------- *)
     | loc, Ast.Statement.Switch  { discriminant; cases; _ } -> 
@@ -100,7 +86,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       let fnlzr_stmts = Option.map (ns << block_to_statement) finalizer in
 
       (* process catch clause *)
-      let handler', handler_stmts = map_default normalize_catch (None, empty_stmt_return) handler in
+      let handler_stmts, handler' = map_default normalize_catch ([], None) handler in
     
       (* build try statement*)
       let try_stmt = Statement.Try.build (loc_f loc) block_stmts handler' fnlzr_stmts in
@@ -114,7 +100,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       in
 
       let unpattern_decls = List.flatten (List.map unpattern declarations) in
-      let decl_stmts = List.map (fun (loc, id, init ) -> 
+      let decl_stmts = List.map (fun (loc, id, init) -> 
         let decl_context = {identifier = Some id; is_assignment = true} in 
         let init_stmt, init_expr = map_default (nec decl_context) ([], None) init in 
         (* if it is an special assignment dont do the assignment twice *)
@@ -133,11 +119,19 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       let return_stmt = Statement.Return.build (loc_f loc) arg_expr in 
 
       arg_stmts @ [return_stmt]
+
+      (* --------- T H R O W --------- *)
+      | loc, Ast.Statement.Throw {argument; _} -> 
+        let arg_stmts, arg_expr = ne argument in
+        let throw_stmt = Statement.Throw.build (loc_f loc) arg_expr in 
+  
+        arg_stmts @ [throw_stmt]
     
     (* --------- A S S I G N   F U N C T I O N ---------*)
     | loc, Ast.Statement.FunctionDeclaration {id; params; body; _} -> fst (normalize_function context loc id params body)
     
     | _, Ast.Statement.Expression {expression; _} -> 
+      (* TODO : graph.js appends expression result if any to the return *)
       fst (ne expression)
             
     | loc, _ -> 
@@ -176,7 +170,14 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     ([], Some literal);
   
   (* --------- T E M P L A T E    L I T E R A L --------- *)
-  | _, Ast.Expression.TemplateLiteral _ (* {quasis; expressions} *) -> empty_expr_return 
+  | loc, Ast.Expression.TemplateLiteral {quasis; expressions; _} -> 
+    let quasis' = List.map build_template_element quasis in 
+    let stmts, exprs = List.split (List.map ne expressions) in
+    let exprs = List.map Option.get exprs in 
+
+    (* TODO : some applications based on the parent *)
+    let literal = Expression.TemplateLiteral.build (loc_f loc) quasis' exprs in
+    (List.flatten stmts, Some literal)
 
   (* --------- I D E N T I F I E R --------- *)
   | _, Ast.Expression.Identifier (loc, { name; _ }) -> 
@@ -227,12 +228,30 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (arg_stmts @ decl, Some (Identifier.to_expression id))
     else 
       (arg_stmts, Some unary_expr)
+  
+  (* --------- U P D A T E --------- *)
+  | loc, Ast.Expression.Update {operator; argument; prefix; _} -> 
+    let operator' = Operator.Update.translate operator in
+    let arg_stmts, arg_expr = ne argument in 
 
+    let location = loc_f loc in
+    let update_expr = Expression.Update.build location operator' (Option.get arg_expr) prefix in 
+    
+    if not context.is_assignment then
+      let id, decl = createVariableDeclaration (Some update_expr) location () in 
+      (arg_stmts @ decl, Some (Identifier.to_expression id))
+    else 
+      (arg_stmts, Some update_expr)
 
   (* --------- T H I S --------- *)
   | loc, Ast.Expression.This _ -> 
     let this = Expression.This.build (loc_f loc) in
     ([], Some this)
+
+  (* --------- S U P E R --------- *)
+  | loc, Ast.Expression.Super _ -> 
+    let super = Expression.Super.build (loc_f loc) in
+    ([], Some super)
   
   (* --------- A S S I G N   S I M P L E --------- *)
   | loc, Ast.Expression.Assignment {operator; left; right; _} ->
@@ -257,7 +276,8 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let loc = loc_f loc in
     let id = get_identifier context.identifier loc in
     let assign = Statement.AssignArray.build loc id elems_exprs in
-
+    
+    (* TODO : arrayExpression keeps array as element if the parent is an expression statement *)
     if not context.is_assignment then 
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) () in 
       ((List.flatten elems_stmts) @ decl @ [assign] , Some (Identifier.to_expression id))
@@ -298,8 +318,12 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (callee_stmts @ (List.flatten args_stmts) @ [assign], Some (Identifier.to_expression id))
 
   (* --------- A S S I G N   F U N C T I O N ---------*)
-  | loc, Ast.Expression.ArrowFunction {id; params; body; _} -> normalize_function context loc id params body
-  | loc, Ast.Expression.Function {id; params; body; _} -> normalize_function context loc id params body
+  | loc, Ast.Expression.ArrowFunction {id; params; body; _} -> 
+    (* TODO : graph.js checks parent type to see if function should or not be put into an assignment*)
+    normalize_function context loc id params body
+  | loc, Ast.Expression.Function {id; params; body; _} -> 
+    (* TODO : graph.js checks parent type to see if function should or not be put into an assignment*)
+    normalize_function context loc id params body
   
   | loc, _ -> 
     let loc_info = Loc.debug_to_string loc in
@@ -333,12 +357,12 @@ and normalize_case (loc, {Ast.Statement.Switch.Case.test; consequent; _}) : m St
   let case = Statement.Switch.Case.build (loc_f loc) test_expr cnsq_stmts in
   (case, test_stmts)
 
-and normalize_catch (loc, { Ast.Statement.Try.CatchClause.param; body; _}) : m Statement.Catch.t option * norm_stmt_t = 
+and normalize_catch (loc, { Ast.Statement.Try.CatchClause.param; body; _}) : norm_stmt_t * m Statement.Catch.t option = 
     let param' = Option.map normalize_pattern param in 
     let body_stmts = normalize_statement empty_context (block_to_statement body) in 
 
     let catch = Statement.Catch.build (loc_f loc) param' body_stmts in
-    (Some catch, body_stmts)
+    (body_stmts, Some catch)
   
 and normalize_array_elem (element : ('M, 'T) Ast.Expression.Array.element) : norm_expr_t = 
   (* TODO : other cases *)
@@ -385,6 +409,9 @@ and normalize_func_body (body : ('M, 'T) Ast.Function.body) : norm_stmt_t =
       let body_stmts, body_expr = normalize_expression empty_context body in 
       let return = Statement.Return.build (loc_f loc) body_expr in 
       body_stmts @ [return]
+
+and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={raw; cooked}; tail}) : m Expression.TemplateLiteral.Element.t =
+  Expression.TemplateLiteral.Element.build (loc_f loc) raw cooked tail
 
 and get_identifier (id : m Identifier.t option) (loc : m) : m Identifier.t = 
   map_default identity (Identifier.build_random loc) id

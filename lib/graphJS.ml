@@ -83,6 +83,15 @@ module Operator = struct
         | Await -> failwith "await operator is not an unary expression"
         
   end
+
+  module Update = struct
+    type t = Increment | Decrement
+
+    let translate (op : Ast.Expression.Update.operator) : t =
+      match op with
+        | Increment -> Increment
+        | Decrement -> Decrement
+  end
 end
 
 
@@ -130,19 +139,6 @@ end = struct
 end
 
 and Statement : sig
-  (**  
-  ==================== Statement Grammar =====================
-
-  Statement ::= If(e, s, s) | Switch(...) | While(e, s) | Try (s, s option, s option) 
-              | Catch(e, s) | VarDecl(x) | Return e  
-              | AssignArray (x, ...) | AssignObject(x, ...) | AssignNew(x, ...) 
-              | AssignFunCall(x, ...) | AssignMetCall(x, ...) | AssignSimple(x, ...) 
-              | AssignMember(x, o1, o2) | AssignFunction(x, ...) 
-  
-  ============================================================
-  **)
-
-
   module If : sig
     type 'M t = {
       test : 'M Expression.t;
@@ -220,6 +216,14 @@ and Statement : sig
   end
 
   module Return : sig
+    type 'M t = {
+      argument : 'M Expression.t option
+    }
+
+    val build : 'M -> 'M Expression.t option -> 'M Statement.t
+  end
+
+  module Throw : sig
     type 'M t = {
       argument : 'M Expression.t option
     }
@@ -326,6 +330,7 @@ and Statement : sig
     | Catch   of 'M Catch.t 
     | VarDecl of 'M VarDecl.t
     | Return  of 'M Return.t
+    | Throw   of 'M Throw.t
     
     (* ---- assignment statements ---- *)
     | AssignSimple   of 'M AssignSimple.t
@@ -471,6 +476,16 @@ end = struct
       (metadata, return_info)
   end
 
+  module Throw = struct
+    type 'M t = {
+      argument : 'M Expression.t option
+    }
+
+    let build (metadata : 'M) (argument' : 'M Expression.t option) : 'M Statement.t =
+      let return_info = Statement.Return {argument = argument'} in
+      (metadata, return_info)
+  end
+
   (* --------- assignment statements --------- *)
   module AssignSimple = struct
     type 'M t = {
@@ -606,6 +621,7 @@ end = struct
     | Catch   of 'M Catch.t 
     | VarDecl of 'M VarDecl.t
     | Return  of 'M Return.t
+    | Throw   of 'M Throw.t
     
     (* ---- assignment statements ---- *)
     | AssignSimple   of 'M AssignSimple.t
@@ -621,15 +637,6 @@ end = struct
 end
 
 and Expression : sig
-  (**
-  ==================== Expression Grammar ====================
-
-  Expression ::= Literal(...) | Identifier(...) | Logical(...) 
-               | Binary(...) | Unary(...) | This(...) 
-               | TemplateLiteral(...)
-  
-  ============================================================
-  **)
 
   module Literal : sig
     type value = 
@@ -677,7 +684,22 @@ and Expression : sig
     val build : 'M -> Operator.Unary.t -> 'M Expression.t -> 'M Expression.t
   end
 
+  module Update : sig
+    type 'M t = {
+      operator : Operator.Update.t;
+      argument : 'M Expression.t;
+      prefix   : bool
+    }
+
+    val build : 'M -> Operator.Update.t -> 'M Expression.t -> bool -> 'M Expression.t
+  end
+
   module This : sig
+    type t = unit
+    val build : 'M -> 'M Expression.t
+  end
+
+  module Super : sig
     type t = unit
     val build : 'M -> 'M Expression.t
   end
@@ -689,18 +711,22 @@ and Expression : sig
         cooked: string;
       }
 
-      and 'M t = 'M * t'
-
       and t' = {
         value: value;
         tail: bool;
       }
+
+      and 'M t = 'M * t'
+
+      val build : 'M -> string -> string -> bool -> 'M t
     end
 
     type 'M t = {
       quasis: 'M Element.t list;
       expressions: 'M Expression.t list;
     }
+
+    val build : 'M -> 'M Element.t list -> 'M Expression.t list -> 'M Expression.t
   end
 
   type 'M t' = 
@@ -709,7 +735,9 @@ and Expression : sig
     | Logical         of 'M Logical.t
     | Binary          of 'M Binary.t
     | Unary           of 'M Unary.t
+    | Update          of 'M Update.t
     | This            of    This.t
+    | Super           of    Super.t
     | TemplateLiteral of 'M TemplateLiteral.t 
 
   type 'M t = 'M * 'M t'
@@ -780,7 +808,30 @@ end = struct
       (metadata, unary_info)
   end
 
+  module Update = struct
+    type 'M t = {
+      operator : Operator.Update.t;
+      argument : 'M Expression.t;
+      prefix   : bool;
+    }
+
+    let build (metadata : 'M) (operator' : Operator.Update.t) (argument' : 'M Expression.t) (prefix' : bool) : 'M Expression.t = 
+      let unary_info = Expression.Update {
+        operator = operator';
+        argument = argument';
+        prefix   = prefix';
+      } in
+      (metadata, unary_info)
+  end
+
   module This = struct
+    type t = unit
+
+    let build (metadata: 'M) : 'M Expression.t =
+      (metadata, Expression.This ())
+  end
+
+  module Super = struct
     type t = unit
 
     let build (metadata: 'M) : 'M Expression.t =
@@ -794,18 +845,32 @@ end = struct
         cooked: string;
       }
 
-      and 'M t = 'M * t'
-
       and t' = {
         value: value;
         tail: bool;
       }
+
+      and 'M t = 'M * t'
+
+      let build (metadata : 'M) (raw' : string) (cooked' : string) (tail' : bool) : 'M t =
+        let elem_info = {
+          value = {raw = raw'; cooked = cooked'};
+          tail = tail';
+        } in
+        (metadata, elem_info)
     end
 
     type 'M t = {
       quasis: 'M Element.t list;
       expressions: 'M Expression.t list;
     }
+
+    let build (metadata : 'M) (quasis' : 'M Element.t list) (expressions': 'M Expression.t list) : 'M Expression.t =
+      let literal_info = Expression.TemplateLiteral {
+        quasis = quasis';
+        expressions = expressions';
+      } in 
+      (metadata, literal_info)
   end
 
   type 'M t' = 
@@ -814,8 +879,10 @@ end = struct
     | Logical         of 'M Logical.t
     | Binary          of 'M Binary.t
     | Unary           of 'M Unary.t
+    | Update          of 'M Update.t
     | This            of    This.t
-    | TemplateLiteral of 'M TemplateLiteral.t 
+    | Super           of    Super.t
+    | TemplateLiteral of 'M TemplateLiteral.t
 
   type 'M t = 'M * 'M t'
      
