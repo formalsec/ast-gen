@@ -119,7 +119,9 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
        let _object' = print_js_expr _object in 
        let property' = print_js_expr property in
 
-       identation_str ^ left' ^ " = " ^ _object' ^ "[" ^ property' ^ "];\n"
+       let is_literal = match property with _, Expression.Literal _ -> true | _ -> false in 
+
+       identation_str ^ left' ^ " = " ^ _object' ^ if is_literal then "[" ^ property' ^ "];\n" else  "." ^ property' ^ ";\n"
 
     | _, AssignFunction {left; params; body} ->
       let left' = print_js_expr (Identifier.to_expression left) in 

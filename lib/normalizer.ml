@@ -477,32 +477,22 @@ and normalize_member_property (property : ('M, 'T) Ast.Expression.Member.propert
     | PropertyPrivateName _ -> failwith "property private name not implemented"
 
 and normalize_property (property : ('M, 'T) Ast.Expression.Object.property) = 
-  let nk = normalize_property_key in 
+  let nk = normalize_property_key in
+  let process_func_property key loc func = 
+    let key_stmts, key_expr = nk key in 
+    let val_stmts, val_expr = normalize_expression empty_context (loc, Ast.Expression.Function func) in 
+    let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) None in
+    key_stmts @ val_stmts, property
+  in 
   match property with
     | Property (_, Init {key; value; shorthand}) ->
       let key_stmts, key_expr = nk key in 
       let val_stmts, val_expr = normalize_expression empty_context value in 
       let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) (Some shorthand) in
       key_stmts @ val_stmts, property
-
-      | Property (_, Method {key; value=(loc, func); _}) -> 
-      let key_stmts, key_expr = nk key in 
-      let val_stmts, val_expr = normalize_expression empty_context (loc, Ast.Expression.Function func) in 
-      let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) None in
-      key_stmts @ val_stmts, property
-      
-    | Property (_, Get {key; value=(loc, func); _}) -> 
-      let key_stmts, key_expr = nk key in 
-      let val_stmts, val_expr = normalize_expression empty_context (loc, Ast.Expression.Function func) in 
-      let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) None in
-      key_stmts @ val_stmts, property
-
-    | Property (_, Set {key; value=(loc, func); _}) -> 
-      let key_stmts, key_expr = nk key in 
-      let val_stmts, val_expr = normalize_expression empty_context (loc, Ast.Expression.Function func) in 
-      let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) None in
-      key_stmts @ val_stmts, property
-
+    | Property (_, Method {key; value=(loc, func); _}) -> process_func_property key loc func
+    | Property (_, Get {key; value=(loc, func); _}) -> process_func_property key loc func
+    | Property (_, Set {key; value=(loc, func); _}) -> process_func_property key loc func
     (* TODO : spread property not implemented *)
     | _ -> failwith "spread property not implemented"
 
