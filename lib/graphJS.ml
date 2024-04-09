@@ -255,11 +255,26 @@ and Statement : sig
   end
 
   module AssignObject : sig
+    module Property : sig
+      type kind = Init | Method | Get | Set
+
+      type 'M t = {
+        kind: kind;
+        key : 'M Expression.t;
+        value : 'M Expression.t;
+        shorthand: bool option;
+      }
+
+      val build : kind -> 'M Expression.t -> 'M Expression.t -> bool option -> 'M t
+    end
+
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      properties : 'M Expression.t * 'M Expression.t list;
+      properties : 'M Property.t list;
     }
+
+    val build : 'M -> 'M Identifier.t -> 'M Property.t list -> 'M Statement.t
   end
 
   module AssignNew : sig
@@ -517,11 +532,37 @@ end = struct
   end
 
   module AssignObject = struct
+    module Property = struct
+      type kind = Init | Method | Get | Set
+
+      type 'M t = {
+        kind: kind;
+        key : 'M Expression.t;
+        value : 'M Expression.t;
+        shorthand: bool option;
+      }
+
+      let build (kind' : kind) (key' : 'M Expression.t) (value' : 'M Expression.t) (shorthand' : bool option) : 'M t = 
+        {
+          kind = kind';
+          key = key';
+          value = value';
+          shorthand = shorthand';
+        }
+    end
+
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      properties : 'M Expression.t * 'M Expression.t list;
+      properties : 'M Property.t list;
     }
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (properties': 'M Property.t list) : 'M Statement.t = 
+      let assign_info = Statement.AssignObject {
+        left = left';
+        properties = properties'
+      } in 
+      (metadata, assign_info)
   end
 
   module AssignNew = struct

@@ -11,6 +11,10 @@ let loc_f = Location.convert_flow_loc;;
 let _const = Statement.VarDecl.Const;;
 let _let = Statement.VarDecl.Let;;
 let _var = Statement.VarDecl.Var;;
+let _init = Statement.AssignObject.Property.Init;;
+let _method = Statement.AssignObject.Property.Method;;
+let _get = Statement.AssignObject.Property.Get;;
+let _set = Statement.AssignObject.Property.Set;;
 
 type name_or_id =
   | Name of string option
@@ -329,7 +333,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
   (* --------- A S S I G N   M E M B E R ---------*)
   | loc, Ast.Expression.Member {_object; property; _} -> 
     let obj_stmts, obj_expr = ne _object in 
-    let prop_stmts, prop_expr = normalize_property property in 
+    let prop_stmts, prop_expr = normalize_member_property property in 
 
     let loc = loc_f loc in
     let id = get_identifier context.identifier loc in
@@ -342,6 +346,19 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     else
       (obj_stmts @ prop_stmts @ [assign], Some (Identifier.to_expression id))
 
+  (* --------- A S S I G N   O B J E C T ---------*)
+  | loc, Ast.Expression.Object {properties; _} -> 
+      let props_stmts, proprs_exprs = List.split (List.map normalize_property properties) in 
+      
+      let loc = loc_f loc in
+      let id = get_identifier context.identifier loc in
+      let assign = Statement.AssignObject.build loc id proprs_exprs in
+
+      if not context.is_assignment then
+        let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
+        (List.flatten props_stmts @ decl @ [assign] , Some (Identifier.to_expression id))
+      else
+        (List.flatten props_stmts @ [assign], Some (Identifier.to_expression id))
 
   (* --------- A S S I G N   F U N C   C A L L ---------*)
   | loc, Ast.Expression.Call {callee; arguments; _} -> 
@@ -452,11 +469,51 @@ and normalize_func_body (body : ('M, 'T) Ast.Function.body) : norm_stmt_t =
       let return = Statement.Return.build (loc_f loc) body_expr in 
       body_stmts @ [return]
 
-and normalize_property property : norm_expr_t = 
+and normalize_member_property (property : ('M, 'T) Ast.Expression.Member.property) : norm_expr_t = 
   match property with
     | PropertyIdentifier ((loc, _) as id) -> normalize_expression empty_context (loc, Ast.Expression.Identifier id)
     | PropertyExpression expr -> normalize_expression empty_context expr
+    (* TODO : private name not implemented*)
     | PropertyPrivateName _ -> failwith "property private name not implemented"
+
+and normalize_property (property : ('M, 'T) Ast.Expression.Object.property) = 
+  let nk = normalize_property_key in 
+  match property with
+    | Property (_, Init {key; value; shorthand}) ->
+      let key_stmts, key_expr = nk key in 
+      let val_stmts, val_expr = normalize_expression empty_context value in 
+      let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) (Some shorthand) in
+      key_stmts @ val_stmts, property
+
+      | Property (_, Method {key; value=(loc, func); _}) -> 
+      let key_stmts, key_expr = nk key in 
+      let val_stmts, val_expr = normalize_expression empty_context (loc, Ast.Expression.Function func) in 
+      let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) None in
+      key_stmts @ val_stmts, property
+      
+    | Property (_, Get {key; value=(loc, func); _}) -> 
+      let key_stmts, key_expr = nk key in 
+      let val_stmts, val_expr = normalize_expression empty_context (loc, Ast.Expression.Function func) in 
+      let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) None in
+      key_stmts @ val_stmts, property
+
+    | Property (_, Set {key; value=(loc, func); _}) -> 
+      let key_stmts, key_expr = nk key in 
+      let val_stmts, val_expr = normalize_expression empty_context (loc, Ast.Expression.Function func) in 
+      let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) None in
+      key_stmts @ val_stmts, property
+
+    (* TODO : spread property not implemented *)
+    | _ -> failwith "spread property not implemented"
+
+and normalize_property_key (key : ('M, 'T) Ast.Expression.Object.Property.key) : norm_expr_t = 
+  match key with
+  | StringLiteral (loc, literal) -> normalize_expression empty_context (loc, Ast.Expression.StringLiteral literal)
+  | NumberLiteral (loc, literal) -> normalize_expression empty_context (loc, Ast.Expression.NumberLiteral literal)
+  | BigIntLiteral (loc, literal) -> normalize_expression empty_context (loc, Ast.Expression.BigIntLiteral literal)
+  | Identifier ((loc, _) as id)  -> normalize_expression empty_context (loc, Ast.Expression.Identifier id)
+  (* TODO : private name and computed key not implemented *)
+  | _ -> failwith "private name and computed key not implemented"
 
 and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={raw; cooked}; tail}) : m Expression.TemplateLiteral.Element.t =
   Expression.TemplateLiteral.Element.build (loc_f loc) raw cooked tail
@@ -483,7 +540,9 @@ and is_special_assignment ((_, expr) : ('M, 'T) Ast.Expression.t) : bool =
     (* -- ASSIGN CALL -- *)
     | Ast.Expression.Call _
     (* -- ASSING MEMBER -- *)
-    | Ast.Expression.Member _
+    | Ast.Expression.Member _    
+    (* -- ASSING OBJECT -- *)
+    | Ast.Expression.Object _
     (* -- ASSIGN FUNCTION -- *)
     | Ast.Expression.Function _
     | Ast.Expression.ArrowFunction _
