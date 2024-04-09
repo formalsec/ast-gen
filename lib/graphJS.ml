@@ -105,6 +105,7 @@ module rec Identifier : sig
   val build : 'M -> string -> 'M t
   val build_random : 'M -> 'M t
   val to_expression: 'M t -> 'M Expression.t
+  val from_expression : 'M Expression.t -> 'M t 
 
 end = struct
   type t' = {
@@ -130,13 +131,14 @@ end = struct
     } in
     (metadata, identifier_info)
 
-  let to_expression (identifier : 'M t) : 'M Expression.t =
-    match identifier with
-      | metadata, {name} -> 
-        let identifier_info = Expression.Identifier { name = name } in
-        (metadata, identifier_info)
-
-end
+  let to_expression (metadata, id : 'M t) : 'M Expression.t =
+    (metadata, Expression.Identifier id)
+  
+  let from_expression ((loc, expr) : 'M Expression.t) : 'M t =
+    match expr with
+      | Expression.Identifier {name} -> build loc name
+      | _ -> failwith "attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier."
+  end
 
 and Statement : sig
   module If : sig
@@ -282,22 +284,15 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Expression.t list -> 'M Statement.t
   end
 
-  module AssignMetCall : sig
-    type 'M t = {
-      left : 'M Identifier.t;
-      (* -- right -- *)
-      callee : 'M Identifier.t;
-      arguments : 'M Expression.t list;
-    }
-  end
-
   module AssignMember : sig
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      obj : 'M Expression.t;
+      _object : 'M Expression.t;
       property : 'M Expression.t;
     }
+
+    val build : 'M  -> 'M Identifier.t ->'M Expression.t ->'M Expression.t ->'M Statement.t
   end
 
   module AssignFunction : sig
@@ -332,13 +327,14 @@ and Statement : sig
     | Return  of 'M Return.t
     | Throw   of 'M Throw.t
     
+    | Expression of 'M Expression.t
+    
     (* ---- assignment statements ---- *)
     | AssignSimple   of 'M AssignSimple.t
     | AssignArray    of 'M AssignArray.t
     | AssignObject   of 'M AssignObject.t
     | AssignNew      of 'M AssignNew.t
     | AssignFunCall  of 'M AssignFunCall.t
-    | AssignMetCall  of 'M AssignMetCall.t
     | AssignMember   of 'M AssignMember.t
     | AssignFunction of 'M AssignFunction.t
   
@@ -562,22 +558,22 @@ end = struct
       (metadata, assign_info)
   end
 
-  module AssignMetCall = struct
-    type 'M t = {
-      left : 'M Identifier.t;
-      (* -- right -- *)
-      callee : 'M Identifier.t;
-      arguments : 'M Expression.t list;
-    }
-  end
-
   module AssignMember = struct
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      obj : 'M Expression.t;
+      _object : 'M Expression.t;
       property : 'M Expression.t;
     }
+
+    let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Expression.t) : 'M Statement.t =
+      let assign_info = Statement.AssignMember {
+        left = left';
+        _object = _object';
+        property = property'
+      } in
+      (metadata, assign_info)
+
   end
 
   module AssignFunction = struct
@@ -623,13 +619,14 @@ end = struct
     | Return  of 'M Return.t
     | Throw   of 'M Throw.t
     
+    | Expression of 'M Expression.t
+
     (* ---- assignment statements ---- *)
     | AssignSimple   of 'M AssignSimple.t
     | AssignArray    of 'M AssignArray.t
     | AssignObject   of 'M AssignObject.t
     | AssignNew      of 'M AssignNew.t
     | AssignFunCall  of 'M AssignFunCall.t
-    | AssignMetCall  of 'M AssignMetCall.t
     | AssignMember   of 'M AssignMember.t
     | AssignFunction of 'M AssignFunction.t
   
@@ -728,6 +725,8 @@ and Expression : sig
 
     val build : 'M -> 'M Element.t list -> 'M Expression.t list -> 'M Expression.t
   end
+
+  val to_statement : 'M Expression.t -> 'M Statement.t
 
   type 'M t' = 
     | Literal         of    Literal.t 
@@ -872,6 +871,9 @@ end = struct
       } in 
       (metadata, literal_info)
   end
+
+  let to_statement ((loc, _) as expr : 'M Expression.t) : 'M Statement.t = 
+    (loc, Statement.Expression expr)
 
   type 'M t' = 
     | Literal         of    Literal.t 

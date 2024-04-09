@@ -2,14 +2,12 @@ module Ast = Flow_ast
 open GraphJS
 open Aux
 
+(* --------- A L I A S E S --------- *)
 type m = Location.t;;
 type norm_stmt_t = m Statement.t list;;
 type norm_expr_t = m Statement.t list * m Expression.t option;;
 
-let empty_expr_return : norm_expr_t = ([], None);;
-
 let loc_f = Location.convert_flow_loc;;
-
 let _const = Statement.VarDecl.Const;;
 let _let = Statement.VarDecl.Let;;
 let _var = Statement.VarDecl.Var;;
@@ -17,6 +15,7 @@ let _var = Statement.VarDecl.Var;;
 type name_or_id =
   | Name of string option
   | Id   of m Identifier.t
+
 
 (* --------- C O N T E X T --------- *)
 type context = { 
@@ -59,15 +58,41 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       (* TODO : normWhileStatement performs some computations over the norm_test.statements *)
       (test_stmts @ [while_stmt])
     
-    (* all this will be transformed into while statments *) 
-    (* | _, Ast.Statement.For _ (* {init; test; update; body} *) -> empty_stmt_return
+    | loc, Ast.Statement.DoWhile {body; test; _} ->
+      let loc = loc_f loc in 
+      let test_stmts, test_expr = ne test in 
+      let body_stmts = ns body in
+      
+      let true_val = Expression.Literal.build loc (Expression.Literal.Boolean true) "true" in 
+      let setup, update, test_expr = if test_stmts = [] 
+        then
+          (* simple test expression: false, 1, x, ...*)
+          let id, decl = createVariableDeclaration (Some true_val) loc ~kind:_let in
+          let update = Statement.AssignSimple.build loc None id (Option.get test_expr) in 
+          decl, [update], Identifier.to_expression id 
+        else
+          (* complex test expression that was reduced to an identifier *)
+          let test_expr = Option.get test_expr in
+          let decls, assings = List.partition is_declaration test_stmts in
+          let setup = Statement.AssignSimple.build loc None (Identifier.from_expression test_expr) true_val in 
+          List.map (change_kind _let) decls @ [setup], assings, test_expr 
+      in
 
-    | _, Ast.Statement.ForIn _ -> empty_stmt_return
+      let while_stmt = Statement.While.build loc test_expr (body_stmts @ update) in 
+      setup @ [while_stmt]
     
-    | _, Ast.Statement.ForOf _ -> empty_stmt_return
+    (* | loc, Ast.Statement.For {init; test; update; body} -> 
+      let loc = loc_f loc in 
+      let true_val = Expression.Literal.build loc (Expression.Literal.Boolean true) "true" in 
+
+
+      let test_stmts, test_expr = map_default ne ([], Some true_val) test in 
+      let updt_stmts, updt_expr = map_default ne ([], None) update in 
+      let body_stmts = ns body in 
+
+      [] *)
     
-    | _, Ast.Statement.DoWhile _ -> empty_stmt_return *)
-    
+        
     (* --------- S W I T C H --------- *)
     | loc, Ast.Statement.Switch  { discriminant; cases; _ } -> 
       let dicr_stmts, dicr_expr = ne discriminant in 
@@ -106,7 +131,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
         (* if it is an special assignment dont do the assignment twice *)
         let init_expr = if (is_special_assignment (Option.get init)) then None else init_expr in 
 
-        let _, decl = createVariableDeclaration init_expr loc ~objId:(Id id) ~kind:kind' () in     
+        let _, decl = createVariableDeclaration init_expr loc ~objId:(Id id) ~kind:kind' in     
         decl @ init_stmt
 
       ) unpattern_decls in 
@@ -132,7 +157,8 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
     
     | _, Ast.Statement.Expression {expression; _} -> 
       (* TODO : graph.js appends expression result if any to the return *)
-      fst (ne expression)
+      let stmts, expr = ne expression in 
+      stmts @ Option.to_list (Option.map Expression.to_statement expr)
             
     | loc, _ -> 
       let loc_info = Loc.debug_to_string loc in
@@ -195,7 +221,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let logical = Expression.Logical.build location operator' (Option.get left_expr) (Option.get right_expr) in 
     
     if not context.is_assignment then
-      let id, decl = createVariableDeclaration (Some logical) location () in 
+      let id, decl = createVariableDeclaration (Some logical) location in 
       (left_stmt @ right_stmt @ decl, Some (Identifier.to_expression id))
     else 
       (left_stmt @ right_stmt, Some logical)
@@ -210,7 +236,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let binary = Expression.Binary.build location operator' (Option.get left_expr) (Option.get right_expr) in 
     
     if not context.is_assignment then
-      let id, decl = createVariableDeclaration (Some binary) location () in 
+      let id, decl = createVariableDeclaration (Some binary) location in 
       (left_stmt @ right_stmt @ decl, Some (Identifier.to_expression id))
     else 
       (left_stmt @ right_stmt, Some binary)
@@ -224,7 +250,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let unary_expr = Expression.Unary.build location operator' (Option.get arg_expr) in 
     
     if not context.is_assignment then
-      let id, decl = createVariableDeclaration (Some unary_expr) location () in 
+      let id, decl = createVariableDeclaration (Some unary_expr) location in 
       (arg_stmts @ decl, Some (Identifier.to_expression id))
     else 
       (arg_stmts, Some unary_expr)
@@ -238,7 +264,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let update_expr = Expression.Update.build location operator' (Option.get arg_expr) prefix in 
     
     if not context.is_assignment then
-      let id, decl = createVariableDeclaration (Some update_expr) location () in 
+      let id, decl = createVariableDeclaration (Some update_expr) location in 
       (arg_stmts @ decl, Some (Identifier.to_expression id))
     else 
       (arg_stmts, Some update_expr)
@@ -279,7 +305,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     
     (* TODO : arrayExpression keeps array as element if the parent is an expression statement *)
     if not context.is_assignment then 
-      let _, decl = createVariableDeclaration None loc ~objId:(Id id) () in 
+      let _, decl = createVariableDeclaration None loc ~objId:(Id id) in 
       ((List.flatten elems_stmts) @ decl @ [assign] , Some (Identifier.to_expression id))
     else
       (List.flatten elems_stmts) @ [assign], Some (Identifier.to_expression id)
@@ -295,10 +321,26 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let assign = Statement.AssignNew.build loc id (Option.get callee_expr) args_exprs in
 
     if not context.is_assignment then
-      let _, decl = createVariableDeclaration None loc ~objId:(Id id) () in
+      let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
       (callee_stmts @ (List.flatten args_stmts) @ decl @ [assign] , Some (Identifier.to_expression id))
     else
       (callee_stmts @ (List.flatten args_stmts) @ [assign], Some (Identifier.to_expression id))
+
+  (* --------- A S S I G N   M E M B E R ---------*)
+  | loc, Ast.Expression.Member {_object; property; _} -> 
+    let obj_stmts, obj_expr = ne _object in 
+    let prop_stmts, prop_expr = normalize_property property in 
+
+    let loc = loc_f loc in
+    let id = get_identifier context.identifier loc in
+    let assign = Statement.AssignMember.build loc id (Option.get obj_expr) (Option.get prop_expr) in
+
+    (* TODO : it has some more restrictions more than being an assignment, like is function call and new expression *)
+    if not context.is_assignment then
+      let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
+      (obj_stmts @ prop_stmts @ decl @ [assign] , Some (Identifier.to_expression id))
+    else
+      (obj_stmts @ prop_stmts @ [assign], Some (Identifier.to_expression id))
 
 
   (* --------- A S S I G N   F U N C   C A L L ---------*)
@@ -312,7 +354,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let assign = Statement.AssignFunCall.build loc id (Option.get callee_expr) args_exprs in
 
     if not context.is_assignment then
-      let _, decl = createVariableDeclaration None loc ~objId:(Id id) () in
+      let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
       (callee_stmts @ (List.flatten args_stmts) @ decl @ [assign] , Some (Identifier.to_expression id))
     else 
       (callee_stmts @ (List.flatten args_stmts) @ [assign], Some (Identifier.to_expression id))
@@ -388,7 +430,7 @@ and normalize_function (context : context) (loc : Loc.t) (id : (Loc.t, Loc.t) As
   let assign = Statement.AssignFunction.build loc id params_exprs body_stmts in 
   
   if not context.is_assignment then 
-    let _, decl = createVariableDeclaration None loc ~objId:(Id id) () in 
+    let _, decl = createVariableDeclaration None loc ~objId:(Id id) in 
     (List.flatten params_stmts @ decl @ [assign], Some (Identifier.to_expression id))
   else
     (List.flatten params_stmts @ [assign], Some (Identifier.to_expression id)) 
@@ -410,18 +452,24 @@ and normalize_func_body (body : ('M, 'T) Ast.Function.body) : norm_stmt_t =
       let return = Statement.Return.build (loc_f loc) body_expr in 
       body_stmts @ [return]
 
+and normalize_property property : norm_expr_t = 
+  match property with
+    | PropertyIdentifier ((loc, _) as id) -> normalize_expression empty_context (loc, Ast.Expression.Identifier id)
+    | PropertyExpression expr -> normalize_expression empty_context expr
+    | PropertyPrivateName _ -> failwith "property private name not implemented"
+
 and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={raw; cooked}; tail}) : m Expression.TemplateLiteral.Element.t =
   Expression.TemplateLiteral.Element.build (loc_f loc) raw cooked tail
 
 and get_identifier (id : m Identifier.t option) (loc : m) : m Identifier.t = 
   map_default identity (Identifier.build_random loc) id
 
-and createVariableDeclaration (obj : m Expression.t option) (loc : m) ?(objId : name_or_id = Name None) ?(kind : Statement.VarDecl.kind = _const) () : m Identifier.t * norm_stmt_t =
+and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Statement.VarDecl.kind = _const) (obj : m Expression.t option) (loc : m) : m Identifier.t * norm_stmt_t =
   let id = match objId with 
     | Name objId -> map_default (Identifier.build loc) (Identifier.build_random loc) objId
     | Id objId   -> objId 
   in 
-  let kind = if (Option.is_none obj && kind == _const) then _let else kind in 
+  let kind = if (Option.is_none obj && kind = _const) then _let else kind in 
 
   let decl = Statement.VarDecl.build loc kind id in 
   let assign = Option.map (Statement.AssignSimple.build loc None id) obj in 
@@ -434,6 +482,8 @@ and is_special_assignment ((_, expr) : ('M, 'T) Ast.Expression.t) : bool =
     | Ast.Expression.New _ 
     (* -- ASSIGN CALL -- *)
     | Ast.Expression.Call _
+    (* -- ASSING MEMBER -- *)
+    | Ast.Expression.Member _
     (* -- ASSIGN FUNCTION -- *)
     | Ast.Expression.Function _
     | Ast.Expression.ArrowFunction _
@@ -441,12 +491,19 @@ and is_special_assignment ((_, expr) : ('M, 'T) Ast.Expression.t) : bool =
     | Ast.Expression.Array _ -> true
     | _ -> false
 
-and block_to_statement (loc, {Ast.Statement.Block.body; comments}) : (Loc.t, Loc.t) Ast.Statement.t =
-  let block_info = Ast.Statement.Block {
-    body = body;
-    comments = comments;
-  } in 
-  (loc, block_info);;
+and block_to_statement (loc, block) : (Loc.t, Loc.t) Ast.Statement.t =
+  (loc, Ast.Statement.Block block)
+
+and change_kind (kind' : Statement.VarDecl.kind) ((loc, stmt) : m Statement.t) : m Statement.t =
+  match stmt with
+    | VarDecl decl -> let decl' = Statement.VarDecl {decl with kind = kind'} in 
+                      (loc, decl')
+    | _ -> failwith "tried to change the kind of non-declaration statement"
+  
+and is_declaration ((_, stmt) : m Statement.t) : bool = 
+  match stmt with 
+    | Statement.VarDecl _ -> true 
+    | _                   -> false;;
 
 
   

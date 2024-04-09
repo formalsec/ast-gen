@@ -65,6 +65,9 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
     | _, Throw {argument} -> 
       let argument' = map_default print_js_expr "" argument in
       identation_str ^ "throw " ^ argument' ^ ";\n" 
+      
+    | _, Expression expr -> 
+      identation_str ^ print_js_expr expr ^ ";\n" 
 
     | _, AssignSimple {operator; left; right} -> 
       let operator' = match operator with 
@@ -107,8 +110,13 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let arguments' = List.map print_js_expr arguments in 
       identation_str ^ left' ^ " = " ^ callee' ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
 
-    | _, AssignMetCall _ -> identation_str ^ "(AssignMetCall)" ^ ";\n"
-    | _, AssignMember _ -> identation_str ^ "(AssignMember)" ^ ";\n"
+    | _, AssignMember {left; _object; property} ->
+       let left' = print_js_expr (Identifier.to_expression left) in 
+       let _object' = print_js_expr _object in 
+       let property' = print_js_expr property in
+
+       identation_str ^ left' ^ " = " ^ _object' ^ "[" ^ property' ^ "];\n"
+       
     | _, AssignFunction {left; params; body} ->
       let left' = print_js_expr (Identifier.to_expression left) in 
       let params' = List.map print_js_param params in 
