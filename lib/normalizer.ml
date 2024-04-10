@@ -11,6 +11,7 @@ let loc_f = Location.convert_flow_loc;;
 let _const = Statement.VarDecl.Const;;
 let _let = Statement.VarDecl.Let;;
 let _var = Statement.VarDecl.Var;;
+
 let _init = Statement.AssignObject.Property.Init;;
 let _method = Statement.AssignObject.Property.Method;;
 let _get = Statement.AssignObject.Property.Get;;
@@ -36,7 +37,6 @@ let rec normalize (loc , { Ast.Program.statements; _ }) : m Program.t =
 and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : norm_stmt_t =
   let ns  = normalize_statement empty_context in
   let ne  = normalize_expression empty_context in
-  let nec  = normalize_expression in
 
   match stmt with
     (* --------- B L O C K --------- *)
@@ -128,23 +128,12 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
 
     (* --------- V A R I A B L E   D E C L A R A T I O N --------- *)
     | _, Ast.Statement.VariableDeclaration {kind; declarations; _} ->
-      let kind' : Statement.VarDecl.kind = match kind with 
+      let _ : Statement.VarDecl.kind = match kind with 
         | Var -> _var  | Let -> _let  | Const -> _const 
       in
 
-      let unpattern_decls = List.flatten (List.map unpattern declarations) in
-      let decl_stmts = List.map (fun (loc, id, init) -> 
-        let decl_context = {identifier = Some id; is_assignment = true} in 
-        let init_stmt, init_expr = map_default (nec decl_context) ([], None) init in 
-        (* if it is an special assignment dont do the assignment twice *)
-        let init_expr = if (is_special_assignment (Option.get init)) then None else init_expr in 
-
-        let _, decl = createVariableDeclaration init_expr loc ~objId:(Id id) ~kind:kind' in     
-        decl @ init_stmt
-
-      ) unpattern_decls in 
-
-      List.flatten decl_stmts
+      let assign_stmts, _ = List.split (List.map (fun (_, {Ast.Statement.VariableDeclaration.Declarator.id; init; _}) -> map_default (normalize_assignment id) ([], None) init) declarations) in 
+      List.flatten assign_stmts
     
     (* --------- R E T U R N --------- *)
     | loc, Ast.Statement.Return {argument; _} -> 
@@ -289,7 +278,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
   
   (* --------- A S S I G N   S I M P L E --------- *)
   | loc, Ast.Expression.Assignment {operator; left; right; _} ->
-    let left' = normalize_pattern left in 
+    let left' = normalize_pattern_aux left in 
     let assign_context = {identifier = Some left'; is_assignment = true} in 
 
     let operator' = Option.map Operator.Assignment.translate operator in
@@ -393,19 +382,66 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     failwith ("Unknown expression type to normalize (object on " ^ loc_info ^ ")")
 
 
-and normalize_pattern (pattern : ('M, 'T) Ast.Pattern.t) : m Identifier.t =
+and normalize_pattern_aux (pattern : ('M, 'T) Ast.Pattern.t) : m Identifier.t =
   (* TODO : need to look to other cases *)
   match pattern with
     | _, Ast.Pattern.Identifier {name; _} -> convert_identifier name
     | _ -> failwith "pattern not implemented"
 
-and convert_identifier (loc, {Ast.Identifier.name; _}) : m Identifier.t =
-  Identifier.build (loc_f loc) name
+and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (right : ('M, 'T) Ast.Expression.t) : norm_expr_t = 
+  let ne = normalize_expression empty_context in 
+  let init_stmts, init_expr = ne right in
+  let pat_stmts = normalize_pattern (Option.get init_expr) left in 
 
-and unpattern (loc, {Ast.Statement.VariableDeclaration.Declarator.id; init}) : (m * m Identifier.t * (Loc.t, Loc.t) Ast.Expression.t option) list = 
-  (* TODO : full unpattern *)
-  let id' = normalize_pattern id in
-  [(loc_f loc, id', init)]
+  init_stmts @ pat_stmts, init_expr
+
+and normalize_pattern expr pattern : norm_stmt_t =
+  match pattern with 
+    | loc, Identifier {name; _} -> 
+      let id = convert_identifier name in 
+      let assign = Statement.AssignSimple.build (loc_f loc) None id expr in 
+      [assign]
+    
+    | _, Array {elements; _} -> List.flatten (List.mapi (
+      fun i elem ->
+        match elem with 
+          | Ast.Pattern.Array.Element (loc, {argument; _}) ->
+            let loc = loc_f loc in 
+            let index = Expression.Literal.build loc (Expression.Literal.BigInt (Some (Int64.of_int i))) (string_of_int i) in
+            let id, decl = createVariableDeclaration None loc in 
+            let assign = Statement.AssignMember.build loc id expr index in 
+            
+            decl @ [assign] @ normalize_pattern (Identifier.to_expression id) argument
+
+          | Hole _ -> [] (* just ignore *)
+
+            (* TODO : maybe convert expression in to oldArray.slice(n, n+k); *)
+          | RestElement _ -> failwith "restelement not implemented"
+      ) elements)
+    
+    | _, Object {properties; _ } -> List.flatten (List.map (
+      fun property -> match property with 
+        | Ast.Pattern.Object.Property (loc, {key; pattern; _}) -> 
+          let loc = loc_f loc in 
+          let obj_key = to_object_key key in 
+          let _, key_expr = normalize_property_key obj_key in 
+          let id, decl = createVariableDeclaration None loc in 
+          let assign = Statement.AssignMember.build loc id expr (Option.get key_expr) in 
+
+          decl @ [assign] @ normalize_pattern (Identifier.to_expression id) pattern
+
+        (* TODO : restelement not implemented *)
+        | RestElement _ -> failwith "restelement not implemented"
+      ) properties)
+    | _ -> failwith "no other patterns were implemented yet"
+
+and to_object_key (key : ('M, 'T) Ast.Pattern.Object.Property.key) : ('M, 'T) Ast.Expression.Object.Property.key = 
+  match key with
+    | StringLiteral lit -> StringLiteral lit
+    | NumberLiteral lit -> NumberLiteral lit
+    | BigIntLiteral lit -> BigIntLiteral lit
+    | Identifier id     -> Identifier id
+    | Computed comp     -> Computed comp
 
 and normalize_alternate (_, {Ast.Statement.If.Alternate.body; _}) : norm_stmt_t = 
   normalize_statement empty_context body
@@ -421,7 +457,7 @@ and normalize_case (loc, {Ast.Statement.Switch.Case.test; consequent; _}) : m St
   (case, test_stmts)
 
 and normalize_catch (loc, { Ast.Statement.Try.CatchClause.param; body; _}) : norm_stmt_t * m Statement.Catch.t option = 
-    let param' = Option.map normalize_pattern param in 
+    let param' = Option.map normalize_pattern_aux param in 
     let body_stmts = normalize_statement empty_context (block_to_statement body) in 
 
     let catch = Statement.Catch.build (loc_f loc) param' body_stmts in
@@ -458,7 +494,7 @@ and normalize_function (context : context) (loc : Loc.t) (id : (Loc.t, Loc.t) As
 
 
 and normalize_param (loc, {Ast.Function.Param.argument; default}) : m Statement.t list * m Statement.AssignFunction.Param.t  = 
-  let argument' = normalize_pattern argument in
+  let argument' = normalize_pattern_aux argument in
   let def_stmts, def_expr = map_default (normalize_expression empty_context) ([], None) default in
   let param = Statement.AssignFunction.Param.build (loc_f loc) argument' def_expr in
   (def_stmts, param)
@@ -519,6 +555,8 @@ and normalize_init (init : ('M, 'T) Ast.Statement.For.init) : norm_expr_t =
     | InitDeclaration (loc, decl) -> ns (loc, Ast.Statement.VariableDeclaration decl), None 
     | InitExpression expr -> ne expr
 
+and convert_identifier (loc, {Ast.Identifier.name; _}) : m Identifier.t =
+  Identifier.build (loc_f loc) name
 
 and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={raw; cooked}; tail}) : m Expression.TemplateLiteral.Element.t =
   Expression.TemplateLiteral.Element.build (loc_f loc) raw cooked tail
