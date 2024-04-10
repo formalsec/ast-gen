@@ -211,7 +211,7 @@ and print_js_property {key; value; _} : string =
   let key' = print_js_expr key in 
   let value' = print_js_expr value in
 
-  key' ^ ":" ^ value'
+  key' ^ " : " ^ value'
 
 and catch_to_stmt (loc, {Statement.Catch.param; body}) : m Statement.t = 
   let catch_info = Statement.Catch (loc, { param = param; body = body }) in

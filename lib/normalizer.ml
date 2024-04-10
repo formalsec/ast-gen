@@ -85,18 +85,22 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       let while_stmt = Statement.While.build loc test_expr (body_stmts @ update) in 
       setup @ [while_stmt]
     
-    (* | loc, Ast.Statement.For {init; test; update; body} -> 
+    | loc, Ast.Statement.For {init; test; update; body; _} -> 
       let loc = loc_f loc in 
       let true_val = Expression.Literal.build loc (Expression.Literal.Boolean true) "true" in 
 
-
+      let init_stmts, init_expr = map_default normalize_init ([], None) init in
+      let new_init = if List.length init_stmts > 0 then init_stmts else Option.to_list (Option.map Expression.to_statement init_expr) in 
+      
       let test_stmts, test_expr = map_default ne ([], Some true_val) test in 
-      let updt_stmts, updt_expr = map_default ne ([], None) update in 
+      let updt_stmts, _         = map_default ne ([], None) update in 
       let body_stmts = ns body in 
 
-      [] *)
-    
-        
+      (* TODO : graph.js iterates over the test_stmts to find the test variable and add it to the body of the while for some reason *)
+      let _for = Statement.While.build loc (Option.get test_expr) (body_stmts @ updt_stmts) in 
+      
+      new_init @ test_stmts @ [_for]
+
     (* --------- S W I T C H --------- *)
     | loc, Ast.Statement.Switch  { discriminant; cases; _ } -> 
       let dicr_stmts, dicr_expr = ne discriminant in 
@@ -478,18 +482,20 @@ and normalize_member_property (property : ('M, 'T) Ast.Expression.Member.propert
 
 and normalize_property (property : ('M, 'T) Ast.Expression.Object.property) = 
   let nk = normalize_property_key in
+  let ne = normalize_expression empty_context in 
   let process_func_property key loc func = 
     let key_stmts, key_expr = nk key in 
-    let val_stmts, val_expr = normalize_expression empty_context (loc, Ast.Expression.Function func) in 
+    let val_stmts, val_expr = ne (loc, Ast.Expression.Function func) in 
     let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) None in
     key_stmts @ val_stmts, property
   in 
   match property with
     | Property (_, Init {key; value; shorthand}) ->
       let key_stmts, key_expr = nk key in 
-      let val_stmts, val_expr = normalize_expression empty_context value in 
+      let val_stmts, val_expr = ne value in 
       let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) (Some shorthand) in
       key_stmts @ val_stmts, property
+
     | Property (_, Method {key; value=(loc, func); _}) -> process_func_property key loc func
     | Property (_, Get {key; value=(loc, func); _}) -> process_func_property key loc func
     | Property (_, Set {key; value=(loc, func); _}) -> process_func_property key loc func
@@ -497,13 +503,22 @@ and normalize_property (property : ('M, 'T) Ast.Expression.Object.property) =
     | _ -> failwith "spread property not implemented"
 
 and normalize_property_key (key : ('M, 'T) Ast.Expression.Object.Property.key) : norm_expr_t = 
+  let ne = normalize_expression empty_context in 
   match key with
-  | StringLiteral (loc, literal) -> normalize_expression empty_context (loc, Ast.Expression.StringLiteral literal)
-  | NumberLiteral (loc, literal) -> normalize_expression empty_context (loc, Ast.Expression.NumberLiteral literal)
-  | BigIntLiteral (loc, literal) -> normalize_expression empty_context (loc, Ast.Expression.BigIntLiteral literal)
-  | Identifier ((loc, _) as id)  -> normalize_expression empty_context (loc, Ast.Expression.Identifier id)
+  | StringLiteral (loc, literal) -> ne (loc, Ast.Expression.StringLiteral literal)
+  | NumberLiteral (loc, literal) -> ne (loc, Ast.Expression.NumberLiteral literal)
+  | BigIntLiteral (loc, literal) -> ne (loc, Ast.Expression.BigIntLiteral literal)
+  | Identifier ((loc, _) as id)  -> ne (loc, Ast.Expression.Identifier id)
   (* TODO : private name and computed key not implemented *)
   | _ -> failwith "private name and computed key not implemented"
+
+and normalize_init (init : ('M, 'T) Ast.Statement.For.init) : norm_expr_t =
+  let ne = normalize_expression empty_context in 
+  let ns = normalize_statement empty_context in
+  match init with 
+    | InitDeclaration (loc, decl) -> ns (loc, Ast.Statement.VariableDeclaration decl), None 
+    | InitExpression expr -> ne expr
+
 
 and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={raw; cooked}; tail}) : m Expression.TemplateLiteral.Element.t =
   Expression.TemplateLiteral.Element.build (loc_f loc) raw cooked tail
