@@ -18,36 +18,41 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
 
       let new_identation = identation + spaces_per_identation in
       let consequent' = print_js_stmts consequent new_identation in 
-      let alternate' = map_default (fun alternate -> "else {\n" ^ (print_js_stmts alternate new_identation) ^ "}\n") ";\n" alternate  in
+      let alternate' = map_default (fun alternate -> "else {\n" ^ (print_js_stmts alternate new_identation) ^ identation_str ^ "}\n") ";\n" alternate  in
 
-      identation_str ^ "if (" ^ test' ^ ") {\n" ^ consequent' ^ "}" ^ alternate'
+      identation_str ^ "if (" ^ test' ^ ") {\n" ^ consequent' ^ identation_str ^ "}" ^ alternate'
 
     | _, Switch {discriminant; cases;} -> 
       let discriminant' = print_js_expr discriminant in
       let new_identation = identation + spaces_per_identation in 
       let cases' = List.map (flip print_js_case new_identation) cases in 
-      identation_str ^ "switch (" ^ discriminant' ^ ") {\n" ^ (String.concat "" cases') ^ "}\n"
+      identation_str ^ "switch (" ^ discriminant' ^ ") {\n" ^ (String.concat "" cases') ^ identation_str ^ "}\n"
   
     | _, While {test; body} -> 
       let test' = print_js_expr test in
       let new_identation = identation + spaces_per_identation in 
       let body' = print_js_stmts body new_identation in 
-      identation_str ^ "while (" ^ test' ^ ") {\n" ^ body' ^ "}\n"
+      identation_str ^ "while (" ^ test' ^ ") {\n" ^ body' ^ identation_str ^ "}\n"
 
     | _, Try {body; handler; finalizer} -> 
       let new_identation = identation + spaces_per_identation in
       let body' = print_js_stmts body new_identation in
       let handler' = map_default ((flip print_js_stmt identation) << catch_to_stmt) "" handler in 
-      let finalizer' = map_default (fun fin -> identation_str ^ "finally {\n" ^ (print_js_stmts fin new_identation)  ^ "}\n" ) "\n" finalizer in 
+      let finalizer' = map_default (fun fin -> identation_str ^ "finally {\n" ^ (print_js_stmts fin new_identation)  ^ identation_str ^ "}\n" ) "\n" finalizer in 
 
-      identation_str ^ "try {\n" ^ body' ^ "} " ^ handler' ^ finalizer'
+      identation_str ^ "try {\n" ^ body' ^ identation_str ^ "} " ^ handler' ^ finalizer'
 
     | _, Catch (_, {param; body}) -> 
       let param' = map_default (fun param -> "(" ^ print_js_expr (Identifier.to_expression param) ^ ")") "" param in 
       let new_identation = identation + spaces_per_identation in
       let body' = print_js_stmts body new_identation in 
 
-      identation_str ^ "catch " ^ param' ^ "{\n" ^ body' ^ "}"
+      identation_str ^ "catch " ^ param' ^ "{\n" ^ body' ^ identation_str ^ "}"
+    
+    | _, Labeled {label; body} ->
+      let label' = print_js_expr (Identifier.to_expression label) in  
+      let body' = print_js_stmts body identation in 
+      identation_str ^ label' ^ ":\n" ^ body' ^ "\n"
 
     | _, VarDecl {kind; id} -> 
       let kind' = match kind with 
@@ -65,7 +70,15 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
     | _, Throw {argument} -> 
       let argument' = map_default print_js_expr "" argument in
       identation_str ^ "throw " ^ argument' ^ ";\n" 
-      
+
+    | _, Break {label} ->
+      let label' = map_default ((^) " " << print_js_expr << Identifier.to_expression) "" label in
+      identation_str ^ "break" ^ label' ^ ";\n" 
+
+    | _, Continue {label} -> 
+      let label' = map_default ((^) " " << print_js_expr << Identifier.to_expression) "" label in
+      identation_str ^ "continue" ^ label' ^ ";\n" 
+
     | _, Expression expr -> 
       identation_str ^ print_js_expr expr ^ ";\n" 
 
@@ -129,7 +142,7 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let new_identation = identation + spaces_per_identation in
       let body' = print_js_stmts body new_identation in 
 
-      identation_str ^ left' ^ " = function (" ^ (String.concat ", " params') ^ ") {\n" ^ body' ^ "}\n"
+      identation_str ^ left' ^ " = function (" ^ (String.concat ", " params') ^ ") {\n" ^ body' ^ identation_str ^ "}\n"
 
   and print_js_expr (expr : m Expression.t): string =
   match expr with 

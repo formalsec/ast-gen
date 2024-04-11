@@ -57,11 +57,12 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
     | loc, Ast.Statement.While { test; body; _ } -> 
       let test_stmts, test_expr = ne test in
       let body_stmts = ns body in
-      let while_stmt= Statement.While.build (loc_f loc) (Option.get test_expr) body_stmts in
+      let while_stmt = Statement.While.build (loc_f loc) (Option.get test_expr) body_stmts in
 
       (* TODO : normWhileStatement performs some computations over the norm_test.statements *)
       (test_stmts @ [while_stmt])
     
+    (* --------- D O - W H I L E --------- *)
     | loc, Ast.Statement.DoWhile {body; test; _} ->
       let loc = loc_f loc in 
       let test_stmts, test_expr = ne test in 
@@ -82,9 +83,10 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
           List.map (change_kind _let) decls @ [setup], assings, test_expr 
       in
 
-      let while_stmt = Statement.While.build loc test_expr (body_stmts @ update) in 
-      setup @ [while_stmt]
-    
+      let dowhile_stmt = Statement.While.build loc test_expr (body_stmts @ update) in 
+      setup @ [dowhile_stmt]
+
+    (* --------- F O R --------- *)
     | loc, Ast.Statement.For {init; test; update; body; _} -> 
       let loc = loc_f loc in 
       let true_val = Expression.Literal.build loc (Expression.Literal.Boolean true) "true" in 
@@ -97,9 +99,9 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       let body_stmts = ns body in 
 
       (* TODO : graph.js iterates over the test_stmts to find the test variable and add it to the body of the while for some reason *)
-      let _for = Statement.While.build loc (Option.get test_expr) (body_stmts @ updt_stmts) in 
+      let for_stmt = Statement.While.build loc (Option.get test_expr) (body_stmts @ updt_stmts) in 
       
-      new_init @ test_stmts @ [_for]
+      new_init @ test_stmts @ [for_stmt]
 
     (* --------- S W I T C H --------- *)
     | loc, Ast.Statement.Switch  { discriminant; cases; _ } -> 
@@ -125,8 +127,17 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       let try_stmt = Statement.Try.build (loc_f loc) block_stmts handler' fnlzr_stmts in
 
       handler_stmts @ [try_stmt]
+    
+    (* --------- L A B E L --------- *)
+    | loc, Ast.Statement.Labeled {label; body; _} ->
+      let label' = convert_identifier label in
+      let body_stmts = ns body in
+
+      let labeled_stmt = Statement.Labeled.build (loc_f loc) label' body_stmts in
+      [labeled_stmt]
 
     (* --------- V A R I A B L E   D E C L A R A T I O N --------- *)
+    (* TODO *)
     | _, Ast.Statement.VariableDeclaration {kind; declarations; _} ->
       let _ : Statement.VarDecl.kind = match kind with 
         | Var -> _var  | Let -> _let  | Const -> _const 
@@ -142,28 +153,43 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
 
       arg_stmts @ [return_stmt]
 
-      (* --------- T H R O W --------- *)
-      | loc, Ast.Statement.Throw {argument; _} -> 
-        let arg_stmts, arg_expr = ne argument in
-        let throw_stmt = Statement.Throw.build (loc_f loc) arg_expr in 
-  
-        arg_stmts @ [throw_stmt]
+    (* --------- T H R O W --------- *)
+    | loc, Ast.Statement.Throw {argument; _} -> 
+      let arg_stmts, arg_expr = ne argument in
+      let throw_stmt = Statement.Throw.build (loc_f loc) arg_expr in 
+
+      arg_stmts @ [throw_stmt]
+      
+    (* --------- B R E A K --------- *)
+    | loc, Ast.Statement.Break {label; _} -> 
+      let label' = Option.map convert_identifier label in 
+      let break_stmt = Statement.Break.build (loc_f loc) label' in 
+      [break_stmt]
+    
+    (* --------- C O N T I N U E --------- *)
+    | loc, Ast.Statement.Continue {label; _} -> 
+      let label' = Option.map convert_identifier label in 
+      let continue_stmt = Statement.Continue.build (loc_f loc) label' in 
+      [continue_stmt]
     
     (* --------- A S S I G N   F U N C T I O N ---------*)
     | loc, Ast.Statement.FunctionDeclaration {id; params; body; _} -> fst (normalize_function context loc id params body)
-    
+
+    (* --------- S T A T E M E N T   E X P R E S S I O N ---------*)
     | _, Ast.Statement.Expression {expression; _} -> 
-      (* TODO : graph.js appends expression result if any to the return *)
       let stmts, expr = ne expression in 
       stmts @ Option.to_list (Option.map Expression.to_statement expr)
-            
+    
+    | _, Ast.Statement.Empty _ -> []
+
     | loc, _ -> 
       let loc_info = Loc.debug_to_string loc in
       failwith ("Unknown statement type to normalize (object on " ^ loc_info ^ ")")
     
 and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) : norm_expr_t =
-  let nec = normalize_expression in 
   let ne = normalize_expression empty_context in 
+  let nec = normalize_expression in
+
   match expr with
   (* --------- L I T E R A L --------- *)
   | loc, Ast.Expression.StringLiteral {value; raw; _} -> 
@@ -278,6 +304,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
   
   (* --------- A S S I G N   S I M P L E --------- *)
   | loc, Ast.Expression.Assignment {operator; left; right; _} ->
+
     let left' = normalize_pattern_aux left in 
     let assign_context = {identifier = Some left'; is_assignment = true} in 
 
@@ -286,10 +313,12 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
     let assign_expr = if not (is_special_assignment right) 
           then Some (Statement.AssignSimple.build (loc_f loc) operator' left' (Option.get right_expr)) 
-          else None in
-          
+          else None in 
+
     (* TODO : graph.js normalizer has some special cases depending on the parent *)
     (right_stmts @ Option.to_list assign_expr, None)
+   
+          
 
   (* --------- A S S I G N   A R R A Y ---------*)
   | loc, Ast.Expression.Array {elements; _} -> 
@@ -382,8 +411,8 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     failwith ("Unknown expression type to normalize (object on " ^ loc_info ^ ")")
 
 
+(* TODO : make this function unused and remove it *)
 and normalize_pattern_aux (pattern : ('M, 'T) Ast.Pattern.t) : m Identifier.t =
-  (* TODO : need to look to other cases *)
   match pattern with
     | _, Ast.Pattern.Identifier {name; _} -> convert_identifier name
     | _ -> failwith "pattern not implemented"
@@ -395,7 +424,7 @@ and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (right : ('M, 'T) Ast.E
 
   init_stmts @ pat_stmts, init_expr
 
-and normalize_pattern expr pattern : norm_stmt_t =
+and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Pattern.t) : norm_stmt_t =
   match pattern with 
     | loc, Identifier {name; _} -> 
       let id = convert_identifier name in 
@@ -555,7 +584,7 @@ and normalize_init (init : ('M, 'T) Ast.Statement.For.init) : norm_expr_t =
     | InitDeclaration (loc, decl) -> ns (loc, Ast.Statement.VariableDeclaration decl), None 
     | InitExpression expr -> ne expr
 
-and convert_identifier (loc, {Ast.Identifier.name; _}) : m Identifier.t =
+and convert_identifier ((loc, {name; _}) : ('M, 'T) Ast.Identifier.t) : m Identifier.t = 
   Identifier.build (loc_f loc) name
 
 and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={raw; cooked}; tail}) : m Expression.TemplateLiteral.Element.t =

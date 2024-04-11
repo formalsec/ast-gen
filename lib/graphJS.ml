@@ -183,7 +183,6 @@ and Statement : sig
 
   module Catch : sig
     type 'M t' = {
-      (* TODO : change param type ??identifier?? *)
       param : 'M Identifier.t option;
       body : 'M Statement.t list;
     }
@@ -201,6 +200,15 @@ and Statement : sig
     }
 
     val build : 'M -> 'M Statement.t list -> 'M Statement.Catch.t option -> 'M Statement.t list option -> 'M Statement.t
+  end
+
+  module Labeled : sig
+    type 'M t = {
+      label : 'M Identifier.t;
+      body : 'M Statement.t list
+    }
+
+    val build : 'M -> 'M Identifier.t -> 'M Statement.t list -> 'M Statement.t
   end
 
   module VarDecl : sig
@@ -231,6 +239,16 @@ and Statement : sig
     }
 
     val build : 'M -> 'M Expression.t option -> 'M Statement.t
+  end
+
+  module Break : sig
+    type 'M t = {  label : 'M Identifier.t option }
+    val build : 'M -> 'M Identifier.t option -> 'M Statement.t
+  end
+
+  module Continue : sig
+    type 'M t = { label : 'M Identifier.t option }
+    val build : 'M -> 'M Identifier.t option -> 'M Statement.t
   end
 
   (* --------- assignment statements --------- *)
@@ -333,14 +351,17 @@ and Statement : sig
   end
 
   type 'M t' = 
-    | If      of 'M If.t
-    | Switch  of 'M Switch.t
-    | While   of 'M While.t
-    | Try     of 'M Try.t 
-    | Catch   of 'M Catch.t 
-    | VarDecl of 'M VarDecl.t
-    | Return  of 'M Return.t
-    | Throw   of 'M Throw.t
+    | If       of 'M If.t
+    | Switch   of 'M Switch.t
+    | While    of 'M While.t
+    | Try      of 'M Try.t 
+    | Catch    of 'M Catch.t 
+    | Labeled  of 'M Labeled.t
+    | VarDecl  of 'M VarDecl.t
+    | Return   of 'M Return.t
+    | Throw    of 'M Throw.t
+    | Break    of 'M Break.t
+    | Continue of 'M Continue.t
     
     | Expression of 'M Expression.t
     
@@ -436,7 +457,6 @@ end = struct
         param = param';
         body = body';
       } in
-      
       (metadata, build_info)
   end
 
@@ -455,6 +475,20 @@ end = struct
       } in
       (metadata, try_info)
 
+  end
+
+  module Labeled = struct
+    type 'M t = {
+      label : 'M Identifier.t;
+      body : 'M Statement.t list
+    }
+
+    let build (metadata : 'M) (label' : 'M Identifier.t) (body' : 'M Statement.t list) : 'M Statement.t =
+      let labeled_info = Statement.Labeled {
+        label = label';
+        body = body'
+      } in 
+      (metadata, labeled_info)
   end
 
   module VarDecl = struct
@@ -495,6 +529,22 @@ end = struct
     let build (metadata : 'M) (argument' : 'M Expression.t option) : 'M Statement.t =
       let return_info = Statement.Return {argument = argument'} in
       (metadata, return_info)
+  end
+
+  module Break = struct
+    type 'M t = {  label : 'M Identifier.t option }
+
+    let build (metadata: 'M) (label' : 'M Identifier.t option ): 'M Statement.t =
+      let break_info = Statement.Break { label = label' } in
+      (metadata, break_info)
+  end
+
+  module Continue = struct
+    type 'M t = {  label : 'M Identifier.t option }
+
+    let build (metadata: 'M) (label' : 'M Identifier.t option): 'M Statement.t =
+      let continue_info = Statement.Continue { label = label' } in
+      (metadata, continue_info)
   end
 
   (* --------- assignment statements --------- *)
@@ -651,14 +701,17 @@ end = struct
   end
 
   type 'M t' = 
-    | If      of 'M If.t
-    | Switch  of 'M Switch.t
-    | While   of 'M While.t
-    | Try     of 'M Try.t 
-    | Catch   of 'M Catch.t 
-    | VarDecl of 'M VarDecl.t
-    | Return  of 'M Return.t
-    | Throw   of 'M Throw.t
+    | If       of 'M If.t
+    | Switch   of 'M Switch.t
+    | While    of 'M While.t
+    | Try      of 'M Try.t 
+    | Catch    of 'M Catch.t 
+    | Labeled  of 'M Labeled.t
+    | VarDecl  of 'M VarDecl.t
+    | Return   of 'M Return.t
+    | Throw    of 'M Throw.t
+    | Break    of 'M Break.t
+    | Continue of 'M Continue.t
     
     | Expression of 'M Expression.t
 
