@@ -86,6 +86,8 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let label' = map_default ((^) " " << print_js_expr << Identifier.to_expression) "" label in
       identation_str ^ "continue" ^ label' ^ ";\n" 
 
+    | _, Debugger _ -> identation_str ^ "debugger;\n"
+
     | _, Expression expr -> 
       identation_str ^ print_js_expr expr ^ ";\n" 
 
@@ -204,6 +206,10 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
     if prefix then operator' ^ argument' else argument' ^ operator'
   | _, This _ -> "this"
   | _, Super _ -> "super"
+  | _, Sequence {expressions} -> 
+    let expressions' = List.map print_js_expr expressions in 
+    "(" ^ String.concat ", " expressions' ^ ")"
+
   | _, TemplateLiteral {quasis; expressions} -> 
     let quasis' = List.map (fun (_, {Expression.TemplateLiteral.Element.value={raw;_}; _})-> raw) quasis in 
     let expressions' = List.map print_js_expr expressions in 

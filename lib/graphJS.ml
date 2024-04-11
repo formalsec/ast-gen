@@ -260,6 +260,11 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t option -> 'M Statement.t
   end
 
+  module Debugger : sig
+    type t = unit
+    val build : 'M -> 'M Statement.t
+  end
+
   (* --------- assignment statements --------- *)
   module AssignSimple : sig
     type 'M t = {
@@ -372,6 +377,7 @@ and Statement : sig
     | Throw    of 'M Throw.t
     | Break    of 'M Break.t
     | Continue of 'M Continue.t
+    | Debugger of    Debugger.t
     
     | Expression of 'M Expression.t
     
@@ -571,6 +577,13 @@ end = struct
       (metadata, continue_info)
   end
 
+  module Debugger = struct
+    type t = unit
+    
+    let build (metadata : 'M) : 'M Statement.t =
+      (metadata, Statement.Debugger ())
+  end
+
   (* --------- assignment statements --------- *)
   module AssignSimple = struct
     type 'M t = {
@@ -737,6 +750,8 @@ end = struct
     | Throw    of 'M Throw.t
     | Break    of 'M Break.t
     | Continue of 'M Continue.t
+    | Debugger of    Debugger.t
+
     
     | Expression of 'M Expression.t
 
@@ -845,6 +860,11 @@ and Expression : sig
     val build : 'M -> 'M Element.t list -> 'M Expression.t list -> 'M Expression.t
   end
 
+  module Sequence : sig
+    type 'M t = { expressions : 'M Expression.t list}
+    val build : 'M -> 'M Expression.t list -> 'M Expression.t
+  end
+
   val to_statement : 'M Expression.t -> 'M Statement.t
 
   type 'M t' = 
@@ -857,6 +877,7 @@ and Expression : sig
     | This            of    This.t
     | Super           of    Super.t
     | TemplateLiteral of 'M TemplateLiteral.t 
+    | Sequence        of 'M Sequence.t
 
   type 'M t = 'M * 'M t'
 
@@ -991,6 +1012,16 @@ end = struct
       (metadata, literal_info)
   end
 
+  module Sequence = struct
+    type 'M t = { expressions : 'M Expression.t list}
+
+    let build (metadata : 'M) (expressions' : 'M Expression.t list) : 'M Expression.t =
+      let sequence_info = Expression.Sequence {
+        expressions = expressions'
+      } in
+      (metadata, sequence_info)
+  end
+
   let to_statement ((loc, _) as expr : 'M Expression.t) : 'M Statement.t = 
     (loc, Statement.Expression expr)
 
@@ -1004,6 +1035,7 @@ end = struct
     | This            of    This.t
     | Super           of    Super.t
     | TemplateLiteral of 'M TemplateLiteral.t
+    | Sequence        of 'M Sequence.t
 
   type 'M t = 'M * 'M t'
      

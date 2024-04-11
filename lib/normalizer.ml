@@ -179,6 +179,12 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       let label' = Option.map convert_identifier label in 
       let continue_stmt = Statement.Continue.build (loc_f loc) label' in 
       [continue_stmt]
+
+    (* --------- D E B U G G E R --------- *)
+    | loc, Ast.Statement.Debugger _ ->
+      let debugger_stmt = Statement.Debugger.build (loc_f loc) in 
+      
+      [debugger_stmt]
     
     (* --------- A S S I G N   F U N C T I O N ---------*)
     | loc, Ast.Statement.FunctionDeclaration {id; params; body; _} -> fst (normalize_function context loc id params body)
@@ -309,6 +315,13 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
   | loc, Ast.Expression.Super _ -> 
     let super = Expression.Super.build (loc_f loc) in
     ([], Some super)
+
+  (* --------- S E Q U E N C E --------- *)
+  | loc, Ast.Expression.Sequence {expressions; _} -> 
+    let stmts, exprs = List.split (List.map ne expressions) in 
+    let sequence = Expression.Sequence.build (loc_f loc) (List.map Option.get exprs) in 
+    
+    List.flatten stmts, Some sequence
   
   (* --------- A S S I G N   S I M P L E --------- *)
   | loc, Ast.Expression.Assignment {operator; left; right; _} ->
