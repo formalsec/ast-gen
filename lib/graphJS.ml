@@ -72,7 +72,7 @@ module Operator = struct
   end 
 
   module Unary = struct
-    type t = Minus | Plus | Not | BitNot | Typeof | Void | Delete
+    type t = Minus | Plus | Not | BitNot | Typeof | Void | Delete | Await
 
     let translate (op : Ast.Expression.Unary.operator) : t =
       match op with
@@ -80,7 +80,7 @@ module Operator = struct
         | Not -> Not       | BitNot -> BitNot
         | Typeof -> Typeof | Void -> Void
         | Delete -> Delete
-        | Await -> failwith "await operator is not an unary expression"
+        | Await -> Await
         
   end
 
@@ -141,6 +141,21 @@ end = struct
   end
 
 and Statement : sig
+
+  module VarDecl : sig
+    type kind =
+      | Var
+      | Let
+      | Const
+
+    type 'M t = {
+      kind : kind;
+      id : 'M Identifier.t;
+    }
+
+    val build : 'M -> kind -> 'M Identifier.t -> 'M Statement.t
+  end
+
   module If : sig
     type 'M t = {
       test : 'M Expression.t;
@@ -178,6 +193,27 @@ and Statement : sig
     }
 
     val build : 'M -> 'M Expression.t -> 'M Statement.t list -> 'M Statement.t
+  end
+
+  module ForIn : sig
+    type 'M t = {
+      left : 'M VarDecl.t;
+      right : 'M Expression.t;
+      body : 'M Statement.t list;
+    }
+
+    val build : 'M -> 'M VarDecl.t -> 'M Expression.t -> 'M Statement.t list -> 'M Statement.t
+  end
+
+  module ForOf : sig
+    type 'M t = {
+      left : 'M VarDecl.t;
+      right : 'M Expression.t;
+      body : 'M Statement.t list;
+      await : bool
+    }
+
+    val build : 'M -> 'M VarDecl.t -> 'M Expression.t -> 'M Statement.t list -> bool -> 'M Statement.t
   end
 
 
@@ -218,20 +254,6 @@ and Statement : sig
     }
 
     val build : 'M -> 'M Identifier.t -> 'M Statement.t list -> 'M Statement.t
-  end
-
-  module VarDecl : sig
-    type kind =
-      | Var
-      | Let
-      | Const
-
-    type 'M t = {
-      kind : kind;
-      id : 'M Identifier.t;
-    }
-
-    val build : 'M -> kind -> 'M Identifier.t -> 'M Statement.t
   end
 
   module Return : sig
@@ -368,6 +390,8 @@ and Statement : sig
     | If       of 'M If.t
     | Switch   of 'M Switch.t
     | While    of 'M While.t
+    | ForIn    of 'M ForIn.t
+    | ForOf    of 'M ForOf.t
     | Try      of 'M Try.t 
     | Catch    of 'M Catch.t 
     | With     of 'M With.t
@@ -394,6 +418,26 @@ and Statement : sig
   
 
 end = struct
+  module VarDecl = struct
+    type kind =
+      | Var
+      | Let
+      | Const
+
+    type 'M t = {
+      kind : kind;
+      id : 'M Identifier.t;
+    }
+
+    let build (metadata : 'M) (kind' : kind) (id' : 'M Identifier.t) : 'M Statement.t =
+      let variabledecl_info = Statement.VarDecl {
+        kind = kind';
+        id = id';
+      } in
+      (metadata, variabledecl_info)
+    
+  end
+
   module If = struct
     
     type 'M t = {
@@ -460,6 +504,40 @@ end = struct
       (metadata, while_info)
   end
 
+  module ForIn = struct
+    type 'M t = {
+      left : 'M VarDecl.t;
+      right : 'M Expression.t;
+      body : 'M Statement.t list;
+    }
+
+    let build (metadata : 'M) (left' : 'M VarDecl.t) (right' : 'M Expression.t) (body' : 'M Statement.t list) : 'M Statement.t =
+      let for_info = Statement.ForIn {
+        left = left';
+        right = right';
+        body = body'
+      } in
+      (metadata, for_info)
+  end
+
+  module ForOf = struct
+    type 'M t = {
+      left : 'M VarDecl.t;
+      right : 'M Expression.t;
+      body : 'M Statement.t list;
+      await : bool
+    }
+
+    let build (metadata : 'M) (left' : 'M VarDecl.t) (right' : 'M Expression.t) (body' : 'M Statement.t list) (await' : bool) : 'M Statement.t =
+      let for_info = Statement.ForOf {
+        left = left';
+        right = right';
+        body = body';
+        await = await'
+      } in
+      (metadata, for_info)
+  end
+
   module Catch = struct
     type 'M t' = {
       param : 'M Identifier.t option;
@@ -519,26 +597,6 @@ end = struct
         body = body'
       } in 
       (metadata, labeled_info)
-  end
-
-  module VarDecl = struct
-    type kind =
-      | Var
-      | Let
-      | Const
-
-    type 'M t = {
-      kind : kind;
-      id : 'M Identifier.t;
-    }
-
-    let build (metadata : 'M) (kind' : kind) (id' : 'M Identifier.t) : 'M Statement.t =
-      let variabledecl_info = Statement.VarDecl {
-        kind = kind';
-        id = id';
-      } in
-      (metadata, variabledecl_info)
-    
   end
 
   module Return = struct
@@ -741,6 +799,8 @@ end = struct
     | If       of 'M If.t
     | Switch   of 'M Switch.t
     | While    of 'M While.t
+    | ForIn    of 'M ForIn.t
+    | ForOf    of 'M ForOf.t
     | Try      of 'M Try.t 
     | Catch    of 'M Catch.t 
     | With     of 'M With.t
@@ -860,9 +920,27 @@ and Expression : sig
     val build : 'M -> 'M Element.t list -> 'M Expression.t list -> 'M Expression.t
   end
 
+  module TaggedTemplate : sig
+    type 'M t = {
+      tag : 'M Expression.t;
+      quasi : 'M TemplateLiteral.t
+    }
+
+    val build : 'M -> 'M Expression.t -> 'M TemplateLiteral.t -> 'M Expression.t
+  end
+
   module Sequence : sig
     type 'M t = { expressions : 'M Expression.t list}
     val build : 'M -> 'M Expression.t list -> 'M Expression.t
+  end
+
+  module Yield : sig
+    type 'M t = {
+      argument : 'M Expression.t option;
+      delegate : bool
+    } 
+
+    val build : 'M -> 'M Expression.t option -> bool -> 'M Expression.t
   end
 
   val to_statement : 'M Expression.t -> 'M Statement.t
@@ -877,7 +955,10 @@ and Expression : sig
     | This            of    This.t
     | Super           of    Super.t
     | TemplateLiteral of 'M TemplateLiteral.t 
+    | TaggedTemplate  of 'M TaggedTemplate.t
     | Sequence        of 'M Sequence.t
+    | Yield           of 'M Yield.t
+
 
   type 'M t = 'M * 'M t'
 
@@ -1012,6 +1093,21 @@ end = struct
       (metadata, literal_info)
   end
 
+  module TaggedTemplate = struct
+    type 'M t = {
+      tag : 'M Expression.t;
+      quasi : 'M TemplateLiteral.t
+    }
+
+    let build (metadata : 'M) (tag' : 'M Expression.t) (quasi' : 'M TemplateLiteral.t) : 'M Expression.t =
+      let tagged_info = Expression.TaggedTemplate {
+        tag = tag';
+        quasi = quasi'
+      } in
+      (metadata, tagged_info)
+
+  end
+
   module Sequence = struct
     type 'M t = { expressions : 'M Expression.t list}
 
@@ -1020,6 +1116,20 @@ end = struct
         expressions = expressions'
       } in
       (metadata, sequence_info)
+  end
+
+  module Yield = struct
+    type 'M t = {
+      argument : 'M Expression.t option;
+      delegate : bool
+    } 
+
+    let build (metadata : 'M) (argument' : 'M Expression.t option) (delegate': bool) : 'M Expression.t =
+      let yield_info = Expression.Yield {
+        argument = argument';
+        delegate = delegate'
+      } in 
+      (metadata, yield_info)
   end
 
   let to_statement ((loc, _) as expr : 'M Expression.t) : 'M Statement.t = 
@@ -1035,7 +1145,10 @@ end = struct
     | This            of    This.t
     | Super           of    Super.t
     | TemplateLiteral of 'M TemplateLiteral.t
+    | TaggedTemplate  of 'M TaggedTemplate.t
     | Sequence        of 'M Sequence.t
+    | Yield           of 'M Yield.t
+
 
   type 'M t = 'M * 'M t'
      

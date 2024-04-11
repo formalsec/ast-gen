@@ -34,6 +34,22 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let body' = print_js_stmts body new_identation in 
       identation_str ^ "while (" ^ test' ^ ") {\n" ^ body' ^ identation_str ^ "}\n"
 
+    | _, ForIn {left; right; body} ->
+      let left' = print_js_decl left in 
+      let right' = print_js_expr right in 
+      let new_identation = identation + spaces_per_identation in 
+      let body' = print_js_stmts body new_identation in 
+      
+      identation_str ^ "for (" ^ left' ^ " in " ^ right' ^ ") {\n" ^ body' ^ identation_str ^ "}\n"
+
+    | _, ForOf {left; right; body; await} -> 
+      let left' = print_js_decl left in 
+      let right' = print_js_expr right in 
+      let new_identation = identation + spaces_per_identation in 
+      let body' = print_js_stmts body new_identation in 
+      
+      identation_str ^ "for" ^ if (await) then " await " else " " ^ "(" ^ left' ^ " of " ^ right' ^ ") {\n" ^ body' ^ identation_str ^ "}\n"
+
     | _, Try {body; handler; finalizer} -> 
       let new_identation = identation + spaces_per_identation in
       let body' = print_js_stmts body new_identation in
@@ -54,7 +70,7 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let new_identation = identation + spaces_per_identation in
       let body' = print_js_stmts body new_identation in 
 
-      identation_str ^ "with (" ^ _object' ^ ") {\n" ^ body' ^ identation_str ^ "\n}"
+      identation_str ^ "with (" ^ _object' ^ ") {\n" ^ body' ^ identation_str ^ "}\n"
       
     | _, Labeled {label; body} ->
       let label' = print_js_expr (Identifier.to_expression label) in  
@@ -194,6 +210,7 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       | Typeof -> "typeof "
       | Void -> "void "
       | Delete -> "delete "
+      | Await -> "await "
     in
     let argument' = print_js_expr argument in
     operator' ^ argument'
@@ -216,6 +233,16 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
     
     let quasi_expr = List.map (fun (raw, expr) -> raw ^ (if expr != "" then "${" ^ expr ^ "}" else "")) (List.combine quasis' (expressions' @ [""])) in
     "`" ^ String.concat "" quasi_expr ^ "`"
+  
+  | _, TaggedTemplate {tag; quasi} -> 
+    let tag' = print_js_expr tag in 
+    let quasi' = print_js_expr (Location.empty, Expression.TemplateLiteral quasi) in 
+    
+    tag' ^ quasi'
+  
+  | _, Yield {argument; _ } ->
+    let argument' = map_default ((^) " " << print_js_expr) "" argument in
+    "yield" ^ argument'
 
 and print_js_stmts (stmts : m Statement.t list) (identation : int): string =
   String.concat "" (List.map (flip print_js_stmt identation) stmts)
@@ -238,6 +265,15 @@ and print_js_property {key; value; _} : string =
   let value' = print_js_expr value in
 
   key' ^ " : " ^ value'
+
+and print_js_decl {kind; id} = 
+  let kind' = match kind with 
+        | Var -> "var "
+        | Let -> "let "
+        | Const -> "const "
+      in
+      let id' = print_js_expr (Identifier.to_expression id) in
+      kind' ^ id'
 
 and catch_to_stmt (loc, {Statement.Catch.param; body}) : m Statement.t = 
   let catch_info = Statement.Catch (loc, { param = param; body = body }) in

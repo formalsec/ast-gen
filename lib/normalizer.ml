@@ -102,6 +102,12 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       let for_stmt = Statement.While.build loc (Option.get test_expr) (body_stmts @ updt_stmts) in 
       
       new_init @ test_stmts @ [for_stmt]
+    
+    
+    (* --------- F O R - I N --------- *)
+    (* TODO *)
+    (* --------- F O R - O F --------- *)
+    (* TODO *)
 
     (* --------- S W I T C H --------- *)
     | loc, Ast.Statement.Switch  { discriminant; cases; _ } -> 
@@ -322,6 +328,23 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let sequence = Expression.Sequence.build (loc_f loc) (List.map Option.get exprs) in 
     
     List.flatten stmts, Some sequence
+
+  (* --------- T A G G E D   T E M P L A T E --------- *)
+  | loc, Ast.Expression.TaggedTemplate {tag; quasi=(qloc, quasi'); _} ->
+    let tag_stmts, tag_expr = ne tag in 
+    let qsi_stmts, qsi_expr = ne (qloc, Ast.Expression.TemplateLiteral quasi') in 
+    (* convert quasi back to a template literal *)
+    let qsi_expr = match qsi_expr with Some (_, Expression.TemplateLiteral tl) -> tl | _ -> failwith "failed to convert quasi to template literal"in 
+
+    let tagged_template = Expression.TaggedTemplate.build (loc_f loc) (Option.get tag_expr) qsi_expr in 
+    tag_stmts @ qsi_stmts, Some tagged_template 
+
+    (* --------- Y I E L D --------- *)
+    | loc, Ast.Expression.Yield {argument; delegate; _} -> 
+      let arg_stmts, arg_expr = map_default ne ([], None) argument in 
+      let yield = Expression.Yield.build (loc_f loc) arg_expr delegate in 
+      
+      arg_stmts, Some yield
   
   (* --------- A S S I G N   S I M P L E --------- *)
   | loc, Ast.Expression.Assignment {operator; left; right; _} ->
@@ -338,8 +361,6 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
     (* TODO : graph.js normalizer has some special cases depending on the parent *)
     (right_stmts @ Option.to_list assign_expr, None)
-   
-          
 
   (* --------- A S S I G N   A R R A Y ---------*)
   | loc, Ast.Expression.Array {elements; _} -> 
