@@ -49,6 +49,13 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
 
       identation_str ^ "catch " ^ param' ^ "{\n" ^ body' ^ identation_str ^ "}"
     
+    | _, With {_object; body} -> 
+      let _object' = print_js_expr _object in 
+      let new_identation = identation + spaces_per_identation in
+      let body' = print_js_stmts body new_identation in 
+
+      identation_str ^ "with (" ^ _object' ^ ") {\n" ^ body' ^ identation_str ^ "\n}"
+      
     | _, Labeled {label; body} ->
       let label' = print_js_expr (Identifier.to_expression label) in  
       let body' = print_js_stmts body identation in 

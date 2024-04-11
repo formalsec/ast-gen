@@ -202,6 +202,15 @@ and Statement : sig
     val build : 'M -> 'M Statement.t list -> 'M Statement.Catch.t option -> 'M Statement.t list option -> 'M Statement.t
   end
 
+  module With : sig 
+    type 'M t = {
+      _object : 'M Expression.t;
+      body : 'M Statement.t list;
+    }
+
+    val build : 'M -> 'M Expression.t -> 'M Statement.t list -> 'M Statement.t
+  end
+
   module Labeled : sig
     type 'M t = {
       label : 'M Identifier.t;
@@ -356,6 +365,7 @@ and Statement : sig
     | While    of 'M While.t
     | Try      of 'M Try.t 
     | Catch    of 'M Catch.t 
+    | With     of 'M With.t
     | Labeled  of 'M Labeled.t
     | VarDecl  of 'M VarDecl.t
     | Return   of 'M Return.t
@@ -475,6 +485,20 @@ end = struct
       } in
       (metadata, try_info)
 
+  end
+
+  module With = struct
+    type 'M t = {
+      _object : 'M Expression.t;
+      body : 'M Statement.t list;
+    }
+
+    let build (metadata : 'M) (_object' : 'M Expression.t) (body' : 'M Statement.t list) : 'M Statement.t =
+      let with_info = Statement.With {
+        _object = _object';
+        body = body';
+      } in
+      (metadata, with_info)
   end
 
   module Labeled = struct
@@ -706,6 +730,7 @@ end = struct
     | While    of 'M While.t
     | Try      of 'M Try.t 
     | Catch    of 'M Catch.t 
+    | With     of 'M With.t
     | Labeled  of 'M Labeled.t
     | VarDecl  of 'M VarDecl.t
     | Return   of 'M Return.t

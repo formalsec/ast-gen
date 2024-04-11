@@ -128,6 +128,14 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
 
       handler_stmts @ [try_stmt]
     
+    (* --------- W I T H --------- *)
+    | loc, Ast.Statement.With {_object; body; _} ->
+      let obj_stmts, obj_expr = ne _object in 
+      let body_stmts = ns body in 
+
+      let with_stmt = Statement.With.build (loc_f loc) (Option.get obj_expr) body_stmts in
+      obj_stmts @ [with_stmt]
+    
     (* --------- L A B E L --------- *)
     | loc, Ast.Statement.Labeled {label; body; _} ->
       let label' = convert_identifier label in
