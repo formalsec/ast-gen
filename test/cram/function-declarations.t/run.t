@@ -38,7 +38,7 @@
         let v4;
         v4 = alert(v3);
         v4;
-     };
+     }
   }
   
   $ dune exec ast_gen -f input-code-5.js

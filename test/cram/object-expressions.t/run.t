@@ -1,12 +1,10 @@
   $ dune exec ast_gen -f input-code-1.js
   let x;
   x = {  };
-  x = x;
   
   $ dune exec ast_gen -f input-code-2.js
   let x;
   x = { p : 'p' };
-  x = x;
   
   $ dune exec ast_gen -f input-code-3.js
   let v1;
@@ -47,10 +45,8 @@
   v1 = { first : 'person' };
   customer = { name : v1,
         role : 'user' };
-  customer = customer;
   
   $ dune exec ast_gen -f input-code-8.js
   var map;
   map = { '%r' : repo };
-  map = map;
   

@@ -471,7 +471,15 @@ and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (right : ('M, 'T) Ast.E
   let context = if is_id then {identifier = id; is_assignment = true} else empty_context in
   
   let init_stmts, init_expr = ne context right in
-  let pat_stmts, ids = normalize_pattern (Option.get init_expr) left in 
+  let pat_stmts, ids = 
+    if not (is_id && is_special_assignment right) then 
+      normalize_pattern (Option.get init_expr) left 
+    else 
+      (* right expression is a special assignment so when it got 
+         normalized it already created a special assignment node 
+         (no need to recreate another) *)
+      [], [Option.get id]
+  in 
 
   init_stmts @ pat_stmts, ids
   

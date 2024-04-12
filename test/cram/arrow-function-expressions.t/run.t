@@ -7,7 +7,6 @@
      v3 = v2 + 3;
      return v3;
   }
-  x = x;
   
   $ dune exec ast_gen -f input-code-2.js
   let x;
@@ -18,7 +17,6 @@
      v3 = v2 + 3;
      return v3;
   }
-  x = x;
   
   $ dune exec ast_gen -f input-code-3.js
   ast_gen: internal error, uncaught exception:
@@ -41,7 +39,6 @@
      return v4;
   }
   a = v2(v3);
-  a = a;
   
   $ dune exec ast_gen -f input-code-5.js
   let a;
@@ -59,5 +56,4 @@
      return v4;
   }
   a = v2(v3);
-  a = a;
   

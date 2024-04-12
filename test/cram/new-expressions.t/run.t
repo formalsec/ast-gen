@@ -3,5 +3,4 @@
   const v1;
   v1 = 1 + 2;
   x = new Object(v1);
-  x = x;
   

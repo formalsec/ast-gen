@@ -5,7 +5,6 @@
      v2 = 1 + 1;
      v2;
   }
-  z = z;
   
   $ dune exec ast_gen -f input-code-2.js
   ast_gen: internal error, uncaught exception:

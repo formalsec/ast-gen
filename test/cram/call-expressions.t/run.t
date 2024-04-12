@@ -3,7 +3,6 @@
   const v1;
   v1 = 1 + 2;
   x = eval('1 + 2', v1);
-  x = x;
   
   $ dune exec ast_gen -f input-code-2.js
   let v1;
