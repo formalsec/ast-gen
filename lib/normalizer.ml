@@ -151,7 +151,6 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       [labeled_stmt]
 
     (* --------- V A R I A B L E   D E C L A R A T I O N --------- *)
-    (* TODO *)
     | loc, Ast.Statement.VariableDeclaration {kind; declarations; _} ->
       let kind' : Statement.VarDecl.kind = match kind with 
         | Var -> _var  | Let -> _let  | Const -> _const 
@@ -164,7 +163,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
           let is_id, _id  = is_identifier id in 
           let ids = if is_id then Option.to_list _id else [] in 
 
-          map_default (normalize_assignment id) ([], ids) init
+          map_default (normalize_assignment id None) ([], ids) init
         ) declarations) 
       in 
 
@@ -219,7 +218,6 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
     
 and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) : norm_expr_t =
   let ne = normalize_expression empty_context in 
-  let nec = normalize_expression in
 
   match expr with
   (* --------- L I T E R A L --------- *)
@@ -358,20 +356,13 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       arg_stmts, Some yield
   
   (* --------- A S S I G N   S I M P L E --------- *)
-  | loc, Ast.Expression.Assignment {operator; left; right; _} ->
-
-    let left' = normalize_pattern_aux left in 
-    let assign_context = {identifier = Some left'; is_assignment = true} in 
+  | _, Ast.Expression.Assignment {operator; left; right; _} ->
 
     let operator' = Option.map Operator.Assignment.translate operator in
-    let right_stmts, right_expr = nec assign_context right in
-
-    let assign_expr = if not (is_special_assignment right) 
-          then Some (Statement.AssignSimple.build (loc_f loc) operator' left' (Option.get right_expr)) 
-          else None in 
+    let assign_stmts, _ = normalize_assignment left operator' right  in 
 
     (* TODO : graph.js normalizer has some special cases depending on the parent *)
-    (right_stmts @ Option.to_list assign_expr, None)
+    assign_stmts, None 
 
   (* --------- A S S I G N   A R R A Y ---------*)
   | loc, Ast.Expression.Array {elements; _} -> 
@@ -470,7 +461,7 @@ and normalize_pattern_aux (pattern : ('M, 'T) Ast.Pattern.t) : m Identifier.t =
     | _, Ast.Pattern.Identifier {name; _} -> convert_identifier name
     | _ -> failwith "pattern not implemented"
 
-and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (right : ('M, 'T) Ast.Expression.t) : norm_stmt_t * m Identifier.t list = 
+and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignment.t option) (right : ('M, 'T) Ast.Expression.t) : norm_stmt_t * m Identifier.t list = 
   let ne = normalize_expression in
   let is_id, id = is_identifier left in  
   let context = if is_id then {identifier = id; is_assignment = true} else empty_context in
@@ -478,7 +469,7 @@ and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (right : ('M, 'T) Ast.E
   let init_stmts, init_expr = ne context right in
   let pat_stmts, ids = 
     if not (is_id && is_special_assignment right) then 
-      normalize_pattern (Option.get init_expr) left 
+      normalize_pattern (Option.get init_expr) left op
     else 
       (* right expression is a special assignment so when it got 
          normalized it already created a special assignment node 
@@ -488,11 +479,11 @@ and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (right : ('M, 'T) Ast.E
 
   init_stmts @ pat_stmts, ids
   
-and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Pattern.t) : norm_stmt_t * m Identifier.t list =
+and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
   match pattern with 
     | loc, Identifier {name; _} -> 
       let id = convert_identifier name in 
-      let assign = Statement.AssignSimple.build (loc_f loc) None id expr in 
+      let assign = Statement.AssignSimple.build (loc_f loc) op id expr in 
       [assign], [id]
     
     | _, Array {elements; _} -> let assigns, ids = List.split (List.mapi (
@@ -508,7 +499,7 @@ and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Patt
               let id, decl = createVariableDeclaration None loc in 
               let assign = Statement.AssignMember.build loc id expr index in 
               
-              let stmts, ids = normalize_pattern (Identifier.to_expression id) argument in 
+              let stmts, ids = normalize_pattern (Identifier.to_expression id) argument op in 
               decl @ [assign] @ stmts, ids
             else 
               let assign = Statement.AssignMember.build loc (Option.get id) expr index in 
@@ -535,7 +526,7 @@ and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Patt
             let id, decl = createVariableDeclaration None loc in 
             let assign = Statement.AssignMember.build loc id expr (Option.get key_expr) in 
             
-            let stmts, ids = normalize_pattern (Identifier.to_expression id) pattern in 
+            let stmts, ids = normalize_pattern (Identifier.to_expression id) pattern op in 
             decl @ [assign] @ stmts, ids
           else
             let assign = Statement.AssignMember.build loc (Option.get id) expr (Option.get key_expr) in 

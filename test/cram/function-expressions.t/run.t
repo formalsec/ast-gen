@@ -8,6 +8,6 @@
   
   $ dune exec ast_gen -f input-code-2.js
   ast_gen: internal error, uncaught exception:
-           Failure("pattern not implemented")
+           Failure("no other patterns were implemented yet")
            
   [125]
