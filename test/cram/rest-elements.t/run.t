@@ -4,20 +4,35 @@
   }
   
   $ dune exec ast_gen -f input-code-2.js
-  ast_gen: internal error, uncaught exception:
-           Failure("restelement not implemented")
-           
-  [125]
+  let param1;
+  let otherParams;
+  const v1;
+  v1 = a + b;
+  param1 = v1[0];
+  const v2;
+  v2 = v1.slice;
+  otherParams = v2(1);
+  
   $ dune exec ast_gen -f input-code-3.js
-  ast_gen: internal error, uncaught exception:
-           Failure("restelement not implemented")
-           
-  [125]
+  let array;
+  let otherParams;
+  const v1;
+  v1 = f();
+  array = v1[0];
+  const v2;
+  v2 = v1.slice;
+  otherParams = v2(1);
+  
   $ dune exec ast_gen -f input-code-4.js
-  ast_gen: internal error, uncaught exception:
-           Failure("restelement not implemented")
-           
-  [125]
+  let array;
+  let otherParams;
+  const v1;
+  v1 = f();
+  array = v1[0];
+  const v2;
+  v2 = v1.slice;
+  otherParams = v2(1);
+  
   $ dune exec ast_gen -f input-code-5.js
   const a;
   const v1;

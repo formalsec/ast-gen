@@ -525,8 +525,26 @@ and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Patt
 
           | Hole _ -> [], [] (* just ignore *)
 
-            (* TODO : maybe convert expression in to oldArray.slice(n, n+k); *)
-          | RestElement _ -> failwith "restelement not implemented"
+          | RestElement (loc, {argument; _}) -> 
+            let loc = loc_f loc in 
+            let index = Expression.Literal.build loc (Expression.Literal.BigInt (Some (Int64.of_int i))) (string_of_int i) in
+            (* generate expr.slice(i) *)
+            let slide_id, slice_decl = createVariableDeclaration None loc in 
+            let slice = Identifier.to_expression (Identifier.build loc "slice") in 
+            let member = Statement.AssignMember.build loc slide_id expr slice in 
+            
+            (* simplify generated code *)
+            let is_id, id = is_identifier argument in
+            if not is_id then 
+              let id, decl = createVariableDeclaration None loc in 
+              let call = Statement.AssignFunCall.build loc id (Identifier.to_expression slide_id) [index] in 
+              let stmts, ids = normalize_pattern (Identifier.to_expression id) argument op in 
+
+              slice_decl @ [member] @ decl @ [call] @ stmts, ids
+            else 
+              let call = Statement.AssignFunCall.build loc (Option.get id) (Identifier.to_expression slide_id) [index] in 
+              slice_decl @ [member] @ [call], Option.to_list id
+
       ) elements) in
       List.flatten assigns, List.flatten ids
 
