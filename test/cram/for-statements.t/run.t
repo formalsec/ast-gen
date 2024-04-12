@@ -1,25 +1,46 @@
   $ dune exec ast_gen -f input-code-1.js
-  ast_gen: internal error, uncaught exception:
-           Failure("Unknown statement type to normalize (object on (3, 0) to (4, 21))")
-           
-  [125]
+  let src;
+  src = [1, 
+        2, 
+        3];
+  let dest;
+  dest = [];
+  for (var p in src) {
+     x = src.p;
+     y = dest.p;
+  }
+  
   $ dune exec ast_gen -f input-code-2.js
-  ast_gen: internal error, uncaught exception:
-           Failure("Unknown statement type to normalize (object on (1, 0) to (2, 21))")
-           
-  [125]
+  for (const v1 in src) {
+     p = v1;
+     x = src.p;
+     y = dest.p;
+  }
+  
   $ dune exec ast_gen -f input-code-3.js
-  ast_gen: internal error, uncaught exception:
-           Failure("Unknown statement type to normalize (object on (2, 4) to (3, 25))")
-           
-  [125]
+  const extend;
+  extend = function (dest, src) {
+     for (var p in src) {
+        x = src.p;
+        y = dest.p;
+     }
+  }
+  
   $ dune exec ast_gen -f input-code-4.js
-  ast_gen: internal error, uncaught exception:
-           Failure("Unknown statement type to normalize (object on (3, 0) to (5, 1))")
-           
-  [125]
+  let iterable;
+  iterable = [10, 
+        20, 
+        30];
+  for (let value of iterable) {
+     const v2;
+     v2 = console.log;
+     const v3;
+     v3 = v2(value);
+     v3;
+  }
+  
   $ dune exec ast_gen -f input-code-5.js
   ast_gen: internal error, uncaught exception:
-           Failure("Unknown statement type to normalize (object on (1, 0) to (3, 1))")
+           Failure("hd")
            
   [125]

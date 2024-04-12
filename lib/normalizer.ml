@@ -21,6 +21,10 @@ type name_or_id =
   | Name of string option
   | Id   of m Identifier.t
 
+type ('M, 'T) generic_left =
+  | LeftDeclaration of ('M * ('M, 'T) Ast.Statement.VariableDeclaration.t)
+  | LeftPattern of ('M, 'T) Ast.Pattern.t
+
 
 (* --------- C O N T E X T --------- *)
 type context = { 
@@ -105,9 +109,30 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
     
     
     (* --------- F O R - I N --------- *)
-    (* TODO *)
+    | loc, Ast.Statement.ForIn {left; right; body; each; _} -> 
+      let left = match left with
+        | LeftDeclaration decl -> LeftDeclaration decl
+        | LeftPattern pat -> LeftPattern pat
+      in
+      let left_stmts, left_decl = normalize_for_left left in 
+      let right_stmts, right_expr = ne right in 
+      let body_stmts = ns body in
+      
+      let for_stmt = Statement.ForIn.build (loc_f loc) left_decl (Option.get right_expr) (left_stmts @ body_stmts) each in 
+      right_stmts @ [for_stmt]
+
     (* --------- F O R - O F --------- *)
-    (* TODO *)
+    | loc, Ast.Statement.ForOf {left; right; body; await; _} -> 
+      let left = match left with
+        | LeftDeclaration decl -> LeftDeclaration decl
+        | LeftPattern pat -> LeftPattern pat
+      in
+      let left_stmts, left_decl = normalize_for_left left in 
+      let right_stmts, right_expr = ne right in 
+      let body_stmts = ns body in
+      
+      let for_stmt = Statement.ForOf.build (loc_f loc) left_decl (Option.get right_expr) (left_stmts @ body_stmts) await in 
+      right_stmts @ [for_stmt]
 
     (* --------- S W I T C H --------- *)
     | loc, Ast.Statement.Switch  { discriminant; cases; _ } -> 
@@ -454,13 +479,6 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let loc_info = Loc.debug_to_string loc in
     failwith ("Unknown expression type to normalize (object on " ^ loc_info ^ ")")
 
-
-(* TODO : make this function unused and remove it *)
-and normalize_pattern_aux (pattern : ('M, 'T) Ast.Pattern.t) : m Identifier.t =
-  match pattern with
-    | _, Ast.Pattern.Identifier {name; _} -> convert_identifier name
-    | _ -> failwith "pattern not implemented"
-
 and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignment.t option) (right : ('M, 'T) Ast.Expression.t) : norm_stmt_t * m Identifier.t list = 
   let ne = normalize_expression in
   let is_id, id = is_identifier left in  
@@ -551,8 +569,25 @@ and to_object_key (key : ('M, 'T) Ast.Pattern.Object.Property.key) : ('M, 'T) As
     | Identifier id     -> Identifier id
     | Computed comp     -> Computed comp
 
+and to_var_decl (stmt : m Statement.t) : m Statement.VarDecl.t =
+  match stmt with
+    | _, Statement.VarDecl decl -> decl
+    | _ -> failwith "tried to conver statement to variable declaration but it isn't possible"
+
 and normalize_alternate (_, {Ast.Statement.If.Alternate.body; _}) : norm_stmt_t = 
   normalize_statement empty_context body
+
+and normalize_for_left (left : ('M, 'T) generic_left) : norm_stmt_t * m Statement.VarDecl.t = 
+  let ns = normalize_statement empty_context in 
+  match left with
+    | LeftDeclaration (loc, decl) -> 
+      let decl_stmts = ns (loc, Ast.Statement.VariableDeclaration decl) in 
+      [], to_var_decl (List.hd decl_stmts)
+    
+    | LeftPattern pattern -> 
+      let id, decl_stmts = createVariableDeclaration None Location.empty in
+      let stmts, _ = normalize_pattern (Identifier.to_expression id) pattern None in 
+      stmts, to_var_decl (List.hd decl_stmts)
 
 and normalize_case (loc, {Ast.Statement.Switch.Case.test; consequent; _}) : m Statement.Switch.Case.t * norm_stmt_t = 
   let ns = normalize_statement empty_context in
@@ -600,7 +635,6 @@ and normalize_function (context : context) (loc : Loc.t) (id : (Loc.t, Loc.t) As
     (List.flatten params_stmts @ decl @ [assign], Some (Identifier.to_expression id))
   else
     (List.flatten params_stmts @ [assign], Some (Identifier.to_expression id)) 
-
 
 and normalize_param (loc, {Ast.Function.Param.argument; default}) : m Statement.t list * m Statement.AssignFunction.Param.t  = 
   let is_id, id = is_identifier argument in 

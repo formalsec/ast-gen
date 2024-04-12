@@ -200,9 +200,10 @@ and Statement : sig
       left : 'M VarDecl.t;
       right : 'M Expression.t;
       body : 'M Statement.t list;
+      each : bool
     }
 
-    val build : 'M -> 'M VarDecl.t -> 'M Expression.t -> 'M Statement.t list -> 'M Statement.t
+    val build : 'M -> 'M VarDecl.t -> 'M Expression.t -> 'M Statement.t list -> bool -> 'M Statement.t
   end
 
   module ForOf : sig
@@ -509,13 +510,15 @@ end = struct
       left : 'M VarDecl.t;
       right : 'M Expression.t;
       body : 'M Statement.t list;
+      each : bool
     }
 
-    let build (metadata : 'M) (left' : 'M VarDecl.t) (right' : 'M Expression.t) (body' : 'M Statement.t list) : 'M Statement.t =
+    let build (metadata : 'M) (left' : 'M VarDecl.t) (right' : 'M Expression.t) (body' : 'M Statement.t list) (each' : bool): 'M Statement.t =
       let for_info = Statement.ForIn {
         left = left';
         right = right';
-        body = body'
+        body = body';
+        each = each'
       } in
       (metadata, for_info)
   end

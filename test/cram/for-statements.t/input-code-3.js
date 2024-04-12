@@ -1,4 +1,6 @@
 function extend(dest, src) {
-    for (var p in src)
-        dest[p] = src[p];
+    for (var p in src) {
+        x = src[p];
+        y = dest[p];
+    }
 }

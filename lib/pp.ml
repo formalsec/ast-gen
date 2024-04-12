@@ -34,7 +34,7 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let body' = print_js_stmts body new_identation in 
       identation_str ^ "while (" ^ test' ^ ") {\n" ^ body' ^ identation_str ^ "}\n"
 
-    | _, ForIn {left; right; body} ->
+    | _, ForIn {left; right; body; _} ->
       let left' = print_js_decl left in 
       let right' = print_js_expr right in 
       let new_identation = identation + spaces_per_identation in 
