@@ -159,11 +159,16 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
 
       let assign_stmts, ids = List.split (List.map 
         (fun (_, {Ast.Statement.VariableDeclaration.Declarator.id; init; _}) -> 
-          map_default (normalize_assignment id) ([], []) init
+          (* get id name into ids list if the init expression
+          is not specified (e.g.: var x;)*)
+          let is_id, _id  = is_identifier id in 
+          let ids = if is_id then Option.to_list _id else [] in 
+
+          map_default (normalize_assignment id) ([], ids) init
         ) declarations) 
       in 
-      let decls = List.map (fun id -> snd (createVariableDeclaration ~kind:kind' ~objId:(Id id) None (loc_f loc))) (List.flatten ids) in 
 
+      let decls = List.map (fun id -> snd (createVariableDeclaration ~kind:kind' ~objId:(Id id) None (loc_f loc))) (List.flatten ids) in 
       List.flatten decls @ List.flatten assign_stmts
     
     (* --------- R E T U R N --------- *)
@@ -542,7 +547,7 @@ and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Patt
       List.flatten assigns, List.flatten ids
     | _ -> failwith "no other patterns were implemented yet"
 
-and is_identifier (pattern : ('M, 'T) Ast.Pattern.t) =
+and is_identifier (pattern : ('M, 'T) Ast.Pattern.t) : bool * m Identifier.t option =
   match pattern with
   | _, Identifier {name; _} -> true,  Some (convert_identifier name)
   | _                       -> false, None
@@ -684,7 +689,6 @@ and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Stateme
     | Name objId -> map_default (Identifier.build loc) (Identifier.build_random loc) objId
     | Id objId   -> objId 
   in 
-  let kind = if (Option.is_none obj && kind = _const) then _let else kind in 
 
   let decl = Statement.VarDecl.build loc kind id in 
   let assign = Option.map (Statement.AssignSimple.build loc None id) obj in 

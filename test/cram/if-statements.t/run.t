@@ -26,14 +26,15 @@
   const v1;
   v1 = x === y;
   if (v1) {
-     let v2;
+     const v2;
      v2 = alert("They are the same!");
      v2;
   }
   
   $ dune exec ast_gen -f input-code-4.js
-  let x;
+  const x;
   x = 1;
+  let y;
   const v1;
   v1 = x > 0;
   if (v1) {

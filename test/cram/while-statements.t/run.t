@@ -47,7 +47,7 @@
   const v1;
   v1 = i < 10;
   while (v1) {
-     let v3;
+     const v3;
      v3 = alert(i);
      v3;
      const v2;
@@ -60,7 +60,7 @@
   const v1;
   v1 = i < 10;
   while (v1) {
-     let v3;
+     const v3;
      v3 = alert(i);
      v3;
      const v2;

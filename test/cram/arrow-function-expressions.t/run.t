@@ -24,15 +24,15 @@
            
   [125]
   $ dune exec ast_gen -f input-code-4.js
-  let a;
-  let v1;
+  const a;
+  const v1;
   v1 = [0, 
         1, 
         2, 
         3];
-  let v2;
+  const v2;
   v2 = v1.find;
-  let v3;
+  const v3;
   v3 = function (_f) {
      const v4;
      v4 = _f == 1;
@@ -41,15 +41,15 @@
   a = v2(v3);
   
   $ dune exec ast_gen -f input-code-5.js
-  let a;
-  let v1;
+  const a;
+  const v1;
   v1 = [0, 
         1, 
         2, 
         3];
-  let v2;
+  const v2;
   v2 = v1.find;
-  let v3;
+  const v3;
   v3 = function (_f) {
      const v4;
      v4 = _f == 1;

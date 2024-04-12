@@ -28,9 +28,9 @@
   v2;
   
   $ dune exec ast_gen -f input-code-5.js
-  let v1;
+  const v1;
   v1 = x.f;
-  let v2;
+  const v2;
   v2 = x.g;
   const v3;
   v3 = v1 && v2;

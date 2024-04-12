@@ -12,6 +12,6 @@
   x = y + z;
   
   $ dune exec ast_gen -f input-code-4.js
-  let x;
+  const x;
   x = y + z;
   

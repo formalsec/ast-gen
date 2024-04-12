@@ -13,6 +13,7 @@
   y = 3;
   
   $ dune exec ast_gen -f input-code-4.js
+  var x;
   var y;
   y = x + 1;
   

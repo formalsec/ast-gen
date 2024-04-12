@@ -5,8 +5,8 @@
   y = x.p;
   
   $ dune exec ast_gen -f input-code-2.js
-  let y;
-  let v1;
+  const y;
+  const v1;
   v1 = f();
   y = x.v1;
   
