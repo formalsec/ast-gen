@@ -1,5 +1,7 @@
 (lang dune 3.12)
 
+(cram enable)
+
 (name ast_gen)
 
 (generate_opam_files true)

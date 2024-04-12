@@ -18,7 +18,7 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
 
       let new_identation = identation + spaces_per_identation in
       let consequent' = print_js_stmts consequent new_identation in 
-      let alternate' = map_default (fun alternate -> "else {\n" ^ (print_js_stmts alternate new_identation) ^ identation_str ^ "}\n") ";\n" alternate  in
+      let alternate' = map_default (fun alternate -> " else {\n" ^ (print_js_stmts alternate new_identation) ^ identation_str ^ "}\n") "\n" alternate  in
 
       identation_str ^ "if (" ^ test' ^ ") {\n" ^ consequent' ^ identation_str ^ "}" ^ alternate'
 

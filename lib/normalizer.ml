@@ -152,13 +152,19 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
 
     (* --------- V A R I A B L E   D E C L A R A T I O N --------- *)
     (* TODO *)
-    | _, Ast.Statement.VariableDeclaration {kind; declarations; _} ->
-      let _ : Statement.VarDecl.kind = match kind with 
+    | loc, Ast.Statement.VariableDeclaration {kind; declarations; _} ->
+      let kind' : Statement.VarDecl.kind = match kind with 
         | Var -> _var  | Let -> _let  | Const -> _const 
       in
 
-      let assign_stmts, _ = List.split (List.map (fun (_, {Ast.Statement.VariableDeclaration.Declarator.id; init; _}) -> map_default (normalize_assignment id) ([], None) init) declarations) in 
-      List.flatten assign_stmts
+      let assign_stmts, ids = List.split (List.map 
+        (fun (_, {Ast.Statement.VariableDeclaration.Declarator.id; init; _}) -> 
+          map_default (normalize_assignment id) ([], []) init
+        ) declarations) 
+      in 
+      let decls = List.map (fun id -> snd (createVariableDeclaration ~kind:kind' ~objId:(Id id) None (loc_f loc))) (List.flatten ids) in 
+
+      List.flatten decls @ List.flatten assign_stmts
     
     (* --------- R E T U R N --------- *)
     | loc, Ast.Statement.Return {argument; _} -> 
@@ -459,52 +465,79 @@ and normalize_pattern_aux (pattern : ('M, 'T) Ast.Pattern.t) : m Identifier.t =
     | _, Ast.Pattern.Identifier {name; _} -> convert_identifier name
     | _ -> failwith "pattern not implemented"
 
-and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (right : ('M, 'T) Ast.Expression.t) : norm_expr_t = 
-  let ne = normalize_expression empty_context in 
-  let init_stmts, init_expr = ne right in
-  let pat_stmts = normalize_pattern (Option.get init_expr) left in 
+and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (right : ('M, 'T) Ast.Expression.t) : norm_stmt_t * m Identifier.t list = 
+  let ne = normalize_expression in
+  let is_id, id = is_identifier left in  
+  let context = if is_id then {identifier = id; is_assignment = true} else empty_context in
+  
+  let init_stmts, init_expr = ne context right in
+  let pat_stmts, ids = normalize_pattern (Option.get init_expr) left in 
 
-  init_stmts @ pat_stmts, init_expr
-
-and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Pattern.t) : norm_stmt_t =
+  init_stmts @ pat_stmts, ids
+  
+and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Pattern.t) : norm_stmt_t * m Identifier.t list =
   match pattern with 
     | loc, Identifier {name; _} -> 
       let id = convert_identifier name in 
       let assign = Statement.AssignSimple.build (loc_f loc) None id expr in 
-      [assign]
+      [assign], [id]
     
-    | _, Array {elements; _} -> List.flatten (List.mapi (
+    | _, Array {elements; _} -> let assigns, ids = List.split (List.mapi (
       fun i elem ->
         match elem with 
           | Ast.Pattern.Array.Element (loc, {argument; _}) ->
             let loc = loc_f loc in 
             let index = Expression.Literal.build loc (Expression.Literal.BigInt (Some (Int64.of_int i))) (string_of_int i) in
-            let id, decl = createVariableDeclaration None loc in 
-            let assign = Statement.AssignMember.build loc id expr index in 
             
-            decl @ [assign] @ normalize_pattern (Identifier.to_expression id) argument
+            (* simplify generated code *)
+            let is_id, id = is_identifier argument in
+            if not is_id then 
+              let id, decl = createVariableDeclaration None loc in 
+              let assign = Statement.AssignMember.build loc id expr index in 
+              
+              let stmts, ids = normalize_pattern (Identifier.to_expression id) argument in 
+              decl @ [assign] @ stmts, ids
+            else 
+              let assign = Statement.AssignMember.build loc (Option.get id) expr index in 
+              [assign], Option.to_list id
 
-          | Hole _ -> [] (* just ignore *)
+          | Hole _ -> [], [] (* just ignore *)
 
             (* TODO : maybe convert expression in to oldArray.slice(n, n+k); *)
           | RestElement _ -> failwith "restelement not implemented"
-      ) elements)
+      ) elements) in
+      List.flatten assigns, List.flatten ids
+
     
-    | _, Object {properties; _ } -> List.flatten (List.map (
+    | _, Object {properties; _ } -> let assigns, ids = List.split (List.map (
       fun property -> match property with 
         | Ast.Pattern.Object.Property (loc, {key; pattern; _}) -> 
           let loc = loc_f loc in 
           let obj_key = to_object_key key in 
           let _, key_expr = normalize_property_key obj_key in 
-          let id, decl = createVariableDeclaration None loc in 
-          let assign = Statement.AssignMember.build loc id expr (Option.get key_expr) in 
 
-          decl @ [assign] @ normalize_pattern (Identifier.to_expression id) pattern
+          (* simplify generated code *)
+          let is_id, id = is_identifier pattern in
+          if not is_id then
+            let id, decl = createVariableDeclaration None loc in 
+            let assign = Statement.AssignMember.build loc id expr (Option.get key_expr) in 
+            
+            let stmts, ids = normalize_pattern (Identifier.to_expression id) pattern in 
+            decl @ [assign] @ stmts, ids
+          else
+            let assign = Statement.AssignMember.build loc (Option.get id) expr (Option.get key_expr) in 
+            [assign], Option.to_list id
 
         (* TODO : restelement not implemented *)
         | RestElement _ -> failwith "restelement not implemented"
-      ) properties)
+      ) properties) in 
+      List.flatten assigns, List.flatten ids
     | _ -> failwith "no other patterns were implemented yet"
+
+and is_identifier (pattern : ('M, 'T) Ast.Pattern.t) =
+  match pattern with
+  | _, Identifier {name; _} -> true,  Some (convert_identifier name)
+  | _                       -> false, None
 
 and to_object_key (key : ('M, 'T) Ast.Pattern.Object.Property.key) : ('M, 'T) Ast.Expression.Object.Property.key = 
   match key with
@@ -528,7 +561,8 @@ and normalize_case (loc, {Ast.Statement.Switch.Case.test; consequent; _}) : m St
   (case, test_stmts)
 
 and normalize_catch (loc, { Ast.Statement.Try.CatchClause.param; body; _}) : norm_stmt_t * m Statement.Catch.t option = 
-    let param' = Option.map normalize_pattern_aux param in 
+    let is_id, id = map_default is_identifier (false, None) param in
+    let param' = if is_id then id else failwith "param is not an identifier" in 
     let body_stmts = normalize_statement empty_context (block_to_statement body) in 
 
     let catch = Statement.Catch.build (loc_f loc) param' body_stmts in
@@ -565,7 +599,9 @@ and normalize_function (context : context) (loc : Loc.t) (id : (Loc.t, Loc.t) As
 
 
 and normalize_param (loc, {Ast.Function.Param.argument; default}) : m Statement.t list * m Statement.AssignFunction.Param.t  = 
-  let argument' = normalize_pattern_aux argument in
+  let is_id, id = is_identifier argument in 
+  let argument' = if is_id then Option.get id else failwith "argument is not an identifier" in 
+  
   let def_stmts, def_expr = map_default (normalize_expression empty_context) ([], None) default in
   let param = Statement.AssignFunction.Param.build (loc_f loc) argument' def_expr in
   (def_stmts, param)
