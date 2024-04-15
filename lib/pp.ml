@@ -243,6 +243,14 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
   | _, Yield {argument; _ } ->
     let argument' = map_default ((^) " " << print_js_expr) "" argument in
     "yield" ^ argument'
+  
+  | _, Conditional {test; consequent; alternate} ->
+    let test' = print_js_expr test in 
+    let consequent' = print_js_expr consequent in 
+    let alternate' = print_js_expr alternate in 
+    
+    "(" ^ test' ^ ") ? " ^ consequent' ^ " : " ^ alternate'
+    
 
 and print_js_stmts (stmts : m Statement.t list) (identation : int): string =
   String.concat "" (List.map (flip print_js_stmt identation) stmts)

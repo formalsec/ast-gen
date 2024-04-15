@@ -373,12 +373,22 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let tagged_template = Expression.TaggedTemplate.build (loc_f loc) (Option.get tag_expr) qsi_expr in 
     tag_stmts @ qsi_stmts, Some tagged_template 
 
-    (* --------- Y I E L D --------- *)
-    | loc, Ast.Expression.Yield {argument; delegate; _} -> 
-      let arg_stmts, arg_expr = map_default ne ([], None) argument in 
-      let yield = Expression.Yield.build (loc_f loc) arg_expr delegate in 
-      
-      arg_stmts, Some yield
+  (* --------- Y I E L D --------- *)
+  | loc, Ast.Expression.Yield {argument; delegate; _} -> 
+    let arg_stmts, arg_expr = map_default ne ([], None) argument in 
+    let yield = Expression.Yield.build (loc_f loc) arg_expr delegate in 
+    
+    arg_stmts, Some yield
+
+  (* --------- C O N D I T I O N A L --------- *)
+  | loc, Ast.Expression.Conditional {test; consequent; alternate; _} ->
+    let test_stmts, test_expr = ne test in
+    let cnsq_stmts, cnsq_expr = ne consequent in 
+    let altr_stmts, altr_expr = ne alternate in 
+
+    let conditional = Expression.Conditional.build (loc_f loc) (Option.get test_expr) (Option.get cnsq_expr) (Option.get altr_expr) in 
+
+    test_stmts @ cnsq_stmts @ altr_stmts, Some conditional
   
   (* --------- A S S I G N   S I M P L E --------- *)
   | _, Ast.Expression.Assignment {operator; left; right; _} ->

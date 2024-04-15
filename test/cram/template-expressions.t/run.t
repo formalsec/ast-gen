@@ -19,7 +19,28 @@
   temp = `head template ${v1} end tail`;
   
   $ dune exec ast_gen -f input-code-5.js
-  ast_gen: internal error, uncaught exception:
-           Failure("Unknown expression type to normalize (object on (2, 17) to (2, 58))")
-           
-  [125]
+  const tag;
+  tag = function (strings, personExp, ageExp) {
+     let ageStr;
+     const v2;
+     v2 = ageExp > 99;
+     ageStr = (v2) ? 'centenarian' : 'youngster';
+     const v3;
+     v3 = strings[0];
+     const v4;
+     v4 = strings[1];
+     const v5;
+     v5 = strings[2];
+     return `${v3}${personExp}${v4}${ageStr}${v5}`;
+  }
+  const firstName;
+  firstName = 'Mike';
+  const lastName;
+  lastName = 'Wheeler';
+  const age;
+  age = 28;
+  const output;
+  const v6;
+  v6 = firstName + lastName;
+  output = tag`${v6} is a ${age}.`;
+  

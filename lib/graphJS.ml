@@ -946,6 +946,16 @@ and Expression : sig
     val build : 'M -> 'M Expression.t option -> bool -> 'M Expression.t
   end
 
+  module Conditional : sig 
+    type 'M t = {
+      test : 'M Expression.t;
+      consequent : 'M Expression.t;
+      alternate : 'M Expression.t; 
+    }
+
+    val build : 'M -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
+  end
+
   val to_statement : 'M Expression.t -> 'M Statement.t
 
   type 'M t' = 
@@ -961,6 +971,7 @@ and Expression : sig
     | TaggedTemplate  of 'M TaggedTemplate.t
     | Sequence        of 'M Sequence.t
     | Yield           of 'M Yield.t
+    | Conditional     of 'M Conditional.t
 
 
   type 'M t = 'M * 'M t'
@@ -1135,6 +1146,22 @@ end = struct
       (metadata, yield_info)
   end
 
+  module Conditional = struct 
+    type 'M t = {
+      test : 'M Expression.t;
+      consequent : 'M Expression.t;
+      alternate : 'M Expression.t; 
+    }
+
+    let build (metadata : 'M) (test' : 'M Expression.t) (consequent' : 'M Expression.t) (alternate' : 'M Expression.t) : 'M Expression.t =
+      let cond_info = Expression.Conditional {
+        test = test';
+        consequent = consequent';
+        alternate = alternate'
+      } in
+      (metadata, cond_info)
+  end
+
   let to_statement ((loc, _) as expr : 'M Expression.t) : 'M Statement.t = 
     (loc, Statement.Expression expr)
 
@@ -1151,6 +1178,7 @@ end = struct
     | TaggedTemplate  of 'M TaggedTemplate.t
     | Sequence        of 'M Sequence.t
     | Yield           of 'M Yield.t
+    | Conditional     of 'M Conditional.t
 
 
   type 'M t = 'M * 'M t'

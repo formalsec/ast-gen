@@ -1,20 +1,32 @@
   $ dune exec ast_gen -f input-code-1.js
-  ast_gen: internal error, uncaught exception:
-           Failure("Unknown expression type to normalize (object on (1, 13) to (1, 37))")
-           
-  [125]
+  let status;
+  status = (true) ? 'adult' : 'minor';
+  
   $ dune exec ast_gen -f input-code-2.js
-  ast_gen: internal error, uncaught exception:
-           Failure("Unknown expression type to normalize (object on (2, 13) to (2, 40))")
-           
-  [125]
+  let x;
+  x = 6;
+  let status;
+  const v1;
+  v1 = x === 6;
+  const v2;
+  v2 = 1 + 2;
+  const v3;
+  v3 = 1 + 2;
+  const v4;
+  v4 = v3 + 3;
+  status = (v1) ? v2 : v4;
+  
   $ dune exec ast_gen -f input-code-3.js
-  ast_gen: internal error, uncaught exception:
-           Failure("Unknown expression type to normalize (object on (2, 4) to (2, 20))")
-           
-  [125]
+  let x;
+  x = 0;
+  const v1;
+  v1 = x === 0;
+  const v2;
+  v2 = -1;
+  x = (v1) ? v2 : 1;
+  
   $ dune exec ast_gen -f input-code-4.js
-  ast_gen: internal error, uncaught exception:
-           Failure("Unknown expression type to normalize (object on (2, 18) to (2, 127))")
-           
-  [125]
+  const v1;
+  v1 = format('Wmic reported the following error: %s.', stderr);
+  stderr = error + (stderr) ? v1 : 'Wmic reported no errors (stderr empty).';
+  
