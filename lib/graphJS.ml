@@ -97,7 +97,8 @@ end
 
 module rec Identifier : sig
   type t' = {
-    name : string
+    name : string;
+    is_generated : bool
   }
 
   type 'M t = 'M * t'
@@ -109,7 +110,8 @@ module rec Identifier : sig
 
 end = struct
   type t' = {
-    name : string
+    name : string;
+    is_generated : bool
   }
 
   type 'M t = 'M * t'
@@ -118,7 +120,8 @@ end = struct
 
   let build (metadata : 'M) (name' : string) : 'M t =
     let identifier_info = {
-      name = name'
+      name = name';
+      is_generated = false
     } in
     (metadata, identifier_info)
   
@@ -127,7 +130,8 @@ end = struct
     count := !count + 1;
 
     let identifier_info = {
-      name = name'
+      name = name';
+      is_generated = true
     } in
     (metadata, identifier_info)
 
@@ -136,7 +140,7 @@ end = struct
   
   let from_expression ((loc, expr) : 'M Expression.t) : 'M t =
     match expr with
-      | Expression.Identifier {name} -> build loc name
+      | Expression.Identifier {name; _} -> build loc name
       | _ -> failwith "attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier."
   end
 
@@ -288,6 +292,26 @@ and Statement : sig
     val build : 'M -> 'M Statement.t
   end
 
+  (* ---------- imports // exports ----------  *)
+  module ExportDefaultDecl : sig 
+    type 'M t = {
+      declaration : 'M Expression.t
+    }
+
+    val build : 'M -> 'M Expression.t -> 'M Statement.t
+  end
+
+  module ExportNamedDecl : sig 
+    type 'M t = {
+      local : 'M Identifier.t option;
+      exported : 'M Identifier.t option;
+      all : bool;
+      source : string option
+    }
+
+    val build : 'M -> 'M Identifier.t option -> 'M Identifier.t option -> bool -> string option -> 'M Statement.t
+  end
+
   (* --------- assignment statements --------- *)
   module AssignSimple : sig
     type 'M t = {
@@ -405,6 +429,10 @@ and Statement : sig
     | Debugger of    Debugger.t
     
     | Expression of 'M Expression.t
+
+    (* ----- imports // exports ------ *)
+    | ExportDefaultDecl of 'M ExportDefaultDecl.t
+    | ExportNamedDecl   of 'M ExportNamedDecl.t
     
     (* ---- assignment statements ---- *)
     | AssignSimple   of 'M AssignSimple.t
@@ -645,6 +673,38 @@ end = struct
       (metadata, Statement.Debugger ())
   end
 
+  (* ---------- imports // exports ----------  *)
+  module ExportDefaultDecl = struct 
+    type 'M t = {
+      declaration : 'M Expression.t
+    }
+
+    let build (metadata : 'M) (declaration' : 'M Expression.t) : 'M Statement.t =
+      let export_info = Statement.ExportDefaultDecl {
+        declaration = declaration'; 
+      } in 
+      (metadata, export_info)
+  end
+
+  module ExportNamedDecl = struct
+    type 'M t = {
+      local : 'M Identifier.t option;
+      exported : 'M Identifier.t option;
+      all : bool;
+      source : string option
+    }
+
+    let build (metadata : 'M) (local' : 'M Identifier.t option) (exported' : 'M Identifier.t option) (all' : bool) (source' : string option) : 'M Statement.t = 
+      let export_info = Statement.ExportNamedDecl {
+        local = local';
+        exported = exported';
+        all = all';
+        source = source';
+      } in 
+      (metadata, export_info)
+
+  end
+
   (* --------- assignment statements --------- *)
   module AssignSimple = struct
     type 'M t = {
@@ -818,6 +878,10 @@ end = struct
     
     | Expression of 'M Expression.t
 
+    (* ----- imports // exports ------ *)
+    | ExportDefaultDecl of 'M ExportDefaultDecl.t
+    | ExportNamedDecl   of 'M ExportNamedDecl.t
+
     (* ---- assignment statements ---- *)
     | AssignSimple   of 'M AssignSimple.t
     | AssignArray    of 'M AssignArray.t
@@ -961,17 +1025,19 @@ and Expression : sig
   type 'M t' = 
     | Literal         of    Literal.t 
     | Identifier      of    Identifier.t' 
+    | This            of    This.t
+    | Super           of    Super.t
     | Logical         of 'M Logical.t
     | Binary          of 'M Binary.t
     | Unary           of 'M Unary.t
     | Update          of 'M Update.t
-    | This            of    This.t
-    | Super           of    Super.t
-    | TemplateLiteral of 'M TemplateLiteral.t 
-    | TaggedTemplate  of 'M TaggedTemplate.t
-    | Sequence        of 'M Sequence.t
+    
     | Yield           of 'M Yield.t
+    | Sequence        of 'M Sequence.t
     | Conditional     of 'M Conditional.t
+
+    | TemplateLiteral of 'M TemplateLiteral.t
+    | TaggedTemplate  of 'M TaggedTemplate.t
 
 
   type 'M t = 'M * 'M t'
@@ -1168,17 +1234,20 @@ end = struct
   type 'M t' = 
     | Literal         of    Literal.t 
     | Identifier      of    Identifier.t' 
+    | This            of    This.t
+    | Super           of    Super.t
     | Logical         of 'M Logical.t
     | Binary          of 'M Binary.t
     | Unary           of 'M Unary.t
     | Update          of 'M Update.t
-    | This            of    This.t
-    | Super           of    Super.t
+    
+    | Yield           of 'M Yield.t
+    | Sequence        of 'M Sequence.t
+    | Conditional     of 'M Conditional.t
+
     | TemplateLiteral of 'M TemplateLiteral.t
     | TaggedTemplate  of 'M TaggedTemplate.t
-    | Sequence        of 'M Sequence.t
-    | Yield           of 'M Yield.t
-    | Conditional     of 'M Conditional.t
+  
 
 
   type 'M t = 'M * 'M t'

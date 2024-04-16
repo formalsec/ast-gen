@@ -106,7 +106,18 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
 
     | _, Expression expr -> 
       identation_str ^ print_js_expr expr ^ ";\n" 
+    
+    | _, ExportDefaultDecl {declaration} -> 
+      let declaration' = print_js_expr declaration in 
+      identation_str ^ "export default " ^ declaration' ^ ";\n" 
+    
+    | _, ExportNamedDecl {local; exported; all; source} ->
+      let exported' = map_default ((^) " as " << print_js_expr << Identifier.to_expression) "" exported in
+      let source' = map_default (fun source -> " from \"" ^ source ^ "\"") "" source in 
 
+      let local' = if all then "*" else print_js_expr (Identifier.to_expression (Option.get local)) in 
+      identation_str ^ "export " ^ local' ^ exported' ^ source' ^ ";\n" 
+      
     | _, AssignSimple {operator; left; right} -> 
       let operator' = match operator with 
         | Some PlusAssign -> " += "

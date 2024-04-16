@@ -226,9 +226,27 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       let debugger_stmt = Statement.Debugger.build (loc_f loc) in 
       
       [debugger_stmt]
+
+    (* --------- E X P O R T   D E F A U L T   D E C L A R A T I O N --------- *)
+    | loc, Ast.Statement.ExportDefaultDeclaration {declaration; _} ->
+      let decl_stmts, decl_expr = normalize_default_declaration declaration in 
+
+      let export_stmt = Statement.ExportDefaultDecl.build (loc_f loc) (Option.get decl_expr) in 
+      decl_stmts @ [export_stmt]
+
+    (* --------- E X P O R T   N A M E D   D E C L A R A T I O N --------- *)
+    | loc, ExportNamedDeclaration {declaration; specifiers; source; _ } -> 
+      let loc = loc_f loc in 
+      let source' = Option.map get_string source in 
+
+      let decl_stmts = map_default (normalize_named_declaration loc source') [] declaration in 
+      let spcf_stmts = map_default (normalize_specifiers loc source') [] specifiers in 
+
+      decl_stmts @ spcf_stmts
     
     (* --------- A S S I G N   F U N C T I O N ---------*)
     | loc, Ast.Statement.FunctionDeclaration {id; params; body; _} -> fst (normalize_function context loc id params body)
+
 
     (* --------- S T A T E M E N T   E X P R E S S I O N ---------*)
     | _, Ast.Statement.Expression {expression; _} -> 
@@ -605,6 +623,55 @@ and to_var_decl (stmt : m Statement.t) : m Statement.VarDecl.t =
 and normalize_alternate (_, {Ast.Statement.If.Alternate.body; _}) : norm_stmt_t = 
   normalize_statement empty_context body
 
+and normalize_default_declaration (declaration : ('M, 'T) Ast.Statement.ExportDefaultDeclaration.declaration) : norm_expr_t = 
+  match declaration with 
+    | Declaration stmt ->
+      let stmt' = normalize_statement empty_context stmt in 
+
+      (* find identifier that represents the exported 
+         statement (must be a function or a class) *)
+      let norm_stmt = List.hd (List.rev stmt') in 
+      let expr = match norm_stmt with 
+        | _, Statement.AssignFunction {left; _} -> Identifier.to_expression left
+        (* TODO : same for classes *)
+        | _ -> failwith "export statement was not of type function or class"
+      in
+      stmt', Some expr
+    
+    | Expression expr -> 
+      normalize_expression empty_context expr
+
+and normalize_named_declaration (loc : m) (source : string option) (declatation : ('M, 'T) Ast.Statement.t) : norm_stmt_t = 
+  let decl_stmts = normalize_statement empty_context declatation in 
+  (* convert all declarations into exports *)
+  let exports = List.filter_map (fun (_, stmt) -> 
+    match stmt with 
+    | Statement.VarDecl {id; _} ->
+      if not (id_is_generated id) then
+        let export = Statement.ExportNamedDecl.build loc (Some id) None false source  in 
+        Some export  
+      else 
+        None
+    | _ -> None 
+  ) decl_stmts in 
+
+  decl_stmts @ exports
+
+and normalize_specifiers (loc : m) (source : string option) (specifier : ('M, 'T) Ast.Statement.ExportNamedDeclaration.specifier ) : norm_stmt_t = 
+  match specifier with 
+    | ExportSpecifiers specifiers -> 
+      List.map (fun (_, {Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local; exported}) -> 
+        let local' = Some (convert_identifier local) in
+        let exported' = Option.map convert_identifier exported in 
+        Statement.ExportNamedDecl.build loc local' exported' false source
+      ) specifiers 
+    
+    (* ExportAllDeclaration case *)
+    | ExportBatchSpecifier (_, id) -> 
+      let exported' = Option.map convert_identifier id in
+      let export = Statement.ExportNamedDecl.build loc None exported' true source in
+      [export] 
+
 and normalize_for_left (left : ('M, 'T) generic_left) : norm_stmt_t * m Statement.VarDecl.t = 
   let ns = normalize_statement empty_context in 
   match left with
@@ -665,6 +732,7 @@ and normalize_function (context : context) (loc : Loc.t) (id : (Loc.t, Loc.t) As
     (List.flatten params_stmts @ [assign], Some (Identifier.to_expression id)) 
 
 and normalize_param (loc, {Ast.Function.Param.argument; default}) : m Statement.t list * m Statement.AssignFunction.Param.t  = 
+  (* TODO : param can be spread element or other patterns (maybe do like the normalize_for_left ) *)
   let is_id, id = is_identifier argument in 
   let argument' = if is_id then Option.get id else failwith "argument is not an identifier" in 
   
@@ -736,6 +804,10 @@ and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={
 
 and get_identifier (id : m Identifier.t option) (loc : m) : m Identifier.t = 
   map_default identity (Identifier.build_random loc) id
+
+and get_string ((_, {Ast.StringLiteral.value; _})) : string = value
+
+and id_is_generated ((_, {is_generated; _}) : m Identifier.t) : bool = is_generated
 
 and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Statement.VarDecl.kind = _const) (obj : m Expression.t option) (loc : m) : m Identifier.t * norm_stmt_t =
   let id = match objId with 
