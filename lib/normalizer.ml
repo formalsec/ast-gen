@@ -280,23 +280,28 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
   | loc, Ast.Expression.StringLiteral {value; raw; _} -> 
     let value' = Expression.Literal.String value in 
     let literal = Expression.Literal.build (loc_f loc) value' raw in 
-    ([], Some literal);
+    ([], Some literal)
 
   | loc, Ast.Expression.NumberLiteral {value; raw; _} -> 
     let value' = Expression.Literal.Number value in 
     let literal = Expression.Literal.build (loc_f loc) value' raw in 
-    ([], Some literal);
+    ([], Some literal)
 
   | loc, Ast.Expression.BigIntLiteral {value; raw; _} -> 
     let value = Expression.Literal.BigInt value in 
     let literal = Expression.Literal.build (loc_f loc) value raw in 
-    ([], Some literal);
+    ([], Some literal)
 
   | loc, Ast.Expression.BooleanLiteral {value; _} -> 
     let value' = Expression.Literal.Boolean value in 
     let raw = if value then "true" else "false" in 
     let literal = Expression.Literal.build (loc_f loc) value' raw in 
-    ([], Some literal);
+    ([], Some literal)
+
+  | loc, Ast.Expression.RegExpLiteral {pattern; flags; raw; _} ->
+    let value' = Expression.Literal.Regex {pattern = pattern; flags = flags} in 
+    let literal = Expression.Literal.build (loc_f loc) value' raw in 
+    ([], Some literal)
 
   | loc, Ast.Expression.NullLiteral _ -> 
     let value = Expression.Literal.Null () in

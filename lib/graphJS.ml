@@ -945,6 +945,7 @@ and Expression : sig
       | Number  of float
       | BigInt  of int64 option
       | Boolean of bool
+      | Regex   of { pattern: string; flags: string; }
       | Null    of unit
 
 
@@ -1102,6 +1103,7 @@ end = struct
       | Number  of float
       | BigInt  of int64 option
       | Boolean of bool
+      | Regex   of { pattern: string; flags: string; }
       | Null    of unit
 
     type t = {
