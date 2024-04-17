@@ -117,6 +117,18 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
 
       let local' = if all then "*" else print_js_expr (Identifier.to_expression (Option.get local)) in 
       identation_str ^ "export " ^ local' ^ exported' ^ source' ^ ";\n" 
+
+    | _, ImportDecl (Default {source; identifier}) ->
+      let identifier' = print_js_expr (Identifier.to_expression identifier) in  
+      identation_str ^ "import " ^ identifier' ^ " from \"" ^ source ^ "\";\n"
+
+    | _, ImportDecl (Specifier {source; local; remote; namespace}) -> 
+      let local' = map_default ((^ ) " as " << print_js_expr << Identifier.to_expression) "" local in
+      let remote' = if namespace then "*" else print_js_expr (Identifier.to_expression (Option.get remote)) in
+
+      let open_bracket = if namespace then "" else "{ " in 
+      let close_bracket = if namespace then "" else " }" in  
+      identation_str ^ "import " ^ open_bracket ^ remote' ^ local' ^ close_bracket ^ " from \"" ^ source ^ "\";\n"
       
     | _, AssignSimple {operator; left; right} -> 
       let operator' = match operator with 

@@ -235,14 +235,24 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       decl_stmts @ [export_stmt]
 
     (* --------- E X P O R T   N A M E D   D E C L A R A T I O N --------- *)
-    | loc, ExportNamedDeclaration {declaration; specifiers; source; _ } -> 
+    | loc, Ast.Statement.ExportNamedDeclaration {declaration; specifiers; source; _ } -> 
       let loc = loc_f loc in 
       let source' = Option.map get_string source in 
 
       let decl_stmts = map_default (normalize_named_declaration loc source') [] declaration in 
-      let spcf_stmts = map_default (normalize_specifiers loc source') [] specifiers in 
+      let spcf_stmts = map_default (normalize_exp_specifiers loc source') [] specifiers in 
 
       decl_stmts @ spcf_stmts
+
+    (* --------- I M P O R T   D E C L A R A T I O N --------- *)
+    | loc, Ast.Statement.ImportDeclaration {source; default; specifiers; _} -> 
+      let loc = loc_f loc in 
+      let source' = get_string source in 
+      let def_stmts = map_default (normalize_default loc source') [] default in 
+      let spf_stmts = map_default (normalize_imp_specifiers loc source') [] specifiers in 
+      
+      def_stmts @ spf_stmts
+      
     
     (* --------- A S S I G N   F U N C T I O N ---------*)
     | loc, Ast.Statement.FunctionDeclaration {id; params; body; _} -> fst (normalize_function context loc id params body)
@@ -657,7 +667,7 @@ and normalize_named_declaration (loc : m) (source : string option) (declatation 
 
   decl_stmts @ exports
 
-and normalize_specifiers (loc : m) (source : string option) (specifier : ('M, 'T) Ast.Statement.ExportNamedDeclaration.specifier ) : norm_stmt_t = 
+and normalize_exp_specifiers (loc : m) (source : string option) (specifier : ('M, 'T) Ast.Statement.ExportNamedDeclaration.specifier ) : norm_stmt_t = 
   match specifier with 
     | ExportSpecifiers specifiers -> 
       List.map (fun (_, {Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local; exported}) -> 
@@ -671,6 +681,26 @@ and normalize_specifiers (loc : m) (source : string option) (specifier : ('M, 'T
       let exported' = Option.map convert_identifier id in
       let export = Statement.ExportNamedDecl.build loc None exported' true source in
       [export] 
+
+and normalize_default (loc : m) (source : string) ({identifier; _} : ('M, 'T) Ast.Statement.ImportDeclaration.default_identifier) : norm_stmt_t = 
+  let identifier' = convert_identifier identifier in 
+  let import = Statement.ImportDecl.build_default loc source identifier' in 
+  
+  [import]
+
+and normalize_imp_specifiers (loc : m) (source : string) (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.specifier) : norm_stmt_t = 
+  match specifier with 
+    | ImportNamedSpecifiers specifiers -> 
+      List.map (fun {Ast.Statement.ImportDeclaration.local; remote; _} -> 
+        let local' = Option.map convert_identifier local in 
+        let remote' = Some (convert_identifier remote) in 
+        Statement.ImportDecl.build_specifier loc source local' remote' false 
+      ) specifiers
+       
+    | ImportNamespaceSpecifier (_, id) -> 
+      let local' = convert_identifier id in 
+      let import = Statement.ImportDecl.build_specifier loc source (Some local') None true in 
+      [import]
 
 and normalize_for_left (left : ('M, 'T) generic_left) : norm_stmt_t * m Statement.VarDecl.t = 
   let ns = normalize_statement empty_context in 

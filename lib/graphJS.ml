@@ -312,6 +312,20 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t option -> 'M Identifier.t option -> bool -> string option -> 'M Statement.t
   end
 
+  module ImportDecl : sig
+    type 'M t = 
+      | Default   of { source : string;
+                       identifier : 'M Identifier.t }
+
+      | Specifier of { source : string;
+                       local: 'M Identifier.t option;
+                       remote: 'M Identifier.t option;
+                       namespace : bool }
+
+    val build_default : 'M -> string -> 'M Identifier.t -> 'M Statement.t
+    val build_specifier : 'M -> string -> 'M Identifier.t option -> 'M Identifier.t option -> bool -> 'M Statement.t
+  end
+
   (* --------- assignment statements --------- *)
   module AssignSimple : sig
     type 'M t = {
@@ -433,6 +447,7 @@ and Statement : sig
     (* ----- imports // exports ------ *)
     | ExportDefaultDecl of 'M ExportDefaultDecl.t
     | ExportNamedDecl   of 'M ExportNamedDecl.t
+    | ImportDecl        of 'M ImportDecl.t
     
     (* ---- assignment statements ---- *)
     | AssignSimple   of 'M AssignSimple.t
@@ -705,6 +720,33 @@ end = struct
 
   end
 
+  module ImportDecl = struct
+    type 'M t = 
+      | Default   of { source : string;
+                       identifier : 'M Identifier.t }
+
+      | Specifier of { source : string;
+                       local: 'M Identifier.t option;
+                       remote: 'M Identifier.t option;
+                       namespace : bool }
+
+    let build_default (metadata : 'M) (source' : string) (identifier' : 'M Identifier.t) : 'M Statement.t =
+      let import_info = Statement.ImportDecl.Default {
+        source = source';
+        identifier = identifier'
+      } in 
+      (metadata, Statement.ImportDecl import_info)
+
+    let build_specifier (metadata : 'M) (source' : string) (local' : 'M Identifier.t option) (remote' : 'M Identifier.t option) (namespace' : bool) : 'M Statement.t =
+      let import_info = Statement.ImportDecl.Specifier {
+        source = source';
+        local = local';
+        remote = remote';
+        namespace = namespace'
+      } in 
+      (metadata, Statement.ImportDecl import_info)
+  end
+
   (* --------- assignment statements --------- *)
   module AssignSimple = struct
     type 'M t = {
@@ -881,6 +923,7 @@ end = struct
     (* ----- imports // exports ------ *)
     | ExportDefaultDecl of 'M ExportDefaultDecl.t
     | ExportNamedDecl   of 'M ExportNamedDecl.t
+    | ImportDecl        of 'M ImportDecl.t
 
     (* ---- assignment statements ---- *)
     | AssignSimple   of 'M AssignSimple.t
