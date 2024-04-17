@@ -273,6 +273,11 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
     let alternate' = print_js_expr alternate in 
     
     "(" ^ test' ^ ") ? " ^ consequent' ^ " : " ^ alternate'
+
+  | _, MetaProperty {meta; property} ->
+    let meta' = print_js_expr (Identifier.to_expression meta) in 
+    let property' = print_js_expr (Identifier.to_expression property) in 
+    meta' ^ "." ^ property'
     
 
 and print_js_stmts (stmts : m Statement.t list) (identation : int): string =

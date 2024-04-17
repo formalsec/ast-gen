@@ -172,7 +172,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
     
     (* --------- L A B E L --------- *)
     | loc, Ast.Statement.Labeled {label; body; _} ->
-      let label' = convert_identifier label in
+      let label' = normalize_identifier label in
       let body_stmts = ns body in
 
       let labeled_stmt = Statement.Labeled.build (loc_f loc) label' body_stmts in
@@ -214,13 +214,13 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       
     (* --------- B R E A K --------- *)
     | loc, Ast.Statement.Break {label; _} -> 
-      let label' = Option.map convert_identifier label in 
+      let label' = Option.map normalize_identifier label in 
       let break_stmt = Statement.Break.build (loc_f loc) label' in 
       [break_stmt]
     
     (* --------- C O N T I N U E --------- *)
     | loc, Ast.Statement.Continue {label; _} -> 
-      let label' = Option.map convert_identifier label in 
+      let label' = Option.map normalize_identifier label in 
       let continue_stmt = Statement.Continue.build (loc_f loc) label' in 
       [continue_stmt]
 
@@ -420,6 +420,15 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let conditional = Expression.Conditional.build (loc_f loc) (Option.get test_expr) (Option.get cnsq_expr) (Option.get altr_expr) in 
 
     test_stmts @ cnsq_stmts @ altr_stmts, Some conditional
+
+  (* --------- M E T A   P R O P E R T Y --------- *)
+  | loc, Ast.Expression.MetaProperty {meta; property; _} -> 
+    let meta' = normalize_identifier meta in 
+    let property' = normalize_identifier property in 
+    
+    let meta_property = Expression.MetaProperty.build (loc_f loc) meta' property' in 
+    [], Some meta_property
+  
   
   (* --------- A S S I G N   S I M P L E --------- *)
   | _, Ast.Expression.Assignment {operator; left; right; _} ->
@@ -439,7 +448,6 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let id = get_identifier context.identifier loc in
     let assign = Statement.AssignArray.build loc id elems_exprs in
     
-    (* TODO : arrayExpression keeps array as element if the parent is an expression statement *)
     if not context.is_assignment then 
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in 
       ((List.flatten elems_stmts) @ decl @ [assign] , Some (Identifier.to_expression id))
@@ -541,7 +549,7 @@ and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignme
 and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
   match pattern with 
     | loc, Identifier {name; _} -> 
-      let id = convert_identifier name in 
+      let id = normalize_identifier name in 
       let assign = Statement.AssignSimple.build (loc_f loc) op id expr in 
       [assign], [id]
     
@@ -617,7 +625,7 @@ and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Patt
 
 and is_identifier (pattern : ('M, 'T) Ast.Pattern.t) : bool * m Identifier.t option =
   match pattern with
-  | _, Identifier {name; _} -> true,  Some (convert_identifier name)
+  | _, Identifier {name; _} -> true,  Some (normalize_identifier name)
   | _                       -> false, None
 
 and to_object_key (key : ('M, 'T) Ast.Pattern.Object.Property.key) : ('M, 'T) Ast.Expression.Object.Property.key = 
@@ -674,19 +682,19 @@ and normalize_exp_specifiers (loc : m) (source : string option) (specifier : ('M
   match specifier with 
     | ExportSpecifiers specifiers -> 
       List.map (fun (_, {Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local; exported}) -> 
-        let local' = Some (convert_identifier local) in
-        let exported' = Option.map convert_identifier exported in 
+        let local' = Some (normalize_identifier local) in
+        let exported' = Option.map normalize_identifier exported in 
         Statement.ExportNamedDecl.build loc local' exported' false source
       ) specifiers 
     
     (* ExportAllDeclaration case *)
     | ExportBatchSpecifier (_, id) -> 
-      let exported' = Option.map convert_identifier id in
+      let exported' = Option.map normalize_identifier id in
       let export = Statement.ExportNamedDecl.build loc None exported' true source in
       [export] 
 
 and normalize_default (loc : m) (source : string) ({identifier; _} : ('M, 'T) Ast.Statement.ImportDeclaration.default_identifier) : norm_stmt_t = 
-  let identifier' = convert_identifier identifier in 
+  let identifier' = normalize_identifier identifier in 
   let import = Statement.ImportDecl.build_default loc source identifier' in 
   
   [import]
@@ -695,13 +703,13 @@ and normalize_imp_specifiers (loc : m) (source : string) (specifier : ('M, 'T) A
   match specifier with 
     | ImportNamedSpecifiers specifiers -> 
       List.map (fun {Ast.Statement.ImportDeclaration.local; remote; _} -> 
-        let local' = Option.map convert_identifier local in 
-        let remote' = Some (convert_identifier remote) in 
+        let local' = Option.map normalize_identifier local in 
+        let remote' = Some (normalize_identifier remote) in 
         Statement.ImportDecl.build_specifier loc source local' remote' false 
       ) specifiers
        
     | ImportNamespaceSpecifier (_, id) -> 
-      let local' = convert_identifier id in 
+      let local' = normalize_identifier id in 
       let import = Statement.ImportDecl.build_specifier loc source (Some local') None true in 
       [import]
 
@@ -752,7 +760,7 @@ and normalize_argument (arg : ('M, 'T) Ast.Expression.expression_or_spread) : no
 
 and normalize_function (context : context) (loc : Loc.t) (id : (Loc.t, Loc.t) Ast.Identifier.t option) (_, {Ast.Function.Params.params; _}) (body : (Loc.t, Loc.t) Ast.Function.body) : norm_expr_t =
   let loc = loc_f loc in 
-  let id = get_identifier (if Option.is_some id then Option.map convert_identifier id else context.identifier) loc in 
+  let id = get_identifier (if Option.is_some id then Option.map normalize_identifier id else context.identifier) loc in 
   
   let params_stmts, params_exprs = List.split (List.map normalize_param params) in
   let body_stmts = normalize_func_body body in 
@@ -829,7 +837,7 @@ and normalize_init (init : ('M, 'T) Ast.Statement.For.init) : norm_expr_t =
     | InitDeclaration (loc, decl) -> ns (loc, Ast.Statement.VariableDeclaration decl), None 
     | InitExpression expr -> ne expr
 
-and convert_identifier ((loc, {name; _}) : ('M, 'T) Ast.Identifier.t) : m Identifier.t = 
+and normalize_identifier ((loc, {name; _}) : ('M, 'T) Ast.Identifier.t) : m Identifier.t = 
   Identifier.build (loc_f loc) name
 
 and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={raw; cooked}; tail}) : m Expression.TemplateLiteral.Element.t =

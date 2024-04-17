@@ -1063,6 +1063,15 @@ and Expression : sig
     val build : 'M -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
   end
 
+  module MetaProperty : sig
+    type 'M t = {
+      meta : 'M Identifier.t;
+      property : 'M Identifier.t
+    }
+
+    val build : 'M -> 'M Identifier.t -> 'M Identifier.t -> 'M Expression.t
+  end
+
   val to_statement : 'M Expression.t -> 'M Statement.t
 
   type 'M t' = 
@@ -1081,6 +1090,7 @@ and Expression : sig
 
     | TemplateLiteral of 'M TemplateLiteral.t
     | TaggedTemplate  of 'M TaggedTemplate.t
+    | MetaProperty    of 'M MetaProperty.t
 
 
   type 'M t = 'M * 'M t'
@@ -1271,6 +1281,20 @@ end = struct
       (metadata, cond_info)
   end
 
+  module MetaProperty = struct
+    type 'M t = {
+      meta : 'M Identifier.t;
+      property : 'M Identifier.t
+    }
+
+    let build (metadata : 'M) (meta' : 'M Identifier.t) (property' : 'M Identifier.t) : 'M Expression.t =
+      let metaprop_info = Expression.MetaProperty {
+        meta = meta';
+        property = property'
+      } in 
+      (metadata, metaprop_info)
+  end
+
   let to_statement ((loc, _) as expr : 'M Expression.t) : 'M Statement.t = 
     (loc, Statement.Expression expr)
 
@@ -1290,6 +1314,7 @@ end = struct
 
     | TemplateLiteral of 'M TemplateLiteral.t
     | TaggedTemplate  of 'M TaggedTemplate.t
+    | MetaProperty    of 'M MetaProperty.t
   
 
 
