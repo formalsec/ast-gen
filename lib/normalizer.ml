@@ -61,9 +61,11 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
     | loc, Ast.Statement.While { test; body; _ } -> 
       let test_stmts, test_expr = ne test in
       let body_stmts = ns body in
-      let while_stmt = Statement.While.build (loc_f loc) (Option.get test_expr) body_stmts in
+      
+      (* update test condition inside loop body *)
+      let update_stmts = List.filter (not << is_declaration) test_stmts in 
+      let while_stmt = Statement.While.build (loc_f loc) (Option.get test_expr) (body_stmts @ update_stmts) in
 
-      (* TODO : normWhileStatement performs some computations over the norm_test.statements *)
       (test_stmts @ [while_stmt])
     
     (* --------- D O - W H I L E --------- *)
@@ -102,7 +104,8 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       let updt_stmts, _         = map_default ne ([], None) update in 
       let body_stmts = ns body in 
 
-      (* TODO : graph.js iterates over the test_stmts to find the test variable and add it to the body of the while for some reason *)
+      (* update test condition inside loop body *)
+      let updt_stmts = updt_stmts @ List.filter (not << is_declaration) test_stmts in 
       let for_stmt = Statement.While.build loc (Option.get test_expr) (body_stmts @ updt_stmts) in 
       
       new_init @ test_stmts @ [for_stmt]

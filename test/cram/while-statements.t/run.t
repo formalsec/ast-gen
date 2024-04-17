@@ -14,6 +14,7 @@
      const v2;
      v2 = x++;
      v2;
+     v1 = x < 1;
   }
   
   $ dune exec ast_gen -f input-code-3.js
@@ -52,6 +53,7 @@
      v3;
      const v2;
      v2 = ++i;
+     v1 = i < 10;
   }
   
   $ dune exec ast_gen -f input-code-6.js
@@ -65,5 +67,6 @@
      v3;
      const v2;
      v2 = ++i;
+     v1 = i < 10;
   }
   

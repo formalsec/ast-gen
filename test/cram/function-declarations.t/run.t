@@ -24,6 +24,7 @@
         const v3;
         v3 = alert(i);
         v3;
+        v2 = i < 10;
      }
   }
   
