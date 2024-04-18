@@ -551,11 +551,11 @@ and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignme
 
   init_stmts @ pat_stmts, ids
   
-and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
+and normalize_pattern (expression : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
   match pattern with 
     | loc, Identifier {name; _} -> 
       let id = normalize_identifier name in 
-      let assign = Statement.AssignSimple.build (loc_f loc) op id expr in 
+      let assign = Statement.AssignSimple.build (loc_f loc) op id expression in 
       [assign], [id]
     
     | _, Array {elements; _} -> let assigns, ids = List.split (List.mapi (
@@ -569,12 +569,12 @@ and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Patt
             let is_id, id = is_identifier argument in
             if not is_id then 
               let id, decl = createVariableDeclaration None loc in 
-              let assign = Statement.AssignMember.build loc id expr index in 
+              let assign = Statement.AssignMember.build loc id expression index in 
               
               let stmts, ids = normalize_pattern (Identifier.to_expression id) argument op in 
               decl @ [assign] @ stmts, ids
             else 
-              let assign = Statement.AssignMember.build loc (Option.get id) expr index in 
+              let assign = Statement.AssignMember.build loc (Option.get id) expression index in 
               [assign], Option.to_list id
 
           | Hole _ -> [], [] (* just ignore *)
@@ -585,7 +585,7 @@ and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Patt
             (* generate expr.slice(i) *)
             let slide_id, slice_decl = createVariableDeclaration None loc in 
             let slice = Identifier.to_expression (Identifier.build loc "slice") in 
-            let member = Statement.AssignMember.build loc slide_id expr slice in 
+            let member = Statement.AssignMember.build loc slide_id expression slice in 
             
             (* simplify generated code *)
             let is_id, id = is_identifier argument in
@@ -614,19 +614,28 @@ and normalize_pattern (expr : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Patt
           let is_id, id = is_identifier pattern in
           if not is_id then
             let id, decl = createVariableDeclaration None loc in 
-            let assign = Statement.AssignMember.build loc id expr (Option.get key_expr) in 
+            let assign = Statement.AssignMember.build loc id expression (Option.get key_expr) in 
             
             let stmts, ids = normalize_pattern (Identifier.to_expression id) pattern op in 
             decl @ [assign] @ stmts, ids
           else
-            let assign = Statement.AssignMember.build loc (Option.get id) expr (Option.get key_expr) in 
+            let assign = Statement.AssignMember.build loc (Option.get id) expression (Option.get key_expr) in 
             [assign], Option.to_list id
 
         (* TODO : restelement not implemented *)
         | RestElement _ -> failwith "restelement not implemented"
       ) properties) in 
       List.flatten assigns, List.flatten ids
-    | _ -> failwith "no other patterns were implemented yet"
+    | loc, Expression expr -> 
+      match expr with 
+        | _, Member {_object; property; _} -> 
+          let obj_stmts, obj_expr = normalize_expression empty_context _object in 
+          let prop_stmts, prop_expr = normalize_member_property property in 
+          let assign = Statement.MemberAssign.build (loc_f loc) op (Option.get obj_expr) (Option.get prop_expr) expression in 
+          
+          obj_stmts @ prop_stmts @ [assign], []
+
+        | _ -> failwith "pattern expression not implemented"
 
 and is_identifier (pattern : ('M, 'T) Ast.Pattern.t) : bool * m Identifier.t option =
   match pattern with

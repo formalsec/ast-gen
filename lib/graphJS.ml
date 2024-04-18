@@ -392,6 +392,20 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Expression.t list -> 'M Statement.t
   end
 
+  module MemberAssign : sig
+    type 'M t = {
+      operator : Operator.Assignment.t option;
+
+      (* -- left -- *)
+      _object : 'M Expression.t;
+      property : 'M Expression.t;
+
+      right : 'M Expression.t
+    }
+
+    val build : 'M -> Operator.Assignment.t option -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t -> 'M Statement.t
+  end
+
   module AssignMember : sig
     type 'M t = {
       left : 'M Identifier.t;
@@ -455,6 +469,7 @@ and Statement : sig
     | AssignObject   of 'M AssignObject.t
     | AssignNew      of 'M AssignNew.t
     | AssignFunCall  of 'M AssignFunCall.t
+    | MemberAssign   of 'M MemberAssign.t
     | AssignMember   of 'M AssignMember.t
     | AssignFunction of 'M AssignFunction.t
   
@@ -849,6 +864,26 @@ end = struct
       (metadata, assign_info)
   end
 
+  module MemberAssign = struct
+    type 'M t = {
+      operator : Operator.Assignment.t option;
+      (* -- left -- *)
+      _object : 'M Expression.t;
+      property : 'M Expression.t;
+
+      right : 'M Expression.t
+    }
+
+    let build (metadata : 'M) (operator' : Operator.Assignment.t option) (_object' : 'M Expression.t) (property' : 'M Expression.t) (right' : 'M Expression.t): 'M Statement.t =
+      let assign_info = Statement.MemberAssign {
+        operator = operator';
+        _object = _object';
+        property = property';
+        right = right';
+      } in 
+      (metadata, assign_info)
+  end
+
   module AssignMember = struct
     type 'M t = {
       left : 'M Identifier.t;
@@ -931,6 +966,7 @@ end = struct
     | AssignObject   of 'M AssignObject.t
     | AssignNew      of 'M AssignNew.t
     | AssignFunCall  of 'M AssignFunCall.t
+    | MemberAssign   of 'M MemberAssign.t
     | AssignMember   of 'M AssignMember.t
     | AssignFunction of 'M AssignFunction.t
   
