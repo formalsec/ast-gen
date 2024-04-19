@@ -26,6 +26,10 @@ type ('M, 'T) generic_left =
   | LeftPattern of ('M, 'T) Ast.Pattern.t
 
 
+let prototype = Identifier.build Location.empty "prototype";;
+
+
+
 (* --------- C O N T E X T --------- *)
 type context = { 
   identifier : m Identifier.t option;
@@ -257,9 +261,11 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       def_stmts @ spf_stmts
       
     
-    (* --------- A S S I G N   F U N C T I O N ---------*)
-    | loc, Ast.Statement.FunctionDeclaration {id; params; body; _} -> fst (normalize_function context loc id params body)
+    (* --------- F U N C T I O N   D E C L A R A T I O N ---------*)
+    | loc, Ast.Statement.FunctionDeclaration _function -> fst (normalize_function context loc _function)
 
+    (* --------- C L A S S   D E C L A R A T I O N ---------*)
+    | loc, Ast.Statement.ClassDeclaration _class -> fst (normalize_class context loc _class)
 
     (* --------- S T A T E M E N T   E X P R E S S I O N ---------*)
     | _, Ast.Statement.Expression {expression; _} -> 
@@ -522,13 +528,12 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (callee_stmts @ (List.flatten args_stmts) @ [assign], Some (Identifier.to_expression id))
 
   (* --------- A S S I G N   F U N C T I O N ---------*)
-  | loc, Ast.Expression.ArrowFunction {id; params; body; _} -> 
-    (* TODO : graph.js checks parent type to see if function should or not be put into an assignment*)
-    normalize_function context loc id params body
-  | loc, Ast.Expression.Function {id; params; body; _} -> 
-    (* TODO : graph.js checks parent type to see if function should or not be put into an assignment*)
-    normalize_function context loc id params body
+  | loc, Ast.Expression.ArrowFunction _function -> normalize_function context loc _function
+  | loc, Ast.Expression.Function _function      -> normalize_function context loc _function
   
+  (* --------- C L A S S   E X P R E S S I O N ---------*)
+  | loc, Ast.Expression.Class _class -> normalize_class context loc _class
+
   | loc, _ -> 
     let loc_info = Loc.debug_to_string loc in
     failwith ("Unknown expression type to normalize (object on " ^ loc_info ^ ")")
@@ -551,7 +556,7 @@ and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignme
 
   init_stmts @ pat_stmts, ids
   
-and normalize_pattern (expression : m Expression.t) (pattern : (Loc.t, Loc.t) Ast.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
+and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
   match pattern with 
     | loc, Identifier {name; _} -> 
       let id = normalize_identifier name in 
@@ -772,7 +777,8 @@ and normalize_argument (arg : ('M, 'T) Ast.Expression.expression_or_spread) : no
     | Ast.Expression.Expression expr -> normalize_expression empty_context expr 
     | _ -> failwith "normalize argument case not defined"
 
-and normalize_function (context : context) (loc : Loc.t) (id : (Loc.t, Loc.t) Ast.Identifier.t option) (_, {Ast.Function.Params.params; _}) (body : (Loc.t, Loc.t) Ast.Function.body) : norm_expr_t =
+
+and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {params; _}); body; _} : ('M, 'T) Ast.Function.t) : norm_expr_t =
   let loc = loc_f loc in 
   let id = get_identifier (if Option.is_some id then Option.map normalize_identifier id else context.identifier) loc in 
   
@@ -786,7 +792,7 @@ and normalize_function (context : context) (loc : Loc.t) (id : (Loc.t, Loc.t) As
   else
     (List.flatten params_stmts @ [assign], Some (Identifier.to_expression id)) 
 
-and normalize_param (loc, {Ast.Function.Param.argument; default}) : m Statement.t list * m Statement.AssignFunction.Param.t  = 
+and normalize_param (loc, {Ast.Function.Param.argument; default} : ('M, 'T) Ast.Function.Param.t) : m Statement.t list * m Statement.AssignFunction.Param.t  = 
   (* TODO : param can be spread element or other patterns (maybe do like the normalize_for_left ) *)
   let is_id, id = is_identifier argument in 
   let argument' = if is_id then Option.get id else failwith "argument is not an identifier" in 
@@ -804,6 +810,96 @@ and normalize_func_body (body : ('M, 'T) Ast.Function.body) : norm_stmt_t =
       let body_stmts, body_expr = normalize_expression empty_context body in 
       let return = Statement.Return.build (loc_f loc) body_expr in 
       body_stmts @ [return]
+
+and normalize_class (context : context) (loc : Loc.t) ({id; body=(_, {body; _}); extends; (* implements; *) _} : ('M, 'T) Ast.Class.t): norm_expr_t = 
+  let loc = loc_f loc in 
+  let id = get_identifier (if Option.is_some id then Option.map normalize_identifier id else context.identifier) loc in 
+
+  
+  let exts_stmts, exts_expr = map_default (normalize_extend id) (no_extend id loc) extends in
+  
+  let constructor, body' = List.partition is_constructor body in 
+  let constructor = if constructor != [] then Some (List.hd constructor) else None in 
+
+  let cnstr_stmts = map_default (normalize_body_element id (Option.get exts_expr)) (empty_constructor id loc) constructor in 
+  let body_stmts  = List.map (normalize_body_element id (Option.get exts_expr)) body' in  
+
+  cnstr_stmts @ exts_stmts @ List.flatten body_stmts, Some (Identifier.to_expression id)
+
+and empty_constructor (class_id : m Identifier.t) (loc : m) : norm_stmt_t = 
+  [Statement.AssignFunction.build loc class_id [] []]
+
+and normalize_class_body (class_id : m Identifier.t) (class_proto : m Expression.t) (_, {body; _} : ('M, 'T) Ast.Class.Body.t) : norm_stmt_t = 
+  List.flatten (List.map (normalize_body_element class_id class_proto) body)
+
+and normalize_body_element (class_id : m Identifier.t) (class_proto : m Expression.t) (element : ('M, 'T) Ast.Class.Body.element) : norm_stmt_t = 
+  match element with 
+    | Method (_, {key; value=(loc, func); _}) -> 
+      let id = get_key_identifier key in
+      let is_constructor = is_specified_name id "constructor" in 
+      
+      if is_constructor then
+        let context = {is_assignment = true; identifier = Some class_id} in 
+        let _, decl = createVariableDeclaration ~kind:_let ~objId:(Id class_id) None (loc_f loc) in 
+        let func_stmts, _ = normalize_function context loc func in 
+        
+        decl @ func_stmts
+      else
+        let func_stmts, func_expr = normalize_function empty_context loc func in 
+        let assign = Statement.MemberAssign.build (loc_f loc) None class_proto (Identifier.to_expression id) (Option.get func_expr)  in 
+        func_stmts @ [assign]
+
+    | Property (loc, {key; value; _}) -> 
+      let id = get_key_identifier key in 
+      let val_stmts, val_expr = match value with 
+        | Initialized expr -> normalize_expression empty_context expr
+
+        (* TODO : should do something in this cases? *)
+        | Uninitialized | Declared -> [], None
+      in
+
+      let assign = Option.map (Statement.MemberAssign.build (loc_f loc) None class_proto (Identifier.to_expression id)) val_expr  in 
+      val_stmts @ Option.to_list assign 
+
+    (* TODO : saw some *)
+    | PrivateField _ -> []
+
+and get_key_identifier (key : ('M, 'T) Ast.Expression.Object.Property.key) : m Identifier.t = 
+  match key with 
+    | StringLiteral ((loc, _) as str) -> Identifier.build (loc_f loc) (get_string str) 
+    | Identifier id -> normalize_identifier id
+    | PrivateName (loc, {name; _}) -> Identifier.build (loc_f loc) name
+    | _ -> failwith "class method key cannot be translated"
+
+
+and is_constructor (element : ('M, 'T) Ast.Class.Body.element) : bool =
+  match element with 
+    | Method (_, {key; _}) -> 
+      let id = get_key_identifier key in 
+      is_specified_name id "constructor"
+    | _ -> false 
+
+and is_specified_name ((_, {name; _}) : m Identifier.t) (specified_name : string) : bool = 
+  name = specified_name
+
+and normalize_extend (class_id : m Identifier.t) ((loc', {expr=(loc, _) as expr; _}) : ('M, 'T) Ast.Class.Extends.t) : norm_expr_t = 
+  let ext_stmts, ext_expr = normalize_expression empty_context expr in 
+  
+  let loc = loc_f loc in
+  (* let v1 = new ext_expr(); *)
+  let id, decl = createVariableDeclaration ~kind:_let None loc  in 
+  let super_init = Statement.AssignNew.build loc id (Option.get ext_expr) [] in
+
+  (* class_id.prototype = v1; *)
+  let assign_proto = Statement.MemberAssign.build (loc_f loc') None (Identifier.to_expression class_id) (Identifier.to_expression prototype) (Identifier.to_expression id) in
+  ext_stmts @ decl @ [super_init; assign_proto] , Some (Identifier.to_expression id)
+
+and no_extend (class_id : m Identifier.t) (loc : m) : norm_expr_t =
+  (* let v1 = X.prototype; *)
+  let id, decl = createVariableDeclaration ~kind:_let None loc  in 
+  let assign = Statement.AssignMember.build loc id (Identifier.to_expression class_id) (Identifier.to_expression prototype) in
+
+  decl @ [assign], Some (Identifier.to_expression id)
 
 and normalize_member_property (property : ('M, 'T) Ast.Expression.Member.property) : norm_expr_t = 
   match property with

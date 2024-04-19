@@ -1226,7 +1226,7 @@ end = struct
     type t = unit
 
     let build (metadata: 'M) : 'M Expression.t =
-      (metadata, Expression.This ())
+      (metadata, Expression.Super ())
   end
 
   module TemplateLiteral = struct
