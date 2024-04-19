@@ -27,15 +27,19 @@ type ('M, 'T) generic_left =
 
 
 let prototype = Identifier.build Location.empty "prototype";;
+let constructor = Identifier.build Location.empty "constructor";;
+
+let func_call = "FunctionCall";;
 
 
 
 (* --------- C O N T E X T --------- *)
 type context = { 
+  parent_type : string;
   identifier : m Identifier.t option;
   is_assignment : bool
 }
-let empty_context : context = { identifier = None; is_assignment = false } 
+let empty_context : context = { parent_type = ""; identifier = None; is_assignment = false } 
 
 let rec normalize (loc , { Ast.Program.statements; _ }) : m Program.t = 
   let statements' = List.flatten (List.map (normalize_statement empty_context) statements) in
@@ -280,6 +284,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
     
 and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) : norm_expr_t =
   let ne = normalize_expression empty_context in 
+  let nec = normalize_expression in 
 
   match expr with
   (* --------- L I T E R A L --------- *)
@@ -395,8 +400,27 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
   (* --------- S U P E R --------- *)
   | loc, Ast.Expression.Super _ -> 
+    let loc = loc_f loc in 
+    if context.parent_type = func_call then
+      (* var v1 = this.prototype *)
+      let class_proto, proto_decl = createVariableDeclaration ~kind:_let None loc in 
+      let this = Expression.This.build loc in 
+      let assign_proto = Statement.AssignMember.build loc class_proto this (Identifier.to_expression prototype) in 
+      
+      (* var v2 = v1.constructor *)
+      let super_constr, constr_decl = createVariableDeclaration ~kind:_let None loc in 
+      let assign_constr = Statement.AssignMember.build loc super_constr (Identifier.to_expression class_proto) (Identifier.to_expression constructor) in
+      
+      proto_decl @ [assign_proto] @ constr_decl @ [assign_constr], Some (Identifier.to_expression super_constr)
+    else
+      failwith "super used ouside implemented scope"
+
+    (* let class_id = Option.get context.identifier in 
+    
+
+
     let super = Expression.Super.build (loc_f loc) in
-    ([], Some super)
+    ([], Some super) *)
 
   (* --------- S E Q U E N C E --------- *)
   | loc, Ast.Expression.Sequence {expressions; _} -> 
@@ -513,7 +537,9 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
   (* --------- A S S I G N   F U N C   C A L L ---------*)
   | loc, Ast.Expression.Call {callee; arguments; _} -> 
-    let callee_stmts, callee_expr = ne callee in
+    let new_context = {empty_context with parent_type = func_call} in 
+
+    let callee_stmts, callee_expr = nec new_context callee in
     let args_stmts, args_exprs = List.split (normalize_argument_list arguments) in 
     let args_exprs = List.flatten (List.map Option.to_list args_exprs) in
 
@@ -541,9 +567,9 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignment.t option) (right : ('M, 'T) Ast.Expression.t) : norm_stmt_t * m Identifier.t list = 
   let ne = normalize_expression in
   let is_id, id = is_identifier left in  
-  let context = if is_id then {identifier = id; is_assignment = true} else empty_context in
+  let new_context = if is_id then {empty_context with identifier = id; is_assignment = true} else empty_context in
   
-  let init_stmts, init_expr = ne context right in
+  let init_stmts, init_expr = ne new_context right in
   let pat_stmts, ids = 
     if not (is_id && is_special_assignment right) then 
       normalize_pattern (Option.get init_expr) left op
@@ -839,9 +865,9 @@ and normalize_body_element (class_id : m Identifier.t) (class_proto : m Expressi
       let is_constructor = is_specified_name id "constructor" in 
       
       if is_constructor then
-        let context = {is_assignment = true; identifier = Some class_id} in 
+        let new_context = {empty_context with is_assignment = true; identifier = Some class_id} in 
         let _, decl = createVariableDeclaration ~kind:_let ~objId:(Id class_id) None (loc_f loc) in 
-        let func_stmts, _ = normalize_function context loc func in 
+        let func_stmts, _ = normalize_function new_context loc func in 
         
         decl @ func_stmts
       else

@@ -235,7 +235,6 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
     let argument' = print_js_expr argument in 
     if prefix then operator' ^ argument' else argument' ^ operator'
   | _, This _ -> "this"
-  | _, Super _ -> "super"
   | _, Sequence {expressions} -> 
     let expressions' = List.map print_js_expr expressions in 
     "(" ^ String.concat ", " expressions' ^ ")"

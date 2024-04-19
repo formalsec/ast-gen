@@ -1037,11 +1037,6 @@ and Expression : sig
     val build : 'M -> 'M Expression.t
   end
 
-  module Super : sig
-    type t = unit
-    val build : 'M -> 'M Expression.t
-  end
-
   module TemplateLiteral : sig
     module Element : sig
       type value = {
@@ -1115,7 +1110,6 @@ and Expression : sig
     | Literal         of    Literal.t 
     | Identifier      of    Identifier.t' 
     | This            of    This.t
-    | Super           of    Super.t
     | Logical         of 'M Logical.t
     | Binary          of 'M Binary.t
     | Unary           of 'M Unary.t
@@ -1220,13 +1214,6 @@ end = struct
 
     let build (metadata: 'M) : 'M Expression.t =
       (metadata, Expression.This ())
-  end
-
-  module Super = struct
-    type t = unit
-
-    let build (metadata: 'M) : 'M Expression.t =
-      (metadata, Expression.Super ())
   end
 
   module TemplateLiteral = struct
@@ -1340,7 +1327,6 @@ end = struct
     | Literal         of    Literal.t 
     | Identifier      of    Identifier.t' 
     | This            of    This.t
-    | Super           of    Super.t
     | Logical         of 'M Logical.t
     | Binary          of 'M Binary.t
     | Unary           of 'M Unary.t
