@@ -1,6 +1,7 @@
   $ dune exec ast_gen -f input-code-1.js
   let x;
-  x = { p : 'p' };
+  x = {};
+  x.p = 'p';
   let y;
   y = x.p;
   

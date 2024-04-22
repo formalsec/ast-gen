@@ -1,6 +1,5 @@
   $ dune exec ast_gen -f input-code-1.js
   let v;
-  let Foo;
   Foo = function () {
   }
   let v2;
@@ -9,7 +8,6 @@
   
   $ dune exec ast_gen -f input-code-2.js
   let v;
-  let Foo;
   Foo = function () {
   }
   let v2;
@@ -22,7 +20,6 @@
   
   $ dune exec ast_gen -f input-code-3.js
   let v;
-  let Foo;
   Foo = function () {
      let v3;
      v3 = this.prototype;

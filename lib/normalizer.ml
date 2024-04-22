@@ -12,10 +12,6 @@ let _const = Statement.VarDecl.Const;;
 let _let = Statement.VarDecl.Let;;
 let _var = Statement.VarDecl.Var;;
 
-let _init = Statement.AssignObject.Property.Init;;
-let _method = Statement.AssignObject.Property.Method;;
-let _get = Statement.AssignObject.Property.Get;;
-let _set = Statement.AssignObject.Property.Set;;
 
 type name_or_id =
   | Name of string option
@@ -525,17 +521,17 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
   (* --------- A S S I G N   O B J E C T ---------*)
   | loc, Ast.Expression.Object {properties; _} -> 
-      let props_stmts, proprs_exprs = List.split (List.map normalize_property properties) in 
-      
       let loc = loc_f loc in
-      let id = get_identifier context.identifier loc in
-      let assign = Statement.AssignObject.build loc id proprs_exprs in
 
+      let id = get_identifier context.identifier loc in
+      let empty_obj = Statement.AssignObject.build loc id in
+      let props_stmts = List.flatten (List.map (normalize_property id) properties) in 
+      
       if not context.is_assignment then
         let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
-        (List.flatten props_stmts @ decl @ [assign] , Some (Identifier.to_expression id))
+        (decl @ [empty_obj] @ props_stmts , Some (Identifier.to_expression id))
       else
-        (List.flatten props_stmts @ [assign], Some (Identifier.to_expression id))
+        ([empty_obj] @ props_stmts, Some (Identifier.to_expression id))
 
   (* --------- A S S I G N   F U N C   C A L L ---------*)
   | loc, Ast.Expression.Call {callee; arguments; _} -> 
@@ -938,25 +934,26 @@ and normalize_member_property (property : ('M, 'T) Ast.Expression.Member.propert
     (* TODO : private name not implemented*)
     | PropertyPrivateName _ -> failwith "property private name not implemented"
 
-and normalize_property (property : ('M, 'T) Ast.Expression.Object.property) = 
+and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast.Expression.Object.property) : norm_stmt_t = 
   let nk = normalize_property_key in
   let ne = normalize_expression empty_context in 
-  let process_func_property key loc func = 
-    let key_stmts, key_expr = nk key in 
-    let val_stmts, val_expr = ne (loc, Ast.Expression.Function func) in 
-    let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) None in
-    key_stmts @ val_stmts, property
-  in 
+  let obj_id = Identifier.to_expression obj_id in 
+
   match property with
-    | Property (_, Init {key; value; shorthand}) ->
+    | Property (loc, Init {key; value; _}) ->
       let key_stmts, key_expr = nk key in 
       let val_stmts, val_expr = ne value in 
-      let property = Statement.AssignObject.Property.build _init (Option.get key_expr) (Option.get val_expr) (Some shorthand) in
-      key_stmts @ val_stmts, property
+      let set_prop = Statement.MemberAssign.build (loc_f loc) None obj_id (Option.get key_expr) (Option.get val_expr) in 
+      key_stmts @ val_stmts @ [set_prop]
 
-    | Property (_, Method {key; value=(loc, func); _}) -> process_func_property key loc func
-    | Property (_, Get {key; value=(loc, func); _}) -> process_func_property key loc func
-    | Property (_, Set {key; value=(loc, func); _}) -> process_func_property key loc func
+    | Property (_, Method {key; value=(loc, func); _}) 
+    | Property (_, Get {key; value=(loc, func); _}) 
+    | Property (_, Set {key; value=(loc, func); _}) -> 
+      let key_stmts, key_expr = nk key in 
+      let val_stmts, val_expr = ne (loc, Ast.Expression.Function func) in 
+      let set_prop = Statement.MemberAssign.build (loc_f loc) None obj_id (Option.get key_expr) (Option.get val_expr) in 
+      key_stmts @ val_stmts @ [set_prop]
+
     (* TODO : spread property not implemented *)
     | _ -> failwith "spread property not implemented"
 

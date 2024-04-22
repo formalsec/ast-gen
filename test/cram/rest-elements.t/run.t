@@ -36,7 +36,8 @@
   $ dune exec ast_gen -f input-code-5.js
   const a;
   const v1;
-  v1 = { a : 3 };
+  v1 = {};
+  v1.a = 3;
   a = v1.a;
   
   $ dune exec ast_gen -f input-code-6.js
@@ -51,7 +52,8 @@
   const a;
   const b;
   const v1;
-  v1 = { a : 3 };
+  v1 = {};
+  v1.a = 3;
   a = v1.a;
   b = v1.b;
   

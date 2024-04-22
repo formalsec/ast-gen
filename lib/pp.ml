@@ -141,10 +141,9 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let array' = "[" ^ String.concat (", \n      " ^ identation_str) (List.map print_js_expr array) ^ "]" in 
       identation_str ^ left' ^ " = " ^ array' ^ ";\n"
 
-    | _, AssignObject {left; properties} -> 
+    | _, AssignObject {left} -> 
       let left' = print_js_expr (Identifier.to_expression left) in
-      let properties' = List.map print_js_property properties in 
-      identation_str ^ left' ^ " = " ^ "{ " ^ String.concat ",\n      " properties' ^ " };\n"
+      identation_str ^ left' ^ " = " ^ "{};\n"
 
     | _, AssignNew {left; callee; arguments} -> 
       let left' = print_js_expr (Identifier.to_expression left) in 
@@ -284,12 +283,6 @@ and print_js_param (_, {Statement.AssignFunction.Param.argument; default}) : str
   let argument' = print_js_expr (Identifier.to_expression argument) in 
   let default' = map_default (fun def -> " = " ^ print_js_expr def) "" default in  
   argument' ^ default'
-
-and print_js_property {key; value; _} : string = 
-  let key' = print_js_expr key in 
-  let value' = print_js_expr value in
-
-  key' ^ " : " ^ value'
 
 and print_js_decl {kind; id} = 
   let kind' = match kind with 
