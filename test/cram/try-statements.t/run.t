@@ -51,29 +51,29 @@
   $ dune exec ast_gen -f input-code-4.js
   const f;
   f = function (x) {
+     const v3;
+     v3 = e["someValue"];
      const v4;
-     v4 = e["someValue"];
+     v4 = x.v3;
      const v5;
-     v5 = x.v4;
-     const v6;
-     v6 = eval(v5);
-     v6;
+     v5 = eval(v4);
+     v5;
      try {
-        const v2;
-        v2 = f();
-        v2;
+        const v1;
+        v1 = f();
+        v1;
      }    catch (e){
-        const v4;
-        v4 = e["someValue"];
-        const v5;
-        v5 = x.v4;
-        const v6;
-        v6 = eval(v5);
-        v6;
-     }   finally {
         const v3;
-        v3 = alert('done');
-        v3;
+        v3 = e["someValue"];
+        const v4;
+        v4 = x.v3;
+        const v5;
+        v5 = eval(v4);
+        v5;
+     }   finally {
+        const v2;
+        v2 = alert('done');
+        v2;
      }
   }
   

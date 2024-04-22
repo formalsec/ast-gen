@@ -7,8 +7,8 @@
   $ dune exec ast_gen -f input-code-2.js
   const foo;
   foo = function (index) {
-     const v2;
-     v2 = index++;
-     yield v2;
+     const v1;
+     v1 = index++;
+     yield v1;
   }
   

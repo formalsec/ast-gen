@@ -7,3 +7,8 @@ let map_default f x value =
   match value with
     | Some value -> f value
     | None -> x
+
+let map_default_lazy f x value =
+  match value with
+    | Some value -> f value
+    | None -> Lazy.force x

@@ -37,9 +37,10 @@ let func_call = "FunctionCall";;
 type context = { 
   parent_type : string;
   identifier : m Identifier.t option;
-  is_assignment : bool
+  is_assignment : bool;
+  is_declaration : bool
 }
-let empty_context : context = { parent_type = ""; identifier = None; is_assignment = false } 
+let empty_context : context = { parent_type = ""; identifier = None; is_assignment = false; is_declaration = false; } 
 
 let rec normalize (loc , { Ast.Program.statements; _ }) : m Program.t = 
   let statements' = List.flatten (List.map (normalize_statement empty_context) statements) in
@@ -192,6 +193,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
         | Var -> _var  | Let -> _let  | Const -> _const 
       in
 
+      let new_context = {context with is_declaration = true} in 
       let assign_stmts, ids = List.split (List.map 
         (fun (_, {Ast.Statement.VariableDeclaration.Declarator.id; init; _}) -> 
           (* get id name into ids list if the init expression
@@ -199,7 +201,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
           let is_id, _id  = is_identifier id in 
           let ids = if is_id then Option.to_list _id else [] in 
 
-          map_default (normalize_assignment id None) ([], ids) init
+          map_default (normalize_assignment new_context id None) ([], ids) init
         ) declarations) 
       in 
 
@@ -469,7 +471,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
   | _, Ast.Expression.Assignment {operator; left; right; _} ->
 
     let operator' = Option.map Operator.Assignment.translate operator in
-    let assign_stmts, _ = normalize_assignment left operator' right  in 
+    let assign_stmts, _ = normalize_assignment context left operator' right  in 
 
     (* TODO : graph.js normalizer has some special cases depending on the parent *)
     assign_stmts, None 
@@ -564,10 +566,10 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let loc_info = Loc.debug_to_string loc in
     failwith ("Unknown expression type to normalize (object on " ^ loc_info ^ ")")
 
-and normalize_assignment (left : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignment.t option) (right : ('M, 'T) Ast.Expression.t) : norm_stmt_t * m Identifier.t list = 
+and normalize_assignment (context : context) (left : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignment.t option) (right : ('M, 'T) Ast.Expression.t) : norm_stmt_t * m Identifier.t list = 
   let ne = normalize_expression in
   let is_id, id = is_identifier left in  
-  let new_context = if is_id then {empty_context with identifier = id; is_assignment = true} else empty_context in
+  let new_context = if is_id then {context with identifier = id; is_assignment = true} else context in
   
   let init_stmts, init_expr = ne new_context right in
   let pat_stmts, ids = 
@@ -696,12 +698,14 @@ and normalize_default_declaration (declaration : ('M, 'T) Ast.Statement.ExportDe
 
       (* find identifier that represents the exported 
          statement (must be a function or a class) *)
-      let norm_stmt = List.hd (List.rev stmt') in 
-      let expr = match norm_stmt with 
-        | _, Statement.AssignFunction {left; _} -> Identifier.to_expression left
-        (* TODO : same for classes *)
-        | _ -> failwith "export statement was not of type function or class"
-      in
+      let export_exprs = List.filter_map (
+        fun stmt -> 
+          match stmt with 
+            | _, Statement.VarDecl {id; _} -> if not (id_is_generated id) then Some (Identifier.to_expression id) else None
+            | _ -> None
+      ) stmt' in 
+      
+      let expr = if List.length export_exprs = 1 then List.hd export_exprs else failwith "more than one expression found to export" in 
       stmt', Some expr
     
     | Expression expr -> 
@@ -840,25 +844,24 @@ and normalize_func_body (body : ('M, 'T) Ast.Function.body) : norm_stmt_t =
 and normalize_class (context : context) (loc : Loc.t) ({id; body=(_, {body; _}); extends; (* implements; *) _} : ('M, 'T) Ast.Class.t): norm_expr_t = 
   let loc = loc_f loc in 
   let id = get_identifier (if Option.is_some id then Option.map normalize_identifier id else context.identifier) loc in 
+  let is_decl = context.is_declaration in 
 
-  
   let exts_stmts, exts_expr = map_default (normalize_extend id) (no_extend id loc) extends in
   
   let constructor, body' = List.partition is_constructor body in 
   let constructor = if constructor != [] then Some (List.hd constructor) else None in 
 
-  let cnstr_stmts = map_default (normalize_body_element id (Option.get exts_expr)) (empty_constructor id loc) constructor in 
-  let body_stmts  = List.map (normalize_body_element id (Option.get exts_expr)) body' in  
+  let cnstr_stmts = map_default (normalize_body_element is_decl id (Option.get exts_expr)) (empty_constructor is_decl id loc) constructor in 
+  let body_stmts  = List.map (normalize_body_element is_decl id (Option.get exts_expr)) body' in  
 
   cnstr_stmts @ exts_stmts @ List.flatten body_stmts, Some (Identifier.to_expression id)
 
-and empty_constructor (class_id : m Identifier.t) (loc : m) : norm_stmt_t = 
-  [Statement.AssignFunction.build loc class_id [] []]
+and empty_constructor (is_declaration : bool) (class_id : m Identifier.t) (loc : m) : norm_stmt_t = 
+  let decl = if not is_declaration then snd (createVariableDeclaration ~kind:_let ~objId:(Id class_id) None loc) else [] in 
+  let cnstr_stmt = Statement.AssignFunction.build loc class_id [] [] in 
+  decl @ [cnstr_stmt]
 
-and normalize_class_body (class_id : m Identifier.t) (class_proto : m Expression.t) (_, {body; _} : ('M, 'T) Ast.Class.Body.t) : norm_stmt_t = 
-  List.flatten (List.map (normalize_body_element class_id class_proto) body)
-
-and normalize_body_element (class_id : m Identifier.t) (class_proto : m Expression.t) (element : ('M, 'T) Ast.Class.Body.element) : norm_stmt_t = 
+and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (class_proto : m Expression.t) (element : ('M, 'T) Ast.Class.Body.element) : norm_stmt_t = 
   match element with 
     | Method (_, {key; value=(loc, func); _}) -> 
       let id = get_key_identifier key in
@@ -866,7 +869,8 @@ and normalize_body_element (class_id : m Identifier.t) (class_proto : m Expressi
       
       if is_constructor then
         let new_context = {empty_context with is_assignment = true; identifier = Some class_id} in 
-        let _, decl = createVariableDeclaration ~kind:_let ~objId:(Id class_id) None (loc_f loc) in 
+        
+        let decl = if not is_declaration then snd (createVariableDeclaration ~kind:_let ~objId:(Id class_id) None (loc_f loc)) else [] in 
         let func_stmts, _ = normalize_function new_context loc func in 
         
         decl @ func_stmts
@@ -980,7 +984,8 @@ and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={
   Expression.TemplateLiteral.Element.build (loc_f loc) raw cooked tail
 
 and get_identifier (id : m Identifier.t option) (loc : m) : m Identifier.t = 
-  map_default identity (Identifier.build_random loc) id
+  let random_id = lazy (Identifier.build_random loc) in
+  map_default_lazy identity random_id id
 
 and get_string ((_, {Ast.StringLiteral.value; _})) : string = value
 
@@ -988,7 +993,7 @@ and id_is_generated ((_, {is_generated; _}) : m Identifier.t) : bool = is_genera
 
 and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Statement.VarDecl.kind = _const) (obj : m Expression.t option) (loc : m) : m Identifier.t * norm_stmt_t =
   let id = match objId with 
-    | Name objId -> map_default (Identifier.build loc) (Identifier.build_random loc) objId
+    | Name objId -> map_default_lazy (Identifier.build loc) (lazy (Identifier.build_random loc)) objId
     | Id objId   -> objId 
   in 
 
@@ -1010,6 +1015,7 @@ and is_special_assignment ((_, expr) : ('M, 'T) Ast.Expression.t) : bool =
     (* -- ASSIGN FUNCTION -- *)
     | Ast.Expression.Function _
     | Ast.Expression.ArrowFunction _
+    | Ast.Expression.Class _
     (* -- ASSIGN ARRAY --*)
     | Ast.Expression.Array _ -> true
     | _ -> false

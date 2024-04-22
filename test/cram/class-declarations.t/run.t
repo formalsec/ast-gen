@@ -1,40 +1,42 @@
   $ dune exec ast_gen -f input-code-1.js
+  let Foo;
   Foo = function () {
   }
-  let v3;
-  v3 = new Bar();
-  Foo.prototype = v3;
+  let v2;
+  v2 = new Bar();
+  Foo.prototype = v2;
   
   $ dune exec ast_gen -f input-code-2.js
+  let Foo;
   Foo = function () {
   }
-  let v3;
-  v3 = new Bar();
-  Foo.prototype = v3;
-  const v4;
-  v4 = function () {
+  let v2;
+  v2 = new Bar();
+  Foo.prototype = v2;
+  const v3;
+  v3 = function () {
   }
-  v3.foo = v4;
+  v2.foo = v3;
   
   $ dune exec ast_gen -f input-code-3.js
   let Foo;
   Foo = function () {
-     let v5;
-     v5 = this.prototype;
-     let v6;
-     v6 = v5.constructor;
+     let v3;
+     v3 = this.prototype;
+     let v4;
+     v4 = v3.constructor;
+     const v5;
+     v5 = v4();
+     v5;
+  }
+  let v2;
+  v2 = new Bar();
+  Foo.prototype = v2;
+  const v6;
+  v6 = function () {
      const v7;
-     v7 = v6();
+     v7 = 1 + 2;
      v7;
   }
-  let v3;
-  v3 = new Bar();
-  Foo.prototype = v3;
-  const v8;
-  v8 = function () {
-     const v9;
-     v9 = 1 + 2;
-     v9;
-  }
-  v3.foo = v8;
+  v2.foo = v6;
   

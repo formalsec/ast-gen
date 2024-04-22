@@ -22,16 +22,16 @@
   const tag;
   tag = function (strings, personExp, ageExp) {
      let ageStr;
+     const v1;
+     v1 = ageExp > 99;
+     ageStr = (v1) ? 'centenarian' : 'youngster';
      const v2;
-     v2 = ageExp > 99;
-     ageStr = (v2) ? 'centenarian' : 'youngster';
+     v2 = strings[0];
      const v3;
-     v3 = strings[0];
+     v3 = strings[1];
      const v4;
-     v4 = strings[1];
-     const v5;
-     v5 = strings[2];
-     return `${v3}${personExp}${v4}${ageStr}${v5}`;
+     v4 = strings[2];
+     return `${v2}${personExp}${v3}${ageStr}${v4}`;
   }
   const firstName;
   firstName = 'Mike';
@@ -40,7 +40,7 @@
   const age;
   age = 28;
   const output;
-  const v6;
-  v6 = firstName + lastName;
-  output = tag`${v6} is a ${age}.`;
+  const v5;
+  v5 = firstName + lastName;
+  output = tag`${v5} is a ${age}.`;
   

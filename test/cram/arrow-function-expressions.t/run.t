@@ -1,21 +1,21 @@
   $ dune exec ast_gen -f input-code-1.js
   let x;
   x = function (z) {
+     const v1;
+     v1 = z + 2;
      const v2;
-     v2 = z + 2;
-     const v3;
-     v3 = v2 + 3;
-     return v3;
+     v2 = v1 + 3;
+     return v2;
   }
   
   $ dune exec ast_gen -f input-code-2.js
   let x;
   x = function (z) {
+     const v1;
+     v1 = 1 + 2;
      const v2;
-     v2 = 1 + 2;
-     const v3;
-     v3 = v2 + 3;
-     return v3;
+     v2 = v1 + 3;
+     return v2;
   }
   
   $ dune exec ast_gen -f input-code-3.js

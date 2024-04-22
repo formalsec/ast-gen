@@ -23,18 +23,18 @@
   $ dune exec ast_gen -f input-code-4.js
   cmd = ["1", 
         "2"];
+  const v1;
+  v1 = cmd.push;
   const v2;
-  v2 = cmd.push;
+  v2 = v1("3");
+  v2;
   const v3;
-  v3 = v2("3");
-  v3;
+  v3 = console.log;
   const v4;
-  v4 = console.log;
+  v4 = cmd.join;
   const v5;
-  v5 = cmd.join;
+  v5 = v4(" ");
   const v6;
-  v6 = v5(" ");
-  const v7;
-  v7 = v4(v6);
-  v7;
+  v6 = v3(v5);
+  v6;
   
