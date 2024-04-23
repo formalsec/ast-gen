@@ -84,13 +84,13 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
         then
           (* simple test expression: false, 1, x, ...*)
           let id, decl = createVariableDeclaration (Some true_val) loc ~kind:_let in
-          let update = Statement.AssignSimple.build loc None id (Option.get test_expr) in 
+          let update = Statement.AssignSimple.build loc id (Option.get test_expr) in 
           decl, [update], Identifier.to_expression id 
         else
           (* complex test expression that was reduced to an identifier *)
           let test_expr = Option.get test_expr in
           let decls, assings = List.partition is_declaration test_stmts in
-          let setup = Statement.AssignSimple.build loc None (Identifier.from_expression test_expr) true_val in 
+          let setup = Statement.AssignSimple.build loc (Identifier.from_expression test_expr) true_val in 
           List.map (change_kind _let) decls @ [setup], assings, test_expr 
       in
 
@@ -568,24 +568,22 @@ and normalize_assignment (context : context) (left : ('M, 'T) Ast.Pattern.t) (op
   let new_context = if is_id then {context with identifier = id; is_assignment = true} else context in
   
   let init_stmts, init_expr = ne new_context right in
-  let pat_stmts, ids = 
-    if not (is_id && is_special_assignment right) then 
-      normalize_pattern (Option.get init_expr) left op
-    else 
-      (* right expression is a special assignment so when it got 
-         normalized it already created a special assignment node 
-         (no need to recreate another) *)
-      [], [Option.get id]
+  let pat_stmts, ids = if not (is_id && is_special_assignment right) 
+    then normalize_pattern (Option.get init_expr) left op
+    else [], [Option.get id] 
   in 
 
   init_stmts @ pat_stmts, ids
+
   
 and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
   match pattern with 
     | loc, Identifier {name; _} -> 
       let id = normalize_identifier name in 
-      let assign = Statement.AssignSimple.build (loc_f loc) op id expression in 
-      [assign], [id]
+      let stmts, expr = map_default (build_operation id expression) ([], expression) op in
+
+      let assign = Statement.AssignSimple.build (loc_f loc) id expr in 
+      stmts @ [assign], [id]
     
     | _, Array {elements; _} -> let assigns, ids = List.split (List.mapi (
       fun i elem ->
@@ -655,16 +653,24 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast.Patt
         | RestElement _ -> failwith "restelement not implemented"
       ) properties) in 
       List.flatten assigns, List.flatten ids
-    | loc, Expression expr -> 
-      match expr with 
-        | _, Member {_object; property; _} -> 
-          let obj_stmts, obj_expr = normalize_expression empty_context _object in 
-          let prop_stmts, prop_expr = normalize_member_property property in 
-          let assign = Statement.MemberAssign.build (loc_f loc) op (Option.get obj_expr) (Option.get prop_expr) expression in 
-          
-          obj_stmts @ prop_stmts @ [assign], []
+    
+    | loc, Expression (_, Member {_object; property; _}) -> 
+      let loc = loc_f loc in 
+      let obj_stmts, obj_expr = normalize_expression empty_context _object in 
+      let prop_stmts, prop_expr = normalize_member_property property in 
+      
+      let stmts, expr = map_default 
+        (fun op -> 
+          let mem_id, mem_decl = createVariableDeclaration ~kind:_let None loc in 
+          let mem_assign = Statement.AssignMember.build loc mem_id (Option.get obj_expr) (Option.get prop_expr) in
+          let stmts', expr' = build_operation mem_id expression op in 
+          mem_decl @ [mem_assign] @ stmts', expr'
+        ) ([], expression) op in 
+      
+      let assign = Statement.MemberAssign.build loc (Option.get obj_expr) (Option.get prop_expr) expr in 
+      obj_stmts @ prop_stmts @ stmts @ [assign], []
 
-        | _ -> failwith "pattern expression not implemented"
+    | _ -> failwith "pattern expression not implemented"
 
 and is_identifier (pattern : ('M, 'T) Ast.Pattern.t) : bool * m Identifier.t option =
   match pattern with
@@ -872,7 +878,7 @@ and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (
         decl @ func_stmts
       else
         let func_stmts, func_expr = normalize_function empty_context loc func in 
-        let assign = Statement.MemberAssign.build (loc_f loc) None class_proto (Identifier.to_expression id) (Option.get func_expr)  in 
+        let assign = Statement.MemberAssign.build (loc_f loc) class_proto (Identifier.to_expression id) (Option.get func_expr)  in 
         func_stmts @ [assign]
 
     | Property (loc, {key; value; _}) -> 
@@ -884,7 +890,7 @@ and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (
         | Uninitialized | Declared -> [], None
       in
 
-      let assign = Option.map (Statement.MemberAssign.build (loc_f loc) None class_proto (Identifier.to_expression id)) val_expr  in 
+      let assign = Option.map (Statement.MemberAssign.build (loc_f loc) class_proto (Identifier.to_expression id)) val_expr  in 
       val_stmts @ Option.to_list assign 
 
     (* TODO : saw some *)
@@ -917,7 +923,7 @@ and normalize_extend (class_id : m Identifier.t) ((loc', {expr=(loc, _) as expr;
   let super_init = Statement.AssignNew.build loc id (Option.get ext_expr) [] in
 
   (* class_id.prototype = v1; *)
-  let assign_proto = Statement.MemberAssign.build (loc_f loc') None (Identifier.to_expression class_id) (Identifier.to_expression prototype) (Identifier.to_expression id) in
+  let assign_proto = Statement.MemberAssign.build (loc_f loc') (Identifier.to_expression class_id) (Identifier.to_expression prototype) (Identifier.to_expression id) in
   ext_stmts @ decl @ [super_init; assign_proto] , Some (Identifier.to_expression id)
 
 and no_extend (class_id : m Identifier.t) (loc : m) : norm_expr_t =
@@ -943,7 +949,7 @@ and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast.Expres
     | Property (loc, Init {key; value; _}) ->
       let key_stmts, key_expr = nk key in 
       let val_stmts, val_expr = ne value in 
-      let set_prop = Statement.MemberAssign.build (loc_f loc) None obj_id (Option.get key_expr) (Option.get val_expr) in 
+      let set_prop = Statement.MemberAssign.build (loc_f loc) obj_id (Option.get key_expr) (Option.get val_expr) in 
       key_stmts @ val_stmts @ [set_prop]
 
     | Property (_, Method {key; value=(loc, func); _}) 
@@ -951,7 +957,7 @@ and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast.Expres
     | Property (_, Set {key; value=(loc, func); _}) -> 
       let key_stmts, key_expr = nk key in 
       let val_stmts, val_expr = ne (loc, Ast.Expression.Function func) in 
-      let set_prop = Statement.MemberAssign.build (loc_f loc) None obj_id (Option.get key_expr) (Option.get val_expr) in 
+      let set_prop = Statement.MemberAssign.build (loc_f loc) obj_id (Option.get key_expr) (Option.get val_expr) in 
       key_stmts @ val_stmts @ [set_prop]
 
     (* TODO : spread property not implemented *)
@@ -995,7 +1001,7 @@ and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Stateme
   in 
 
   let decl = Statement.VarDecl.build loc kind id in 
-  let assign = Option.map (Statement.AssignSimple.build loc None id) obj in 
+  let assign = Option.map (Statement.AssignSimple.build loc id) obj in 
   
   (id, [decl] @ Option.to_list assign)
 
@@ -1029,7 +1035,31 @@ and change_kind (kind' : Statement.VarDecl.kind) ((loc, stmt) : m Statement.t) :
 and is_declaration ((_, stmt) : m Statement.t) : bool = 
   match stmt with 
     | Statement.VarDecl _ -> true 
-    | _                   -> false;;
+    | _                   -> false
+  
+and build_operation (left : m Identifier.t) ((loc, _) as right : m Expression.t) (op : Operator.Assignment.t): m Statement.t list * m Expression.t = 
+
+  let left = Identifier.to_expression left in 
+  let id', decl = createVariableDeclaration ~kind:_let (Some right) loc in
+  let right = Identifier.to_expression id' in 
+  
+  decl, match op with 
+          | PlusAssign    -> Expression.Binary.build loc Operator.Binary.Plus left right      
+          | MinusAssign   -> Expression.Binary.build loc Operator.Binary.Minus left right
+          | MultAssign    -> Expression.Binary.build loc Operator.Binary.Mult left right        
+          | ExpAssign     -> Expression.Binary.build loc Operator.Binary.Exp left right 
+          | DivAssign     -> Expression.Binary.build loc Operator.Binary.Div left right          
+          | ModAssign     -> Expression.Binary.build loc Operator.Binary.Mod left right 
+          | LShiftAssign  -> Expression.Binary.build loc Operator.Binary.LShift left right    
+          | RShiftAssign  -> Expression.Binary.build loc Operator.Binary.RShift left right 
+          | RShift3Assign -> Expression.Binary.build loc Operator.Binary.RShift3 left right 
+          | BitOrAssign   -> Expression.Binary.build loc Operator.Binary.BitOr left right 
+          | BitXorAssign  -> Expression.Binary.build loc Operator.Binary.Xor left right    
+          | BitAndAssign  -> Expression.Binary.build loc Operator.Binary.BitAnd left right 
+          | NullishAssign -> Expression.Logical.build loc Operator.Logical.NullishCoalesce left right  
+          | AndAssign     -> Expression.Logical.build loc Operator.Logical.And left right 
+          | OrAssign      -> Expression.Logical.build loc Operator.Logical.Or left right
+
 
 
   

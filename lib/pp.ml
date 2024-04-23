@@ -130,11 +130,10 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let close_bracket = if namespace then "" else " }" in  
       identation_str ^ "import " ^ open_bracket ^ remote' ^ local' ^ close_bracket ^ " from \"" ^ source ^ "\";\n"
       
-    | _, AssignSimple {operator; left; right} -> 
-      let operator' = map_default print_js_assign_op " = " operator in
+    | _, AssignSimple {left; right} -> 
       let left' = print_js_expr (Identifier.to_expression left) in
       let right' = print_js_expr right in
-      identation_str ^ left' ^ operator' ^ right' ^ ";\n"
+      identation_str ^ left' ^ " = " ^ right' ^ ";\n"
 
     | _, AssignArray {left; array} ->
       let left' = print_js_expr (Identifier.to_expression left) in
@@ -157,12 +156,11 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let arguments' = List.map print_js_expr arguments in 
       identation_str ^ left' ^ " = " ^ callee' ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
 
-    | _, MemberAssign {operator; _object; property; right} ->
-        let operator' = map_default print_js_assign_op " = " operator in 
+    | _, MemberAssign {_object; property; right} ->
         let _object' = print_js_expr _object in
         let property' = print_js_expr property in 
         let right' = print_js_expr right in  
-        identation_str ^ _object' ^ "." ^ property' ^ operator' ^ right' ^ ";\n"
+        identation_str ^ _object' ^ "." ^ property' ^ " = " ^ right' ^ ";\n"
 
     | _, AssignMember {left; _object; property} ->
        let left' = print_js_expr (Identifier.to_expression left) in 
@@ -292,24 +290,6 @@ and print_js_decl {kind; id} =
       in
       let id' = print_js_expr (Identifier.to_expression id) in
       kind' ^ id'
-
-and print_js_assign_op (operator : Operator.Assignment.t) : string = 
-  match operator with 
-        | PlusAssign -> " += "
-        | MinusAssign -> " -= "
-        | MultAssign -> " *= "
-        | ExpAssign -> " **= "
-        | DivAssign -> " /= "
-        | ModAssign -> " %= "
-        | LShiftAssign -> " <<= "
-        | RShiftAssign -> " >>= "
-        | RShift3Assign -> " >>>= "
-        | BitOrAssign -> " |= "
-        | BitXorAssign -> " ^= "
-        | BitAndAssign -> " &= "
-        | NullishAssign -> " ??= "
-        | AndAssign -> " &&= "
-        | OrAssign -> " ||= "
 
 and catch_to_stmt (loc, {Statement.Catch.param; body}) : m Statement.t = 
   let catch_info = Statement.Catch (loc, { param = param; body = body }) in

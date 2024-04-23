@@ -329,12 +329,11 @@ and Statement : sig
   (* --------- assignment statements --------- *)
   module AssignSimple : sig
     type 'M t = {
-      operator : Operator.Assignment.t option;
       left : 'M Identifier.t;
       right : 'M Expression.t;
     }
 
-    val build : 'M -> Operator.Assignment.t option -> 'M Identifier.t -> 'M Expression.t -> 'M Statement.t
+    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Statement.t
   end
 
   module AssignArray : sig
@@ -357,8 +356,6 @@ and Statement : sig
 
   module MemberAssign : sig
     type 'M t = {
-      operator : Operator.Assignment.t option;
-
       (* -- left -- *)
       _object : 'M Expression.t;
       property : 'M Expression.t;
@@ -366,7 +363,7 @@ and Statement : sig
       right : 'M Expression.t
     }
 
-    val build : 'M -> Operator.Assignment.t option -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t -> 'M Statement.t
+    val build : 'M -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t -> 'M Statement.t
   end
 
   module AssignMember : sig
@@ -750,14 +747,12 @@ end = struct
   (* --------- assignment statements --------- *)
   module AssignSimple = struct
     type 'M t = {
-      operator : Operator.Assignment.t option;
       left : 'M Identifier.t;
       right : 'M Expression.t;
     }
 
-    let build (metadata : 'M) (operator' : Operator.Assignment.t option) (left' : 'M Identifier.t) (right' : 'M Expression.t) : 'M Statement.t =
+    let build (metadata : 'M) (left' : 'M Identifier.t) (right' : 'M Expression.t) : 'M Statement.t =
       let assign_info = Statement.AssignSimple {
-        operator = operator';
         left = left';
         right = right';
       } 
@@ -813,7 +808,6 @@ end = struct
 
   module MemberAssign = struct
     type 'M t = {
-      operator : Operator.Assignment.t option;
       (* -- left -- *)
       _object : 'M Expression.t;
       property : 'M Expression.t;
@@ -821,9 +815,8 @@ end = struct
       right : 'M Expression.t
     }
 
-    let build (metadata : 'M) (operator' : Operator.Assignment.t option) (_object' : 'M Expression.t) (property' : 'M Expression.t) (right' : 'M Expression.t): 'M Statement.t =
+    let build (metadata : 'M) (_object' : 'M Expression.t) (property' : 'M Expression.t) (right' : 'M Expression.t): 'M Statement.t =
       let assign_info = Statement.MemberAssign {
-        operator = operator';
         _object = _object';
         property = property';
         right = right';
