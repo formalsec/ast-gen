@@ -54,7 +54,7 @@
      const v3;
      v3 = e["someValue"];
      const v4;
-     v4 = x.v3;
+     v4 = x[v3];
      const v5;
      v5 = eval(v4);
      v5;
@@ -66,7 +66,7 @@
         const v3;
         v3 = e["someValue"];
         const v4;
-        v4 = x.v3;
+        v4 = x[v3];
         const v5;
         v5 = eval(v4);
         v5;

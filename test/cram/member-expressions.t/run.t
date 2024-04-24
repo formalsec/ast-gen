@@ -9,5 +9,5 @@
   const y;
   const v1;
   v1 = f();
-  y = x.v1;
+  y = x[v1];
   

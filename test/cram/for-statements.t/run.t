@@ -6,23 +6,23 @@
   let dest;
   dest = [];
   for (var p in src) {
-     x = src.p;
-     y = dest.p;
+     x = src[p];
+     y = dest[p];
   }
   
   $ dune exec ast_gen -f input-code-2.js
   for (const v1 in src) {
      p = v1;
-     x = src.p;
-     y = dest.p;
+     x = src[p];
+     y = dest[p];
   }
   
   $ dune exec ast_gen -f input-code-3.js
   const extend;
   extend = function (dest, src) {
      for (var p in src) {
-        x = src.p;
-        y = dest.p;
+        x = src[p];
+        y = dest[p];
      }
   }
   

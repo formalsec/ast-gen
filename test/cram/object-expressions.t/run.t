@@ -55,5 +55,5 @@
   $ dune exec ast_gen -f input-code-8.js
   var map;
   map = {};
-  map.'%r' = repo;
+  map['%r'] = repo;
   

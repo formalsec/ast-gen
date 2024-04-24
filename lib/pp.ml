@@ -156,20 +156,31 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let arguments' = List.map print_js_expr arguments in 
       identation_str ^ left' ^ " = " ^ callee' ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
 
-    | _, MemberAssign {_object; property; right} ->
+    | _, StaticMemberAssign {_object; property; right} ->
         let _object' = print_js_expr _object in
-        let property' = print_js_expr property in 
+        let property' = print_js_expr (Identifier.to_expression property) in 
         let right' = print_js_expr right in  
         identation_str ^ _object' ^ "." ^ property' ^ " = " ^ right' ^ ";\n"
 
-    | _, AssignMember {left; _object; property} ->
+    | _, DynmicMemberAssign {_object; property; right} ->
+        let _object' = print_js_expr _object in
+        let property' = print_js_expr property in 
+        let right' = print_js_expr right in  
+        identation_str ^ _object' ^ "[" ^ property' ^ "] = " ^ right' ^ ";\n"
+
+    | _, AssignStaticMember {left; _object; property} ->
        let left' = print_js_expr (Identifier.to_expression left) in 
        let _object' = print_js_expr _object in 
-       let property' = print_js_expr property in
+       let property' = print_js_expr (Identifier.to_expression property) in
 
-       let is_literal = match property with _, Expression.Literal _ -> true | _ -> false in 
+       identation_str ^ left' ^ " = " ^ _object' ^  "." ^ property' ^ ";\n"
 
-       identation_str ^ left' ^ " = " ^ _object' ^ if is_literal then "[" ^ property' ^ "];\n" else  "." ^ property' ^ ";\n"
+    | _, AssignDynmicMember {left; _object; property} ->
+      let left' = print_js_expr (Identifier.to_expression left) in 
+      let _object' = print_js_expr _object in 
+      let property' = print_js_expr property in
+      
+      identation_str ^ left' ^ " = " ^ _object' ^ "[" ^ property' ^ "];\n"
 
     | _, AssignFunction {left; params; body} ->
       let left' = print_js_expr (Identifier.to_expression left) in 

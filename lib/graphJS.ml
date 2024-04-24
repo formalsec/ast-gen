@@ -354,7 +354,19 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t -> 'M Statement.t
   end
 
-  module MemberAssign : sig
+  module StaticMemberAssign : sig
+    type 'M t = {
+      (* -- left -- *)
+      _object : 'M Expression.t;
+      property : 'M Identifier.t;
+
+      right : 'M Expression.t
+    }
+
+    val build : 'M -> 'M Expression.t -> 'M Identifier.t -> 'M Expression.t -> 'M Statement.t
+  end
+
+  module DynmicMemberAssign : sig
     type 'M t = {
       (* -- left -- *)
       _object : 'M Expression.t;
@@ -366,7 +378,18 @@ and Statement : sig
     val build : 'M -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t -> 'M Statement.t
   end
 
-  module AssignMember : sig
+  module AssignStaticMember : sig
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      _object : 'M Expression.t;
+      property : 'M Identifier.t;
+    }
+
+    val build : 'M  -> 'M Identifier.t ->'M Expression.t ->'M Identifier.t ->'M Statement.t
+  end
+
+  module AssignDynmicMember : sig
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
@@ -446,14 +469,16 @@ and Statement : sig
     | ImportDecl        of 'M ImportDecl.t
     
     (* ---- assignment statements ---- *)
-    | AssignSimple   of 'M AssignSimple.t
-    | AssignArray    of 'M AssignArray.t
-    | AssignObject   of 'M AssignObject.t
-    | MemberAssign   of 'M MemberAssign.t
-    | AssignMember   of 'M AssignMember.t
-    | AssignNew      of 'M AssignNew.t
-    | AssignFunCall  of 'M AssignFunCall.t
-    | AssignFunction of 'M AssignFunction.t
+    | AssignSimple       of 'M AssignSimple.t
+    | AssignArray        of 'M AssignArray.t
+    | AssignObject       of 'M AssignObject.t
+    | StaticMemberAssign of 'M StaticMemberAssign.t
+    | DynmicMemberAssign of 'M DynmicMemberAssign.t
+    | AssignStaticMember of 'M AssignStaticMember.t
+    | AssignDynmicMember of 'M AssignDynmicMember.t
+    | AssignNew          of 'M AssignNew.t
+    | AssignFunCall      of 'M AssignFunCall.t
+    | AssignFunction     of 'M AssignFunction.t
   
   type 'M t = 'M * 'M t'
   
@@ -806,7 +831,25 @@ end = struct
       (metadata, assign_info)
   end
 
-  module MemberAssign = struct
+  module StaticMemberAssign = struct
+    type 'M t = {
+      (* -- left -- *)
+      _object : 'M Expression.t;
+      property : 'M Identifier.t;
+
+      right : 'M Expression.t
+    }
+
+    let build (metadata : 'M) (_object' : 'M Expression.t) (property' : 'M Identifier.t) (right' : 'M Expression.t): 'M Statement.t =
+      let assign_info = Statement.StaticMemberAssign {
+        _object = _object';
+        property = property';
+        right = right';
+      } in 
+      (metadata, assign_info)
+  end
+
+  module DynmicMemberAssign = struct
     type 'M t = {
       (* -- left -- *)
       _object : 'M Expression.t;
@@ -816,7 +859,7 @@ end = struct
     }
 
     let build (metadata : 'M) (_object' : 'M Expression.t) (property' : 'M Expression.t) (right' : 'M Expression.t): 'M Statement.t =
-      let assign_info = Statement.MemberAssign {
+      let assign_info = Statement.DynmicMemberAssign {
         _object = _object';
         property = property';
         right = right';
@@ -824,7 +867,25 @@ end = struct
       (metadata, assign_info)
   end
 
-  module AssignMember = struct
+  module AssignStaticMember = struct
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      _object : 'M Expression.t;
+      property : 'M Identifier.t;
+    }
+
+    let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Identifier.t) : 'M Statement.t =
+      let assign_info = Statement.AssignStaticMember {
+        left = left';
+        _object = _object';
+        property = property'
+      } in
+      (metadata, assign_info)
+
+  end
+
+  module AssignDynmicMember = struct
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
@@ -833,13 +894,12 @@ end = struct
     }
 
     let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Expression.t) : 'M Statement.t =
-      let assign_info = Statement.AssignMember {
+      let assign_info = Statement.AssignDynmicMember {
         left = left';
         _object = _object';
         property = property'
       } in
       (metadata, assign_info)
-
   end
 
   module AssignFunCall = struct
@@ -918,14 +978,16 @@ end = struct
     | ImportDecl        of 'M ImportDecl.t
 
     (* ---- assignment statements ---- *)
-    | AssignSimple   of 'M AssignSimple.t
-    | AssignArray    of 'M AssignArray.t
-    | AssignObject   of 'M AssignObject.t
-    | MemberAssign   of 'M MemberAssign.t
-    | AssignMember   of 'M AssignMember.t
-    | AssignNew      of 'M AssignNew.t
-    | AssignFunCall  of 'M AssignFunCall.t
-    | AssignFunction of 'M AssignFunction.t
+    | AssignSimple       of 'M AssignSimple.t
+    | AssignArray        of 'M AssignArray.t
+    | AssignObject       of 'M AssignObject.t
+    | StaticMemberAssign of 'M StaticMemberAssign.t
+    | DynmicMemberAssign of 'M DynmicMemberAssign.t
+    | AssignStaticMember of 'M AssignStaticMember.t
+    | AssignDynmicMember of 'M AssignDynmicMember.t
+    | AssignNew          of 'M AssignNew.t
+    | AssignFunCall      of 'M AssignFunCall.t
+    | AssignFunction     of 'M AssignFunction.t
   
   type 'M t = 'M * 'M t'
 end
