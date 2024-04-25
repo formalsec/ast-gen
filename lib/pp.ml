@@ -135,7 +135,7 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let right' = print_js_expr right in
       identation_str ^ left' ^ " = " ^ right' ^ ";\n"
     
-    | _, AssignOperation {left; operator; opLeft; opRght} -> 
+    | _, AssignOperation {left; operator; opLeft; opRght; _} -> 
       let left' = print_js_expr (Identifier.to_expression left) in 
       let operator' = match operator with
         | Equal -> " == "         | NotEqual -> " != "
@@ -162,7 +162,7 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let array' = "[" ^ String.concat (", \n      " ^ identation_str) (List.map print_js_expr array) ^ "]" in 
       identation_str ^ left' ^ " = " ^ array' ^ ";\n"
 
-    | _, AssignObject {left} -> 
+    | _, AssignObject {left; _} -> 
       let left' = print_js_expr (Identifier.to_expression left) in
       identation_str ^ left' ^ " = " ^ "{};\n"
 
@@ -178,26 +178,26 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let arguments' = List.map print_js_expr arguments in 
       identation_str ^ left' ^ " = " ^ callee' ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
 
-    | _, StaticMemberAssign {_object; property; right} ->
+    | _, StaticMemberAssign {_object; property; right; _} ->
         let _object' = print_js_expr _object in
         let property' = print_js_expr (Identifier.to_expression property) in 
         let right' = print_js_expr right in  
         identation_str ^ _object' ^ "." ^ property' ^ " = " ^ right' ^ ";\n"
 
-    | _, DynmicMemberAssign {_object; property; right} ->
+    | _, DynmicMemberAssign {_object; property; right; _} ->
         let _object' = print_js_expr _object in
         let property' = print_js_expr property in 
         let right' = print_js_expr right in  
         identation_str ^ _object' ^ "[" ^ property' ^ "] = " ^ right' ^ ";\n"
 
-    | _, AssignStaticMember {left; _object; property} ->
+    | _, AssignStaticMember {left; _object; property; _} ->
        let left' = print_js_expr (Identifier.to_expression left) in 
        let _object' = print_js_expr _object in 
        let property' = print_js_expr (Identifier.to_expression property) in
 
        identation_str ^ left' ^ " = " ^ _object' ^  "." ^ property' ^ ";\n"
 
-    | _, AssignDynmicMember {left; _object; property} ->
+    | _, AssignDynmicMember {left; _object; property; _} ->
       let left' = print_js_expr (Identifier.to_expression left) in 
       let _object' = print_js_expr _object in 
       let property' = print_js_expr property in

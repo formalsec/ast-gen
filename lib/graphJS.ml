@@ -337,6 +337,7 @@ and Statement : sig
 
   module AssignOperation : sig
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
       operator : Operator.Binary.t;
       (* -- right -- *)
@@ -359,6 +360,7 @@ and Statement : sig
 
   module AssignObject : sig
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
     }
 
@@ -367,6 +369,7 @@ and Statement : sig
 
   module StaticMemberAssign : sig
     type 'M t = {
+      id : int;
       (* -- left -- *)
       _object : 'M Expression.t;
       property : 'M Identifier.t;
@@ -379,6 +382,7 @@ and Statement : sig
 
   module DynmicMemberAssign : sig
     type 'M t = {
+      id : int;
       (* -- left -- *)
       _object : 'M Expression.t;
       property : 'M Expression.t;
@@ -391,6 +395,7 @@ and Statement : sig
 
   module AssignStaticMember : sig
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
@@ -402,6 +407,7 @@ and Statement : sig
 
   module AssignDynmicMember : sig
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
@@ -498,7 +504,7 @@ and Statement : sig
 end = struct
 
   let id_count : int ref = ref (-1)
-  let _ : int = 
+  let get_id : int = 
     id_count := !id_count + 1;
     !id_count
 
@@ -806,6 +812,7 @@ end = struct
 
   module AssignOperation = struct
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
       operator : Operator.Binary.t;
       (* -- right -- *)
@@ -815,6 +822,7 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (operator' : Operator.Binary.t) (opLeft' : 'M Expression.t) (opRght' : 'M Expression.t) : 'M Statement.t =
       let assign_info = Statement.AssignOperation {
+        id = get_id; 
         left = left';
         operator = operator';
         opLeft = opLeft';
@@ -842,11 +850,13 @@ end = struct
   module AssignObject = struct
 
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
     }
 
     let build (metadata : 'M) (left' : 'M Identifier.t) : 'M Statement.t = 
       let assign_info = Statement.AssignObject {
+        id = get_id;
         left = left';
       } in 
       (metadata, assign_info)
@@ -871,6 +881,7 @@ end = struct
 
   module StaticMemberAssign = struct
     type 'M t = {
+      id : int;
       (* -- left -- *)
       _object : 'M Expression.t;
       property : 'M Identifier.t;
@@ -880,6 +891,7 @@ end = struct
 
     let build (metadata : 'M) (_object' : 'M Expression.t) (property' : 'M Identifier.t) (right' : 'M Expression.t): 'M Statement.t =
       let assign_info = Statement.StaticMemberAssign {
+        id = get_id;
         _object = _object';
         property = property';
         right = right';
@@ -889,6 +901,7 @@ end = struct
 
   module DynmicMemberAssign = struct
     type 'M t = {
+      id : int;
       (* -- left -- *)
       _object : 'M Expression.t;
       property : 'M Expression.t;
@@ -898,6 +911,7 @@ end = struct
 
     let build (metadata : 'M) (_object' : 'M Expression.t) (property' : 'M Expression.t) (right' : 'M Expression.t): 'M Statement.t =
       let assign_info = Statement.DynmicMemberAssign {
+        id = get_id;
         _object = _object';
         property = property';
         right = right';
@@ -907,6 +921,7 @@ end = struct
 
   module AssignStaticMember = struct
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
@@ -915,6 +930,7 @@ end = struct
 
     let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Identifier.t) : 'M Statement.t =
       let assign_info = Statement.AssignStaticMember {
+        id = get_id;
         left = left';
         _object = _object';
         property = property'
@@ -925,6 +941,7 @@ end = struct
 
   module AssignDynmicMember = struct
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
@@ -933,6 +950,7 @@ end = struct
 
     let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Expression.t) : 'M Statement.t =
       let assign_info = Statement.AssignDynmicMember {
+        id = get_id;
         left = left';
         _object = _object';
         property = property'
