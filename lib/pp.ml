@@ -134,6 +134,28 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
       let left' = print_js_expr (Identifier.to_expression left) in
       let right' = print_js_expr right in
       identation_str ^ left' ^ " = " ^ right' ^ ";\n"
+    
+    | _, AssignOperation {left; operator; opLeft; opRght} -> 
+      let left' = print_js_expr (Identifier.to_expression left) in 
+      let operator' = match operator with
+        | Equal -> " == "         | NotEqual -> " != "
+        | StrictEqual -> " === "  | StrictNotEqual -> " !== "
+        | LessThan -> " < "       | LessThanEqual -> " <= "
+        | GreaterThan -> " > "    | GreaterThanEqual -> " >= "
+        | LShift -> " << "        | RShift -> " >> "
+        | RShift3 -> " >>> "      | Plus -> " + "
+        | Minus -> " - "          | Mult -> " * "
+        | Exp -> " ** "           | Div -> " / "
+        | Mod -> " % "            | BitOr -> " | "
+        | Xor -> " ^ "            | BitAnd -> " & "
+        | In -> " in "            | Instanceof -> " instanceof "
+        | Or -> " || "            | And -> " && "
+        | NullishCoalesce -> " ?? " 
+      in
+      let opLeft' = print_js_expr opLeft in 
+      let opRght' = print_js_expr opRght in 
+
+      identation_str ^ left' ^ " = " ^ opLeft' ^ operator' ^ opRght' ^ ";\n"
 
     | _, AssignArray {left; array} ->
       let left' = print_js_expr (Identifier.to_expression left) in
@@ -194,44 +216,12 @@ and print_js_stmt (stmt : m Statement.t) (identation : int) : string =
   match expr with 
   | _, Literal {raw; _} -> raw
   | _, Identifier {name; _} -> name
-  | _, Logical {operator; left; right} -> 
-    let operator' = match operator with
-      | Or -> " || "
-      | And -> " && "
-      | NullishCoalesce -> " ?? "
-    in
-    let left' = print_js_expr left in
-    let right' = print_js_expr right in
-    left' ^ operator' ^ right'
-  
-  | _, Binary {operator; left; right} -> 
-    let operator' = match operator with
-      | Equal -> " == "         | NotEqual -> " != "
-      | StrictEqual -> " === "  | StrictNotEqual -> " !== "
-      | LessThan -> " < "       | LessThanEqual -> " <= "
-      | GreaterThan -> " > "    | GreaterThanEqual -> " >= "
-      | LShift -> " << "        | RShift -> " >> "
-      | RShift3 -> " >>> "      | Plus -> " + "
-      | Minus -> " - "          | Mult -> " * "
-      | Exp -> " ** "           | Div -> " / "
-      | Mod -> " % "            | BitOr -> " | "
-      | Xor -> " ^ "            | BitAnd -> " & "
-      | In -> " in "            | Instanceof -> " instanceof "
-    in
-    let left' = print_js_expr left in
-    let right' = print_js_expr right in
-    left' ^ operator' ^ right'
-  
   | _, Unary {operator; argument} ->
     let operator' = match operator with
-      | Minus -> "-"
-      | Plus -> "+"
-      | Not -> "!"
-      | BitNot -> "~"
-      | Typeof -> "typeof "
-      | Void -> "void "
-      | Delete -> "delete "
-      | Await -> "await "
+      | Minus -> "-"          | Plus -> "+"
+      | Not -> "!"            | BitNot -> "~"
+      | Typeof -> "typeof "   | Void -> "void "
+      | Delete -> "delete "   | Await -> "await "
     in
     let argument' = print_js_expr argument in
     operator' ^ argument'

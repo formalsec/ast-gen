@@ -43,20 +43,15 @@ module Operator = struct
         | OrAssign -> OrAssign
   end
 
-  module Logical = struct
-    type t =  Or | And | NullishCoalesce
-    
-    let translate (op : Ast.Expression.Logical.operator) : t =
-      match op with
-        | Or -> Or | And -> And | NullishCoalesce -> NullishCoalesce
-  end
-
   module Binary = struct
-    type t = Equal | NotEqual | StrictEqual | StrictNotEqual | LessThan | LessThanEqual |
+    type t = (* ------------------------ B I N A R Y ------------------------*)
+             Equal | NotEqual | StrictEqual | StrictNotEqual | LessThan | LessThanEqual |
              GreaterThan | GreaterThanEqual | LShift | RShift | RShift3 | Plus |
-             Minus | Mult | Exp | Div | Mod | BitOr | Xor | BitAnd | In | Instanceof
+             Minus | Mult | Exp | Div | Mod | BitOr | Xor | BitAnd | In | Instanceof |
+             (* ------------------------ L O G I C A L -----------------------*)
+             Or | And | NullishCoalesce
 
-    let translate (op : Ast.Expression.Binary.operator) : t =
+    let translate_binary (op : Ast.Expression.Binary.operator) : t =
       match op with
         | Equal -> Equal             | NotEqual -> NotEqual
         | StrictEqual -> StrictEqual | StrictNotEqual -> StrictNotEqual
@@ -69,6 +64,10 @@ module Operator = struct
         | Mod -> Mod                 | BitOr -> BitOr
         | Xor -> Xor                 | BitAnd -> BitAnd
         | In -> In                   | Instanceof -> Instanceof
+    
+    let translate_logical (op : Ast.Expression.Logical.operator) : t =
+      match op with
+        | Or -> Or | And -> And | NullishCoalesce -> NullishCoalesce
   end 
 
   module Unary = struct
@@ -336,6 +335,18 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Statement.t
   end
 
+  module AssignOperation : sig
+    type 'M t = {
+      left : 'M Identifier.t;
+      operator : Operator.Binary.t;
+      (* -- right -- *)
+      opLeft : 'M Expression.t;
+      opRght : 'M Expression.t;
+    }
+
+    val build : 'M -> 'M Identifier.t -> Operator.Binary.t -> 'M Expression.t -> 'M Expression.t -> 'M Statement.t 
+  end
+
   module AssignArray : sig
     type 'M t = {
       left : 'M Identifier.t;
@@ -470,6 +481,7 @@ and Statement : sig
     
     (* ---- assignment statements ---- *)
     | AssignSimple       of 'M AssignSimple.t
+    | AssignOperation     of 'M AssignOperation.t
     | AssignArray        of 'M AssignArray.t
     | AssignObject       of 'M AssignObject.t
     | StaticMemberAssign of 'M StaticMemberAssign.t
@@ -484,6 +496,13 @@ and Statement : sig
   
 
 end = struct
+
+  let id_count : int ref = ref (-1)
+  let _ : int = 
+    id_count := !id_count + 1;
+    !id_count
+
+
   module VarDecl = struct
     type kind =
       | Var
@@ -785,6 +804,25 @@ end = struct
       (metadata, assign_info)
   end
 
+  module AssignOperation = struct
+    type 'M t = {
+      left : 'M Identifier.t;
+      operator : Operator.Binary.t;
+      (* -- right -- *)
+      opLeft : 'M Expression.t;
+      opRght : 'M Expression.t;
+    }
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (operator' : Operator.Binary.t) (opLeft' : 'M Expression.t) (opRght' : 'M Expression.t) : 'M Statement.t =
+      let assign_info = Statement.AssignOperation {
+        left = left';
+        operator = operator';
+        opLeft = opLeft';
+        opRght = opRght';
+      } in 
+      (metadata, assign_info)
+  end
+
   module AssignArray = struct
     type 'M t = {
       left : 'M Identifier.t;
@@ -979,6 +1017,7 @@ end = struct
 
     (* ---- assignment statements ---- *)
     | AssignSimple       of 'M AssignSimple.t
+    | AssignOperation     of 'M AssignOperation.t
     | AssignArray        of 'M AssignArray.t
     | AssignObject       of 'M AssignObject.t
     | StaticMemberAssign of 'M StaticMemberAssign.t
@@ -1010,26 +1049,6 @@ and Expression : sig
     }
 
     val build : 'M -> value -> string -> 'M Expression.t
-  end
-
-  module Logical : sig 
-    type 'M t = {
-      operator : Operator.Logical.t;
-      left : 'M Expression.t;
-      right : 'M Expression.t
-    }
-
-    val build : 'M -> Operator.Logical.t -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
-  end
-
-  module Binary : sig    
-    type 'M t = {
-      operator : Operator.Binary.t;
-      left : 'M Expression.t;
-      right : 'M Expression.t;
-    }
-
-    val build : 'M -> Operator.Binary.t -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
   end
 
   module Unary : sig
@@ -1129,8 +1148,6 @@ and Expression : sig
     | Literal         of    Literal.t 
     | Identifier      of    Identifier.t' 
     | This            of    This.t
-    | Logical         of 'M Logical.t
-    | Binary          of 'M Binary.t
     | Unary           of 'M Unary.t
     | Update          of 'M Update.t
     
@@ -1164,38 +1181,6 @@ end = struct
       let literal_info = Expression.Literal { value = value'; raw = raw' } in
       (metadata, literal_info)
 
-  end
-
-  module Logical = struct    
-    type 'M t = {
-      operator : Operator.Logical.t;
-      left : 'M Expression.t;
-      right : 'M Expression.t
-    }
-
-    let build (metadata : 'M) (operator' : Operator.Logical.t) (left' : 'M Expression.t) (right' : 'M Expression.t) : 'M Expression.t = 
-      let logical_info = Expression.Logical {
-        operator = operator';
-        left = left';
-        right = right';
-      } in
-      (metadata, logical_info)
-  end
-
-  module Binary = struct
-    type 'M t = {
-      operator : Operator.Binary.t;
-      left : 'M Expression.t;
-      right : 'M Expression.t
-    }
-
-    let build (metadata : 'M) (operator' : Operator.Binary.t) (left' : 'M Expression.t) (right' : 'M Expression.t) : 'M Expression.t = 
-      let binary_info = Expression.Binary {
-        operator = operator';
-        left = left';
-        right = right';
-      } in
-      (metadata, binary_info)
   end
 
   module Unary = struct
@@ -1346,8 +1331,6 @@ end = struct
     | Literal         of    Literal.t 
     | Identifier      of    Identifier.t' 
     | This            of    This.t
-    | Logical         of 'M Logical.t
-    | Binary          of 'M Binary.t
     | Unary           of 'M Unary.t
     | Update          of 'M Update.t
     
