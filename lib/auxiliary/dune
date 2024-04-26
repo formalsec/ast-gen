@@ -1,0 +1,6 @@
+(include_subdirs unqualified)
+
+(library
+ (name auxiliary)
+ (libraries flow_parser yojson))
+

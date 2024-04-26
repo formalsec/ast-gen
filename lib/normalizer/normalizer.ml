@@ -1,6 +1,6 @@
 module Ast = Flow_ast
-open GraphJS
-open Aux
+open Auxiliary.GraphJS
+open Auxiliary.Functions
 
 (* --------- A L I A S E S --------- *)
 type m = Location.t;;
@@ -1114,8 +1114,3 @@ and build_operation (left : m Identifier.t) ((loc, _) as right : m Expression.t)
           | NullishAssign -> Statement.AssignOperation.build loc left Operator.Binary.NullishCoalesce left_expr right  
           | AndAssign     -> Statement.AssignOperation.build loc left Operator.Binary.And left_expr right 
           | OrAssign      -> Statement.AssignOperation.build loc left Operator.Binary.Or left_expr right
-
-
-
-  
-

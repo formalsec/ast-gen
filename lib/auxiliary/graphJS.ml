@@ -1035,7 +1035,7 @@ end = struct
 
     (* ---- assignment statements ---- *)
     | AssignSimple       of 'M AssignSimple.t
-    | AssignOperation     of 'M AssignOperation.t
+    | AssignOperation    of 'M AssignOperation.t
     | AssignArray        of 'M AssignArray.t
     | AssignObject       of 'M AssignObject.t
     | StaticMemberAssign of 'M StaticMemberAssign.t

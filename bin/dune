@@ -1,4 +1,4 @@
 (executable
  (public_name ast_gen)
  (name main)
- (libraries ast_gen cmdliner))
+ (libraries auxiliary normalizer pp mdg cmdliner))
