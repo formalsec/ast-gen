@@ -3,7 +3,6 @@ open Auxiliary.GraphJS
 open Auxiliary.Functions
 
 (* --------- A L I A S E S --------- *)
-type m = Location.t;;
 type norm_stmt_t = m Statement.t list;;
 type norm_expr_t = m Statement.t list * m Expression.t option;;
 
@@ -439,14 +438,14 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     List.flatten stmts, Some sequence
 
   (* --------- T A G G E D   T E M P L A T E --------- *)
-  | loc, Ast.Expression.TaggedTemplate {tag; quasi=(qloc, quasi'); _} ->
+  (* | loc, Ast.Expression.TaggedTemplate {tag; quasi=(qloc, quasi'); _} ->
     let tag_stmts, tag_expr = ne tag in 
     let qsi_stmts, qsi_expr = ne (qloc, Ast.Expression.TemplateLiteral quasi') in 
     (* convert quasi back to a template literal *)
     let qsi_expr = match qsi_expr with Some (_, Expression.TemplateLiteral tl) -> tl | _ -> failwith "failed to convert quasi to template literal"in 
 
     let tagged_template = Expression.TaggedTemplate.build (loc_f loc) (Option.get tag_expr) qsi_expr in 
-    tag_stmts @ qsi_stmts, Some tagged_template 
+    tag_stmts @ qsi_stmts, Some tagged_template  *)
 
   (* --------- Y I E L D --------- *)
   | loc, Ast.Expression.Yield {argument; delegate; _} -> 
@@ -466,12 +465,12 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     test_stmts @ cnsq_stmts @ altr_stmts, Some conditional
 
   (* --------- M E T A   P R O P E R T Y --------- *)
-  | loc, Ast.Expression.MetaProperty {meta; property; _} -> 
+  (* | loc, Ast.Expression.MetaProperty {meta; property; _} -> 
     let meta' = normalize_identifier meta in 
     let property' = normalize_identifier property in 
     
     let meta_property = Expression.MetaProperty.build (loc_f loc) meta' property' in 
-    [], Some meta_property
+    [], Some meta_property *)
   
   
   (* --------- A S S I G N   S I M P L E --------- *)

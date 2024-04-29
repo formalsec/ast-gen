@@ -25,6 +25,8 @@ module Location = struct
 
 end
 
+type m = Location.t;;
+
 module Operator = struct
   module Assignment = struct
     type t = PlusAssign | MinusAssign | MultAssign | ExpAssign | DivAssign |
@@ -1118,14 +1120,14 @@ and Expression : sig
     val build : 'M -> 'M Element.t list -> 'M Expression.t list -> 'M Expression.t
   end
 
-  module TaggedTemplate : sig
+  (* module TaggedTemplate : sig
     type 'M t = {
       tag : 'M Expression.t;
       quasi : 'M TemplateLiteral.t
     }
 
     val build : 'M -> 'M Expression.t -> 'M TemplateLiteral.t -> 'M Expression.t
-  end
+  end *)
 
   module Sequence : sig
     type 'M t = { expressions : 'M Expression.t list}
@@ -1151,14 +1153,14 @@ and Expression : sig
     val build : 'M -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
   end
 
-  module MetaProperty : sig
+  (* module MetaProperty : sig
     type 'M t = {
       meta : 'M Identifier.t;
       property : 'M Identifier.t
     }
 
     val build : 'M -> 'M Identifier.t -> 'M Identifier.t -> 'M Expression.t
-  end
+  end *)
 
   val to_statement : 'M Expression.t -> 'M Statement.t
 
@@ -1174,8 +1176,10 @@ and Expression : sig
     | Conditional     of 'M Conditional.t
 
     | TemplateLiteral of 'M TemplateLiteral.t
+    (* 
     | TaggedTemplate  of 'M TaggedTemplate.t
-    | MetaProperty    of 'M MetaProperty.t
+    | MetaProperty    of 'M MetaProperty.t 
+    *)
 
 
   type 'M t = 'M * 'M t'
@@ -1273,7 +1277,7 @@ end = struct
       (metadata, literal_info)
   end
 
-  module TaggedTemplate = struct
+  (* module TaggedTemplate = struct
     type 'M t = {
       tag : 'M Expression.t;
       quasi : 'M TemplateLiteral.t
@@ -1286,7 +1290,7 @@ end = struct
       } in
       (metadata, tagged_info)
 
-  end
+  end *)
 
   module Sequence = struct
     type 'M t = { expressions : 'M Expression.t list}
@@ -1328,7 +1332,7 @@ end = struct
       (metadata, cond_info)
   end
 
-  module MetaProperty = struct
+  (* module MetaProperty = struct
     type 'M t = {
       meta : 'M Identifier.t;
       property : 'M Identifier.t
@@ -1340,7 +1344,7 @@ end = struct
         property = property'
       } in 
       (metadata, metaprop_info)
-  end
+  end *)
 
   let to_statement ((loc, _) as expr : 'M Expression.t) : 'M Statement.t = 
     (loc, Statement.Expression expr)
@@ -1357,8 +1361,10 @@ end = struct
     | Conditional     of 'M Conditional.t
 
     | TemplateLiteral of 'M TemplateLiteral.t
+    (* 
     | TaggedTemplate  of 'M TaggedTemplate.t
-    | MetaProperty    of 'M MetaProperty.t
+    | MetaProperty    of 'M MetaProperty.t 
+    *)
   
 
 

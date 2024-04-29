@@ -2,7 +2,6 @@
 open Auxiliary.GraphJS 
 open Auxiliary.Functions
 
-type m = Location.t
 let spaces_per_identation = 3;;
 
 
@@ -244,11 +243,11 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
     let quasi_expr = List.map (fun (raw, expr) -> raw ^ (if expr != "" then "${" ^ expr ^ "}" else "")) (List.combine quasis' (expressions' @ [""])) in
     "`" ^ String.concat "" quasi_expr ^ "`"
   
-  | _, TaggedTemplate {tag; quasi} -> 
+  (* | _, TaggedTemplate {tag; quasi} -> 
     let tag' = print_expr tag in 
     let quasi' = print_expr (Location.empty, Expression.TemplateLiteral quasi) in 
     
-    tag' ^ quasi'
+    tag' ^ quasi' *)
   
   | _, Yield {argument; _ } ->
     let argument' = map_default ((^) " " << print_expr) "" argument in
@@ -261,10 +260,10 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
     
     "(" ^ test' ^ ") ? " ^ consequent' ^ " : " ^ alternate'
 
-  | _, MetaProperty {meta; property} ->
+  (* | _, MetaProperty {meta; property} ->
     let meta' = print_expr (Identifier.to_expression meta) in 
     let property' = print_expr (Identifier.to_expression property) in 
-    meta' ^ "." ^ property'
+    meta' ^ "." ^ property' *)
     
 
 and print_stmts (stmts : m Statement.t list) (identation : int): string =
