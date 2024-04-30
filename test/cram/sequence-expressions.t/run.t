@@ -29,6 +29,8 @@
   v1 = 2 + 1;
   y.a = v1;
   let v2;
+  v2 = x;
   let v3;
+  v3 = y;
   v3;
   

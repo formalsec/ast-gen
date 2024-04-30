@@ -41,8 +41,9 @@ type context = {
   is_assignment : bool;
   has_op : bool;
   is_declaration : bool;
+  is_statement : bool;
 }
-let empty_context : context = { parent_type = ""; identifier = None; is_assignment = false; is_declaration = false; has_op = false; } 
+let empty_context : context = { parent_type = ""; identifier = None; is_assignment = false; is_declaration = false; has_op = false; is_statement = false; } 
 
 let rec normalize (loc , { Ast.Program.statements; _ }) : m Program.t = 
   let statements' = List.flatten (List.map (normalize_statement empty_context) statements) in
@@ -52,6 +53,7 @@ let rec normalize (loc , { Ast.Program.statements; _ }) : m Program.t =
 and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : norm_stmt_t =
   let ns  = normalize_statement empty_context in
   let ne  = normalize_expression empty_context in
+  let nec = normalize_expression in 
 
   match stmt with
     (* --------- B L O C K --------- *)
@@ -277,7 +279,8 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
 
     (* --------- S T A T E M E N T   E X P R E S S I O N ---------*)
     | _, Ast.Statement.Expression {expression; _} -> 
-      let stmts, expr = ne expression in 
+      let new_context = {context with is_statement = true} in 
+      let stmts, expr = nec new_context expression in 
       stmts @ Option.to_list (Option.map Expression.to_statement expr)
     
     | _, Ast.Statement.Empty _ -> []
@@ -469,11 +472,11 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let test_stmts, test_expr = ne test in
     let cnsq_stmts, cnsq_expr = ne consequent in 
     let cnsq_assign = Statement.AssignSimple.build loc id (Option.get cnsq_expr) in 
+    
     let altr_stmts, altr_expr = ne alternate in 
     let altr_assign = Statement.AssignSimple.build loc id (Option.get altr_expr) in 
-
+    
     let conditional = Statement.If.build loc (Option.get test_expr) (cnsq_stmts @ [cnsq_assign]) (Some (altr_stmts @ [altr_assign])) in
-
     decl @ test_stmts @ [conditional], Some (Identifier.to_expression id)
 
   (* --------- M E T A   P R O P E R T Y --------- *)
@@ -491,8 +494,12 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let operator' = Option.map Operator.Assignment.translate operator in
     let assign_stmts, _ = normalize_assignment context left operator' right  in 
 
-    (* TODO : graph.js normalizer has some special cases depending on the parent *)
-    assign_stmts, None 
+    let stmts, expr = if not context.is_statement
+      then get_pattern_expr left
+      else [], None 
+    in 
+
+    assign_stmts @ stmts, expr 
 
   (* --------- A S S I G N   A R R A Y ---------*)
   | loc, Ast.Expression.Array {elements; _} -> 
@@ -712,6 +719,25 @@ and is_identifier (pattern : ('M, 'T) Ast.Pattern.t) : bool * m Identifier.t opt
   match pattern with
   | _, Identifier {name; _} -> true,  Some (normalize_identifier name)
   | _                       -> false, None
+
+and get_pattern_expr (pattern : ('M, 'T) Ast.Pattern.t) : norm_expr_t = 
+  match pattern with 
+    | _, Identifier {name; _} -> 
+      [], Some ((Identifier.to_expression << normalize_identifier) name)
+    
+    | _, Expression (loc, Member {_object; property; _}) -> 
+      let loc = loc_f loc in 
+      let id, decl = createVariableDeclaration ~kind:_let None loc in
+      
+      let obj_stmts, obj_expr = normalize_expression empty_context _object in 
+      let prop_stmts, prop_expr = normalize_member_property property in 
+      let assign = match prop_expr with 
+        | Static  prop -> Statement.AssignStaticMember.build loc id (Option.get obj_expr) prop
+        | Dynamic prop -> Statement.AssignDynmicMember.build loc id (Option.get obj_expr) prop in 
+    
+      decl @ obj_stmts @ prop_stmts @ [assign], Some (Identifier.to_expression id)
+    
+    | _ -> [], None
 
 and to_object_key (key : ('M, 'T) Ast.Pattern.Object.Property.key) : ('M, 'T) Ast.Expression.Object.Property.key = 
   match key with
