@@ -9,7 +9,7 @@
   const f;
   f = function (x, y, z) {
      const v1;
-     v1 = x++;
+     v1 = x + 1;
      v1;
   }
   

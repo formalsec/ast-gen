@@ -7,7 +7,7 @@
   const x;
   x = 0;
   const v1;
-  v1 = x++;
+  v1 = x + 1;
   v1;
   
   $ dune exec ast_gen -f input-code-3.js
@@ -16,7 +16,7 @@
      const v1;
      v1 = x.y;
      const v2;
-     v2 = v1++;
+     v2 = v1 + 1;
      v2;
      const v3;
      v3 = x.y;

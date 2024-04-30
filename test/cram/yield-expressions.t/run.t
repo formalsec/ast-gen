@@ -8,7 +8,7 @@
   const foo;
   foo = function (index) {
      const v1;
-     v1 = index++;
+     v1 = index + 1;
      yield v1;
   }
   
