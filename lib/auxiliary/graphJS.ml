@@ -1161,11 +1161,6 @@ and Expression : sig
     val build : 'M -> 'M Expression.t -> 'M TemplateLiteral.t -> 'M Expression.t
   end *)
 
-  module Sequence : sig
-    type 'M t = { expressions : 'M Expression.t list}
-    val build : 'M -> 'M Expression.t list -> 'M Expression.t
-  end
-
   module Conditional : sig 
     type 'M t = {
       test : 'M Expression.t;
@@ -1192,7 +1187,6 @@ and Expression : sig
     | Identifier      of    Identifier.t' 
     | This            of    This.t
     
-    | Sequence        of 'M Sequence.t
     | Conditional     of 'M Conditional.t
 
     | TemplateLiteral of 'M TemplateLiteral.t
@@ -1282,16 +1276,6 @@ end = struct
 
   end *)
 
-  module Sequence = struct
-    type 'M t = { expressions : 'M Expression.t list}
-
-    let build (metadata : 'M) (expressions' : 'M Expression.t list) : 'M Expression.t =
-      let sequence_info = Expression.Sequence {
-        expressions = expressions'
-      } in
-      (metadata, sequence_info)
-  end
-
   module Conditional = struct 
     type 'M t = {
       test : 'M Expression.t;
@@ -1330,7 +1314,6 @@ end = struct
     | Identifier      of    Identifier.t' 
     | This            of    This.t
     
-    | Sequence        of 'M Sequence.t
     | Conditional     of 'M Conditional.t
 
     | TemplateLiteral of 'M TemplateLiteral.t

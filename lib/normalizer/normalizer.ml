@@ -436,10 +436,13 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
   (* --------- S E Q U E N C E --------- *)
   | loc, Ast.Expression.Sequence {expressions; _} -> 
+    let loc = loc_f loc in 
+
     let stmts, exprs = List.split (List.map ne expressions) in 
-    let sequence = Expression.Sequence.build (loc_f loc) (List.map Option.get exprs) in 
-    
-    List.flatten stmts, Some sequence
+    let ids, decls = List.split (List.map (fun expr -> createVariableDeclaration ~kind:_let expr loc) exprs) in 
+    let last_expr = Identifier.to_expression (List.hd (List.rev ids)) in 
+   
+    List.flatten stmts @ List.flatten decls, Some last_expr
 
   (* --------- T A G G E D   T E M P L A T E --------- *)
   (* | loc, Ast.Expression.TaggedTemplate {tag; quasi=(qloc, quasi'); _} ->

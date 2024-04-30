@@ -231,10 +231,6 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
   | _, Literal {raw; _} -> raw
   | _, Identifier {name; _} -> name
   | _, This _ -> "this"
-  | _, Sequence {expressions} -> 
-    let expressions' = List.map print_expr expressions in 
-    "(" ^ String.concat ", " expressions' ^ ")"
-
   | _, TemplateLiteral {quasis; expressions} -> 
     let quasis' = List.map (fun (_, {Expression.TemplateLiteral.Element.value={raw;_}; _})-> raw) quasis in 
     let expressions' = List.map print_expr expressions in 
