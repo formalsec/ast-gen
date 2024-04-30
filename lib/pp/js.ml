@@ -224,13 +224,6 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
     in
     let argument' = print_expr argument in
     operator' ^ argument'
-  | _, Update {operator; argument; prefix} ->
-    let operator' = match operator with
-      | Increment -> "++"
-      | Decrement -> "--"
-    in
-    let argument' = print_expr argument in 
-    if prefix then operator' ^ argument' else argument' ^ operator'
   | _, This _ -> "this"
   | _, Sequence {expressions} -> 
     let expressions' = List.map print_expr expressions in 

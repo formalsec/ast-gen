@@ -70,7 +70,12 @@ module Operator = struct
     let translate_logical (op : Ast.Expression.Logical.operator) : t =
       match op with
         | Or -> Or | And -> And | NullishCoalesce -> NullishCoalesce
-  end 
+
+    let translate_update (op : Ast.Expression.Update.operator) : t =
+      match op with 
+        | Increment -> Plus  | Decrement -> Minus 
+
+   end 
 
   module Unary = struct
     type t = Minus | Plus | Not | BitNot | Typeof | Void | Delete | Await
@@ -83,15 +88,6 @@ module Operator = struct
         | Delete -> Delete
         | Await -> Await
         
-  end
-
-  module Update = struct
-    type t = Increment | Decrement
-
-    let translate (op : Ast.Expression.Update.operator) : t =
-      match op with
-        | Increment -> Increment
-        | Decrement -> Decrement
   end
 end
 
@@ -1080,16 +1076,6 @@ and Expression : sig
     val build : 'M -> Operator.Unary.t -> 'M Expression.t -> 'M Expression.t
   end
 
-  module Update : sig
-    type 'M t = {
-      operator : Operator.Update.t;
-      argument : 'M Expression.t;
-      prefix   : bool
-    }
-
-    val build : 'M -> Operator.Update.t -> 'M Expression.t -> bool -> 'M Expression.t
-  end
-
   module This : sig
     type t = unit
     val build : 'M -> 'M Expression.t
@@ -1169,7 +1155,6 @@ and Expression : sig
     | Identifier      of    Identifier.t' 
     | This            of    This.t
     | Unary           of 'M Unary.t
-    | Update          of 'M Update.t
     
     | Yield           of 'M Yield.t
     | Sequence        of 'M Sequence.t
@@ -1215,22 +1200,6 @@ end = struct
       let unary_info = Expression.Unary {
         operator = operator';
         argument = argument';
-      } in
-      (metadata, unary_info)
-  end
-
-  module Update = struct
-    type 'M t = {
-      operator : Operator.Update.t;
-      argument : 'M Expression.t;
-      prefix   : bool;
-    }
-
-    let build (metadata : 'M) (operator' : Operator.Update.t) (argument' : 'M Expression.t) (prefix' : bool) : 'M Expression.t = 
-      let unary_info = Expression.Update {
-        operator = operator';
-        argument = argument';
-        prefix   = prefix';
       } in
       (metadata, unary_info)
   end
@@ -1354,7 +1323,6 @@ end = struct
     | Identifier      of    Identifier.t' 
     | This            of    This.t
     | Unary           of 'M Unary.t
-    | Update          of 'M Update.t
     
     | Yield           of 'M Yield.t
     | Sequence        of 'M Sequence.t

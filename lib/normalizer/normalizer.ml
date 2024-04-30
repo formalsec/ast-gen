@@ -388,18 +388,20 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (arg_stmts, Some unary_expr)
   
   (* --------- U P D A T E --------- *)
-  | loc, Ast.Expression.Update {operator; argument; prefix; _} -> 
-    let operator' = Operator.Update.translate operator in
+  | loc, Ast.Expression.Update {operator; argument; _} -> 
+    let operator' = Operator.Binary.translate_update operator in
     let arg_stmts, arg_expr = ne argument in 
 
-    let location = loc_f loc in
-    let update_expr = Expression.Update.build location operator' (Option.get arg_expr) prefix in 
-    
+    let loc = loc_f loc in
+    let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
+    let one = Expression.Literal.build loc (Expression.Literal.Number (Int.to_float 1)) "1" in 
+    let assign = Statement.AssignOperation.build loc id operator' (Option.get arg_expr) one in
+
     if not context.is_assignment then
-      let id, decl = createVariableDeclaration (Some update_expr) location in 
-      (arg_stmts @ decl, Some (Identifier.to_expression id))
-    else 
-      (arg_stmts, Some update_expr)
+      let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
+      (arg_stmts @ decl @ [assign] , Some (Identifier.to_expression id))
+    else
+      (arg_stmts @ [assign], Some (Identifier.to_expression id))
 
   (* --------- T H I S --------- *)
   | loc, Ast.Expression.This _ -> 
@@ -1057,6 +1059,7 @@ and is_special_assignment ((_, expr) : ('M, 'T) Ast.Expression.t) : bool =
     (* -- ASSIGN OP -- *)
     | Ast.Expression.Binary _
     | Ast.Expression.Logical _ 
+    | Ast.Expression.Update _
     (* -- ASSIGN NEW -- *)
     | Ast.Expression.New _ 
     (* -- ASSIGN CALL -- *)
@@ -1077,7 +1080,8 @@ and is_operation ((_, expr) : ('M, 'T) Ast.Expression.t) : bool =
   match expr with 
     (* -- ASSIGN OP -- *)
     | Ast.Expression.Binary _
-    | Ast.Expression.Logical _ -> true
+    | Ast.Expression.Logical _ 
+    | Ast.Expression.Update _ -> true
     | _ -> false
 
 
