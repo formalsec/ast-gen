@@ -1159,19 +1159,9 @@ and Expression : sig
     }
 
     val build : 'M -> 'M Expression.t -> 'M TemplateLiteral.t -> 'M Expression.t
-  end *)
-
-  module Conditional : sig 
-    type 'M t = {
-      test : 'M Expression.t;
-      consequent : 'M Expression.t;
-      alternate : 'M Expression.t; 
-    }
-
-    val build : 'M -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t
-  end
-
-  (* module MetaProperty : sig
+  end 
+  
+  module MetaProperty : sig
     type 'M t = {
       meta : 'M Identifier.t;
       property : 'M Identifier.t
@@ -1186,9 +1176,6 @@ and Expression : sig
     | Literal         of    Literal.t 
     | Identifier      of    Identifier.t' 
     | This            of    This.t
-    
-    | Conditional     of 'M Conditional.t
-
     | TemplateLiteral of 'M TemplateLiteral.t
     (* 
     | TaggedTemplate  of 'M TaggedTemplate.t
@@ -1274,25 +1261,9 @@ end = struct
       } in
       (metadata, tagged_info)
 
-  end *)
-
-  module Conditional = struct 
-    type 'M t = {
-      test : 'M Expression.t;
-      consequent : 'M Expression.t;
-      alternate : 'M Expression.t; 
-    }
-
-    let build (metadata : 'M) (test' : 'M Expression.t) (consequent' : 'M Expression.t) (alternate' : 'M Expression.t) : 'M Expression.t =
-      let cond_info = Expression.Conditional {
-        test = test';
-        consequent = consequent';
-        alternate = alternate'
-      } in
-      (metadata, cond_info)
-  end
-
-  (* module MetaProperty = struct
+  end 
+  
+  module MetaProperty = struct
     type 'M t = {
       meta : 'M Identifier.t;
       property : 'M Identifier.t
@@ -1313,9 +1284,6 @@ end = struct
     | Literal         of    Literal.t 
     | Identifier      of    Identifier.t' 
     | This            of    This.t
-    
-    | Conditional     of 'M Conditional.t
-
     | TemplateLiteral of 'M TemplateLiteral.t
     (* 
     | TaggedTemplate  of 'M TaggedTemplate.t

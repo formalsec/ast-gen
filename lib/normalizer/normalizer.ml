@@ -463,13 +463,18 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
   (* --------- C O N D I T I O N A L --------- *)
   | loc, Ast.Expression.Conditional {test; consequent; alternate; _} ->
+    let loc = loc_f loc in 
+    let id, decl = createVariableDeclaration ~kind:_let None loc in
+
     let test_stmts, test_expr = ne test in
     let cnsq_stmts, cnsq_expr = ne consequent in 
+    let cnsq_assign = Statement.AssignSimple.build loc id (Option.get cnsq_expr) in 
     let altr_stmts, altr_expr = ne alternate in 
+    let altr_assign = Statement.AssignSimple.build loc id (Option.get altr_expr) in 
 
-    let conditional = Expression.Conditional.build (loc_f loc) (Option.get test_expr) (Option.get cnsq_expr) (Option.get altr_expr) in 
+    let conditional = Statement.If.build loc (Option.get test_expr) (cnsq_stmts @ [cnsq_assign]) (Some (altr_stmts @ [altr_assign])) in
 
-    test_stmts @ cnsq_stmts @ altr_stmts, Some conditional
+    decl @ test_stmts @ [conditional], Some (Identifier.to_expression id)
 
   (* --------- M E T A   P R O P E R T Y --------- *)
   (* | loc, Ast.Expression.MetaProperty {meta; property; _} -> 

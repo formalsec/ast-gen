@@ -238,20 +238,14 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
     let quasi_expr = List.map (fun (raw, expr) -> raw ^ (if expr != "" then "${" ^ expr ^ "}" else "")) (List.combine quasis' (expressions' @ [""])) in
     "`" ^ String.concat "" quasi_expr ^ "`"
   
-  (* | _, TaggedTemplate {tag; quasi} -> 
+  (* 
+  | _, TaggedTemplate {tag; quasi} -> 
     let tag' = print_expr tag in 
     let quasi' = print_expr (Location.empty, Expression.TemplateLiteral quasi) in 
     
-    tag' ^ quasi' *)
-  
-  | _, Conditional {test; consequent; alternate} ->
-    let test' = print_expr test in 
-    let consequent' = print_expr consequent in 
-    let alternate' = print_expr alternate in 
-    
-    "(" ^ test' ^ ") ? " ^ consequent' ^ " : " ^ alternate'
+    tag' ^ quasi'
 
-  (* | _, MetaProperty {meta; property} ->
+  | _, MetaProperty {meta; property} ->
     let meta' = print_expr (Identifier.to_expression meta) in 
     let property' = print_expr (Identifier.to_expression property) in 
     meta' ^ "." ^ property' *)
