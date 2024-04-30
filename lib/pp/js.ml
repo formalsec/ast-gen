@@ -97,6 +97,10 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
       let label' = map_default ((^) " " << print_expr << Identifier.to_expression) "" label in
       identation_str ^ "break" ^ label' ^ ";\n" 
 
+    | _, Yield {argument; _ } ->
+      let argument' = map_default ((^) " " << print_expr) "" argument in
+      identation_str ^ "yield" ^ argument' ^ ";\n" 
+
     | _, Continue {label} -> 
       let label' = map_default ((^) " " << print_expr << Identifier.to_expression) "" label in
       identation_str ^ "continue" ^ label' ^ ";\n" 
@@ -243,10 +247,6 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
     let quasi' = print_expr (Location.empty, Expression.TemplateLiteral quasi) in 
     
     tag' ^ quasi' *)
-  
-  | _, Yield {argument; _ } ->
-    let argument' = map_default ((^) " " << print_expr) "" argument in
-    "yield" ^ argument'
   
   | _, Conditional {test; consequent; alternate} ->
     let test' = print_expr test in 

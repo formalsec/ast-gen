@@ -279,6 +279,15 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t option -> 'M Statement.t
   end
 
+  module Yield : sig
+    type 'M t = {
+      argument : 'M Expression.t option;
+      delegate : bool
+    } 
+
+    val build : 'M -> 'M Expression.t option -> bool -> 'M Statement.t
+  end
+
   module Continue : sig
     type 'M t = { label : 'M Identifier.t option }
     val build : 'M -> 'M Identifier.t option -> 'M Statement.t
@@ -484,6 +493,7 @@ and Statement : sig
     | Return   of 'M Return.t
     | Throw    of 'M Throw.t
     | Break    of 'M Break.t
+    | Yield    of 'M Yield.t
     | Continue of 'M Continue.t
     | Debugger of    Debugger.t
     
@@ -728,6 +738,20 @@ end = struct
     let build (metadata: 'M) (label' : 'M Identifier.t option ): 'M Statement.t =
       let break_info = Statement.Break { label = label' } in
       (metadata, break_info)
+  end
+
+  module Yield = struct
+    type 'M t = {
+      argument : 'M Expression.t option;
+      delegate : bool
+    } 
+
+    let build (metadata : 'M) (argument' : 'M Expression.t option) (delegate': bool) : 'M Statement.t =
+      let yield_info = Statement.Yield {
+        argument = argument';
+        delegate = delegate'
+      } in 
+      (metadata, yield_info)
   end
 
   module Continue = struct
@@ -1049,6 +1073,7 @@ end = struct
     | Return   of 'M Return.t
     | Throw    of 'M Throw.t
     | Break    of 'M Break.t
+    | Yield    of 'M Yield.t
     | Continue of 'M Continue.t
     | Debugger of    Debugger.t
 
@@ -1141,15 +1166,6 @@ and Expression : sig
     val build : 'M -> 'M Expression.t list -> 'M Expression.t
   end
 
-  module Yield : sig
-    type 'M t = {
-      argument : 'M Expression.t option;
-      delegate : bool
-    } 
-
-    val build : 'M -> 'M Expression.t option -> bool -> 'M Expression.t
-  end
-
   module Conditional : sig 
     type 'M t = {
       test : 'M Expression.t;
@@ -1176,7 +1192,6 @@ and Expression : sig
     | Identifier      of    Identifier.t' 
     | This            of    This.t
     
-    | Yield           of 'M Yield.t
     | Sequence        of 'M Sequence.t
     | Conditional     of 'M Conditional.t
 
@@ -1277,20 +1292,6 @@ end = struct
       (metadata, sequence_info)
   end
 
-  module Yield = struct
-    type 'M t = {
-      argument : 'M Expression.t option;
-      delegate : bool
-    } 
-
-    let build (metadata : 'M) (argument' : 'M Expression.t option) (delegate': bool) : 'M Expression.t =
-      let yield_info = Expression.Yield {
-        argument = argument';
-        delegate = delegate'
-      } in 
-      (metadata, yield_info)
-  end
-
   module Conditional = struct 
     type 'M t = {
       test : 'M Expression.t;
@@ -1329,7 +1330,6 @@ end = struct
     | Identifier      of    Identifier.t' 
     | This            of    This.t
     
-    | Yield           of 'M Yield.t
     | Sequence        of 'M Sequence.t
     | Conditional     of 'M Conditional.t
 

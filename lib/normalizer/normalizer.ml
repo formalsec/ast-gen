@@ -454,9 +454,9 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
   (* --------- Y I E L D --------- *)
   | loc, Ast.Expression.Yield {argument; delegate; _} -> 
     let arg_stmts, arg_expr = map_default ne ([], None) argument in 
-    let yield = Expression.Yield.build (loc_f loc) arg_expr delegate in 
+    let yield = Statement.Yield.build (loc_f loc) arg_expr delegate in 
     
-    arg_stmts, Some yield
+    arg_stmts @ [yield], None
 
   (* --------- C O N D I T I O N A L --------- *)
   | loc, Ast.Expression.Conditional {test; consequent; alternate; _} ->
