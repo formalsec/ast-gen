@@ -134,7 +134,7 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
       let right' = print_expr right in
       identation_str ^ left' ^ " = " ^ right' ^ ";\n"
     
-    | _, AssignOperation {left; operator; opLeft; opRght; _} -> 
+    | _, AssignBinary {left; operator; opLeft; opRght; _} -> 
       let left' = print_expr (Identifier.to_expression left) in 
       let operator' = match operator with
         | Equal -> " == "         | NotEqual -> " != "
@@ -155,6 +155,17 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
       let opRght' = print_expr opRght in 
 
       identation_str ^ left' ^ " = " ^ opLeft' ^ operator' ^ opRght' ^ ";\n"
+
+    | _, AssignUnary {left; operator; argument} ->
+      let left' = print_expr (Identifier.to_expression left) in  
+      let operator' = match operator with
+        | Minus -> "-"          | Plus -> "+"
+        | Not -> "!"            | BitNot -> "~"
+        | Typeof -> "typeof "   | Void -> "void "
+        | Delete -> "delete "   | Await -> "await "
+      in
+      let argument' = print_expr argument in
+      identation_str ^ left' ^ " = " ^ operator' ^ argument' ^ ";\n"
 
     | _, AssignArray {left; array} ->
       let left' = print_expr (Identifier.to_expression left) in
@@ -215,15 +226,6 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
   match expr with 
   | _, Literal {raw; _} -> raw
   | _, Identifier {name; _} -> name
-  | _, Unary {operator; argument} ->
-    let operator' = match operator with
-      | Minus -> "-"          | Plus -> "+"
-      | Not -> "!"            | BitNot -> "~"
-      | Typeof -> "typeof "   | Void -> "void "
-      | Delete -> "delete "   | Await -> "await "
-    in
-    let argument' = print_expr argument in
-    operator' ^ argument'
   | _, This _ -> "this"
   | _, Sequence {expressions} -> 
     let expressions' = List.map print_expr expressions in 

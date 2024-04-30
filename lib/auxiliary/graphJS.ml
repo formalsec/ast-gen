@@ -333,7 +333,7 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Statement.t
   end
 
-  module AssignOperation : sig
+  module AssignBinary : sig
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
@@ -344,6 +344,17 @@ and Statement : sig
     }
 
     val build : 'M -> 'M Identifier.t -> Operator.Binary.t -> 'M Expression.t -> 'M Expression.t -> 'M Statement.t 
+  end
+
+  module AssignUnary : sig
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      operator : Operator.Unary.t;
+      argument : 'M Expression.t;
+    }
+
+    val build : 'M -> 'M Identifier.t -> Operator.Unary.t -> 'M Expression.t -> 'M Statement.t
   end
 
   module AssignArray : sig
@@ -485,7 +496,8 @@ and Statement : sig
     
     (* ---- assignment statements ---- *)
     | AssignSimple       of 'M AssignSimple.t
-    | AssignOperation     of 'M AssignOperation.t
+    | AssignBinary       of 'M AssignBinary.t
+    | AssignUnary        of 'M AssignUnary.t
     | AssignArray        of 'M AssignArray.t
     | AssignObject       of 'M AssignObject.t
     | StaticMemberAssign of 'M StaticMemberAssign.t
@@ -808,7 +820,7 @@ end = struct
       (metadata, assign_info)
   end
 
-  module AssignOperation = struct
+  module AssignBinary = struct
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
@@ -819,7 +831,7 @@ end = struct
     }
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (operator' : Operator.Binary.t) (opLeft' : 'M Expression.t) (opRght' : 'M Expression.t) : 'M Statement.t =
-      let assign_info = Statement.AssignOperation {
+      let assign_info = Statement.AssignBinary {
         id = get_id; 
         left = left';
         operator = operator';
@@ -827,6 +839,23 @@ end = struct
         opRght = opRght';
       } in 
       (metadata, assign_info)
+  end
+
+  module AssignUnary = struct
+    type 'M t = {
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      operator : Operator.Unary.t;
+      argument : 'M Expression.t;
+    }
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (operator' : Operator.Unary.t) (argument' : 'M Expression.t) : 'M Statement.t = 
+      let unary_info = Statement.AssignUnary {
+        left = left';
+        operator = operator';
+        argument = argument';
+      } in
+      (metadata, unary_info)
   end
 
   module AssignArray = struct
@@ -1033,7 +1062,8 @@ end = struct
 
     (* ---- assignment statements ---- *)
     | AssignSimple       of 'M AssignSimple.t
-    | AssignOperation    of 'M AssignOperation.t
+    | AssignBinary       of 'M AssignBinary.t
+    | AssignUnary        of 'M AssignUnary.t
     | AssignArray        of 'M AssignArray.t
     | AssignObject       of 'M AssignObject.t
     | StaticMemberAssign of 'M StaticMemberAssign.t
@@ -1065,15 +1095,6 @@ and Expression : sig
     }
 
     val build : 'M -> value -> string -> 'M Expression.t
-  end
-
-  module Unary : sig
-    type 'M t = {
-      operator : Operator.Unary.t;
-      argument : 'M Expression.t;
-    }
-
-    val build : 'M -> Operator.Unary.t -> 'M Expression.t -> 'M Expression.t
   end
 
   module This : sig
@@ -1154,7 +1175,6 @@ and Expression : sig
     | Literal         of    Literal.t 
     | Identifier      of    Identifier.t' 
     | This            of    This.t
-    | Unary           of 'M Unary.t
     
     | Yield           of 'M Yield.t
     | Sequence        of 'M Sequence.t
@@ -1188,20 +1208,6 @@ end = struct
       let literal_info = Expression.Literal { value = value'; raw = raw' } in
       (metadata, literal_info)
 
-  end
-
-  module Unary = struct
-    type 'M t = {
-      operator : Operator.Unary.t;
-      argument : 'M Expression.t;
-    }
-
-    let build (metadata : 'M) (operator' : Operator.Unary.t) (argument' : 'M Expression.t) : 'M Expression.t = 
-      let unary_info = Expression.Unary {
-        operator = operator';
-        argument = argument';
-      } in
-      (metadata, unary_info)
   end
 
   module This = struct
@@ -1322,7 +1328,6 @@ end = struct
     | Literal         of    Literal.t 
     | Identifier      of    Identifier.t' 
     | This            of    This.t
-    | Unary           of 'M Unary.t
     
     | Yield           of 'M Yield.t
     | Sequence        of 'M Sequence.t

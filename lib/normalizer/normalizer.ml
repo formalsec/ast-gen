@@ -347,7 +347,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
     let loc = loc_f loc in
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
-    let assign = Statement.AssignOperation.build loc id operator' (Option.get left_expr) (Option.get right_expr) in 
+    let assign = Statement.AssignBinary.build loc id operator' (Option.get left_expr) (Option.get right_expr) in 
     
     (* force declaration if it was an operator *)
     if not context.is_assignment || context.has_op then
@@ -364,7 +364,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
     let loc = loc_f loc in
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
-    let assign = Statement.AssignOperation.build loc id operator' (Option.get left_expr) (Option.get right_expr) in 
+    let assign = Statement.AssignBinary.build loc id operator' (Option.get left_expr) (Option.get right_expr) in 
     
     (* force declaration if it was an operator *)
     if not context.is_assignment || context.has_op then
@@ -378,14 +378,16 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let operator' = Operator.Unary.translate operator in 
     let arg_stmts, arg_expr = ne argument in
 
-    let location = loc_f loc in
-    let unary_expr = Expression.Unary.build location operator' (Option.get arg_expr) in 
+    let loc = loc_f loc in
+    let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
+    let assign = Statement.AssignUnary.build loc id operator' (Option.get arg_expr) in 
     
-    if not context.is_assignment then
-      let id, decl = createVariableDeclaration (Some unary_expr) location in 
-      (arg_stmts @ decl, Some (Identifier.to_expression id))
+    if not context.is_assignment || context.has_op then
+      let _, decl = createVariableDeclaration None loc ~objId:(Id id) in 
+      (arg_stmts @ decl @ [assign] , Some (Identifier.to_expression id))
     else 
-      (arg_stmts, Some unary_expr)
+      (arg_stmts @ [assign], Some (Identifier.to_expression id))
+
   
   (* --------- U P D A T E --------- *)
   | loc, Ast.Expression.Update {operator; argument; _} -> 
@@ -395,7 +397,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     let loc = loc_f loc in
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
     let one = Expression.Literal.build loc (Expression.Literal.Number (Int.to_float 1)) "1" in 
-    let assign = Statement.AssignOperation.build loc id operator' (Option.get arg_expr) one in
+    let assign = Statement.AssignBinary.build loc id operator' (Option.get arg_expr) one in
 
     if not context.is_assignment then
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
@@ -1060,6 +1062,7 @@ and is_special_assignment ((_, expr) : ('M, 'T) Ast.Expression.t) : bool =
     | Ast.Expression.Binary _
     | Ast.Expression.Logical _ 
     | Ast.Expression.Update _
+    | Ast.Expression.Unary _
     (* -- ASSIGN NEW -- *)
     | Ast.Expression.New _ 
     (* -- ASSIGN CALL -- *)
@@ -1081,7 +1084,8 @@ and is_operation ((_, expr) : ('M, 'T) Ast.Expression.t) : bool =
     (* -- ASSIGN OP -- *)
     | Ast.Expression.Binary _
     | Ast.Expression.Logical _ 
-    | Ast.Expression.Update _ -> true
+    | Ast.Expression.Update _ 
+    | Ast.Expression.Unary _ -> true
     | _ -> false
 
 
@@ -1102,18 +1106,18 @@ and is_declaration ((_, stmt) : m Statement.t) : bool =
 and build_operation (left : m Identifier.t) ((loc, _) as right : m Expression.t) (op : Operator.Assignment.t): m Statement.t = 
   let left_expr = Identifier.to_expression left in 
   match op with 
-          | PlusAssign    -> Statement.AssignOperation.build loc left Operator.Binary.Plus left_expr right       
-          | MinusAssign   -> Statement.AssignOperation.build loc left Operator.Binary.Minus left_expr right
-          | MultAssign    -> Statement.AssignOperation.build loc left Operator.Binary.Mult left_expr right        
-          | ExpAssign     -> Statement.AssignOperation.build loc left Operator.Binary.Exp left_expr right 
-          | DivAssign     -> Statement.AssignOperation.build loc left Operator.Binary.Div left_expr right          
-          | ModAssign     -> Statement.AssignOperation.build loc left Operator.Binary.Mod left_expr right 
-          | LShiftAssign  -> Statement.AssignOperation.build loc left Operator.Binary.LShift left_expr right    
-          | RShiftAssign  -> Statement.AssignOperation.build loc left Operator.Binary.RShift left_expr right 
-          | RShift3Assign -> Statement.AssignOperation.build loc left Operator.Binary.RShift3 left_expr right 
-          | BitOrAssign   -> Statement.AssignOperation.build loc left Operator.Binary.BitOr left_expr right 
-          | BitXorAssign  -> Statement.AssignOperation.build loc left Operator.Binary.Xor left_expr right    
-          | BitAndAssign  -> Statement.AssignOperation.build loc left Operator.Binary.BitAnd left_expr right 
-          | NullishAssign -> Statement.AssignOperation.build loc left Operator.Binary.NullishCoalesce left_expr right  
-          | AndAssign     -> Statement.AssignOperation.build loc left Operator.Binary.And left_expr right 
-          | OrAssign      -> Statement.AssignOperation.build loc left Operator.Binary.Or left_expr right
+          | PlusAssign    -> Statement.AssignBinary.build loc left Operator.Binary.Plus left_expr right       
+          | MinusAssign   -> Statement.AssignBinary.build loc left Operator.Binary.Minus left_expr right
+          | MultAssign    -> Statement.AssignBinary.build loc left Operator.Binary.Mult left_expr right        
+          | ExpAssign     -> Statement.AssignBinary.build loc left Operator.Binary.Exp left_expr right 
+          | DivAssign     -> Statement.AssignBinary.build loc left Operator.Binary.Div left_expr right          
+          | ModAssign     -> Statement.AssignBinary.build loc left Operator.Binary.Mod left_expr right 
+          | LShiftAssign  -> Statement.AssignBinary.build loc left Operator.Binary.LShift left_expr right    
+          | RShiftAssign  -> Statement.AssignBinary.build loc left Operator.Binary.RShift left_expr right 
+          | RShift3Assign -> Statement.AssignBinary.build loc left Operator.Binary.RShift3 left_expr right 
+          | BitOrAssign   -> Statement.AssignBinary.build loc left Operator.Binary.BitOr left_expr right 
+          | BitXorAssign  -> Statement.AssignBinary.build loc left Operator.Binary.Xor left_expr right    
+          | BitAndAssign  -> Statement.AssignBinary.build loc left Operator.Binary.BitAnd left_expr right 
+          | NullishAssign -> Statement.AssignBinary.build loc left Operator.Binary.NullishCoalesce left_expr right  
+          | AndAssign     -> Statement.AssignBinary.build loc left Operator.Binary.And left_expr right 
+          | OrAssign      -> Statement.AssignBinary.build loc left Operator.Binary.Or left_expr right
