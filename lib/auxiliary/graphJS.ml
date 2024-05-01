@@ -357,6 +357,7 @@ and Statement : sig
 
   module AssignUnary : sig
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       operator : Operator.Unary.t;
@@ -867,6 +868,7 @@ end = struct
 
   module AssignUnary = struct
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       operator : Operator.Unary.t;
@@ -875,6 +877,7 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (operator' : Operator.Unary.t) (argument' : 'M Expression.t) : 'M Statement.t = 
       let unary_info = Statement.AssignUnary {
+        id = get_id;
         left = left';
         operator = operator';
         argument = argument';

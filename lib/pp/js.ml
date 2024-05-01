@@ -160,7 +160,7 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
 
       identation_str ^ left' ^ " = " ^ opLeft' ^ operator' ^ opRght' ^ ";\n"
 
-    | _, AssignUnary {left; operator; argument} ->
+    | _, AssignUnary {left; operator; argument; _} ->
       let left' = print_expr (Identifier.to_expression left) in  
       let operator' = match operator with
         | Minus -> "-"          | Plus -> "+"

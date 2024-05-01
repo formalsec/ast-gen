@@ -1,22 +1,12 @@
 (* open Auxiliary.Functions *)
 open Auxiliary.GraphJS
+open Auxiliary.Functions
 open Structures
-
-type state = {
-  graph : Graph.t;
-  store : Store.t;
-  this  : LocationSet.t;
-}
-
-let empty_state : state = { 
-  graph = Graph.empty; 
-  store = Store.empty; 
-  this  = Store.this_loc
-}
+open State
 
 let rec program ((_, {body}) : m Program.t) : Graph.t * Store.t = 
-  let state = empty_state in 
-  List.iter (analyse state) body; 
+  let state = empty_state () in 
+  analyse_sequence state body;
   state.graph, state.store
 
 and analyse (state : state) (statement : m Statement.t) : unit =
@@ -36,10 +26,17 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     *)
 
     (* -------- A S S I G N - O P -------- *)
-    | _, AssignBinary {(*left;*) opLeft; opRght; id; _} -> 
+    | _, AssignBinary {left; opLeft; opRght; id; _} -> 
       let _L1, _L2 = eval_expr opLeft, eval_expr opRght in 
-      let _ = Graph.alloc graph id in 
-      ()
+      let l_i = Graph.alloc graph id in 
+      LocationSet.iter (Graph.addDepEdge graph l_i) (LocationSet.union _L1 _L2);
+      Store.update store left (LocationSet.singleton l_i)
+    
+    | _, AssignUnary {left; argument; id; _} -> 
+      let _L1 = eval_expr argument in 
+      let l_i = Graph.alloc graph id in 
+      LocationSet.iter (Graph.addDepEdge graph l_i) _L1;
+      Store.update store left (LocationSet.singleton l_i)
 
     (* -------- N E W   O B J E C T -------- *)
     | _, AssignObject {id; left} -> 
@@ -65,17 +62,21 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     | _, AssignNew _ -> ()
 
     (* -------- I F -------- *)
-    | _, If _ ->
-      (* let consq_state = analyse_sequence state consequent in 
-         let altrn_state = map_default (analyse_sequence state) empty_state alternate in 
-       TODO : graph and store union *)
-      ()
+    | _, If {consequent; alternate; _} ->
+      let state' = State.copy state in 
+      analyse_sequence state consequent;
+      option_may (analyse_sequence state') alternate;
+      
+      Graph.lub state.graph state'.graph;
+      Store.lub state.store state'.store;
 
     (* -------- W H I L E -------- *)
     | _, While _ -> ()
 
     | _ -> ()
-          (* failwith "statement node analysis not defined" *) 
+          (* failwith "statement node analysis not defined" *)
+          
+and analyse_sequence (state : state) = List.iter (analyse state)
 
 and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) : LocationSet.t = 
   match expr with
