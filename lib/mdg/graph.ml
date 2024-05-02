@@ -54,18 +54,18 @@ let rec orig (graph : t) (l : location) : location =
 let lookup (graph : t) (l : location) (property : property) : location =
   let direct_edges = HashTable.find graph l in   
 
+  (* Direct Lookup - Known Property *)
   if (EdgeSet.exists (has_property_edge (Some property)) direct_edges) then 
-    (* Direct Lookup - Known Property *)
-    (
     let {Edge._to; _} = EdgeSet.find_last (has_property_edge (Some property)) direct_edges in 
-    _to)
+    _to
+
+  (* Direct Lookup - Unknown Property *)
   else if (EdgeSet.exists (has_property_edge None) direct_edges) then 
-    (* Direct Lookup - Unknown Property *)
-    (print_endline "yo";
     let {Edge._to; _} = EdgeSet.find_last (has_property_edge None) direct_edges in 
-    _to)
+    _to
+
+  (* TODO : Indirect Lookup - Known Version and Indirect Lookup - Unknown Version *)
   else 
-    (* TODO : Indirect Lookup - Known Version and Indirect Lookup - Unknown Version *)
     "!TODO!"
   
   
@@ -95,4 +95,19 @@ let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id
       then let l_i = alloc graph id in 
            addPropEdge graph l_o l_i (Some property)
   ) _L 
+
+let dynamicAddProperty (graph : t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : unit =
+  LocationSet.iter (fun l -> 
+    let l_o = orig graph l in 
+
+    let edges = get_edges graph l_o in  
+    if (EdgeSet.exists (has_property_edge None) edges) then 
+      let {Edge._to; _} = EdgeSet.find_last (has_property_edge None) edges in
+      LocationSet.iter (addDepEdge graph _to) _L_prop
+    else 
+    ( let l_i = alloc graph id in 
+      addPropEdge graph l_o l_i None;
+      LocationSet.iter (addDepEdge graph l_i) _L_prop )
+      
+  ) _L_obj  
   

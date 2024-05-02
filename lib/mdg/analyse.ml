@@ -48,17 +48,20 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let l_i = Graph.alloc graph id in
       Store.update store left (LocationSet.singleton l_i);
       Graph.addNode graph l_i;
-      
 
     (* -------- S T A T I C   P R O P E R T Y    L O O K U P -------- *)
     | _, AssignStaticMember {left; _object; property=(_, {name; _}); id} -> 
       let _L = eval_expr _object in 
       Graph.staticAddProperty graph _L name id;
       let _L' = LocationSet.map (fun loc -> Graph.lookup graph loc name) _L  in 
-      Store.update store left _L' (* TODO *);
+      Store.update store left _L'
 
     (* -------- D Y N A M I C   P R O P E R T Y    L O O K U P -------- *)
-    | _, AssignDynmicMember _ -> ()
+    | _, AssignDynmicMember {left; _object; property; id} ->
+      let _L1, _L2 = eval_expr _object, eval_expr property in 
+      Graph.dynamicAddProperty graph _L1 _L2 id;
+      let _L' = LocationSet.map (fun loc -> Graph.lookup graph loc "*") _L1 in
+      Store.update store left _L'
 
     (* -------- S T A T I C   P R O P E R T Y    U P D A T E -------- *)
     | _, StaticMemberAssign _ -> ()
