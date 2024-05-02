@@ -16,7 +16,6 @@ end)
 (* ------- S T O R E ------- *)
 module LocationSet = Set.Make(AbstractLocation)
 
-let locset_to_list set = LocationSet.fold (fun elem acc -> elem :: acc) set []
 
 (* ------- G R A P H ------- *)
 
@@ -41,7 +40,7 @@ module Edge = struct
             | Version prop -> map_default (fun prop -> "P(" ^ prop ^ ")") "P(*)" prop
             | Dependency -> "D" 
         in 
-        "- " ^ edge_info ^ "-> " ^ _to 
+        " --" ^ edge_info ^ "-> " ^ _to 
 
 end
 

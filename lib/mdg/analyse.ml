@@ -4,7 +4,11 @@ open Auxiliary.Functions
 open Structures
 open State
 
-let rec program ((_, {body}) : m Program.t) : Graph.t * Store.t = 
+let verbose = ref false;;
+
+let rec program (is_verbose : bool) ((_, {body}) : m Program.t) : Graph.t * Store.t = 
+  verbose := is_verbose;
+  
   let state = empty_state () in 
   analyse_sequence state body;
   state.graph, state.store
@@ -12,9 +16,10 @@ let rec program ((_, {body}) : m Program.t) : Graph.t * Store.t =
 and analyse (state : state) (statement : m Statement.t) : unit =
   let graph = state.graph in 
   let store = state.store in 
+
   let eval_expr = eval_expr store state.this in 
 
-  match statement with
+  (match statement with
     (* -------- A S S I G N - E X P R -------- *)
     | _, AssignSimple {left; right} -> 
       let _L = eval_expr right in 
@@ -30,7 +35,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let _L1, _L2 = eval_expr opLeft, eval_expr opRght in 
       let l_i = Graph.alloc graph id in 
       LocationSet.iter (Graph.addDepEdge graph l_i) (LocationSet.union _L1 _L2);
-      Store.update store left (LocationSet.singleton l_i)
+      Store.update store left (LocationSet.singleton l_i);
     
     | _, AssignUnary {left; argument; id; _} -> 
       let _L1 = eval_expr argument in 
@@ -46,7 +51,11 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       
 
     (* -------- S T A T I C   P R O P E R T Y    L O O K U P -------- *)
-    | _, AssignStaticMember _ -> ()
+    | _, AssignStaticMember {left; _object; property=(_, {name; _}); id} -> 
+      let _L = eval_expr _object in 
+      Graph.staticAddProperty graph _L name id;
+      let _L' = LocationSet.map (fun loc -> Graph.lookup graph loc name) _L  in 
+      Store.update store left _L' (* TODO *);
 
     (* -------- D Y N A M I C   P R O P E R T Y    L O O K U P -------- *)
     | _, AssignDynmicMember _ -> ()
@@ -73,8 +82,20 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     (* -------- W H I L E -------- *)
     | _, While _ -> ()
 
-    | _ -> ()
+    | _ -> ());
           (* failwith "statement node analysis not defined" *)
+  
+  if (!verbose) then (
+    print_endline "----------";
+    print_string (Pp.Js.print_stmt statement 0);
+
+    print_endline "----------";
+    print_endline "Graph\n------";
+    Graph.print graph; 
+    
+    print_endline "Store\n------";
+    Store.print store; 
+    print_endline "----------"; )
           
 and analyse_sequence (state : state) = List.iter (analyse state)
 

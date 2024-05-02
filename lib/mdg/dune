@@ -2,5 +2,5 @@
 
 (library
  (name mdg)
- (libraries auxiliary))
+ (libraries auxiliary pp))
 

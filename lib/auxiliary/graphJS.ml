@@ -525,7 +525,7 @@ and Statement : sig
 end = struct
 
   let id_count : int ref = ref (-1)
-  let get_id : int = 
+  let get_id () : int = 
     id_count := !id_count + 1;
     !id_count
 
@@ -857,7 +857,7 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (operator' : Operator.Binary.t) (opLeft' : 'M Expression.t) (opRght' : 'M Expression.t) : 'M Statement.t =
       let assign_info = Statement.AssignBinary {
-        id = get_id; 
+        id = get_id (); 
         left = left';
         operator = operator';
         opLeft = opLeft';
@@ -877,7 +877,7 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (operator' : Operator.Unary.t) (argument' : 'M Expression.t) : 'M Statement.t = 
       let unary_info = Statement.AssignUnary {
-        id = get_id;
+        id = get_id ();
         left = left';
         operator = operator';
         argument = argument';
@@ -910,7 +910,7 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) : 'M Statement.t = 
       let assign_info = Statement.AssignObject {
-        id = get_id;
+        id = get_id ();
         left = left';
       } in 
       (metadata, assign_info)
@@ -945,7 +945,7 @@ end = struct
 
     let build (metadata : 'M) (_object' : 'M Expression.t) (property' : 'M Identifier.t) (right' : 'M Expression.t): 'M Statement.t =
       let assign_info = Statement.StaticMemberAssign {
-        id = get_id;
+        id = get_id ();
         _object = _object';
         property = property';
         right = right';
@@ -965,7 +965,7 @@ end = struct
 
     let build (metadata : 'M) (_object' : 'M Expression.t) (property' : 'M Expression.t) (right' : 'M Expression.t): 'M Statement.t =
       let assign_info = Statement.DynmicMemberAssign {
-        id = get_id;
+        id = get_id ();
         _object = _object';
         property = property';
         right = right';
@@ -984,7 +984,7 @@ end = struct
 
     let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Identifier.t) : 'M Statement.t =
       let assign_info = Statement.AssignStaticMember {
-        id = get_id;
+        id = get_id ();
         left = left';
         _object = _object';
         property = property'
@@ -1004,7 +1004,7 @@ end = struct
 
     let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Expression.t) : 'M Statement.t =
       let assign_info = Statement.AssignDynmicMember {
-        id = get_id;
+        id = get_id ();
         left = left';
         _object = _object';
         property = property'
