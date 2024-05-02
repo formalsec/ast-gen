@@ -50,10 +50,10 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       Graph.addNode graph l_i;
 
     (* -------- S T A T I C   P R O P E R T Y    L O O K U P -------- *)
-    | _, AssignStaticMember {left; _object; property=(_, {name; _}); id} -> 
+    | _, AssignStaticMember {left; _object; property=(_, {name=property; _}); id} -> 
       let _L = eval_expr _object in 
-      Graph.staticAddProperty graph _L name id;
-      let _L' = LocationSet.map (fun loc -> Graph.lookup graph loc name) _L  in 
+      Graph.staticAddProperty graph _L property id;
+      let _L' = LocationSet.map (fun loc -> Graph.lookup graph loc property) _L  in 
       Store.update store left _L'
 
     (* -------- D Y N A M I C   P R O P E R T Y    L O O K U P -------- *)
@@ -64,10 +64,27 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       Store.update store left _L'
 
     (* -------- S T A T I C   P R O P E R T Y    U P D A T E -------- *)
-    | _, StaticMemberAssign _ -> ()
+    | _, StaticMemberAssign {_object; property=(_, {name=property; _}); right; id} -> 
+      let _L1, _L2 = eval_expr _object, eval_expr right in
+      let _L1' = Graph.staticNewVersion graph store _L1 property id in 
+      LocationSet.iter ( fun l_1 ->
+        LocationSet.iter (fun l_2 ->
+            Graph.addPropEdge graph l_1 l_2 (Some property)
+          ) _L2
+      ) _L1'
 
     (* -------- D Y N A M I C   P R O P E R T Y    U P D A T E -------- *)
-    | _, DynmicMemberAssign _ -> ()
+    | _, DynmicMemberAssign {_object; property; right; id} -> 
+      let _L1, _L2, _L3 = eval_expr _object, 
+                          eval_expr property, 
+                          eval_expr right in
+      
+      let _L1' = Graph.dynamicNewVersion graph store _L1 _L2 id in 
+      LocationSet.iter ( fun l_1 ->
+        LocationSet.iter (fun l_3 ->
+            Graph.addPropEdge graph l_1 l_3 None
+          ) _L3
+      ) _L1'
 
     (* -------- C A L L -------- *)
     | _, AssignFunCall _ -> ()

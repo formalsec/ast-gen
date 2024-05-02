@@ -108,6 +108,12 @@ let dynamicAddProperty (graph : t) (_L_obj : LocationSet.t) (_L_prop : LocationS
     ( let l_i = alloc graph id in 
       addPropEdge graph l_o l_i None;
       LocationSet.iter (addDepEdge graph l_i) _L_prop )
-      
+
   ) _L_obj  
+
+let staticNewVersion (_ : t) (_ : Store.t) (_ : LocationSet.t) (_ : property) (_ : int) : LocationSet.t = 
+  LocationSet.empty
+
+let dynamicNewVersion (_ : t) (_ : Store.t) (_ : LocationSet.t) (_ : LocationSet.t) (_ : int) : LocationSet.t = 
+  LocationSet.empty
   
