@@ -1,5 +1,6 @@
 open Structures
 open Auxiliary.Functions
+open Auxiliary.GraphJS
 
 type t = EdgeSet.t HashTable.t
 let empty : t = HashTable.create 100
@@ -20,13 +21,18 @@ let has_property_edge (property' : property option) ({_to; info} : Edge.t) : boo
     | Property property -> property = property'
     | _                 -> false
 
+let get_expression_id (expr : m Expression.t) : string =
+  match expr with 
+    | _, Identifier {name; _} -> name
+    | _, This _ -> "this"
+    | _ -> failwith "expression cannot be converted into an id"
+
 let rec print (graph : t) : unit = 
   HashTable.iter print_edge graph;
   print_string "\n";
 
 and print_edge (from : location) (edges : EdgeSet.t) : unit = 
   EdgeSet.iter (fun edge -> print_string (from ^ (Edge.to_string edge) ^ "\n")) edges
-
 
 let copy (graph : t) : t = HashTable.copy graph
 
@@ -113,48 +119,75 @@ let dynamicAddProperty (graph : t) (_L_obj : LocationSet.t) (_L_prop : LocationS
 
   ) _L_obj  
 
-let staticNewVersion (graph : t) (store : Store.t) (_L : LocationSet.t) (property : property) (id : int) : LocationSet.t = 
-  let l_i = alloc graph id in 
-  (* add version edges *)
-  LocationSet.iter ( fun l ->
-    addVersionEdge graph l l_i (Some property)
-  ) _L;
 
-  if (LocationSet.cardinal _L) = 1
-    (* strong udpate *) 
-    then let l = LocationSet.min_elt _L in 
-         Store.strong_update store l l_i
-    (* TODO : weak update*)
-    else LocationSet.iter (fun l -> 
-          let _new = LocationSet.of_list [l; l_i] in
-          Store.weak_update store l _new
-        ) _L;
+let sNVStrongUpdate (graph : t) (store : Store.t) (l : location) (property : property) (id : int) : LocationSet.t = 
+  let l_i = alloc graph id in 
+  addVersionEdge graph l l_i (Some property);
+  Store.strong_update store l l_i;
 
   (* return *)
   LocationSet.singleton l_i
 
-let dynamicNewVersion (graph : t) (store : Store.t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
+let sNVWeakUpdate (graph : t) (store : Store.t) (_object : string) (_L : LocationSet.t) (property : property) (id : int) : LocationSet.t = 
   let l_i = alloc graph id in 
-  (* add version edges *)
-  LocationSet.iter ( fun l -> 
-    addVersionEdge graph l l_i None
-  ) _L_obj;
+  LocationSet.iter ( fun l ->
+    (* add version edges *)
+    addVersionEdge graph l l_i (Some property);
+    
+    (* store update *)
+    let _new = LocationSet.of_list [l; l_i] in
+    Store.weak_update store l _new
+  ) _L;
+  Store.update' store _object (LocationSet.singleton l_i);
+
+  (* return *)
+  LocationSet.singleton l_i
+
+let staticNewVersion (graph : t) (store : Store.t) (_object : m Expression.t) (_L : LocationSet.t) (property : property) (id : int) : LocationSet.t = 
+  if LocationSet.cardinal _L = 1 
+    then sNVStrongUpdate graph store (LocationSet.min_elt _L) property id
+    else sNVWeakUpdate graph store (get_expression_id _object) _L property id
+
+
+let dNVStrongUpdate (graph : t) (store : Store.t) (l_obj : location) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
+  let l_i = alloc graph id in 
+  addVersionEdge graph l_obj l_i None;
 
   (* add dependency edges *)
   LocationSet.iter (fun l_prop ->
     addDepEdge graph l_prop l_i 
   ) _L_prop;
 
-  if (LocationSet.cardinal _L_obj) = 1
-    (* strong udpate *) 
-    then let l = LocationSet.min_elt _L_obj in 
-         Store.strong_update store l l_i
-    (* TODO : weak update*)
-    else LocationSet.iter (fun l -> 
-          let _new = LocationSet.of_list [l; l_i] in
-          Store.weak_update store l _new
-        ) _L_obj;
+  Store.strong_update store l_obj l_i;
+
+  (* return *)
+  LocationSet.singleton l_i
+
+let dNVWeakUpdate (graph : t) (store : Store.t) (_object : string) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
+  let l_i = alloc graph id in 
+  print_endline "yee";
+  LocationSet.iter ( fun l -> 
+    print_endline l;
+    (* add version edges *)
+    addVersionEdge graph l l_i None;
+
+    (* store update *)
+    let _new = LocationSet.of_list [l; l_i] in
+    Store.weak_update store l _new
+  ) _L_obj;
+  Store.update' store _object (LocationSet.singleton l_i);
+
+
+  (* add dependency edges *)
+  LocationSet.iter (fun l_prop ->
+    addDepEdge graph l_prop l_i 
+  ) _L_prop;
   
   (* return *)
   LocationSet.singleton l_i
+
+let dynamicNewVersion (graph : t) (store : Store.t) (_object : m Expression.t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
+  if LocationSet.cardinal _L_obj = 1 
+    then dNVStrongUpdate graph store (LocationSet.min_elt _L_obj) _L_prop id
+    else dNVWeakUpdate graph store (get_expression_id _object) _L_obj _L_prop id
   

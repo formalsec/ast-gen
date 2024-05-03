@@ -66,7 +66,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     (* -------- S T A T I C   P R O P E R T Y   U P D A T E -------- *)
     | _, StaticMemberAssign {_object; property=(_, {name=property; _}); right; id} -> 
       let _L1, _L2 = eval_expr _object, eval_expr right in
-      let _L1' = Graph.staticNewVersion graph store _L1 property id in 
+      let _L1' = Graph.staticNewVersion graph store _object _L1 property id in 
       LocationSet.iter ( fun l_1 ->
         LocationSet.iter (fun l_2 ->
             Graph.addPropEdge graph l_1 l_2 (Some property)
@@ -78,8 +78,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let _L1, _L2, _L3 = eval_expr _object, 
                           eval_expr property, 
                           eval_expr right in
-      
-      let _L1' = Graph.dynamicNewVersion graph store _L1 _L2 id in 
+       
+      let _L1' = Graph.dynamicNewVersion graph store _object _L1 _L2 id in 
       LocationSet.iter ( fun l_1 ->
         LocationSet.iter (fun l_3 ->
             Graph.addPropEdge graph l_1 l_3 None

@@ -39,8 +39,12 @@ and locs_to_string (locs : LocationSet.t) : string =
 let get (store : t) ((_, {name; _}) : m Identifier.t) : LocationSet.t =
   get_locations store name
 
+
+let update' (store : t) (id : string) (locs : LocationSet.t) : unit =
+  HashTable.replace store id locs
+
 let update (store : t) ((_, {name; _}) : m Identifier.t) (locs : LocationSet.t) : unit  = 
-  HashTable.replace store name locs
+  update' store name locs
 
 let strong_update (store : t) (old : location) (_new : location) : unit =
   HashTable.iter (fun id locations -> 
