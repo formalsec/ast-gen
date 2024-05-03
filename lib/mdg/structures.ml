@@ -37,7 +37,7 @@ module Edge = struct
     let to_string ({_to; info} : t) : string = 
         let edge_info = match info with 
             | Property prop -> map_default (fun prop -> "P(" ^ prop ^ ")") "P(*)" prop
-            | Version prop -> map_default (fun prop -> "P(" ^ prop ^ ")") "P(*)" prop
+            | Version prop -> map_default (fun prop -> "V(" ^ prop ^ ")") "V(*)" prop
             | Dependency -> "D" 
         in 
         " --" ^ edge_info ^ "-> " ^ _to 

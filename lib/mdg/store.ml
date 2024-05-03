@@ -42,3 +42,18 @@ let get (store : t) ((_, {name; _}) : m Identifier.t) : LocationSet.t =
 let update (store : t) ((_, {name; _}) : m Identifier.t) (locs : LocationSet.t) : unit  = 
   HashTable.replace store name locs
 
+let strong_update (store : t) (old : location) (_new : location) : unit =
+  HashTable.iter (fun id locations -> 
+    let new_locations = LocationSet.map (fun loc -> if loc = old then _new else loc) locations in 
+    HashTable.replace store id new_locations
+  ) store
+
+let weak_update (store : t) (old : location) (_new : LocationSet.t) : unit =
+  HashTable.iter (fun id locations -> 
+    let new_locations = LocationSet.fold (fun loc acc -> if loc = old 
+                                            then LocationSet.union acc _new 
+                                            else LocationSet.add loc acc
+                                          ) locations LocationSet.empty in 
+    HashTable.replace store id new_locations
+  ) store
+
