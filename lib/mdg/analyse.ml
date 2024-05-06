@@ -100,8 +100,9 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       Store.lub state.store state'.store;
 
     (* -------- W H I L E -------- *)
-    | _, While _ -> ()
-
+    | _, While {body; _} -> 
+      ifp (flip analyse_sequence body) state
+        
     | _ -> ());
           (* failwith "statement node analysis not defined" *)
   
@@ -118,6 +119,14 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     print_endline "----------"; )
           
 and analyse_sequence (state : state) = List.iter (analyse state)
+
+and ifp (f : state -> unit) (state : state) : unit =
+  let state' = State.copy state in 
+  f state;
+  if not (State.is_equal state state') 
+    then ifp f state 
+    else ()
+
 
 and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) : LocationSet.t = 
   match expr with

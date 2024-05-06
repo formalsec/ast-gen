@@ -36,6 +36,20 @@ and print_edge (from : location) (edges : EdgeSet.t) : unit =
 
 let copy (graph : t) : t = HashTable.copy graph
 
+let is_equal (graph : t) (graph' : t) : bool = 
+  let result = ref true in
+  if HashTable.length graph = HashTable.length graph'
+    then (
+        HashTable.iter ( fun key value -> 
+        if !result then
+          let value' = HashTable.find_opt graph' key in 
+          if Option.is_some value'
+            then result := EdgeSet.equal value (Option.get value')
+            else result := false
+        ) graph;
+        !result
+      )
+    else false
 
 (* ------- M A I N   F U N C T I O N S -------*)
 let lub (graph : t) (graph' : t) : unit = 
@@ -47,7 +61,7 @@ let lub (graph : t) (graph' : t) : unit =
 
 let alloc (_ : t) (id : int) : location = loc_prefix ^ (Int.to_string id)
 
-(* TODO : test*)
+(* TODO : test *)
 let rec orig (graph : t) (l : location) : location = 
   HashTable.fold (fun l' edges acc ->
     if (EdgeSet.exists (has_version_edge l) edges) 
@@ -56,7 +70,6 @@ let rec orig (graph : t) (l : location) : location =
   ) graph l 
 
 
-(* TODO *)
 let lookup (graph : t) (l : location) (property : property) : location =
   let direct_edges = HashTable.find graph l in   
 

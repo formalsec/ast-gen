@@ -23,6 +23,20 @@ let lub (store : t) (store' : t) : unit =
 
 let copy (store : t) : t = HashTable.copy store
 
+let is_equal (store : t) (store' : t) : bool = 
+  let result = ref true in
+  if HashTable.length store = HashTable.length store'
+    then (
+        HashTable.iter ( fun key value -> 
+        if !result then
+          let value' = HashTable.find_opt store' key in 
+          if Option.is_some value'
+            then result := LocationSet.equal value (Option.get value')
+            else result := false
+        ) store;
+        !result
+      )
+    else false
 
 let rec print (store : t) : unit =
   HashTable.iter (fun id locs -> 
