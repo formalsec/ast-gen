@@ -42,6 +42,12 @@ module Edge = struct
         in 
         " --" ^ edge_info ^ "-> " ^ _to 
 
+    let get_property (info : info) : property = 
+        match info with 
+            | Property prop
+            | Version prop -> map_default (identity) ("*") prop
+            | Dependency -> failwith "dependency edge has no property"
+
 end
 
 module EdgeSet = Set.Make(Edge)

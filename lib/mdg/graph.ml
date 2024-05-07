@@ -11,9 +11,9 @@ let empty : t = HashTable.create 100
 let get_edges (graph : t) (origin : location) : EdgeSet.t = 
   map_default identity EdgeSet.empty (HashTable.find_opt graph origin)
 
-let has_version_edge (_to' : location) ({_to; info} : Edge.t) : bool = 
+let has_version_edge ?(_to' : location option = None) ?(property' : property option option = None) ({_to; info} : Edge.t) : bool = 
   match info with
-    | Version _ -> _to = _to'
+    | Version property -> map_default ((=) _to) (true) _to' && map_default ((=) property) (true) property'
     | _         -> false
 
 let has_property_edge (property' : property option) ({_to; info} : Edge.t) : bool = 
@@ -64,13 +64,22 @@ let alloc (_ : t) (id : int) : location = loc_prefix ^ (Int.to_string id)
 (* TODO : test *)
 let rec orig (graph : t) (l : location) : location = 
   HashTable.fold (fun l' edges acc ->
-    if (EdgeSet.exists (has_version_edge l) edges) 
+    if (EdgeSet.exists (has_version_edge ~_to':(Some l)) edges) 
       then orig graph l'
       else acc
   ) graph l 
 
+let find_version_edge_origin (graph : t) (_to : location) (property : property option) : bool * location =
+  let _to = Some _to in 
+  let property' : property option option = if Option.is_some property then None else Some None in 
+  HashTable.fold (fun from edges acc ->
+    (* check if version edge exists and if its property is different than the one provided *)
+    if (EdgeSet.exists (fun edge -> has_version_edge ~_to':_to ~property':property' edge && map_default ((!=) (Edge.get_property edge.info)) (true) property) edges)
+      then true, from
+      else acc
+  ) graph (false, "!NOT FOUND!")
 
-let lookup (graph : t) (l : location) (property : property) : location =
+let rec lookup (graph : t) (l : location) (property : property) : location =
   let direct_edges = HashTable.find graph l in   
 
   (* Direct Lookup - Known Property *)
@@ -83,9 +92,15 @@ let lookup (graph : t) (l : location) (property : property) : location =
     let {Edge._to; _} = EdgeSet.find_last (has_property_edge None) direct_edges in 
     _to
 
-  (* TODO : Indirect Lookup - Known Version and Indirect Lookup - Unknown Version *)
-  else 
-    "!TODO!"
+  (* Indirect Lookup - Known Version *)
+  else let is_kv_lookup, l' = find_version_edge_origin graph l (Some property) in 
+  if is_kv_lookup then lookup graph l' property
+  
+  (* Indirect Lookup - Unknown Version *)
+  else let is_uv_lookup, l' = find_version_edge_origin graph l None in
+  if is_uv_lookup then lookup graph l' property
+  
+  else failwith "property lookup failed, location doesn't posses such property"
 
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
 let addNode (graph : t) (loc : location) : unit =
