@@ -110,6 +110,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 
     (* -------- C A L L -------- *)
     | _, AssignFunCall _ -> ()
+
+    (* TODO *)
     | _, AssignNew _ -> () 
 
     (* -------- I F -------- *)
