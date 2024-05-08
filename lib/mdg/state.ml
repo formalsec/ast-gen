@@ -17,11 +17,6 @@ let copy ({graph; store; _} as state : state) : state =
      graph = Graph.copy graph;
      store = Store.copy store;
   }
-
-let is_equal (state : state) (state' : state) : bool = 
-  Graph.is_equal state.graph state'.graph &&
-  Store.is_equal state.store state'.store &&
-  LocationSet.equal state.this state'.this
   
 
 

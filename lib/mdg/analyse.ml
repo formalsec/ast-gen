@@ -6,6 +6,22 @@ open State
 
 let verbose = ref false;;
 
+let register, setup, was_changed =
+  let bs : bool list ref = ref [] in 
+ 
+  let reg = fun () -> match !bs with 
+  	| _ :: bs' -> bs := true :: bs'
+  	| _ -> () in
+  	
+  let push = fun () -> bs := false :: !bs in
+   
+  let pop = fun () -> match !bs with 
+  	| b :: bs' -> bs := bs'; b
+  	| _ -> failwith "no element to pop" in 
+  
+  reg, push, pop;;
+  
+
 let rec program (is_verbose : bool) ((_, {body}) : m Program.t) : Graph.t * Store.t = 
   verbose := is_verbose;
   
@@ -17,59 +33,65 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let graph = state.graph in 
   let store = state.store in 
 
+  (* aliases *)
   let eval_expr = eval_expr store state.this in 
+  let add_dep_edge = Graph.addDepEdge register graph in 
+  let add_prop_edge = Graph.addPropEdge register graph in 
+  let store_update = Store.update register store in 
+  let alloc = Graph.alloc graph in 
+  let add_node = Graph.addNode register graph in 
+  let add_property = Graph.staticAddProperty register graph in 
+  let add_property' = Graph.dynamicAddProperty register graph in
+  let lookup = Graph.lookup graph in  
+  let new_version = Graph.staticNewVersion register graph in 
+  let new_version' = Graph.dynamicNewVersion register graph in 
 
   (match statement with
     (* -------- A S S I G N - E X P R -------- *)
     | _, AssignSimple {left; right} -> 
       let _L = eval_expr right in 
-      Store.update store left _L
-
-    (* ??? 
-    | _, AssignArray _ -> ()
-    | _, AssignFunCall _ -> () 
-    *)
+      store_update left _L
 
     (* -------- A S S I G N - O P -------- *)
     | _, AssignBinary {left; opLeft; opRght; id; _} -> 
       let _L1, _L2 = eval_expr opLeft, eval_expr opRght in 
-      let l_i = Graph.alloc graph id in 
-      LocationSet.iter (flip (Graph.addDepEdge graph) l_i) (LocationSet.union _L1 _L2);
-      Store.update store left (LocationSet.singleton l_i);
+      let l_i = alloc id in 
+      LocationSet.iter (flip add_dep_edge l_i) (LocationSet.union _L1 _L2);
+      store_update left (LocationSet.singleton l_i);
     
     | _, AssignUnary {left; argument; id; _} -> 
       let _L1 = eval_expr argument in 
-      let l_i = Graph.alloc graph id in 
-      LocationSet.iter (flip (Graph.addDepEdge graph) l_i) _L1;
-      Store.update store left (LocationSet.singleton l_i)
+      let l_i = alloc id in 
+      LocationSet.iter (flip add_dep_edge l_i) _L1;
+      store_update left (LocationSet.singleton l_i)
 
     (* -------- N E W   O B J E C T -------- *)
     | _, AssignObject {id; left} -> 
-      let l_i = Graph.alloc graph id in
-      Store.update store left (LocationSet.singleton l_i);
-      Graph.addNode graph l_i;
+      let l_i = alloc id in
+      store_update left (LocationSet.singleton l_i);
+      add_node l_i;
 
     (* -------- S T A T I C   P R O P E R T Y   L O O K U P -------- *)
     | _, AssignStaticMember {left; _object; property=(_, {name=property; _}); id} -> 
       let _L = eval_expr _object in 
-      Graph.staticAddProperty graph _L property id;
-      let _L' = LocationSet.map (fun loc -> Graph.lookup graph loc property) _L  in 
-      Store.update store left _L'
+      add_property _L property id;
+      let _L' = LocationSet.map (fun loc -> lookup loc property) _L  in 
+      store_update left _L'
 
     (* -------- D Y N A M I C   P R O P E R T Y   L O O K U P -------- *)
     | _, AssignDynmicMember {left; _object; property; id} ->
       let _L1, _L2 = eval_expr _object, eval_expr property in 
-      Graph.dynamicAddProperty graph _L1 _L2 id;
-      let _L' = LocationSet.map (fun loc -> Graph.lookup graph loc "*") _L1 in
-      Store.update store left _L'
+      add_property' _L1 _L2 id;
+      let _L' = LocationSet.map (fun loc -> lookup loc "*") _L1 in
+      store_update left _L'
 
     (* -------- S T A T I C   P R O P E R T Y   U P D A T E -------- *)
     | _, StaticMemberAssign {_object; property=(_, {name=property; _}); right; id} -> 
       let _L1, _L2 = eval_expr _object, eval_expr right in
-      let _L1' = Graph.staticNewVersion graph store _object _L1 property id in 
+      let _L1' = new_version store _object _L1 property id in 
       LocationSet.iter ( fun l_1 ->
         LocationSet.iter (fun l_2 ->
-            Graph.addPropEdge graph l_1 l_2 (Some property)
+            add_prop_edge l_1 l_2 (Some property)
           ) _L2
       ) _L1'
 
@@ -79,16 +101,16 @@ and analyse (state : state) (statement : m Statement.t) : unit =
                           eval_expr property, 
                           eval_expr right in
        
-      let _L1' = Graph.dynamicNewVersion graph store _object _L1 _L2 id in 
+      let _L1' = new_version' store _object _L1 _L2 id in 
       LocationSet.iter ( fun l_1 ->
         LocationSet.iter (fun l_3 ->
-            Graph.addPropEdge graph l_1 l_3 None
+            add_prop_edge l_1 l_3 None
           ) _L3
       ) _L1'
 
     (* -------- C A L L -------- *)
     | _, AssignFunCall _ -> ()
-    | _, AssignNew _ -> ()
+    | _, AssignNew _ -> () 
 
     (* -------- I F -------- *)
     | _, If {consequent; alternate; _} ->
@@ -96,8 +118,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       analyse_sequence state consequent;
       option_may (analyse_sequence state') alternate;
       
-      Graph.lub state.graph state'.graph;
-      Store.lub state.store state'.store;
+      Graph.lub register state.graph state'.graph;
+      Store.lub register state.store state'.store;
 
     (* -------- W H I L E -------- *)
     | _, While {body; _} -> 
@@ -121,11 +143,10 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 and analyse_sequence (state : state) = List.iter (analyse state)
 
 and ifp (f : state -> unit) (state : state) : unit =
-  let state' = State.copy state in 
+  setup ();
   f state;
-  if not (State.is_equal state state') 
-    then ifp f state 
-    else ()
+  if not (was_changed ()) 
+    then ifp f state
 
 
 and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) : LocationSet.t = 

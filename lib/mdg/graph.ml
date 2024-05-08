@@ -36,26 +36,12 @@ and print_edge (from : location) (edges : EdgeSet.t) : unit =
 
 let copy (graph : t) : t = HashTable.copy graph
 
-let is_equal (graph : t) (graph' : t) : bool = 
-  let result = ref true in
-  if HashTable.length graph = HashTable.length graph'
-    then (
-        HashTable.iter ( fun key value -> 
-        if !result then
-          let value' = HashTable.find_opt graph' key in 
-          if Option.is_some value'
-            then result := EdgeSet.equal value (Option.get value')
-            else result := false
-        ) graph;
-        !result
-      )
-    else false
-
 (* ------- M A I N   F U N C T I O N S -------*)
-let lub (graph : t) (graph' : t) : unit = 
+let lub (register : unit -> unit) (graph : t) (graph' : t) : unit = 
   (* least upper bound *)
   HashTable.iter (fun from edges' -> 
     let edges = get_edges graph from in 
+    if not (EdgeSet.subset edges' edges) then register ();
     HashTable.replace graph from (EdgeSet.union edges edges');
   ) graph'
 
@@ -103,119 +89,119 @@ let rec lookup (graph : t) (l : location) (property : property) : location =
   else failwith "property lookup failed, location doesn't posses such property"
 
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
-let addNode (graph : t) (loc : location) : unit =
-  HashTable.add graph loc EdgeSet.empty
+let addNode (register : unit -> unit) (graph : t) (loc : location) : unit =
+  if not (HashTable.mem graph loc) || not (EdgeSet.is_empty (HashTable.find graph loc)) then register ();
+  HashTable.replace graph loc EdgeSet.empty
 
-let addEdge (graph : t) (edge : Edge.t) (_to : location) (from : location) : unit = 
+let addEdge (register : unit -> unit) (graph : t) (edge : Edge.t) (_to : location) (from : location) : unit = 
   let edges = get_edges graph from in 
+  if not (EdgeSet.mem edge edges) then register ();
   HashTable.replace graph from (EdgeSet.add edge edges)
 
-let addDepEdge (graph : t) (from : location) (_to : location) : unit = 
+let addDepEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) : unit = 
   let edge = {Edge._to = _to; info = Dependency} in 
-  addEdge graph edge _to from
+  addEdge register graph edge _to from
 
-let addPropEdge (graph : t) (from : location) (_to : location) (property : property option) : unit = 
+let addPropEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) (property : property option) : unit = 
   let edge = {Edge._to = _to; info = Property property} in 
-  addEdge graph edge _to from
+  addEdge register graph edge _to from
 
-let addVersionEdge (graph : t) (from : location) (_to : location) (property : property option) : unit =
+let addVersionEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) (property : property option) : unit =
   let edge = {Edge._to = _to; info = Version property} in 
-  addEdge graph edge _to from
+  addEdge register graph edge _to from
 
-let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id : int) : unit =
+let staticAddProperty (register : unit -> unit) (graph : t) (_L : LocationSet.t) (property : property) (id : int) : unit =
   LocationSet.iter (fun l -> 
     let l_o = orig graph l in 
 
     let edges = get_edges graph l_o in  
     if not (EdgeSet.exists (has_property_edge (Some property)) edges) 
       then let l_i = alloc graph id in 
-           addPropEdge graph l_o l_i (Some property)
+           addPropEdge register graph l_o l_i (Some property)
   ) _L 
 
-let dynamicAddProperty (graph : t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : unit =
+let dynamicAddProperty (register : unit -> unit)  (graph : t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : unit =
   LocationSet.iter (fun l -> 
     let l_o = orig graph l in 
 
     let edges = get_edges graph l_o in  
     if (EdgeSet.exists (has_property_edge None) edges) then 
       let {Edge._to; _} = EdgeSet.find_last (has_property_edge None) edges in
-      LocationSet.iter (flip (addDepEdge graph) _to) _L_prop
+      LocationSet.iter (flip (addDepEdge register graph) _to) _L_prop
     else 
     ( let l_i = alloc graph id in 
-      addPropEdge graph l_o l_i None;
-      LocationSet.iter (flip (addDepEdge graph) l_i) _L_prop )
+      addPropEdge register graph l_o l_i None;
+      LocationSet.iter (flip (addDepEdge register graph) l_i) _L_prop )
 
   ) _L_obj  
 
 
-let sNVStrongUpdate (graph : t) (store : Store.t) (l : location) (property : property) (id : int) : LocationSet.t = 
+let sNVStrongUpdate (register : unit -> unit)  (graph : t) (store : Store.t) (l : location) (property : property) (id : int) : LocationSet.t = 
   let l_i = alloc graph id in 
-  addVersionEdge graph l l_i (Some property);
-  Store.strong_update store l l_i;
+  addVersionEdge register graph l l_i (Some property);
+  Store.strong_update register store l l_i;
 
   (* return *)
   LocationSet.singleton l_i
 
-let sNVWeakUpdate (graph : t) (store : Store.t) (_object : string) (_L : LocationSet.t) (property : property) (id : int) : LocationSet.t = 
+let sNVWeakUpdate (register : unit -> unit)  (graph : t) (store : Store.t) (_object : string) (_L : LocationSet.t) (property : property) (id : int) : LocationSet.t = 
   let l_i = alloc graph id in 
   LocationSet.iter ( fun l ->
     (* add version edges *)
-    addVersionEdge graph l l_i (Some property);
+    addVersionEdge register graph l l_i (Some property);
     
     (* store update *)
     let _new = LocationSet.of_list [l; l_i] in
-    Store.weak_update store l _new
+    Store.weak_update register store l _new
   ) _L;
-  Store.update' store _object (LocationSet.singleton l_i);
+  Store.update' register store _object (LocationSet.singleton l_i);
 
   (* return *)
   LocationSet.singleton l_i
 
-let staticNewVersion (graph : t) (store : Store.t) (_object : m Expression.t) (_L : LocationSet.t) (property : property) (id : int) : LocationSet.t = 
+let staticNewVersion (register : unit -> unit)  (graph : t) (store : Store.t) (_object : m Expression.t) (_L : LocationSet.t) (property : property) (id : int) : LocationSet.t = 
   if LocationSet.cardinal _L = 1 
-    then sNVStrongUpdate graph store (LocationSet.min_elt _L) property id
-    else sNVWeakUpdate graph store (get_expression_id _object) _L property id
+    then sNVStrongUpdate register graph store (LocationSet.min_elt _L) property id
+    else sNVWeakUpdate register graph store (get_expression_id _object) _L property id
 
 
-let dNVStrongUpdate (graph : t) (store : Store.t) (l_obj : location) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
+let dNVStrongUpdate (register : unit -> unit) (graph : t) (store : Store.t) (l_obj : location) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
   let l_i = alloc graph id in 
-  addVersionEdge graph l_obj l_i None;
+  addVersionEdge register graph l_obj l_i None;
 
   (* add dependency edges *)
   LocationSet.iter (fun l_prop ->
-    addDepEdge graph l_prop l_i 
+    addDepEdge register graph l_prop l_i 
   ) _L_prop;
 
-  Store.strong_update store l_obj l_i;
+  Store.strong_update register store l_obj l_i;
 
   (* return *)
   LocationSet.singleton l_i
 
-let dNVWeakUpdate (graph : t) (store : Store.t) (_object : string) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
+let dNVWeakUpdate (register : unit -> unit)  (graph : t) (store : Store.t) (_object : string) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
   let l_i = alloc graph id in 
-  print_endline "yee";
   LocationSet.iter ( fun l -> 
-    print_endline l;
     (* add version edges *)
-    addVersionEdge graph l l_i None;
+    addVersionEdge register graph l l_i None;
 
     (* store update *)
     let _new = LocationSet.of_list [l; l_i] in
-    Store.weak_update store l _new
+    Store.weak_update register store l _new
   ) _L_obj;
-  Store.update' store _object (LocationSet.singleton l_i);
+  Store.update' register store _object (LocationSet.singleton l_i);
 
 
   (* add dependency edges *)
   LocationSet.iter (fun l_prop ->
-    addDepEdge graph l_prop l_i 
+    addDepEdge register graph l_prop l_i 
   ) _L_prop;
   
   (* return *)
   LocationSet.singleton l_i
 
-let dynamicNewVersion (graph : t) (store : Store.t) (_object : m Expression.t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
+let dynamicNewVersion (register : unit -> unit) (graph : t) (store : Store.t) (_object : m Expression.t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
   if LocationSet.cardinal _L_obj = 1 
-    then dNVStrongUpdate graph store (LocationSet.min_elt _L_obj) _L_prop id
-    else dNVWeakUpdate graph store (get_expression_id _object) _L_obj _L_prop id
+    then dNVStrongUpdate register graph store (LocationSet.min_elt _L_obj) _L_prop id
+    else dNVWeakUpdate register graph store (get_expression_id _object) _L_obj _L_prop id
   
