@@ -440,22 +440,22 @@ and Statement : sig
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      callee : 'M Expression.t;
+      callee : 'M Identifier.t;
       arguments : 'M Expression.t list;
     }
 
-    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Expression.t list -> 'M Statement.t
+    val build : 'M -> 'M Identifier.t -> 'M Identifier.t -> 'M Expression.t list -> 'M Statement.t
   end
 
   module AssignFunCall : sig
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      callee : 'M Expression.t;
+      callee : 'M Identifier.t;
       arguments : 'M Expression.t list;
     }
 
-    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Expression.t list -> 'M Statement.t
+    val build : 'M -> 'M Identifier.t -> 'M Identifier.t -> 'M Expression.t list -> 'M Statement.t
   end
 
   module AssignFunction : sig
@@ -920,11 +920,11 @@ end = struct
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      callee : 'M Expression.t;
+      callee : 'M Identifier.t;
       arguments : 'M Expression.t list;
     }
 
-    let build (metadata : 'M) (left' : 'M Identifier.t) (callee' : 'M Expression.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
+    let build (metadata : 'M) (left' : 'M Identifier.t) (callee' : 'M Identifier.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
       let assign_info = Statement.AssignNew {
         left = left';
         callee = callee';
@@ -1016,11 +1016,11 @@ end = struct
     type 'M t = {
       left : 'M Identifier.t;
       (* -- right -- *)
-      callee : 'M Expression.t;
+      callee : 'M Identifier.t;
       arguments : 'M Expression.t list;
     }
 
-    let build (metadata : 'M) (left' : 'M Identifier.t) (callee' : 'M Expression.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
+    let build (metadata : 'M) (left' : 'M Identifier.t) (callee' : 'M Identifier.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
       let assign_info = Statement.AssignFunCall {
         left = left';
         callee = callee';

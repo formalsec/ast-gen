@@ -524,7 +524,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
     let loc = loc_f loc in
     let id = get_identifier loc context.identifier in
-    let assign = Statement.AssignNew.build loc id (Option.get callee_expr) args_exprs in
+    let assign = Statement.AssignNew.build loc id (Identifier.from_expression (Option.get callee_expr)) args_exprs in
 
     if not context.is_assignment then
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
@@ -577,7 +577,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
     let loc = loc_f loc in
     let id = get_identifier loc context.identifier in
-    let assign = Statement.AssignFunCall.build loc id (Option.get callee_expr) args_exprs in
+    let assign = Statement.AssignFunCall.build loc id (Identifier.from_expression (Option.get callee_expr)) args_exprs in
 
     if not context.is_assignment then
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
@@ -650,12 +650,12 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast.Patt
             let is_id, id = is_identifier argument in
             if not is_id then 
               let id, decl = createVariableDeclaration None loc in 
-              let call = Statement.AssignFunCall.build loc id (Identifier.to_expression slide_id) [index] in 
+              let call = Statement.AssignFunCall.build loc id slide_id [index] in 
               let stmts, ids = normalize_pattern (Identifier.to_expression id) argument op in 
 
               slice_decl @ [member] @ decl @ [call] @ stmts, ids
             else 
-              let call = Statement.AssignFunCall.build loc (Option.get id) (Identifier.to_expression slide_id) [index] in 
+              let call = Statement.AssignFunCall.build loc (Option.get id) slide_id [index] in 
               slice_decl @ [member] @ [call], Option.to_list id
 
       ) elements) in
@@ -982,7 +982,7 @@ and normalize_extend (class_id : m Identifier.t) ((loc', {expr=(loc, _) as expr;
   let loc = loc_f loc in
   (* let v1 = new ext_expr(); *)
   let id, decl = createVariableDeclaration ~kind:_let None loc  in 
-  let super_init = Statement.AssignNew.build loc id (Option.get ext_expr) [] in
+  let super_init = Statement.AssignNew.build loc id (Identifier.from_expression (Option.get ext_expr)) [] in
 
   (* class_id.prototype = v1; *)
   let assign_proto = Statement.StaticMemberAssign.build (loc_f loc') (Identifier.to_expression class_id) prototype (Identifier.to_expression id) in
@@ -1069,11 +1069,6 @@ and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={
 and get_identifier (loc : m) (id : m Identifier.t option) : m Identifier.t = 
   let random_id = lazy (Identifier.build_random loc) in
   map_default_lazy identity random_id id
-
-and to_identifier (expr : m Expression.t) : m Identifier.t option = 
-  match expr with
-    | loc, Identifier id -> Some (loc, id)
-    | _                  -> None
 
 and get_string ((_, {Ast.StringLiteral.value; _})) : string = value
 
