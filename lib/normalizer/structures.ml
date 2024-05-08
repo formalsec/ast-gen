@@ -1,3 +1,5 @@
+open Auxiliary.Structures
+open Auxiliary.Functions
 module Ast = Flow_ast
 
 module Location = struct
@@ -26,6 +28,32 @@ module Location = struct
 end
 
 type m = Location.t;;
+
+module FunctionInfo = struct
+  type info = {
+    params : string list;
+  }
+
+  type t = info HashTable.t
+
+  let create = HashTable.create
+  let add : t -> string -> info -> unit = HashTable.replace
+  let find : t -> string -> info option = HashTable.find_opt
+  let get_param_name_opt (functions : t) (identifier : string) (index : int) : string option =
+    map_default (fun {params} -> List.nth_opt params index) None (find functions identifier)
+  let get_param_name (functions : t) (identifier : string) (index : int) : string =
+    let info = find functions identifier in 
+    if Option.is_some info
+      then let info = Option.get info in 
+               List.nth info.params index
+      else (failwith "function name wasn't found")
+
+  let info_to_string (info : info) : string = String.concat ", " info.params 
+  let print (functions : t) : unit =
+    HashTable.iter (fun func_id info ->
+      print_endline (func_id ^ " : " ^ (info_to_string info))
+    ) functions
+end
 
 module Operator = struct
   module Assignment = struct
@@ -103,7 +131,8 @@ module rec Identifier : sig
   val build : 'M -> string -> 'M t
   val build_random : 'M -> 'M t
   val to_expression: 'M t -> 'M Expression.t
-  val from_expression : 'M Expression.t -> 'M t 
+  val from_expression : 'M Expression.t -> 'M t
+  val get_name : 'M t -> string 
 
 end = struct
   type t' = {
@@ -139,7 +168,9 @@ end = struct
     match expr with
       | Expression.Identifier {name; _} -> build loc name
       | _ -> failwith "attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier."
-  end
+
+  let get_name ((_, {name; _}) : 'M t) : string = name
+end
 
 and Statement : sig
 
@@ -218,26 +249,25 @@ and Statement : sig
     val build : 'M -> 'M VarDecl.t -> 'M Expression.t -> 'M Statement.t list -> bool -> 'M Statement.t
   end
 
-
-  module Catch : sig
-    type 'M t' = {
-      param : 'M Identifier.t option;
-      body : 'M Statement.t list;
-    }
-
-    type 'M t = 'M * 'M t'
-
-    val build : 'M -> 'M Identifier.t option -> 'M Statement.t list -> 'M t
-  end
-
   module Try : sig
+    module Catch : sig
+      type 'M t' = {
+        param : 'M Identifier.t option;
+        body : 'M Statement.t list;
+      }
+  
+      type 'M t = 'M * 'M t'
+  
+      val build : 'M -> 'M Identifier.t option -> 'M Statement.t list -> 'M t
+    end
+
     type 'M t = {
       body : 'M Statement.t list;
       handler : 'M Catch.t option;
       finalizer : 'M Statement.t list option;
     }
 
-    val build : 'M -> 'M Statement.t list -> 'M Statement.Catch.t option -> 'M Statement.t list option -> 'M Statement.t
+    val build : 'M -> 'M Statement.t list -> 'M Catch.t option -> 'M Statement.t list option -> 'M Statement.t
   end
 
   module With : sig 
@@ -489,7 +519,6 @@ and Statement : sig
     | ForIn    of 'M ForIn.t
     | ForOf    of 'M ForOf.t
     | Try      of 'M Try.t 
-    | Catch    of 'M Catch.t 
     | With     of 'M With.t
     | Labeled  of 'M Labeled.t
     | VarDecl  of 'M VarDecl.t
@@ -654,30 +683,30 @@ end = struct
       (metadata, for_info)
   end
 
-  module Catch = struct
-    type 'M t' = {
-      param : 'M Identifier.t option;
-      body : 'M Statement.t list;
-    }
-
-    type 'M t = 'M * 'M t'
-
-    let build (metadata : 'M) (param' : 'M Identifier.t option) (body' : 'M Statement.t list) : 'M t =
-      let build_info = {
-        param = param';
-        body = body';
-      } in
-      (metadata, build_info)
-  end
-
   module Try = struct
+    module Catch = struct
+      type 'M t' = {
+        param : 'M Identifier.t option;
+        body : 'M Statement.t list;
+      }
+  
+      type 'M t = 'M * 'M t'
+  
+      let build (metadata : 'M) (param' : 'M Identifier.t option) (body' : 'M Statement.t list) : 'M t =
+        let build_info = {
+          param = param';
+          body = body';
+        } in
+        (metadata, build_info)
+    end
+
     type 'M t = {
       body : 'M Statement.t list;
       handler : 'M Catch.t option;
       finalizer : 'M Statement.t list option;
     }
 
-    let build (metadata : 'M) (body' : 'M Statement.t list) (handler' : 'M Statement.Catch.t option) (finalizer' : 'M Statement.t list option) : 'M Statement.t =
+    let build (metadata : 'M) (body' : 'M Statement.t list) (handler' : 'M Catch.t option) (finalizer' : 'M Statement.t list option) : 'M Statement.t =
       let try_info = Statement.Try {
         body = body';
         handler = handler';
@@ -1075,7 +1104,6 @@ end = struct
     | ForIn    of 'M ForIn.t
     | ForOf    of 'M ForOf.t
     | Try      of 'M Try.t 
-    | Catch    of 'M Catch.t 
     | With     of 'M With.t
     | Labeled  of 'M Labeled.t
     | VarDecl  of 'M VarDecl.t
@@ -1307,17 +1335,62 @@ end
 and Program : sig
   type 'M t' = {
     body : 'M Statement.t list;
+    functions : FunctionInfo.t
   }
 
   type 'M t = 'M * 'M t'
   val build :  'M -> 'M Statement.t list -> 'M t
+  val set_function_info : 'M t -> unit
+
 end = struct
   type 'M t' = {
     body : 'M Statement.t list;
+    functions : FunctionInfo.t
   }
 
   type 'M t = 'M * 'M t'
   let build (metadata : 'M) (stmts : 'M Statement.t list) : 'M t = 
-    (metadata, { body = stmts });; 
+    (metadata, { body = stmts; functions = FunctionInfo.create 100 });; 
+
+  let set_function_info ((_, {body; functions}) : 'M t) : unit =
+    let rec traverse_body (stmts : 'M Statement.t list) : unit =
+      List.iter search_functions stmts
+    and search_functions (stmt : 'M Statement.t) : unit =
+      match stmt with
+        | _, Statement.AssignFunction {left; params; body; _} -> 
+          (* add function information *)
+          let left' = Identifier.get_name left in 
+          let params' = List.map (fun (_, {Statement.AssignFunction.Param.argument; _}) -> Identifier.get_name argument) params in
+          
+          FunctionInfo.add functions left' {params = params'};
+          traverse_body body;
+          
+        (* --------- traverse ast --------- *)
+        | _, Statement.If {consequent; alternate; _} -> 
+          traverse_body consequent;
+          option_may traverse_body alternate;
+
+        | _, Statement.Switch {cases; _} -> 
+          List.iter (fun (_, {Statement.Switch.Case.consequent; _}) -> 
+            traverse_body consequent;
+          ) cases
+
+        | _, Statement.While   {body; _} -> traverse_body body
+        | _, Statement.ForIn   {body; _} -> traverse_body body
+        | _, Statement.ForOf   {body; _} -> traverse_body body
+        | _, Statement.With    {body;_ } -> traverse_body body
+        | _, Statement.Labeled {body; _} -> traverse_body body
+        
+        | _, Statement.Try     {body; handler; finalizer} -> 
+          traverse_body body;
+          option_may (fun (_, {Statement.Try.Catch.body; _}) -> traverse_body body) handler;
+          option_may traverse_body finalizer;
+
+        (* ------- ignore all other statements ------- *)
+        | _ -> ()
+      
+    in
+
+    traverse_body body
 
 end

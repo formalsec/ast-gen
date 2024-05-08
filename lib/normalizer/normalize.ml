@@ -46,9 +46,11 @@ type context = {
 let empty_context : context = { parent_type = ""; identifier = None; is_assignment = false; is_declaration = false; has_op = false; is_statement = false; } 
 
 let rec program (loc , { Ast.Program.statements; _ }) : m Program.t = 
-  let statements' = List.flatten (List.map (normalize_statement empty_context) statements) in
-  let program' = Program.build (loc_f loc) statements' in 
-  program'
+  let body = List.flatten (List.map (normalize_statement empty_context) statements) in
+  let program = Program.build (loc_f loc) body in
+  Program.set_function_info program; 
+  program;
+
 
 and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : norm_stmt_t =
   let ns  = normalize_statement empty_context in
@@ -848,12 +850,12 @@ and normalize_case (loc, {Ast.Statement.Switch.Case.test; consequent; _}) : m St
   let case = Statement.Switch.Case.build (loc_f loc) test_expr cnsq_stmts in
   (case, test_stmts)
 
-and normalize_catch (loc, { Ast.Statement.Try.CatchClause.param; body; _}) : norm_stmt_t * m Statement.Catch.t option = 
+and normalize_catch (loc, { Ast.Statement.Try.CatchClause.param; body; _}) : norm_stmt_t * m Statement.Try.Catch.t option = 
     let is_id, id = map_default is_identifier (false, None) param in
     let param' = if is_id then id else failwith "param is not an identifier" in 
     let body_stmts = normalize_statement empty_context (block_to_statement body) in 
 
-    let catch = Statement.Catch.build (loc_f loc) param' body_stmts in
+    let catch = Statement.Try.Catch.build (loc_f loc) param' body_stmts in
     (body_stmts, Some catch)
   
 and normalize_array_elem (element : ('M, 'T) Ast.Expression.Array.element) : norm_expr_t = 

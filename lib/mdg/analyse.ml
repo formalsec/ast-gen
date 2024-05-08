@@ -22,16 +22,16 @@ let register, setup, was_changed =
   reg, push, pop;;
   
 
-let rec program (is_verbose : bool) ((_, {body}) : m Program.t) : Graph.t * Store.t = 
+let rec program (is_verbose : bool) ((_, {body; functions}) : m Program.t) : Graph.t * Store.t = 
   verbose := is_verbose;
-  
-  let state = empty_state () in 
+  let state = empty_state functions in 
   analyse_sequence state body;
   state.graph, state.store
 
 and analyse (state : state) (statement : m Statement.t) : unit =
   let graph = state.graph in 
   let store = state.store in 
+  let funcs = state.functions in 
 
   (* aliases *)
   let eval_expr = eval_expr store state.this in 
@@ -46,6 +46,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let lookup = Graph.lookup graph in  
   let new_version = Graph.staticNewVersion register graph in 
   let new_version' = Graph.dynamicNewVersion register graph in 
+  let get_param_name = FunctionInfo.get_param_name funcs in 
 
   (match statement with
     (* -------- A S S I G N - E X P R -------- *)
@@ -110,22 +111,18 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       ) _L1'
 
     (* -------- C A L L -------- *)
-    | _, AssignFunCall {left; (* callee *) arguments; id; _} -> 
+    | _, AssignNew {left; callee; arguments; id; _}
+    | _, AssignFunCall {left; callee; arguments; id; _} -> 
       let _Lss = List.map eval_expr arguments in 
       let l_call = alloc id in 
-      List.iteri ( fun _ _Ls -> 
-        (* TODO : get paramater name *)
-        LocationSet.iter (fun l -> add_arg_edge l l_call "arg_name") _Ls
+      List.iteri ( fun i _Ls -> 
+        LocationSet.iter (fun l -> add_arg_edge l l_call (get_param_name (Identifier.get_name callee) i)) _Ls
       ) _Lss;
       
       (* TODO : add call edge from l_call to function definition node *)
       (* TODO : function definition node not yet implemented *)
-
+      
       store_update left (LocationSet.singleton l_call);
-
-
-    (* TODO *)
-    | _, AssignNew _ -> () 
 
     (* -------- I F -------- *)
     | _, If {consequent; alternate; _} ->

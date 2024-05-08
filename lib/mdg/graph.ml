@@ -1,6 +1,7 @@
 open Structures
 open Auxiliary.Functions
 open Normalizer.Structures
+open Auxiliary.Structures
 
 type t = EdgeSet.t HashTable.t
 let empty : t = HashTable.create 100

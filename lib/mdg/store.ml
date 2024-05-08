@@ -1,5 +1,6 @@
 open Structures
 open Normalizer.Structures
+open Auxiliary.Structures
 open Auxiliary.Functions
 
 

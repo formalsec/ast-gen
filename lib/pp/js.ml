@@ -6,7 +6,7 @@ let spaces_per_identation = 3;;
 
 
 let rec print (program : m Program.t)  : string = print_program program 0
-and print_program (_, {Program.body}) (identation : int): string =
+and print_program (_, {Program.body; _}) (identation : int): string =
   print_stmts body identation
 
 and print_stmt (stmt : m Statement.t) (identation : int) : string =
@@ -49,20 +49,13 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
       
       identation_str ^ "for" ^ if (await) then " await " else " " ^ "(" ^ left' ^ " of " ^ right' ^ ") {\n" ^ body' ^ identation_str ^ "}\n"
 
-    | _, Try {body; handler; finalizer} -> 
+    | _, Try {body; finalizer; handler} -> 
       let new_identation = identation + spaces_per_identation in
       let body' = print_stmts body new_identation in
-      let handler' = map_default ((flip print_stmt identation) << catch_to_stmt) "" handler in 
+      let handler' = map_default (print_handler identation identation_str) ("") handler  in 
       let finalizer' = map_default (fun fin -> identation_str ^ "finally {\n" ^ (print_stmts fin new_identation)  ^ identation_str ^ "}\n" ) "\n" finalizer in 
 
       identation_str ^ "try {\n" ^ body' ^ identation_str ^ "} " ^ handler' ^ finalizer'
-
-    | _, Catch (_, {param; body}) -> 
-      let param' = map_default (fun param -> "(" ^ print_identifier param ^ ")") "" param in 
-      let new_identation = identation + spaces_per_identation in
-      let body' = print_stmts body new_identation in 
-
-      identation_str ^ "catch " ^ param' ^ "{\n" ^ body' ^ identation_str ^ "}"
     
     | _, With {_object; body} -> 
       let _object' = print_expr _object in 
@@ -218,7 +211,7 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
       
       identation_str ^ left' ^ " = " ^ _object' ^ "[" ^ property' ^ "];\n"
 
-    | _, AssignFunction {left; params; body} ->
+    | _, AssignFunction {left; params; body; _} ->
       let left' = print_identifier left in 
       let params' = List.map print_param params in 
       let new_identation = identation + spaces_per_identation in
@@ -278,6 +271,9 @@ and print_decl {kind; id} =
       let id' = print_identifier id in
       kind' ^ id'
 
-and catch_to_stmt (loc, {Statement.Catch.param; body}) : m Statement.t = 
-  let catch_info = Statement.Catch (loc, { param = param; body = body }) in
-  (loc, catch_info)
+and print_handler (identation : int) (identation_str : string) ((_, {param; body}) : 'M Statement.Try.Catch.t) : string  = 
+  let param' = map_default (fun param -> "(" ^ print_identifier param ^ ")") "" param in 
+  let new_identation = identation + spaces_per_identation in
+  let body' = print_stmts body new_identation in 
+
+  identation_str ^ "catch " ^ param' ^ "{\n" ^ body' ^ identation_str ^ "}"
