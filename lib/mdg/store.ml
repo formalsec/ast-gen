@@ -1,5 +1,5 @@
 open Structures
-open Auxiliary.GraphJS
+open Normalizer.Structures
 open Auxiliary.Functions
 
 

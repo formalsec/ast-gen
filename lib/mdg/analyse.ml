@@ -1,5 +1,5 @@
 (* open Auxiliary.Functions *)
-open Auxiliary.GraphJS
+open Normalizer.Structures
 open Auxiliary.Functions
 open Structures
 open State
@@ -37,6 +37,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let eval_expr = eval_expr store state.this in 
   let add_dep_edge = Graph.addDepEdge register graph in 
   let add_prop_edge = Graph.addPropEdge register graph in 
+  let add_arg_edge = Graph.addArgEdge register graph in 
   let store_update = Store.update register store in 
   let alloc = Graph.alloc graph in 
   let add_node = Graph.addNode register graph in 
@@ -109,7 +110,19 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       ) _L1'
 
     (* -------- C A L L -------- *)
-    | _, AssignFunCall _ -> ()
+    | _, AssignFunCall {left; (* callee *) arguments; id; _} -> 
+      let _Lss = List.map eval_expr arguments in 
+      let l_call = alloc id in 
+      List.iteri ( fun _ _Ls -> 
+        (* TODO : get paramater name *)
+        LocationSet.iter (fun l -> add_arg_edge l l_call "arg_name") _Ls
+      ) _Lss;
+      
+      (* TODO : add call edge from l_call to function definition node *)
+      (* TODO : function definition node not yet implemented *)
+
+      store_update left (LocationSet.singleton l_call);
+
 
     (* TODO *)
     | _, AssignNew _ -> () 

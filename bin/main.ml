@@ -3,7 +3,7 @@ open Cmdliner
 let main (filename : string) (verbose : bool) (generate_mdg : bool) : int =
   match Auxiliary.Js_parser.from_file filename with
   | Ok ast ->
-      let norm_program = Normalizer.normalize ast in
+      let norm_program = Normalizer.Normalize.program ast in
       if generate_mdg then (
         let graph, store = Mdg.Analyse.program verbose norm_program in 
 

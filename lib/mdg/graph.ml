@@ -1,6 +1,6 @@
 open Structures
 open Auxiliary.Functions
-open Auxiliary.GraphJS
+open Normalizer.Structures
 
 type t = EdgeSet.t HashTable.t
 let empty : t = HashTable.create 100
@@ -108,6 +108,10 @@ let addPropEdge (register : unit -> unit) (graph : t) (from : location) (_to : l
 
 let addVersionEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) (property : property option) : unit =
   let edge = {Edge._to = _to; info = Version property} in 
+  addEdge register graph edge _to from
+
+let addArgEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) (identifier : string) : unit = 
+  let edge = {Edge._to = _to; info = Argument identifier} in 
   addEdge register graph edge _to from
 
 let staticAddProperty (register : unit -> unit) (graph : t) (_L : LocationSet.t) (property : property) (id : int) : unit =

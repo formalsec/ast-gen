@@ -1,6 +1,6 @@
 module Ast = Flow_ast
-open Auxiliary.GraphJS
 open Auxiliary.Functions
+open Structures
 
 (* --------- A L I A S E S --------- *)
 type norm_stmt_t = m Statement.t list;;
@@ -45,7 +45,7 @@ type context = {
 }
 let empty_context : context = { parent_type = ""; identifier = None; is_assignment = false; is_declaration = false; has_op = false; is_statement = false; } 
 
-let rec normalize (loc , { Ast.Program.statements; _ }) : m Program.t = 
+let rec program (loc , { Ast.Program.statements; _ }) : m Program.t = 
   let statements' = List.flatten (List.map (normalize_statement empty_context) statements) in
   let program' = Program.build (loc_f loc) statements' in 
   program'

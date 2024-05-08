@@ -1,5 +1,5 @@
 
-open Auxiliary.GraphJS 
+open Normalizer.Structures 
 open Auxiliary.Functions
 
 let spaces_per_identation = 3;;
@@ -180,13 +180,13 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
       let left' = print_identifier left in
       identation_str ^ left' ^ " = " ^ "{};\n"
 
-    | _, AssignNew {left; callee; arguments} -> 
+    | _, AssignNew {left; callee; arguments; _} -> 
       let left' = print_identifier left in 
       let callee' = print_identifier callee in 
       let arguments' = List.map print_expr arguments in 
       identation_str ^ left' ^ " = new " ^ callee' ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
 
-    | _, AssignFunCall {left; callee; arguments} -> 
+    | _, AssignFunCall {left; callee; arguments; _} -> 
       let left' = print_identifier left in 
       let callee' = print_identifier callee in 
       let arguments' = List.map print_expr arguments in 

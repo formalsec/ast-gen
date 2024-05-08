@@ -25,6 +25,9 @@ module Edge = struct
         | Property of property option
         | Version  of property option
         | Dependency
+        | Argument of string   
+        | Parameter of string 
+        | Call 
 
     type t = {
         _to  : location;
@@ -39,6 +42,9 @@ module Edge = struct
             | Property prop -> map_default (fun prop -> "P(" ^ prop ^ ")") "P(*)" prop
             | Version prop -> map_default (fun prop -> "V(" ^ prop ^ ")") "V(*)" prop
             | Dependency -> "D" 
+            | Argument id -> "ARG(" ^ id ^ ")"
+            | Parameter pos -> "param " ^ pos
+            | Call -> "CG"
         in 
         " --" ^ edge_info ^ "-> " ^ _to 
 
@@ -46,7 +52,7 @@ module Edge = struct
         match info with 
             | Property prop
             | Version prop -> map_default (identity) ("*") prop
-            | Dependency -> failwith "dependency edge has no property"
+            | _ -> failwith "provided edge has no property"
 
 end
 
