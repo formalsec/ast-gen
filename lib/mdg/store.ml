@@ -18,18 +18,16 @@ let replace : t -> string -> LocationSet.t -> unit = HashTable.replace
 let copy : t -> t = HashTable.copy
 
 let rec print (store : t) : unit =
-  iter (fun id locs -> 
-    print_endline (id ^ " : " ^ (locs_to_string locs));
-  ) store;
+  iter (print_locations) store;
   print_string "\n";
 
-and locs_to_string (locs : LocationSet.t) : string =
-  let elems = String.concat ", " (LocationSet.elements locs) in 
-  "[" ^ elems ^ "]"
+and print_locations (id : location) (locations : LocationSet.t) : unit = 
+  print_endline (id ^ " : [" ^ String.concat ", " (LocationSet.elements locations) ^ "]")
 
+
+(* ------- A U X I L I A R Y   F U N C T I O N S -------*)
 let get_locations (store : t) (id : location) : LocationSet.t =
   map_default identity LocationSet.empty (HashTable.find_opt store id)
-
   
 (* ------- S T O R E   M A N I P U L A T I O N ------- *)
 let get (store : t) ((_, {name; _}) : m Identifier.t) : LocationSet.t =
