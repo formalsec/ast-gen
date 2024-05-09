@@ -4,12 +4,18 @@ open Normalizer.Structures
 
 (* =============== S T R U C T U R E S =============== *)
 module Node = struct
+  type _type = 
+    | Function of string  | Parameter of string 
+    | Object              | None
+
   type t = {
     location : location;
+    _type : _type;
   }
 
+  let empty : t = {location = ""; _type = None}
   let to_string (node : t) : string = node.location
-  let with_location (location : location) : t = {location = location}
+  let with_location (location : location) : t = {empty with location = location}
 
   (* functions requeired to be a key*)
   let equal (node : t) (node' : t) = String.equal node.location node'.location
@@ -18,12 +24,12 @@ end
 
 module Edge = struct
     type _type = 
-        | Property of property option
-        | Version  of property option
-        | Dependency
-        | Argument of string   
-        | Parameter of string 
-        | Call 
+      | Property of property option
+      | Version  of property option
+      | Dependency
+      | Argument of string   
+      | Parameter of string 
+      | Call 
 
     type t = {
         _to  : location;
@@ -60,21 +66,26 @@ type t = EdgeSet.t GraphHT.t
 (* =============== F U N C T I O N S =============== *)
 
 (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
-let iter (f : location -> EdgeSet.t -> unit) (graph : t) = GraphHT.iter (fun node edges -> f node.location edges) graph
+let iter' (f : location -> EdgeSet.t -> unit) (graph : t) = GraphHT.iter (fun node edges -> f node.location edges) graph
+let iter : (Node.t -> EdgeSet.t -> unit) -> t -> unit = GraphHT.iter
 let fold (f : location -> EdgeSet.t -> 'acc -> 'acc) (graph : t) (acc : 'acc) : 'acc = GraphHT.fold (fun node edges acc' -> f node.location edges acc') graph acc
 let copy : t -> t = GraphHT.copy 
 let empty : t = GraphHT.create 100
 let find_opt (graph : t) (location : location) : EdgeSet.t option = GraphHT.find_opt graph (Node.with_location location)
 let find (graph : t) (location : location) : EdgeSet.t = GraphHT.find graph (Node.with_location location)
-let replace (graph : t) (location : location) (edges : EdgeSet.t) : unit = GraphHT.replace graph (Node.with_location location) edges
+let add : t -> Node.t -> EdgeSet.t -> unit = GraphHT.add
 let mem (graph : t) (location : location) : bool =  GraphHT.mem graph (Node.with_location location)
+let replace (graph : t) (location : location) (edges : EdgeSet.t) : unit = 
+  GraphHT.filter_map_inplace (fun node' edges' -> if node'.location = location then Some edges else Some edges' ) graph;
+  if not (mem graph location) then add graph {Node.empty with location = location} edges
 
 let rec print (graph : t) : unit = 
-  iter print_edge graph;
+  iter' print_edge graph;
   print_string "\n";
 
 and print_edge (from : location) (edges : EdgeSet.t) : unit = 
   EdgeSet.iter (fun edge -> print_string (from ^ (Edge.to_string edge) ^ "\n")) edges
+
 
 
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
@@ -100,13 +111,17 @@ let get_expression_id (expr : m Expression.t) : string =
 (* ------- M A I N   F U N C T I O N S -------*)
 let lub (register : unit -> unit) (graph : t) (graph' : t) : unit = 
   (* least upper bound *)
-  iter (fun from edges' -> 
+  iter' (fun from edges' -> 
     let edges = get_edges graph from in 
     if not (EdgeSet.subset edges' edges) then register ();
     replace graph from (EdgeSet.union edges edges');
   ) graph'
 
-let alloc (_ : t) (id : int) : location = loc_prefix ^ (Int.to_string id)
+let alloc (_ : t) (id : int) : location = loc_obj_prefix ^ (Int.to_string id)
+
+let alloc_param (_ : t) (param : string) = loc_par_prefix ^ param
+let alloc_function (_ : t) (func : string) = loc_fun_prefix ^ func
+
 
 (* TODO : test *)
 let rec orig (graph : t) (l : location) : location = 
@@ -152,8 +167,17 @@ let rec lookup (graph : t) (l : location) (property : property) : location =
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
 let addNode (register : unit -> unit) (graph : t) (loc : location) : unit =
   if not (mem graph loc) || not (EdgeSet.is_empty (find graph loc)) then register ();
-  (* TODO : need to add the new node possible information also *)
-  replace graph loc EdgeSet.empty
+  
+  let node : Node.t =  {location = loc; _type = Node.Object} in 
+  add graph node EdgeSet.empty
+
+let addFuncNode (_ : unit -> unit) (graph : t) (location : location) (func_name : string) : unit = 
+  let node : Node.t =  {location = location; _type = Node.Function func_name} in 
+  add graph node EdgeSet.empty
+
+let addParamNode (_ : unit -> unit) (graph : t) (location : location) (param : string) : unit = 
+  let node : Node.t =  {location = location; _type = Node.Parameter param} in 
+  add graph node EdgeSet.empty
 
 let addEdge (register : unit -> unit) (graph : t) (edge : Edge.t) (_to : location) (from : location) : unit = 
   let edges = get_edges graph from in 
@@ -175,6 +199,25 @@ let addVersionEdge (register : unit -> unit) (graph : t) (from : location) (_to 
 let addArgEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) (identifier : string) : unit = 
   let edge = {Edge._to = _to; _type = Argument identifier} in 
   addEdge register graph edge _to from
+
+let addParamEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) (index : string) : unit = 
+  let edge = {Edge._to = _to; _type = Parameter index} in 
+  addEdge register graph edge _to from
+
+let addCallEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) : unit = 
+  let edge = {Edge._to = _to; _type = Call} in 
+  addEdge register graph edge _to from
+
+let getFuncNode (graph : t) (func : string) : location option = 
+  let res : location option ref= ref None in 
+  iter ( fun node _ ->
+    match node with 
+      | {location; _type=(Node.Function f)} -> if f = func then res := Some location
+      | _ -> ()
+  ) graph;
+  !res
+
+
 
 let staticAddProperty (register : unit -> unit) (graph : t) (_L : LocationSet.t) (property : property) (id : int) : unit =
   LocationSet.iter (fun l -> 

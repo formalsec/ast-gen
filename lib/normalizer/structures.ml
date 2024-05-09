@@ -36,23 +36,26 @@ module FunctionInfo = struct
 
   type t = info HashTable.t
 
+  (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
   let create = HashTable.create
   let add : t -> string -> info -> unit = HashTable.replace
   let find : t -> string -> info option = HashTable.find_opt
+  let iter : (string -> info -> unit) -> t -> unit = HashTable.iter
+
+  let rec print (functions : t) : unit =
+    iter (print_info) functions
+  and print_info (func : string )( info : info) : unit =  print_endline (func ^ " : " ^ (String.concat ", " info.params ))
+  
+  (* ------- I N F O   M A N I P U L A T I O N ------- *)
   let get_param_name_opt (functions : t) (identifier : string) (index : int) : string option =
     map_default (fun {params} -> List.nth_opt params index) None (find functions identifier)
-  let get_param_name (functions : t) (identifier : string) (index : int) : string =
+  
+    let get_param_name (functions : t) (identifier : string) (index : int) : string =
     let info = find functions identifier in 
     if Option.is_some info
       then let info = Option.get info in 
                List.nth info.params index
       else (failwith "function name wasn't found")
-
-  let info_to_string (info : info) : string = String.concat ", " info.params 
-  let print (functions : t) : unit =
-    HashTable.iter (fun func_id info ->
-      print_endline (func_id ^ " : " ^ (info_to_string info))
-    ) functions
 end
 
 module Operator = struct

@@ -25,6 +25,7 @@ let register, setup, was_changed =
 let rec program (is_verbose : bool) ((_, {body; functions}) : m Program.t) : Graph.t * Store.t = 
   verbose := is_verbose;
   let state = empty_state functions in 
+  analyse_functions state;
   analyse_sequence state body;
   state.graph, state.store
 
@@ -37,7 +38,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let eval_expr = eval_expr store state.this in 
   let add_dep_edge = Graph.addDepEdge register graph in 
   let add_prop_edge = Graph.addPropEdge register graph in 
-  let add_arg_edge = Graph.addArgEdge register graph in 
+  let add_arg_edge = Graph.addArgEdge register graph in
+  let add_call_edge = Graph.addCallEdge register graph in 
   let store_update = Store.update register store in 
   let alloc = Graph.alloc graph in 
   let add_node = Graph.addNode register graph in 
@@ -53,6 +55,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     | _, AssignSimple {left; right} -> 
       let _L = eval_expr right in 
       store_update left _L
+
+    | _, AssignFunction _ -> ()
 
     (* -------- A S S I G N - O P -------- *)
     | _, AssignBinary {left; opLeft; opRght; id; _} -> 
@@ -111,16 +115,17 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       ) _L1'
 
     (* -------- C A L L -------- *)
-    | _, AssignNewCall {left; callee; arguments; id; _}
-    | _, AssignFunCall {left; callee; arguments; id; _} -> 
+    | _, AssignNewCall {left; callee=(_, {name=f; _}); arguments; id; _}
+    | _, AssignFunCall {left; callee=(_, {name=f; _}); arguments; id; _} -> 
       let _Lss = List.map eval_expr arguments in 
       let l_call = alloc id in 
       List.iteri ( fun i _Ls -> 
-        LocationSet.iter (fun l -> add_arg_edge l l_call (get_param_name (Identifier.get_name callee) i)) _Ls
+        LocationSet.iter (fun l -> add_arg_edge l l_call (get_param_name f i)) _Ls
       ) _Lss;
       
-      (* TODO : add call edge from l_call to function definition node *)
-      (* TODO : function definition node not yet implemented *)
+      let l_f = Graph.getFuncNode graph f in 
+      add_call_edge l_call (Option.get l_f);
+
       
       store_update left (LocationSet.singleton l_call);
 
@@ -175,4 +180,28 @@ and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) :
       List.fold_left (fun acc elem -> LocationSet.union acc (eval_expr store this elem)) LocationSet.empty expressions
 
 
+and analyse_functions (state : state) : unit =
+  let graph = state.graph in 
+  let functions = state.functions in 
 
+  let alloc_func = Graph.alloc_function graph in
+  let alloc_param = Graph.alloc_param graph in
+  let add_func_node = Graph.addFuncNode register graph in
+  let add_param_node = Graph.addParamNode register graph in
+  let add_param_edge = Graph.addParamEdge register graph in 
+
+  FunctionInfo.iter (fun func {params; _}  -> 
+    let l_f = alloc_func func in 
+    add_func_node l_f func;
+
+    (* add param nodes and edges *)
+    List.iteri (fun i param -> 
+      let l_p = alloc_param (func ^ "." ^ param) in 
+      add_param_node l_p param;
+      add_param_edge l_f l_p (Int.to_string i)
+    ) params;
+
+    (* add this param node and edge*)
+    let l_p = alloc_param (func ^ ".this") in
+    add_param_edge l_f l_p "this";
+  ) functions
