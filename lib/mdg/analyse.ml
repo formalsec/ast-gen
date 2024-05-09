@@ -81,7 +81,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     | _, AssignStaticMember {left; _object; property=(_, {name=property; _}); id} -> 
       let _L = eval_expr _object in 
       add_property _L property id;
-      let _L' = LocationSet.map (fun loc -> lookup loc property) _L  in 
+      let _L' = LocationSet.map (fun loc -> lookup loc property) _L  in
       store_update left _L'
 
     (* -------- D Y N A M I C   P R O P E R T Y   L O O K U P -------- *)

@@ -142,16 +142,16 @@ let find_version_edge_origin (graph : t) (_to : location) (property : property o
   ) graph (false, "!NOT FOUND!")
 
 let rec lookup (graph : t) (l : location) (property : property) : location =
-  let direct_edges = find graph l in   
+  let direct_edges = find graph l in  
 
   (* Direct Lookup - Known Property *)
   if (EdgeSet.exists (has_property_edge (Some property)) direct_edges) then 
-    let {Edge._to; _} = EdgeSet.find_last (has_property_edge (Some property)) direct_edges in 
+    let {Edge._to; _} = List.find (has_property_edge (Some property)) (EdgeSet.elements direct_edges) in 
     _to
 
   (* Direct Lookup - Unknown Property *)
   else if (EdgeSet.exists (has_property_edge None) direct_edges) then 
-    let {Edge._to; _} = EdgeSet.find_last (has_property_edge None) direct_edges in 
+    let {Edge._to; _} = List.find (has_property_edge None) (EdgeSet.elements direct_edges) in 
     _to
 
   (* Indirect Lookup - Known Version *)
@@ -235,7 +235,7 @@ let dynamicAddProperty (register : unit -> unit)  (graph : t) (_L_obj : Location
 
     let edges = get_edges graph l_o in  
     if (EdgeSet.exists (has_property_edge None) edges) then 
-      let {Edge._to; _} = EdgeSet.find_last (has_property_edge None) edges in
+      let {Edge._to; _} = List.find (has_property_edge None) (EdgeSet.elements edges) in
       LocationSet.iter (flip (addDepEdge register graph) _to) _L_prop
     else 
     ( let l_i = alloc graph id in 
