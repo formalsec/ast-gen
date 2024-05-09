@@ -466,7 +466,7 @@ and Statement : sig
     val build : 'M  -> 'M Identifier.t ->'M Expression.t ->'M Expression.t ->'M Statement.t
   end
 
-  module AssignNew : sig
+  module AssignNewCall : sig
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
@@ -546,7 +546,7 @@ and Statement : sig
     | DynmicMemberAssign of 'M DynmicMemberAssign.t
     | AssignStaticMember of 'M AssignStaticMember.t
     | AssignDynmicMember of 'M AssignDynmicMember.t
-    | AssignNew          of 'M AssignNew.t
+    | AssignNewCall      of 'M AssignNewCall.t
     | AssignFunCall      of 'M AssignFunCall.t
     | AssignFunction     of 'M AssignFunction.t
   
@@ -947,7 +947,7 @@ end = struct
       (metadata, assign_info)
   end
 
-  module AssignNew = struct
+  module AssignNewCall = struct
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
@@ -957,7 +957,7 @@ end = struct
     }
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (callee' : 'M Identifier.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
-      let assign_info = Statement.AssignNew {
+      let assign_info = Statement.AssignNewCall {
         id = get_id ();
         left = left';
         callee = callee';
@@ -1131,7 +1131,7 @@ end = struct
     | DynmicMemberAssign of 'M DynmicMemberAssign.t
     | AssignStaticMember of 'M AssignStaticMember.t
     | AssignDynmicMember of 'M AssignDynmicMember.t
-    | AssignNew          of 'M AssignNew.t
+    | AssignNewCall      of 'M AssignNewCall.t
     | AssignFunCall      of 'M AssignFunCall.t
     | AssignFunction     of 'M AssignFunction.t
   

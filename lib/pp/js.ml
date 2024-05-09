@@ -173,7 +173,7 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
       let left' = print_identifier left in
       identation_str ^ left' ^ " = " ^ "{};\n"
 
-    | _, AssignNew {left; callee; arguments; _} -> 
+    | _, AssignNewCall {left; callee; arguments; _} -> 
       let left' = print_identifier left in 
       let callee' = print_identifier callee in 
       let arguments' = List.map print_expr arguments in 

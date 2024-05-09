@@ -1,24 +1,93 @@
 open Structures
 open Auxiliary.Functions
 open Normalizer.Structures
-open Auxiliary.Structures
 
-type t = EdgeSet.t HashTable.t
-let empty : t = HashTable.create 100
+(* =============== S T R U C T U R E S =============== *)
+module Node = struct
+  type t = {
+    location : location;
+  }
 
+  let to_string (node : t) : string = node.location
+  let with_location (location : location) : t = {location = location}
+
+  (* functions requeired to be a key*)
+  let equal (node : t) (node' : t) = String.equal node.location node'.location
+  let hash (node : t) = Hashtbl.hash node.location
+end
+
+module Edge = struct
+    type _type = 
+        | Property of property option
+        | Version  of property option
+        | Dependency
+        | Argument of string   
+        | Parameter of string 
+        | Call 
+
+    type t = {
+        _to  : location;
+        _type : _type;
+      } 
+
+    let compare (edge : t) (edge' : t) : int = 
+        Bool.to_int (edge._to = edge'._to && edge._type = edge'._type) - 1
+
+    let to_string (edge : t) : string = 
+        let edge_info = match edge._type with 
+            | Property prop -> map_default (fun prop -> "P(" ^ prop ^ ")") "P(*)" prop
+            | Version prop -> map_default (fun prop -> "V(" ^ prop ^ ")") "V(*)" prop
+            | Dependency -> "D" 
+            | Argument id -> "ARG(" ^ id ^ ")"
+            | Parameter pos -> "param " ^ pos
+            | Call -> "CG"
+        in 
+        " --" ^ edge_info ^ "-> " ^ edge._to 
+
+    (* TODO : why not pass edge instead of only its type? operations must be done in the unit not on its parts *)
+    let get_property (_type : _type) : property = 
+        match _type with 
+            | Property prop
+            | Version prop -> map_default (identity) ("*") prop
+            | _ -> failwith "provided edge has no property"
+
+end
+
+module EdgeSet = Set.Make(Edge)
+module GraphHT = Hashtbl.Make(Node)
+type t = EdgeSet.t GraphHT.t
 
 (* =============== F U N C T I O N S =============== *)
- 
-let get_edges (graph : t) (origin : location) : EdgeSet.t = 
-  map_default identity EdgeSet.empty (HashTable.find_opt graph origin)
 
-let has_version_edge ?(_to' : location option = None) ?(property' : property option option = None) ({_to; info} : Edge.t) : bool = 
-  match info with
-    | Version property -> map_default ((=) _to) (true) _to' && map_default ((=) property) (true) property'
+(* ------- S T R U C T U R E   F U N C T I O N S ------- *)
+let iter (f : location -> EdgeSet.t -> unit) (graph : t) = GraphHT.iter (fun node edges -> f node.location edges) graph
+let fold (f : location -> EdgeSet.t -> 'acc -> 'acc) (graph : t) (acc : 'acc) : 'acc = GraphHT.fold (fun node edges acc' -> f node.location edges acc') graph acc
+let copy : t -> t = GraphHT.copy 
+let empty : t = GraphHT.create 100
+let find_opt (graph : t) (location : location) : EdgeSet.t option = GraphHT.find_opt graph (Node.with_location location)
+let find (graph : t) (location : location) : EdgeSet.t = GraphHT.find graph (Node.with_location location)
+let replace (graph : t) (location : location) (edges : EdgeSet.t) : unit = GraphHT.replace graph (Node.with_location location) edges
+let mem (graph : t) (location : location) : bool =  GraphHT.mem graph (Node.with_location location)
+
+let rec print (graph : t) : unit = 
+  iter print_edge graph;
+  print_string "\n";
+
+and print_edge (from : location) (edges : EdgeSet.t) : unit = 
+  EdgeSet.iter (fun edge -> print_string (from ^ (Edge.to_string edge) ^ "\n")) edges
+
+
+(* ------- A U X I L I A R Y   F U N C T I O N S -------*)
+let get_edges (graph : t) (origin : location) : EdgeSet.t = 
+  map_default identity EdgeSet.empty (find_opt graph origin)
+
+let has_version_edge ?(_to' : location option = None) ?(property' : property option option = None) (edge : Edge.t) : bool = 
+  match edge._type with
+    | Version property -> map_default ((=) edge._to) (true) _to' && map_default ((=) property) (true) property'
     | _         -> false
 
-let has_property_edge (property' : property option) ({_to; info} : Edge.t) : bool = 
-  match info with
+let has_property_edge (property' : property option) (edge : Edge.t) : bool = 
+  match edge._type with
     | Property property -> property = property'
     | _                 -> false
 
@@ -28,29 +97,20 @@ let get_expression_id (expr : m Expression.t) : string =
     | _, This _ -> "this"
     | _ -> failwith "expression cannot be converted into an id"
 
-let rec print (graph : t) : unit = 
-  HashTable.iter print_edge graph;
-  print_string "\n";
-
-and print_edge (from : location) (edges : EdgeSet.t) : unit = 
-  EdgeSet.iter (fun edge -> print_string (from ^ (Edge.to_string edge) ^ "\n")) edges
-
-let copy (graph : t) : t = HashTable.copy graph
-
 (* ------- M A I N   F U N C T I O N S -------*)
 let lub (register : unit -> unit) (graph : t) (graph' : t) : unit = 
   (* least upper bound *)
-  HashTable.iter (fun from edges' -> 
+  iter (fun from edges' -> 
     let edges = get_edges graph from in 
     if not (EdgeSet.subset edges' edges) then register ();
-    HashTable.replace graph from (EdgeSet.union edges edges');
+    replace graph from (EdgeSet.union edges edges');
   ) graph'
 
 let alloc (_ : t) (id : int) : location = loc_prefix ^ (Int.to_string id)
 
 (* TODO : test *)
 let rec orig (graph : t) (l : location) : location = 
-  HashTable.fold (fun l' edges acc ->
+  fold (fun l' edges acc ->
     if (EdgeSet.exists (has_version_edge ~_to':(Some l)) edges) 
       then orig graph l'
       else acc
@@ -59,15 +119,15 @@ let rec orig (graph : t) (l : location) : location =
 let find_version_edge_origin (graph : t) (_to : location) (property : property option) : bool * location =
   let _to = Some _to in 
   let property' : property option option = if Option.is_some property then None else Some None in 
-  HashTable.fold (fun from edges acc ->
+  fold (fun from edges acc ->
     (* check if version edge exists and if its property is different than the one provided *)
-    if (EdgeSet.exists (fun edge -> has_version_edge ~_to':_to ~property':property' edge && map_default ((!=) (Edge.get_property edge.info)) (true) property) edges)
+    if (EdgeSet.exists (fun edge -> has_version_edge ~_to':_to ~property':property' edge && map_default ((!=) (Edge.get_property edge._type)) (true) property) edges)
       then true, from
       else acc
   ) graph (false, "!NOT FOUND!")
 
 let rec lookup (graph : t) (l : location) (property : property) : location =
-  let direct_edges = HashTable.find graph l in   
+  let direct_edges = find graph l in   
 
   (* Direct Lookup - Known Property *)
   if (EdgeSet.exists (has_property_edge (Some property)) direct_edges) then 
@@ -91,28 +151,29 @@ let rec lookup (graph : t) (l : location) (property : property) : location =
 
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
 let addNode (register : unit -> unit) (graph : t) (loc : location) : unit =
-  if not (HashTable.mem graph loc) || not (EdgeSet.is_empty (HashTable.find graph loc)) then register ();
-  HashTable.replace graph loc EdgeSet.empty
+  if not (mem graph loc) || not (EdgeSet.is_empty (find graph loc)) then register ();
+  (* TODO : need to add the new node possible information also *)
+  replace graph loc EdgeSet.empty
 
 let addEdge (register : unit -> unit) (graph : t) (edge : Edge.t) (_to : location) (from : location) : unit = 
   let edges = get_edges graph from in 
   if not (EdgeSet.mem edge edges) then register ();
-  HashTable.replace graph from (EdgeSet.add edge edges)
+  replace graph from (EdgeSet.add edge edges)
 
 let addDepEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) : unit = 
-  let edge = {Edge._to = _to; info = Dependency} in 
+  let edge = {Edge._to = _to; _type = Dependency} in 
   addEdge register graph edge _to from
 
 let addPropEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) (property : property option) : unit = 
-  let edge = {Edge._to = _to; info = Property property} in 
+  let edge = {Edge._to = _to; _type = Property property} in 
   addEdge register graph edge _to from
 
 let addVersionEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) (property : property option) : unit =
-  let edge = {Edge._to = _to; info = Version property} in 
+  let edge = {Edge._to = _to; _type = Version property} in 
   addEdge register graph edge _to from
 
 let addArgEdge (register : unit -> unit) (graph : t) (from : location) (_to : location) (identifier : string) : unit = 
-  let edge = {Edge._to = _to; info = Argument identifier} in 
+  let edge = {Edge._to = _to; _type = Argument identifier} in 
   addEdge register graph edge _to from
 
 let staticAddProperty (register : unit -> unit) (graph : t) (_L : LocationSet.t) (property : property) (id : int) : unit =

@@ -111,7 +111,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       ) _L1'
 
     (* -------- C A L L -------- *)
-    | _, AssignNew {left; callee; arguments; id; _}
+    | _, AssignNewCall {left; callee; arguments; id; _}
     | _, AssignFunCall {left; callee; arguments; id; _} -> 
       let _Lss = List.map eval_expr arguments in 
       let l_call = alloc id in 

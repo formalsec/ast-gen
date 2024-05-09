@@ -526,7 +526,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
     let loc = loc_f loc in
     let id = get_identifier loc context.identifier in
-    let assign = Statement.AssignNew.build loc id (Identifier.from_expression (Option.get callee_expr)) args_exprs in
+    let assign = Statement.AssignNewCall.build loc id (Identifier.from_expression (Option.get callee_expr)) args_exprs in
 
     if not context.is_assignment then
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
@@ -984,7 +984,7 @@ and normalize_extend (class_id : m Identifier.t) ((loc', {expr=(loc, _) as expr;
   let loc = loc_f loc in
   (* let v1 = new ext_expr(); *)
   let id, decl = createVariableDeclaration ~kind:_let None loc  in 
-  let super_init = Statement.AssignNew.build loc id (Identifier.from_expression (Option.get ext_expr)) [] in
+  let super_init = Statement.AssignNewCall.build loc id (Identifier.from_expression (Option.get ext_expr)) [] in
 
   (* class_id.prototype = v1; *)
   let assign_proto = Statement.StaticMemberAssign.build (loc_f loc') (Identifier.to_expression class_id) prototype (Identifier.to_expression id) in
