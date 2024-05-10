@@ -25,7 +25,7 @@ let register, setup, was_changed =
 let rec program (is_verbose : bool) ((_, {body; functions}) : m Program.t) : Graph.t * Store.t = 
   verbose := is_verbose;
   let state = empty_state register functions in 
-  (* analyse_functions state; *)
+  analyse_functions state;
   analyse_sequence state body;
   state.graph, state.store
 
@@ -39,10 +39,10 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let add_dep_edge = Graph.addDepEdge graph in 
   let add_prop_edge = Graph.addPropEdge graph in 
   let add_arg_edge = Graph.addArgEdge graph in
-  (* let add_call_edge = Graph.addCallEdge register graph in  *)
+  let add_call_edge = Graph.addCallEdge graph in 
   let store_update = Store.update store in 
   let alloc = Graph.alloc graph in 
-  let add_node = Graph.addNode graph in 
+  let add_node = Graph.addObjNode graph in 
   let add_property = Graph.staticAddProperty graph in 
   let add_property' = Graph.dynamicAddProperty graph in
   let lookup = Graph.lookup graph in  
@@ -123,8 +123,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
         LocationSet.iter (fun l -> add_arg_edge l l_call (get_param_name f i)) _Ls
       ) _Lss;
       
-      (* let l_f = Graph.getFuncNode graph f in 
-      add_call_edge l_call (Option.get l_f); *)
+      let l_f = Graph.getFuncNode graph f in 
+      add_call_edge l_call (Option.get l_f);
 
       
       store_update left (LocationSet.singleton l_call);
@@ -180,15 +180,15 @@ and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) :
       List.fold_left (fun acc elem -> LocationSet.union acc (eval_expr store this elem)) LocationSet.empty expressions
 
 
-(* and analyse_functions (state : state) : unit =
+and analyse_functions (state : state) : unit =
   let graph = state.graph in 
   let functions = state.functions in 
 
   let alloc_func = Graph.alloc_function graph in
   let alloc_param = Graph.alloc_param graph in
-  let add_func_node = Graph.addFuncNode register graph in
-  let add_param_node = Graph.addParamNode register graph in
-  let add_param_edge = Graph.addParamEdge register graph in 
+  let add_func_node = Graph.addFuncNode graph in
+  let add_param_node = Graph.addParamNode graph in
+  let add_param_edge = Graph.addParamEdge graph in 
 
   FunctionInfo.iter (fun func {params; _}  -> 
     let l_f = alloc_func func in 
@@ -204,4 +204,4 @@ and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) :
     (* add this param node and edge*)
     let l_p = alloc_param (func ^ ".this") in
     add_param_edge l_f l_p "this";
-  ) functions *)
+  ) functions

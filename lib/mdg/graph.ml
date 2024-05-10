@@ -4,23 +4,17 @@ open Auxiliary.Structures
 open Normalizer.Structures
 
 (* =============== S T R U C T U R E S =============== *)
-module Node = struct
-  type _type = 
-    | Function of string  | Parameter of string 
-    | Object              | None
+module Node = struct            
+  type t = 
+    | Object
+    | Function of string
+    | Parameter of string 
 
-  type t = {
-    location : location;
-    _type : _type;
-  }
-
-  let empty : t = {location = ""; _type = None}
-  let to_string (node : t) : string = node.location
-  let with_location (location : location) : t = {empty with location = location}
-
-  (* functions requeired to be a key*)
-  let equal (node : t) (node' : t) = String.equal node.location node'.location
-  let hash (node : t) = Hashtbl.hash node.location
+  let to_string (node : t) = match node with
+    | Object -> "(obj)"
+    | Function func -> "(fun " ^ func ^ ")"
+    | Parameter param -> "(param " ^ param ^ ")"
+  
 end
 
 module Edge = struct
@@ -84,12 +78,25 @@ let replace_edges (graph : t) (location : location) (edges : EdgeSet.t) : unit =
   map_default (fun old_edges -> if not (EdgeSet.subset edges old_edges) then graph.register () ) (graph.register ()) old_edges;
   HashTable.replace graph.edges location edges
 
+(* > NODE FUNCTIONS : *)
+let iter_nodes (f : location -> Node.t -> unit) (graph : t) = HashTable.iter f graph.nodes
+
+let find_node_opt (graph : t) : location -> Node.t option = HashTable.find_opt graph.nodes
+
+let replace_node (graph : t) (location : location) (node : Node.t) = 
+  let old_node = find_node_opt graph location in
+  map_default (fun old_node -> if old_node != node then graph.register () ) (graph.register ()) old_node;
+  HashTable.replace graph.nodes location node
+
 let rec print (graph : t) : unit = 
   iter_edges print_edge graph;
   print_string "\n";
 
 and print_edge (from : location) (edges : EdgeSet.t) : unit = 
   EdgeSet.iter (fun edge -> print_string (from ^ (Edge.to_string edge) ^ "\n")) edges
+
+and print_node (location : location) (node : Node.t) : unit =
+  print_endline (Node.to_string node ^ " " ^ location)
 
 
 
@@ -116,7 +123,6 @@ let get_expression_id (expr : m Expression.t) : string =
 (* ------- M A I N   F U N C T I O N S -------*)
 let lub (graph : t) (graph' : t) : unit = 
   (* least upper bound *)
-  (* TODO : what about info? *)
   iter_edges (fun from edges' -> 
     let edges = get_edges graph from in 
     replace_edges graph from (EdgeSet.union edges edges');
@@ -170,17 +176,22 @@ let rec lookup (graph : t) (l : location) (property : property) : location =
   else failwith "property lookup failed, location doesn't posses such property"
 
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
-let addNode (graph : t) (loc : location) : unit =
-  (* TODO add info *)
+let addNode (graph : t) (loc : location) (node : Node.t) : unit =
+  replace_node  graph loc node;
   replace_edges graph loc EdgeSet.empty
 
-(* let addFuncNode (_ : unit -> unit) (graph : t) (location : location) (func_name : string) : unit = 
-  let node : Node.t =  {location = location; _type = Node.Function func_name} in 
-  add graph node EdgeSet.empty
+let addObjNode (graph : t) (loc : location) : unit =
+  let node : Node.t = Object in 
+  addNode graph loc node
 
-let addParamNode (_ : unit -> unit) (graph : t) (location : location) (param : string) : unit = 
-  let node : Node.t =  {location = location; _type = Node.Parameter param} in 
-  add graph node EdgeSet.empty *)
+let addFuncNode (graph : t) (loc : location) (func_name) : unit =
+  let node : Node.t = Function func_name in 
+  addNode graph loc node
+  
+let addParamNode (graph : t) (loc : location) (param : string) : unit =
+  let node : Node.t = Parameter param in 
+  addNode graph loc node
+
 
 let addEdge (graph : t) (edge : Edge.t) (_to : location) (from : location) : unit = 
   let edges = get_edges graph from in 
@@ -210,16 +221,14 @@ let addCallEdge (graph : t) (from : location) (_to : location) : unit =
   let edge = {Edge._to = _to; _type = Call} in 
   addEdge graph edge _to from
 
-(* let getFuncNode (graph : t) (func : string) : location option = 
-  let res : location option ref= ref None in 
-  iter ( fun node _ ->
+let getFuncNode (graph : t) (func_name : string) : location option = 
+  let res : location option ref = ref None in 
+  iter_nodes ( fun location node ->
     match node with 
-      | {location; _type=(Node.Function f)} -> if f = func then res := Some location
+      | Function func_name' -> if func_name = func_name' then res := Some location
       | _ -> ()
   ) graph;
   !res
-*)
-
 
 
 let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id : int) : unit =
