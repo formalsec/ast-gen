@@ -99,7 +99,7 @@ and print_node (location : location) (node : Node.t) : unit =
   print_endline (Node.to_string node ^ " " ^ location)
 
 
-
+  
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
 let get_edges (graph : t) (origin : location) : EdgeSet.t = 
   map_default identity EdgeSet.empty (find_edges_opt graph origin)
