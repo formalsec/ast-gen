@@ -4,18 +4,27 @@ open Auxiliary.Structures
 open Auxiliary.Functions
 
 
-type t = LocationSet.t HashTable.t
+type t = {
+  data : LocationSet.t HashTable.t;
+  register : unit -> unit;
+}
 
-let empty : t = HashTable.create 100
+let empty (register : unit -> unit) : t = {data = HashTable.create 100; register = register}
 let literal_loc = LocationSet.singleton (loc_obj_prefix ^ "literal") 
 let this_loc = LocationSet.singleton "this"
 
 (* =============== F U N C T I O N S =============== *)
 
 (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
-let iter : (string -> LocationSet.t -> unit) -> t -> unit  = HashTable.iter
-let replace : t -> string -> LocationSet.t -> unit = HashTable.replace
-let copy : t -> t = HashTable.copy
+let iter (f : location -> LocationSet.t -> unit) (store : t): unit  = HashTable.iter f store.data
+let find_opt (store : t) : location -> LocationSet.t option = HashTable.find_opt store.data
+
+
+let replace (store : t) (location : location) (locations : LocationSet.t) : unit = 
+  let old_locs = find_opt store location in
+  map_default (fun old_locs -> if not (LocationSet.subset locations old_locs) then store.register () ) (store.register ()) old_locs;
+  HashTable.replace store.data location locations
+let copy (store : t) : t = {store with data = HashTable.copy store.data}
 
 let rec print (store : t) : unit =
   iter (print_locations) store;
@@ -27,30 +36,26 @@ and print_locations (id : location) (locations : LocationSet.t) : unit =
 
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
 let get_locations (store : t) (id : location) : LocationSet.t =
-  map_default identity LocationSet.empty (HashTable.find_opt store id)
+  map_default identity LocationSet.empty (find_opt store id)
   
 (* ------- S T O R E   M A N I P U L A T I O N ------- *)
 let get (store : t) ((_, {name; _}) : m Identifier.t) : LocationSet.t =
   get_locations store name
 
-let update' (register : unit -> unit) (store : t) (id : string) (locs : LocationSet.t) : unit =
-  let old_value = get_locations store id in 
-  if not (LocationSet.equal locs old_value) then register ();
+let update' (store : t) (id : string) (locs : LocationSet.t) : unit =
   replace store id locs
 
-let update (register : unit -> unit) (store : t) ((_, {name; _}) : m Identifier.t) (locs : LocationSet.t) : unit  = 
-  update' register store name locs
+let update (store : t) ((_, {name; _}) : m Identifier.t) (locs : LocationSet.t) : unit  = 
+  update' store name locs
 
-let strong_update (register : unit -> unit) (store : t) (old : location) (_new : location) : unit =
+let strong_update (store : t) (old : location) (_new : location) : unit =
   iter (fun id locations -> 
-    if (LocationSet.mem old locations) then register();
     let new_locations = LocationSet.map (fun loc -> if loc = old then _new else loc) locations in 
     replace store id new_locations
   ) store
 
-let weak_update (register : unit -> unit) (store : t) (old : location) (_new : LocationSet.t) : unit =
+let weak_update (store : t) (old : location) (_new : LocationSet.t) : unit =
   iter (fun id locations -> 
-    if not (LocationSet.subset _new locations) && (LocationSet.mem old locations) then register();
     let new_locations = LocationSet.fold (fun loc acc -> if loc = old 
                                             then LocationSet.union acc _new 
                                             else LocationSet.add loc acc
@@ -58,10 +63,9 @@ let weak_update (register : unit -> unit) (store : t) (old : location) (_new : L
     replace store id new_locations
   ) store
 
-let lub (register : unit -> unit) (store : t) (store' : t) : unit =
+let lub (store : t) (store' : t) : unit =
   (* least upper bound *)
   iter ( fun id locs' ->
     let locs = get_locations store id in 
-    if not (LocationSet.subset locs' locs) then register ();
     replace store id (LocationSet.union locs locs')
   ) store'

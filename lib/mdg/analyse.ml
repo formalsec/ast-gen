@@ -24,8 +24,8 @@ let register, setup, was_changed =
 
 let rec program (is_verbose : bool) ((_, {body; functions}) : m Program.t) : Graph.t * Store.t = 
   verbose := is_verbose;
-  let state = empty_state functions in 
-  analyse_functions state;
+  let state = empty_state register functions in 
+  (* analyse_functions state; *)
   analyse_sequence state body;
   state.graph, state.store
 
@@ -36,18 +36,18 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 
   (* aliases *)
   let eval_expr = eval_expr store state.this in 
-  let add_dep_edge = Graph.addDepEdge register graph in 
-  let add_prop_edge = Graph.addPropEdge register graph in 
-  let add_arg_edge = Graph.addArgEdge register graph in
-  let add_call_edge = Graph.addCallEdge register graph in 
-  let store_update = Store.update register store in 
+  let add_dep_edge = Graph.addDepEdge graph in 
+  let add_prop_edge = Graph.addPropEdge graph in 
+  let add_arg_edge = Graph.addArgEdge graph in
+  (* let add_call_edge = Graph.addCallEdge register graph in  *)
+  let store_update = Store.update store in 
   let alloc = Graph.alloc graph in 
-  let add_node = Graph.addNode register graph in 
-  let add_property = Graph.staticAddProperty register graph in 
-  let add_property' = Graph.dynamicAddProperty register graph in
+  let add_node = Graph.addNode graph in 
+  let add_property = Graph.staticAddProperty graph in 
+  let add_property' = Graph.dynamicAddProperty graph in
   let lookup = Graph.lookup graph in  
-  let new_version = Graph.staticNewVersion register graph in 
-  let new_version' = Graph.dynamicNewVersion register graph in 
+  let new_version = Graph.staticNewVersion graph in 
+  let new_version' = Graph.dynamicNewVersion graph in 
   let get_param_name = FunctionInfo.get_param_name funcs in 
 
   (match statement with
@@ -123,8 +123,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
         LocationSet.iter (fun l -> add_arg_edge l l_call (get_param_name f i)) _Ls
       ) _Lss;
       
-      let l_f = Graph.getFuncNode graph f in 
-      add_call_edge l_call (Option.get l_f);
+      (* let l_f = Graph.getFuncNode graph f in 
+      add_call_edge l_call (Option.get l_f); *)
 
       
       store_update left (LocationSet.singleton l_call);
@@ -135,8 +135,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       analyse_sequence state consequent;
       option_may (analyse_sequence state') alternate;
       
-      Graph.lub register state.graph state'.graph;
-      Store.lub register state.store state'.store;
+      Graph.lub state.graph state'.graph;
+      Store.lub state.store state'.store;
 
     (* -------- W H I L E -------- *)
     | _, While {body; _} -> 
@@ -180,7 +180,7 @@ and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) :
       List.fold_left (fun acc elem -> LocationSet.union acc (eval_expr store this elem)) LocationSet.empty expressions
 
 
-and analyse_functions (state : state) : unit =
+(* and analyse_functions (state : state) : unit =
   let graph = state.graph in 
   let functions = state.functions in 
 
@@ -204,4 +204,4 @@ and analyse_functions (state : state) : unit =
     (* add this param node and edge*)
     let l_p = alloc_param (func ^ ".this") in
     add_param_edge l_f l_p "this";
-  ) functions
+  ) functions *)

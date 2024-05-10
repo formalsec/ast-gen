@@ -8,9 +8,9 @@ type state = {
   functions : FunctionInfo.t;
 }
 
-let empty_state (functions : FunctionInfo.t) = { 
-  graph = Graph.empty; 
-  store = Store.empty; 
+let empty_state (register : unit -> unit) (functions : FunctionInfo.t) = { 
+  graph = Graph.empty register; 
+  store = Store.empty register; 
   this  = Store.this_loc;
   functions = functions;
 }
