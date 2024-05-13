@@ -570,6 +570,27 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
         ([empty_obj] @ props_stmts, Some (Identifier.to_expression id))
 
   (* --------- A S S I G N   F U N C   C A L L ---------*)
+  | loc, Ast.Expression.Call {callee = (_, Member {_object; property; _}); arguments; _} -> 
+    (* callee representation*)
+    let obj_stmts, obj_expr = normalize_expression empty_context _object in 
+    let prop_stmts, prop_expr = normalize_member_property property in 
+    (* arguments *)
+    let args_stmts, args_exprs = List.split (normalize_argument_list arguments) in 
+    let args_exprs = List.flatten (List.map Option.to_list args_exprs) in
+
+    let loc = loc_f loc in
+    let id = get_identifier loc context.identifier in
+    let assign = match prop_expr with 
+      | Static  prop -> Statement.AssignMetCallStatic.build loc id (Option.get obj_expr) prop args_exprs
+      | Dynamic prop -> Statement.AssignMetCallDynmic.build loc id (Option.get obj_expr) prop args_exprs in
+
+    if not context.is_assignment then
+      let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
+      (obj_stmts @ prop_stmts @ (List.flatten args_stmts) @ decl @ [assign] , Some (Identifier.to_expression id))
+    else 
+      (obj_stmts @ prop_stmts @ (List.flatten args_stmts) @ [assign], Some (Identifier.to_expression id))
+
+
   | loc, Ast.Expression.Call {callee; arguments; _} -> 
     let new_context = {empty_context with parent_type = func_call} in 
 

@@ -37,14 +37,12 @@
         2, 
         3];
   const v2;
-  v2 = v1.find;
-  const v3;
-  v3 = function (_f) {
-     const v4;
-     v4 = _f == 1;
-     return v4;
+  v2 = function (_f) {
+     const v3;
+     v3 = _f == 1;
+     return v3;
   }
-  a = v2(v3);
+  a = v1.find(v2);
   
   $ dune exec ast_gen -f input-code-5.js
   const a;
@@ -54,12 +52,10 @@
         2, 
         3];
   const v2;
-  v2 = v1.find;
-  const v3;
-  v3 = function (_f) {
-     const v4;
-     v4 = _f == 1;
-     return v4;
+  v2 = function (_f) {
+     const v3;
+     v3 = _f == 1;
+     return v3;
   }
-  a = v2(v3);
+  a = v1.find(v2);
   

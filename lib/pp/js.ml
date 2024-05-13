@@ -184,6 +184,20 @@ and print_stmt (stmt : m Statement.t) (identation : int) : string =
       let callee' = print_identifier callee in 
       let arguments' = List.map print_expr arguments in 
       identation_str ^ left' ^ " = " ^ callee' ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
+    
+    | _, AssignMetCallStatic {left; _object; property; arguments; _} -> 
+      let left' = print_identifier left in 
+      let _object' = print_expr _object in
+      let property' = print_identifier property in 
+      let arguments' = List.map print_expr arguments in 
+      identation_str ^ left' ^ " = " ^ _object' ^ "." ^ property' ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
+
+    | _, AssignMetCallDynmic {left; _object; property; arguments; _} -> 
+        let left' = print_identifier left in 
+        let _object' = print_expr _object in
+        let property' = print_expr property in 
+        let arguments' = List.map print_expr arguments in 
+        identation_str ^ left' ^ " = " ^ _object' ^ "[" ^ property' ^ "]" ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
 
     | _, StaticMemberAssign {_object; property; right; _} ->
         let _object' = print_expr _object in

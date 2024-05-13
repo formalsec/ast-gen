@@ -116,34 +116,26 @@
   switch (x) {
      case 0: 
         const v1;
-        v1 = console.log;
-        const v2;
-        v2 = v1(0);
-        v2;
+        v1 = console.log(0);
+        v1;
   
      case 1: 
-        const v3;
-        v3 = console.log;
-        const v4;
-        v4 = v3(1);
-        v4;
+        const v2;
+        v2 = console.log(1);
+        v2;
         break;
   
      case 2: 
-        const v5;
-        v5 = console.log;
-        const v6;
-        v6 = v5(2);
-        v6;
+        const v3;
+        v3 = console.log(2);
+        v3;
   
      default: 
-        const v7;
-        v7 = console.log;
-        const v8;
-        v8 = -1;
-        const v9;
-        v9 = v7(v8);
-        v9;
+        const v4;
+        v4 = -1;
+        const v5;
+        v5 = console.log(v4);
+        v5;
   
   }
   
@@ -155,26 +147,20 @@
   switch (v1) {
      case v2: 
         const v3;
-        v3 = console.log;
-        const v4;
-        v4 = v3("5");
-        v4;
+        v3 = console.log("5");
+        v3;
         break;
   
      case 6: 
-        const v5;
-        v5 = console.log;
-        const v6;
-        v6 = v5("6");
-        v6;
+        const v4;
+        v4 = console.log("6");
+        v4;
         break;
   
      default: 
-        const v7;
-        v7 = console.log;
-        const v8;
-        v8 = v7("huh?");
-        v8;
+        const v5;
+        v5 = console.log("huh?");
+        v5;
         break;
   
   }

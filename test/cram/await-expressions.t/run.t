@@ -21,12 +21,10 @@
   f = function (x) {
      let a;
      const v1;
-     v1 = x.f;
+     v1 = x.f();
+     a = await v1;
      const v2;
-     v2 = v1();
-     a = await v2;
-     const v3;
-     v3 = eval(a);
-     v3;
+     v2 = eval(a);
+     v2;
   }
   

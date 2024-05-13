@@ -493,6 +493,34 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t -> 'M Identifier.t -> 'M Expression.t list -> 'M Statement.t
   end
 
+  module AssignMetCallStatic : sig
+    type 'M t = {
+      id : int;
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      _object : 'M Expression.t;
+      property : 'M Identifier.t;
+
+      arguments : 'M Expression.t list;
+    }
+
+    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Identifier.t -> 'M Expression.t list -> 'M Statement.t
+  end
+
+  module AssignMetCallDynmic : sig
+    type 'M t = {
+      id : int;
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      _object : 'M Expression.t;
+      property : 'M Expression.t;
+
+      arguments : 'M Expression.t list;
+    }
+
+    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t list -> 'M Statement.t
+  end
+
   module AssignFunction : sig
     module Param : sig 
       type 'M t' = {
@@ -540,18 +568,20 @@ and Statement : sig
     | ImportDecl        of 'M ImportDecl.t
     
     (* ---- assignment statements ---- *)
-    | AssignSimple       of 'M AssignSimple.t
-    | AssignBinary       of 'M AssignBinary.t
-    | AssignUnary        of 'M AssignUnary.t
-    | AssignArray        of 'M AssignArray.t
-    | AssignObject       of 'M AssignObject.t
-    | StaticMemberAssign of 'M StaticMemberAssign.t
-    | DynmicMemberAssign of 'M DynmicMemberAssign.t
-    | AssignStaticMember of 'M AssignStaticMember.t
-    | AssignDynmicMember of 'M AssignDynmicMember.t
-    | AssignNewCall      of 'M AssignNewCall.t
-    | AssignFunCall      of 'M AssignFunCall.t
-    | AssignFunction     of 'M AssignFunction.t
+    | AssignSimple        of 'M AssignSimple.t
+    | AssignBinary        of 'M AssignBinary.t
+    | AssignUnary         of 'M AssignUnary.t
+    | AssignArray         of 'M AssignArray.t
+    | AssignObject        of 'M AssignObject.t
+    | StaticMemberAssign  of 'M StaticMemberAssign.t
+    | DynmicMemberAssign  of 'M DynmicMemberAssign.t
+    | AssignStaticMember  of 'M AssignStaticMember.t
+    | AssignDynmicMember  of 'M AssignDynmicMember.t
+    | AssignNewCall       of 'M AssignNewCall.t
+    | AssignFunCall       of 'M AssignFunCall.t
+    | AssignMetCallStatic of 'M AssignMetCallStatic.t
+    | AssignMetCallDynmic of 'M AssignMetCallDynmic.t
+    | AssignFunction      of 'M AssignFunction.t
   
   type 'M t = 'M * 'M t'
   
@@ -1067,6 +1097,48 @@ end = struct
       (metadata, assign_info)
   end
 
+  module AssignMetCallStatic = struct
+    type 'M t = {
+      id : int;
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      _object : 'M Expression.t;
+      property : 'M Identifier.t;
+      arguments : 'M Expression.t list;
+    }
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Identifier.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
+      let assign_info = Statement.AssignMetCallStatic {
+        id = get_id ();
+        left = left';
+        _object = _object';
+        property = property';
+        arguments = arguments';
+      } in 
+      (metadata, assign_info)
+  end
+
+  module AssignMetCallDynmic = struct
+    type 'M t = {
+      id : int;
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      _object : 'M Expression.t;
+      property : 'M Expression.t;
+      arguments : 'M Expression.t list;
+    }
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Expression.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
+      let assign_info = Statement.AssignMetCallDynmic {
+        id = get_id ();
+        left = left';
+        _object = _object';
+        property = property';
+        arguments = arguments';
+      } in 
+      (metadata, assign_info)
+  end
+
   module AssignFunction = struct
     module Param = struct
       type 'M t' = {
@@ -1125,18 +1197,20 @@ end = struct
     | ImportDecl        of 'M ImportDecl.t
 
     (* ---- assignment statements ---- *)
-    | AssignSimple       of 'M AssignSimple.t
-    | AssignBinary       of 'M AssignBinary.t
-    | AssignUnary        of 'M AssignUnary.t
-    | AssignArray        of 'M AssignArray.t
-    | AssignObject       of 'M AssignObject.t
-    | StaticMemberAssign of 'M StaticMemberAssign.t
-    | DynmicMemberAssign of 'M DynmicMemberAssign.t
-    | AssignStaticMember of 'M AssignStaticMember.t
-    | AssignDynmicMember of 'M AssignDynmicMember.t
-    | AssignNewCall      of 'M AssignNewCall.t
-    | AssignFunCall      of 'M AssignFunCall.t
-    | AssignFunction     of 'M AssignFunction.t
+    | AssignSimple        of 'M AssignSimple.t
+    | AssignBinary        of 'M AssignBinary.t
+    | AssignUnary         of 'M AssignUnary.t
+    | AssignArray         of 'M AssignArray.t
+    | AssignObject        of 'M AssignObject.t
+    | StaticMemberAssign  of 'M StaticMemberAssign.t
+    | DynmicMemberAssign  of 'M DynmicMemberAssign.t
+    | AssignStaticMember  of 'M AssignStaticMember.t
+    | AssignDynmicMember  of 'M AssignDynmicMember.t
+    | AssignNewCall       of 'M AssignNewCall.t
+    | AssignFunCall       of 'M AssignFunCall.t
+    | AssignMetCallStatic of 'M AssignMetCallStatic.t
+    | AssignMetCallDynmic of 'M AssignMetCallDynmic.t
+    | AssignFunction      of 'M AssignFunction.t
   
   type 'M t = 'M * 'M t'
 end
