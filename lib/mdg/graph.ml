@@ -34,16 +34,16 @@ module Edge = struct
     let compare (edge : t) (edge' : t) : int = 
         Bool.to_int (edge._to = edge'._to && edge._type = edge'._type) - 1
 
-    let to_string (edge : t) : string = 
-        let edge_info = match edge._type with 
-            | Property prop -> map_default (fun prop -> "P(" ^ prop ^ ")") "P(*)" prop
-            | Version prop -> map_default (fun prop -> "V(" ^ prop ^ ")") "V(*)" prop
-            | Dependency -> "D" 
-            | Argument id -> "ARG(" ^ id ^ ")"
-            | Parameter pos -> "param " ^ pos
-            | Call -> "CG"
-        in 
-        " --" ^ edge_info ^ "-> " ^ edge._to 
+    let label (edge : t) : string = 
+      match edge._type with 
+        | Property prop -> map_default (fun prop -> "P(" ^ prop ^ ")") "P(*)" prop
+        | Version prop -> map_default (fun prop -> "V(" ^ prop ^ ")") "V(*)" prop
+        | Dependency -> "D" 
+        | Argument id -> "ARG(" ^ id ^ ")"
+        | Parameter pos -> "param " ^ pos
+        | Call -> "CG"
+    
+    let to_string (edge : t) : string = " --" ^ label edge ^ "-> " ^ edge._to 
 
     (* TODO : why not pass edge instead of only its type? operations must be done in the unit not on its parts *)
     let get_property (_type : _type) : property = 

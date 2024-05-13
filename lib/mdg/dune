@@ -2,5 +2,5 @@
 
 (library
  (name mdg)
- (libraries auxiliary normalizer pp))
+ (libraries auxiliary normalizer))
 

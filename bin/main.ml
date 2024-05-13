@@ -5,15 +5,8 @@ let main (filename : string) (verbose : bool) (generate_mdg : bool) : int =
   | Ok ast ->
       let norm_program = Normalizer.Normalize.program ast in
       if generate_mdg then (
-        let graph, store = Mdg.Analyse.program verbose norm_program in 
-
-        print_endline "Graph\n-----";
-        Mdg.Graph.print graph;
-
-        print_endline "Store\n-----";
-        Mdg.Store.print store; 
-        
-        print_endline "Code\n-----"
+        let graph, _ = Mdg.Analyse.program verbose norm_program in 
+        Pp.Dot.output "out/graph" graph
       );
 
       let js_program = Pp.Js.print norm_program in

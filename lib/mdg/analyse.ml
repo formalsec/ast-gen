@@ -147,9 +147,6 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   
   if (!verbose) then (
     print_endline "----------";
-    print_string (Pp.Js.print_stmt statement 0);
-
-    print_endline "----------";
     print_endline "Graph\n------";
     Graph.print graph; 
     

@@ -2,5 +2,5 @@
 
 (library
  (name pp)
- (libraries normalizer auxiliary))
+ (libraries ocamlgraph mdg normalizer auxiliary))
 
