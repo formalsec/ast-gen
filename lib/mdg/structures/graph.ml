@@ -1,7 +1,7 @@
 open Structures
 open Auxiliary.Functions
 open Auxiliary.Structures
-open Normalizer.Structures
+open Ast.Grammar
 
 (* =============== S T R U C T U R E S =============== *)
 module Node = struct            
@@ -10,6 +10,12 @@ module Node = struct
     | Function of string
     | Parameter of string 
 
+  let equals (node : t) (node' : t) = match (node, node') with
+    | Object, Object -> true
+    | Function x, Function x'
+    | Parameter x, Parameter x' -> String.equal x x'
+    | _ -> false
+    
   let to_string (node : t) = match node with
     | Object -> "(obj)"
     | Function func -> "(fun " ^ func ^ ")"
@@ -31,8 +37,28 @@ module Edge = struct
         _type : _type;
       } 
 
+    let _type_to_int (t : _type) : int =
+      match t with
+      | Property _  -> 0
+      | Version  _  -> 1
+      | Dependency  -> 2
+      | Argument _  -> 3
+      | Parameter _ -> 4
+      | Call        -> 5
+
+
+    let compare_type (t : _type) (t' : _type) : int =
+      match Int.compare (_type_to_int t) (_type_to_int t'), t, t' with
+      | 0, Property x, Property x'
+      | 0, Version  x, Version  x' -> Option.compare (String.compare) x x'
+      | 0, Argument  x, Argument  x'
+      | 0, Parameter x, Parameter x' -> String.compare x x'
+      | c, _, _ -> c
+    
     let compare (edge : t) (edge' : t) : int = 
-        Bool.to_int (edge._to = edge'._to && edge._type = edge'._type) - 1
+      match String.compare edge._to edge'._to with
+      | 0 -> compare_type edge._type edge'._type
+      | c -> c
 
     let label (edge : t) : string = 
       match edge._type with 
@@ -65,7 +91,7 @@ type t = {
 
 (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
 let copy (graph : t) : t = {graph with edges = HashTable.copy graph.edges; nodes = HashTable.copy graph.nodes}
-let empty (register : unit -> unit) : t = {edges = HashTable.create 100; nodes = HashTable.create 100; register = register}
+let empty (register : unit -> unit) : t = {edges = HashTable.create 100; nodes = HashTable.create 50; register = register}
 
 (* > EDGES FUNCTIONS : *)
 let iter_edges (f : location -> EdgeSet.t -> unit) (graph : t) = HashTable.iter f graph.edges
@@ -73,20 +99,11 @@ let fold_edges (f : location -> EdgeSet.t -> 'acc -> 'acc) (graph : t) : 'acc ->
 let find_edges_opt (graph : t) : location -> EdgeSet.t option = HashTable.find_opt graph.edges
 let find_edges (graph : t) : location -> EdgeSet.t = HashTable.find graph.edges
 let mem_edges (graph : t) : location -> bool =  HashTable.mem graph.edges
+
 let replace_edges (graph : t) (location : location) (edges : EdgeSet.t) : unit = 
   let old_edges = find_edges_opt graph location in
-  map_default (fun old_edges -> if not (EdgeSet.subset edges old_edges) then graph.register () ) (graph.register ()) old_edges;
+  map_default_lazy (fun old_edges -> if not (EdgeSet.subset edges old_edges) then (graph.register ()) ) (lazy (graph.register ())) old_edges;
   HashTable.replace graph.edges location edges
-
-(* > NODE FUNCTIONS : *)
-let iter_nodes (f : location -> Node.t -> unit) (graph : t) = HashTable.iter f graph.nodes
-
-let find_node_opt (graph : t) : location -> Node.t option = HashTable.find_opt graph.nodes
-
-let replace_node (graph : t) (location : location) (node : Node.t) = 
-  let old_node = find_node_opt graph location in
-  map_default (fun old_node -> if old_node != node then graph.register () ) (graph.register ()) old_node;
-  HashTable.replace graph.nodes location node
 
 let rec print (graph : t) : unit = 
   iter_edges print_edge graph;
@@ -95,11 +112,19 @@ let rec print (graph : t) : unit =
 and print_edge (from : location) (edges : EdgeSet.t) : unit = 
   EdgeSet.iter (fun edge -> print_string (from ^ (Edge.to_string edge) ^ "\n")) edges
 
+(* > NODE FUNCTIONS : *)
+let iter_nodes (f : location -> Node.t -> unit) (graph : t) = HashTable.iter f graph.nodes
+
+let find_node_opt (graph : t) : location -> Node.t option = HashTable.find_opt graph.nodes
+
+let replace_node (graph : t) (location : location) (node : Node.t) = 
+  let old_node = find_node_opt graph location in
+  map_default_lazy (fun old_node -> if not (Node.equals old_node node) then (graph.register ()) ) (lazy (graph.register ())) old_node;
+  HashTable.replace graph.nodes location node
+
 and print_node (location : location) (node : Node.t) : unit =
   print_endline (Node.to_string node ^ " " ^ location)
 
-
-  
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
 let get_edges (graph : t) (origin : location) : EdgeSet.t = 
   map_default identity EdgeSet.empty (find_edges_opt graph origin)
@@ -178,7 +203,7 @@ let rec lookup (graph : t) (l : location) (property : property) : location =
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
 let addNode (graph : t) (loc : location) (node : Node.t) : unit =
   replace_node  graph loc node;
-  replace_edges graph loc EdgeSet.empty
+  replace_edges graph loc (get_edges graph loc)
 
 let addObjNode (graph : t) (loc : location) : unit =
   let node : Node.t = Object in 

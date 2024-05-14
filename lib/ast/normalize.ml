@@ -1,6 +1,6 @@
-module Ast = Flow_ast
+module Ast' = Flow_ast
 open Auxiliary.Functions
-open Structures
+open Grammar
 
 (* --------- A L I A S E S --------- *)
 type norm_stmt_t = m Statement.t list;;
@@ -21,8 +21,8 @@ type property =
   | Dynamic of m Expression.t
 
 type ('M, 'T) generic_left =
-  | LeftDeclaration of ('M * ('M, 'T) Ast.Statement.VariableDeclaration.t)
-  | LeftPattern of ('M, 'T) Ast.Pattern.t
+  | LeftDeclaration of ('M * ('M, 'T) Ast'.Statement.VariableDeclaration.t)
+  | LeftPattern of ('M, 'T) Ast'.Pattern.t
 
 
 let prototype = Identifier.build Location.empty "prototype";;
@@ -45,26 +45,26 @@ type context = {
 }
 let empty_context : context = { parent_type = ""; identifier = None; is_assignment = false; is_declaration = false; has_op = false; is_statement = false; } 
 
-let rec program (loc , { Ast.Program.statements; _ }) : m Program.t = 
+let rec program (loc , { Ast'.Program.statements; _ }) : m Program.t = 
   let body = List.flatten (List.map (normalize_statement empty_context) statements) in
   let program = Program.build (loc_f loc) body in
   Program.set_function_info program; 
   program;
 
 
-and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : norm_stmt_t =
+and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) : norm_stmt_t =
   let ns  = normalize_statement empty_context in
   let ne  = normalize_expression empty_context in
   let nec = normalize_expression in 
 
   match stmt with
     (* --------- B L O C K --------- *)
-    | _, Ast.Statement.Block {body; _} -> 
+    | _, Ast'.Statement.Block {body; _} -> 
       let body_stmts = List.map ns body in
       List.flatten body_stmts;
     
     (* --------- I F --------- *)
-    | loc, Ast.Statement.If {test; consequent; alternate; _} ->
+    | loc, Ast'.Statement.If {test; consequent; alternate; _} ->
       let test_stmts, test_expr = ne test in
       let cons_stmts = ns consequent in
       let altn_stmts = Option.map normalize_alternate alternate in
@@ -73,7 +73,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       test_stmts @ [if_stmt]
     
     (* --------- W H I L E --------- *)
-    | loc, Ast.Statement.While { test; body; _ } -> 
+    | loc, Ast'.Statement.While { test; body; _ } -> 
       let test_stmts, test_expr = ne test in
       let body_stmts = ns body in
       
@@ -84,7 +84,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       (test_stmts @ [while_stmt])
     
     (* --------- D O - W H I L E --------- *)
-    | loc, Ast.Statement.DoWhile {body; test; _} ->
+    | loc, Ast'.Statement.DoWhile {body; test; _} ->
       let loc = loc_f loc in 
       let test_stmts, test_expr = ne test in 
       let body_stmts = ns body in
@@ -108,7 +108,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       setup @ [dowhile_stmt]
 
     (* --------- F O R --------- *)
-    | loc, Ast.Statement.For {init; test; update; body; _} -> 
+    | loc, Ast'.Statement.For {init; test; update; body; _} -> 
       let loc = loc_f loc in 
       let true_val = Expression.Literal.build loc (Expression.Literal.Boolean true) "true" in 
 
@@ -127,7 +127,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
     
     
     (* --------- F O R - I N --------- *)
-    | loc, Ast.Statement.ForIn {left; right; body; each; _} -> 
+    | loc, Ast'.Statement.ForIn {left; right; body; each; _} -> 
       let left = match left with
         | LeftDeclaration decl -> LeftDeclaration decl
         | LeftPattern pat -> LeftPattern pat
@@ -140,7 +140,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       right_stmts @ [for_stmt]
 
     (* --------- F O R - O F --------- *)
-    | loc, Ast.Statement.ForOf {left; right; body; await; _} -> 
+    | loc, Ast'.Statement.ForOf {left; right; body; await; _} -> 
       let left = match left with
         | LeftDeclaration decl -> LeftDeclaration decl
         | LeftPattern pat -> LeftPattern pat
@@ -153,7 +153,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       right_stmts @ [for_stmt]
 
     (* --------- S W I T C H --------- *)
-    | loc, Ast.Statement.Switch  { discriminant; cases; _ } -> 
+    | loc, Ast'.Statement.Switch  { discriminant; cases; _ } -> 
       let dicr_stmts, dicr_expr = ne discriminant in 
       (* normalize cases *)
       let cases', tests_stmts = List.split (List.map normalize_case cases) in
@@ -165,7 +165,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       previous_stmts @ [switch_stmt]
     
     (* --------- T R Y - C A T C H --------- *)
-    | loc, Ast.Statement.Try {block; handler; finalizer; _} -> 
+    | loc, Ast'.Statement.Try {block; handler; finalizer; _} -> 
       let block_stmts = ns (block_to_statement block) in
       let fnlzr_stmts = Option.map (ns << block_to_statement) finalizer in
 
@@ -178,7 +178,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       handler_stmts @ [try_stmt]
     
     (* --------- W I T H --------- *)
-    | loc, Ast.Statement.With {_object; body; _} ->
+    | loc, Ast'.Statement.With {_object; body; _} ->
       let obj_stmts, obj_expr = ne _object in 
       let body_stmts = ns body in 
 
@@ -186,7 +186,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       obj_stmts @ [with_stmt]
     
     (* --------- L A B E L --------- *)
-    | loc, Ast.Statement.Labeled {label; body; _} ->
+    | loc, Ast'.Statement.Labeled {label; body; _} ->
       let label' = normalize_identifier label in
       let body_stmts = ns body in
 
@@ -194,14 +194,14 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       [labeled_stmt]
 
     (* --------- V A R I A B L E   D E C L A R A T I O N --------- *)
-    | loc, Ast.Statement.VariableDeclaration {kind; declarations; _} ->
+    | loc, Ast'.Statement.VariableDeclaration {kind; declarations; _} ->
       let kind' : Statement.VarDecl.kind = match kind with 
         | Var -> _var  | Let -> _let  | Const -> _const 
       in
 
       let new_context = {context with is_declaration = true} in 
       let assign_stmts, ids = List.split (List.map 
-        (fun (_, {Ast.Statement.VariableDeclaration.Declarator.id; init; _}) -> 
+        (fun (_, {Ast'.Statement.VariableDeclaration.Declarator.id; init; _}) -> 
           (* get id name into ids list if the init expression
           is not specified (e.g.: var x;)*)
           let is_id, _id  = is_identifier id in 
@@ -215,46 +215,46 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       List.flatten decls @ List.flatten assign_stmts
     
     (* --------- R E T U R N --------- *)
-    | loc, Ast.Statement.Return {argument; _} -> 
+    | loc, Ast'.Statement.Return {argument; _} -> 
       let arg_stmts, arg_expr = map_default ne ([], None) argument in
       let return_stmt = Statement.Return.build (loc_f loc) arg_expr in 
 
       arg_stmts @ [return_stmt]
 
     (* --------- T H R O W --------- *)
-    | loc, Ast.Statement.Throw {argument; _} -> 
+    | loc, Ast'.Statement.Throw {argument; _} -> 
       let arg_stmts, arg_expr = ne argument in
       let throw_stmt = Statement.Throw.build (loc_f loc) arg_expr in 
 
       arg_stmts @ [throw_stmt]
       
     (* --------- B R E A K --------- *)
-    | loc, Ast.Statement.Break {label; _} -> 
+    | loc, Ast'.Statement.Break {label; _} -> 
       let label' = Option.map normalize_identifier label in 
       let break_stmt = Statement.Break.build (loc_f loc) label' in 
       [break_stmt]
     
     (* --------- C O N T I N U E --------- *)
-    | loc, Ast.Statement.Continue {label; _} -> 
+    | loc, Ast'.Statement.Continue {label; _} -> 
       let label' = Option.map normalize_identifier label in 
       let continue_stmt = Statement.Continue.build (loc_f loc) label' in 
       [continue_stmt]
 
     (* --------- D E B U G G E R --------- *)
-    | loc, Ast.Statement.Debugger _ ->
+    | loc, Ast'.Statement.Debugger _ ->
       let debugger_stmt = Statement.Debugger.build (loc_f loc) in 
       
       [debugger_stmt]
 
     (* --------- E X P O R T   D E F A U L T   D E C L A R A T I O N --------- *)
-    | loc, Ast.Statement.ExportDefaultDeclaration {declaration; _} ->
+    | loc, Ast'.Statement.ExportDefaultDeclaration {declaration; _} ->
       let decl_stmts, decl_expr = normalize_default_declaration declaration in 
 
       let export_stmt = Statement.ExportDefaultDecl.build (loc_f loc) (Option.get decl_expr) in 
       decl_stmts @ [export_stmt]
 
     (* --------- E X P O R T   N A M E D   D E C L A R A T I O N --------- *)
-    | loc, Ast.Statement.ExportNamedDeclaration {declaration; specifiers; source; _ } -> 
+    | loc, Ast'.Statement.ExportNamedDeclaration {declaration; specifiers; source; _ } -> 
       let loc = loc_f loc in 
       let source' = Option.map get_string source in 
 
@@ -264,7 +264,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       decl_stmts @ spcf_stmts
 
     (* --------- I M P O R T   D E C L A R A T I O N --------- *)
-    | loc, Ast.Statement.ImportDeclaration {source; default; specifiers; _} -> 
+    | loc, Ast'.Statement.ImportDeclaration {source; default; specifiers; _} -> 
       let loc = loc_f loc in 
       let source' = get_string source in 
       let def_stmts = map_default (normalize_default loc source') [] default in 
@@ -274,62 +274,62 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast.Statement.t) : 
       
     
     (* --------- F U N C T I O N   D E C L A R A T I O N ---------*)
-    | loc, Ast.Statement.FunctionDeclaration _function -> fst (normalize_function context loc _function)
+    | loc, Ast'.Statement.FunctionDeclaration _function -> fst (normalize_function context loc _function)
 
     (* --------- C L A S S   D E C L A R A T I O N ---------*)
-    | loc, Ast.Statement.ClassDeclaration _class -> fst (normalize_class context loc _class)
+    | loc, Ast'.Statement.ClassDeclaration _class -> fst (normalize_class context loc _class)
 
     (* --------- S T A T E M E N T   E X P R E S S I O N ---------*)
-    | _, Ast.Statement.Expression {expression; _} -> 
+    | _, Ast'.Statement.Expression {expression; _} -> 
       let new_context = {context with is_statement = true} in 
       let stmts, expr = nec new_context expression in 
       stmts @ Option.to_list (Option.map Expression.to_statement expr)
     
-    | _, Ast.Statement.Empty _ -> []
+    | _, Ast'.Statement.Empty _ -> []
 
     | loc, _ -> 
       let loc_info = Loc.debug_to_string loc in
       failwith ("Unknown statement type to normalize (object on " ^ loc_info ^ ")")
     
-and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) : norm_expr_t =
+and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t) : norm_expr_t =
   let ne = normalize_expression empty_context in 
   let nec = normalize_expression in 
 
   match expr with
   (* --------- L I T E R A L --------- *)
-  | loc, Ast.Expression.StringLiteral {value; raw; _} -> 
+  | loc, Ast'.Expression.StringLiteral {value; raw; _} -> 
     let value' = Expression.Literal.String value in 
     let literal = Expression.Literal.build (loc_f loc) value' raw in 
     ([], Some literal)
 
-  | loc, Ast.Expression.NumberLiteral {value; raw; _} -> 
+  | loc, Ast'.Expression.NumberLiteral {value; raw; _} -> 
     let value' = Expression.Literal.Number value in 
     let literal = Expression.Literal.build (loc_f loc) value' raw in 
     ([], Some literal)
 
-  | loc, Ast.Expression.BigIntLiteral {value; raw; _} -> 
+  | loc, Ast'.Expression.BigIntLiteral {value; raw; _} -> 
     let value = Expression.Literal.BigInt value in 
     let literal = Expression.Literal.build (loc_f loc) value raw in 
     ([], Some literal)
 
-  | loc, Ast.Expression.BooleanLiteral {value; _} -> 
+  | loc, Ast'.Expression.BooleanLiteral {value; _} -> 
     let value' = Expression.Literal.Boolean value in 
     let raw = if value then "true" else "false" in 
     let literal = Expression.Literal.build (loc_f loc) value' raw in 
     ([], Some literal)
 
-  | loc, Ast.Expression.RegExpLiteral {pattern; flags; raw; _} ->
+  | loc, Ast'.Expression.RegExpLiteral {pattern; flags; raw; _} ->
     let value' = Expression.Literal.Regex {pattern = pattern; flags = flags} in 
     let literal = Expression.Literal.build (loc_f loc) value' raw in 
     ([], Some literal)
 
-  | loc, Ast.Expression.NullLiteral _ -> 
+  | loc, Ast'.Expression.NullLiteral _ -> 
     let value = Expression.Literal.Null () in
     let literal = Expression.Literal.build (loc_f loc) value "null" in
     ([], Some literal);
   
   (* --------- T E M P L A T E    L I T E R A L --------- *)
-  | loc, Ast.Expression.TemplateLiteral {quasis; expressions; _} -> 
+  | loc, Ast'.Expression.TemplateLiteral {quasis; expressions; _} -> 
     let quasis' = List.map build_template_element quasis in 
     let stmts, exprs = List.split (List.map ne expressions) in
     let exprs = List.map Option.get exprs in 
@@ -339,13 +339,13 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     (List.flatten stmts, Some literal)
 
   (* --------- I D E N T I F I E R --------- *)
-  | _, Ast.Expression.Identifier (loc, { name; _ }) -> 
+  | _, Ast'.Expression.Identifier (loc, { name; _ }) -> 
     let location = loc_f loc in
     let identifier = Identifier.to_expression (Identifier.build location name) in 
     ([], Some identifier)
 
   (* --------- L O G I C A L --------- *)
-  | loc, Ast.Expression.Logical {operator; left; right; _} -> 
+  | loc, Ast'.Expression.Logical {operator; left; right; _} -> 
     let operator' = Operator.Binary.translate_logical operator in
     let left_stmt, left_expr = ne left in  
     let right_stmt, right_expr = ne right in  
@@ -362,7 +362,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (left_stmt @ right_stmt @ [assign], Some (Identifier.to_expression id))
   
   (* --------- B I N A R Y --------- *)
-  | loc, Ast.Expression.Binary {operator; left; right; _} -> 
+  | loc, Ast'.Expression.Binary {operator; left; right; _} -> 
     let operator' = Operator.Binary.translate_binary operator in
     let left_stmt, left_expr = ne left in  
     let right_stmt, right_expr = ne right in  
@@ -379,7 +379,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (left_stmt @ right_stmt @ [assign], Some (Identifier.to_expression id))
   
   (* --------- U N A R Y --------- *)
-  | loc, Ast.Expression.Unary {operator; argument; _} -> 
+  | loc, Ast'.Expression.Unary {operator; argument; _} -> 
     let operator' = Operator.Unary.translate operator in 
     let arg_stmts, arg_expr = ne argument in
 
@@ -395,7 +395,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
 
   
   (* --------- U P D A T E --------- *)
-  | loc, Ast.Expression.Update {operator; argument; _} -> 
+  | loc, Ast'.Expression.Update {operator; argument; _} -> 
     let operator' = Operator.Binary.translate_update operator in
     let arg_stmts, arg_expr = ne argument in 
 
@@ -411,12 +411,12 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (arg_stmts @ [assign], Some (Identifier.to_expression id))
 
   (* --------- T H I S --------- *)
-  | loc, Ast.Expression.This _ -> 
+  | loc, Ast'.Expression.This _ -> 
     let this = Expression.This.build (loc_f loc) in
     ([], Some this)
 
   (* --------- S U P E R --------- *)
-  | loc, Ast.Expression.Super _ -> 
+  | loc, Ast'.Expression.Super _ -> 
     let loc = loc_f loc in 
     if context.parent_type = func_call then
       (* var v1 = this.prototype *)
@@ -440,7 +440,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     ([], Some super) *)
 
   (* --------- S E Q U E N C E --------- *)
-  | loc, Ast.Expression.Sequence {expressions; _} -> 
+  | loc, Ast'.Expression.Sequence {expressions; _} -> 
     let loc = loc_f loc in 
 
     let stmts, exprs = List.split (List.map ne expressions) in 
@@ -450,9 +450,9 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     List.flatten stmts @ List.flatten decls, Some last_expr
 
   (* --------- T A G G E D   T E M P L A T E --------- *)
-  (* | loc, Ast.Expression.TaggedTemplate {tag; quasi=(qloc, quasi'); _} ->
+  (* | loc, Ast'.Expression.TaggedTemplate {tag; quasi=(qloc, quasi'); _} ->
     let tag_stmts, tag_expr = ne tag in 
-    let qsi_stmts, qsi_expr = ne (qloc, Ast.Expression.TemplateLiteral quasi') in 
+    let qsi_stmts, qsi_expr = ne (qloc, Ast'.Expression.TemplateLiteral quasi') in 
     (* convert quasi back to a template literal *)
     let qsi_expr = match qsi_expr with Some (_, Expression.TemplateLiteral tl) -> tl | _ -> failwith "failed to convert quasi to template literal"in 
 
@@ -460,14 +460,14 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     tag_stmts @ qsi_stmts, Some tagged_template  *)
 
   (* --------- Y I E L D --------- *)
-  | loc, Ast.Expression.Yield {argument; delegate; _} -> 
+  | loc, Ast'.Expression.Yield {argument; delegate; _} -> 
     let arg_stmts, arg_expr = map_default ne ([], None) argument in 
     let yield = Statement.Yield.build (loc_f loc) arg_expr delegate in 
     
     arg_stmts @ [yield], None
 
   (* --------- C O N D I T I O N A L --------- *)
-  | loc, Ast.Expression.Conditional {test; consequent; alternate; _} ->
+  | loc, Ast'.Expression.Conditional {test; consequent; alternate; _} ->
     let loc = loc_f loc in 
     let id, decl = createVariableDeclaration ~kind:_let None loc in
 
@@ -482,7 +482,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     decl @ test_stmts @ [conditional], Some (Identifier.to_expression id)
 
   (* --------- M E T A   P R O P E R T Y --------- *)
-  (* | loc, Ast.Expression.MetaProperty {meta; property; _} -> 
+  (* | loc, Ast'.Expression.MetaProperty {meta; property; _} -> 
     let meta' = normalize_identifier meta in 
     let property' = normalize_identifier property in 
     
@@ -491,7 +491,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
   
   
   (* --------- A S S I G N   S I M P L E --------- *)
-  | _, Ast.Expression.Assignment {operator; left; right; _} ->
+  | _, Ast'.Expression.Assignment {operator; left; right; _} ->
 
     let operator' = Option.map Operator.Assignment.translate operator in
     let assign_stmts, _ = normalize_assignment context left operator' right  in 
@@ -504,7 +504,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     assign_stmts @ stmts, expr 
 
   (* --------- A S S I G N   A R R A Y ---------*)
-  | loc, Ast.Expression.Array {elements; _} -> 
+  | loc, Ast'.Expression.Array {elements; _} -> 
     let elems_stmts, elems_exprs = List.split (List.map normalize_array_elem elements) in 
     let elems_exprs = List.map Option.get (List.filter Option.is_some elems_exprs) in 
 
@@ -519,7 +519,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (List.flatten elems_stmts) @ [assign], Some (Identifier.to_expression id)
   
   (* --------- A S S I G N   N E W ---------*)
-  | loc, Ast.Expression.New {callee; arguments; _} -> 
+  | loc, Ast'.Expression.New {callee; arguments; _} -> 
     let callee_stmts, callee_expr = ne callee in
     let args_stmts, args_exprs = List.split (map_default normalize_argument_list [] arguments) in 
     let args_exprs = List.flatten (List.map Option.to_list args_exprs) in
@@ -535,7 +535,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (callee_stmts @ (List.flatten args_stmts) @ [assign], Some (Identifier.to_expression id))
 
   (* --------- A S S I G N   M E M B E R ---------*)
-  | loc, Ast.Expression.Member {_object; property; _} -> 
+  | loc, Ast'.Expression.Member {_object; property; _} -> 
     let obj_stmts, obj_expr = ne _object in 
     let prop_stmts, prop_expr = normalize_member_property property in 
 
@@ -556,7 +556,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (obj_stmts @ prop_stmts @ [assign], Some (Identifier.to_expression id))
 
   (* --------- A S S I G N   O B J E C T ---------*)
-  | loc, Ast.Expression.Object {properties; _} -> 
+  | loc, Ast'.Expression.Object {properties; _} -> 
       let loc = loc_f loc in
 
       let id = get_identifier loc context.identifier in
@@ -570,7 +570,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
         ([empty_obj] @ props_stmts, Some (Identifier.to_expression id))
 
   (* --------- A S S I G N   F U N C   C A L L ---------*)
-  | loc, Ast.Expression.Call {callee = (_, Member {_object; property; _}); arguments; _} -> 
+  | loc, Ast'.Expression.Call {callee = (_, Member {_object; property; _}); arguments; _} -> 
     (* callee representation*)
     let obj_stmts, obj_expr = normalize_expression empty_context _object in 
     let prop_stmts, prop_expr = normalize_member_property property in 
@@ -590,8 +590,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
     else 
       (obj_stmts @ prop_stmts @ (List.flatten args_stmts) @ [assign], Some (Identifier.to_expression id))
 
-
-  | loc, Ast.Expression.Call {callee; arguments; _} -> 
+  | loc, Ast'.Expression.Call {callee; arguments; _} -> 
     let new_context = {empty_context with parent_type = func_call} in 
 
     let callee_stmts, callee_expr = nec new_context callee in
@@ -609,17 +608,17 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast.Expression.t) 
       (callee_stmts @ (List.flatten args_stmts) @ [assign], Some (Identifier.to_expression id))
 
   (* --------- A S S I G N   F U N C T I O N ---------*)
-  | loc, Ast.Expression.ArrowFunction _function -> normalize_function context loc _function
-  | loc, Ast.Expression.Function _function      -> normalize_function context loc _function
+  | loc, Ast'.Expression.ArrowFunction _function -> normalize_function context loc _function
+  | loc, Ast'.Expression.Function _function      -> normalize_function context loc _function
   
   (* --------- C L A S S   E X P R E S S I O N ---------*)
-  | loc, Ast.Expression.Class _class -> normalize_class context loc _class
+  | loc, Ast'.Expression.Class _class -> normalize_class context loc _class
 
   | loc, _ -> 
     let loc_info = Loc.debug_to_string loc in
     failwith ("Unknown expression type to normalize (object on " ^ loc_info ^ ")")
 
-and normalize_assignment (context : context) (left : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignment.t option) (right : ('M, 'T) Ast.Expression.t) : norm_stmt_t * m Identifier.t list = 
+and normalize_assignment (context : context) (left : ('M, 'T) Ast'.Pattern.t) (op : Operator.Assignment.t option) (right : ('M, 'T) Ast'.Expression.t) : norm_stmt_t * m Identifier.t list = 
   let ne = normalize_expression in
   let is_id, id = is_identifier left in  
   let new_context = if is_id then {context with identifier = id; is_assignment = true; has_op = Option.is_some op} else context in
@@ -633,7 +632,7 @@ and normalize_assignment (context : context) (left : ('M, 'T) Ast.Pattern.t) (op
   init_stmts @ pat_stmts, ids
 
   
-and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
+and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
   match pattern with 
     | loc, Identifier {name; _} -> 
       let id = normalize_identifier name in 
@@ -644,7 +643,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast.Patt
     | _, Array {elements; _} -> let assigns, ids = List.split (List.mapi (
       fun i elem ->
         match elem with 
-          | Ast.Pattern.Array.Element (loc, {argument; _}) ->
+          | Ast'.Pattern.Array.Element (loc, {argument; _}) ->
             let loc = loc_f loc in 
             let index = Expression.Literal.build loc (Expression.Literal.BigInt (Some (Int64.of_int i))) (string_of_int i) in
             
@@ -687,7 +686,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast.Patt
     
     | _, Object {properties; _ } -> let assigns, ids = List.split (List.map (
       fun property -> match property with 
-        | Ast.Pattern.Object.Property (loc, {key; pattern; _}) -> 
+        | Ast'.Pattern.Object.Property (loc, {key; pattern; _}) -> 
           let loc = loc_f loc in 
           let obj_key = to_object_key key in 
           let _, key_expr = normalize_property_key obj_key in 
@@ -738,12 +737,12 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast.Patt
 
     | _ -> failwith "pattern expression not implemented"
 
-and is_identifier (pattern : ('M, 'T) Ast.Pattern.t) : bool * m Identifier.t option =
+and is_identifier (pattern : ('M, 'T) Ast'.Pattern.t) : bool * m Identifier.t option =
   match pattern with
   | _, Identifier {name; _} -> true,  Some (normalize_identifier name)
   | _                       -> false, None
 
-and get_pattern_expr (pattern : ('M, 'T) Ast.Pattern.t) : norm_expr_t = 
+and get_pattern_expr (pattern : ('M, 'T) Ast'.Pattern.t) : norm_expr_t = 
   match pattern with 
     | _, Identifier {name; _} -> 
       [], Some ((Identifier.to_expression << normalize_identifier) name)
@@ -762,7 +761,7 @@ and get_pattern_expr (pattern : ('M, 'T) Ast.Pattern.t) : norm_expr_t =
     
     | _ -> [], None
 
-and to_object_key (key : ('M, 'T) Ast.Pattern.Object.Property.key) : ('M, 'T) Ast.Expression.Object.Property.key = 
+and to_object_key (key : ('M, 'T) Ast'.Pattern.Object.Property.key) : ('M, 'T) Ast'.Expression.Object.Property.key = 
   match key with
     | StringLiteral lit -> StringLiteral lit
     | NumberLiteral lit -> NumberLiteral lit
@@ -775,10 +774,10 @@ and to_var_decl (stmt : m Statement.t) : m Statement.VarDecl.t =
     | _, Statement.VarDecl decl -> decl
     | _ -> failwith "tried to conver statement to variable declaration but it isn't possible"
 
-and normalize_alternate (_, {Ast.Statement.If.Alternate.body; _}) : norm_stmt_t = 
+and normalize_alternate (_, {Ast'.Statement.If.Alternate.body; _}) : norm_stmt_t = 
   normalize_statement empty_context body
 
-and normalize_default_declaration (declaration : ('M, 'T) Ast.Statement.ExportDefaultDeclaration.declaration) : norm_expr_t = 
+and normalize_default_declaration (declaration : ('M, 'T) Ast'.Statement.ExportDefaultDeclaration.declaration) : norm_expr_t = 
   match declaration with 
     | Declaration stmt ->
       let stmt' = normalize_statement empty_context stmt in 
@@ -798,7 +797,7 @@ and normalize_default_declaration (declaration : ('M, 'T) Ast.Statement.ExportDe
     | Expression expr -> 
       normalize_expression empty_context expr
 
-and normalize_named_declaration (loc : m) (source : string option) (declatation : ('M, 'T) Ast.Statement.t) : norm_stmt_t = 
+and normalize_named_declaration (loc : m) (source : string option) (declatation : ('M, 'T) Ast'.Statement.t) : norm_stmt_t = 
   let decl_stmts = normalize_statement empty_context declatation in 
   (* convert all declarations into exports *)
   let exports = List.filter_map (fun (_, stmt) -> 
@@ -814,10 +813,10 @@ and normalize_named_declaration (loc : m) (source : string option) (declatation 
 
   decl_stmts @ exports
 
-and normalize_exp_specifiers (loc : m) (source : string option) (specifier : ('M, 'T) Ast.Statement.ExportNamedDeclaration.specifier ) : norm_stmt_t = 
+and normalize_exp_specifiers (loc : m) (source : string option) (specifier : ('M, 'T) Ast'.Statement.ExportNamedDeclaration.specifier ) : norm_stmt_t = 
   match specifier with 
     | ExportSpecifiers specifiers -> 
-      List.map (fun (_, {Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local; exported}) -> 
+      List.map (fun (_, {Ast'.Statement.ExportNamedDeclaration.ExportSpecifier.local; exported}) -> 
         let local' = Some (normalize_identifier local) in
         let exported' = Option.map normalize_identifier exported in 
         Statement.ExportNamedDecl.build loc local' exported' false source
@@ -829,16 +828,16 @@ and normalize_exp_specifiers (loc : m) (source : string option) (specifier : ('M
       let export = Statement.ExportNamedDecl.build loc None exported' true source in
       [export] 
 
-and normalize_default (loc : m) (source : string) ({identifier; _} : ('M, 'T) Ast.Statement.ImportDeclaration.default_identifier) : norm_stmt_t = 
+and normalize_default (loc : m) (source : string) ({identifier; _} : ('M, 'T) Ast'.Statement.ImportDeclaration.default_identifier) : norm_stmt_t = 
   let identifier' = normalize_identifier identifier in 
   let import = Statement.ImportDecl.build_default loc source identifier' in 
   
   [import]
 
-and normalize_imp_specifiers (loc : m) (source : string) (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.specifier) : norm_stmt_t = 
+and normalize_imp_specifiers (loc : m) (source : string) (specifier : ('M, 'T) Ast'.Statement.ImportDeclaration.specifier) : norm_stmt_t = 
   match specifier with 
     | ImportNamedSpecifiers specifiers -> 
-      List.map (fun {Ast.Statement.ImportDeclaration.local; remote; _} -> 
+      List.map (fun {Ast'.Statement.ImportDeclaration.local; remote; _} -> 
         let local' = Option.map normalize_identifier local in 
         let remote' = Some (normalize_identifier remote) in 
         Statement.ImportDecl.build_specifier loc source local' remote' false 
@@ -853,7 +852,7 @@ and normalize_for_left (left : ('M, 'T) generic_left) : norm_stmt_t * m Statemen
   let ns = normalize_statement empty_context in 
   match left with
     | LeftDeclaration (loc, decl) -> 
-      let decl_stmts = ns (loc, Ast.Statement.VariableDeclaration decl) in 
+      let decl_stmts = ns (loc, Ast'.Statement.VariableDeclaration decl) in 
       [], to_var_decl (List.hd decl_stmts)
     
     | LeftPattern pattern -> 
@@ -861,7 +860,7 @@ and normalize_for_left (left : ('M, 'T) generic_left) : norm_stmt_t * m Statemen
       let stmts, _ = normalize_pattern (Identifier.to_expression id) pattern None in 
       stmts, to_var_decl (List.hd decl_stmts)
 
-and normalize_case (loc, {Ast.Statement.Switch.Case.test; consequent; _}) : m Statement.Switch.Case.t * norm_stmt_t = 
+and normalize_case (loc, {Ast'.Statement.Switch.Case.test; consequent; _}) : m Statement.Switch.Case.t * norm_stmt_t = 
   let ns = normalize_statement empty_context in
   let ne = normalize_expression empty_context in
 
@@ -871,7 +870,7 @@ and normalize_case (loc, {Ast.Statement.Switch.Case.test; consequent; _}) : m St
   let case = Statement.Switch.Case.build (loc_f loc) test_expr cnsq_stmts in
   (case, test_stmts)
 
-and normalize_catch (loc, { Ast.Statement.Try.CatchClause.param; body; _}) : norm_stmt_t * m Statement.Try.Catch.t option = 
+and normalize_catch (loc, { Ast'.Statement.Try.CatchClause.param; body; _}) : norm_stmt_t * m Statement.Try.Catch.t option = 
     let is_id, id = map_default is_identifier (false, None) param in
     let param' = if is_id then id else failwith "param is not an identifier" in 
     let body_stmts = normalize_statement empty_context (block_to_statement body) in 
@@ -879,23 +878,23 @@ and normalize_catch (loc, { Ast.Statement.Try.CatchClause.param; body; _}) : nor
     let catch = Statement.Try.Catch.build (loc_f loc) param' body_stmts in
     (body_stmts, Some catch)
   
-and normalize_array_elem (element : ('M, 'T) Ast.Expression.Array.element) : norm_expr_t = 
+and normalize_array_elem (element : ('M, 'T) Ast'.Expression.Array.element) : norm_expr_t = 
   (* TODO : other cases *)
   match element with
-    | Ast.Expression.Array.Expression expr -> normalize_expression empty_context expr
+    | Ast'.Expression.Array.Expression expr -> normalize_expression empty_context expr
     | _ -> failwith "normalize array element case not defined"
 
-and normalize_argument_list (_, {Ast.Expression.ArgList.arguments; _}) : norm_expr_t list = 
+and normalize_argument_list (_, {Ast'.Expression.ArgList.arguments; _}) : norm_expr_t list = 
   List.map normalize_argument arguments
 
-and normalize_argument (arg : ('M, 'T) Ast.Expression.expression_or_spread) : norm_expr_t = 
+and normalize_argument (arg : ('M, 'T) Ast'.Expression.expression_or_spread) : norm_expr_t = 
   (* TODO : other cases *)
   match arg with
-    | Ast.Expression.Expression expr -> normalize_expression empty_context expr 
+    | Ast'.Expression.Expression expr -> normalize_expression empty_context expr 
     | _ -> failwith "normalize argument case not defined"
 
 
-and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {params; _}); body; _} : ('M, 'T) Ast.Function.t) : norm_expr_t =
+and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {params; _}); body; _} : ('M, 'T) Ast'.Function.t) : norm_expr_t =
   let loc = loc_f loc in 
   let id = get_identifier loc (if Option.is_some id then Option.map normalize_identifier id else context.identifier) in 
   
@@ -909,7 +908,7 @@ and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {param
   else
     (List.flatten params_stmts @ [assign], Some (Identifier.to_expression id)) 
 
-and normalize_param (loc, {Ast.Function.Param.argument; default} : ('M, 'T) Ast.Function.Param.t) : m Statement.t list * m Statement.AssignFunction.Param.t  = 
+and normalize_param (loc, {Ast'.Function.Param.argument; default} : ('M, 'T) Ast'.Function.Param.t) : m Statement.t list * m Statement.AssignFunction.Param.t  = 
   (* TODO : param can be spread element or other patterns (maybe do like the normalize_for_left ) *)
   let is_id, id = is_identifier argument in 
   let argument' = if is_id then Option.get id else failwith "argument is not an identifier" in 
@@ -918,17 +917,17 @@ and normalize_param (loc, {Ast.Function.Param.argument; default} : ('M, 'T) Ast.
   let param = Statement.AssignFunction.Param.build (loc_f loc) argument' def_expr in
   (def_stmts, param)
 
-and normalize_func_body (body : ('M, 'T) Ast.Function.body) : norm_stmt_t =
+and normalize_func_body (body : ('M, 'T) Ast'.Function.body) : norm_stmt_t =
   match body with 
-    | Ast.Function.BodyBlock body-> 
+    | Ast'.Function.BodyBlock body-> 
       normalize_statement empty_context (block_to_statement body) 
 
-    | Ast.Function.BodyExpression ((loc, _) as body) -> 
+    | Ast'.Function.BodyExpression ((loc, _) as body) -> 
       let body_stmts, body_expr = normalize_expression empty_context body in 
       let return = Statement.Return.build (loc_f loc) body_expr in 
       body_stmts @ [return]
 
-and normalize_class (context : context) (loc : Loc.t) ({id; body=(_, {body; _}); extends; (* implements; *) _} : ('M, 'T) Ast.Class.t): norm_expr_t = 
+and normalize_class (context : context) (loc : Loc.t) ({id; body=(_, {body; _}); extends; (* implements; *) _} : ('M, 'T) Ast'.Class.t): norm_expr_t = 
   let loc = loc_f loc in 
   let id = get_identifier loc (if Option.is_some id then Option.map normalize_identifier id else context.identifier) in 
   let is_decl = context.is_declaration in 
@@ -948,7 +947,7 @@ and empty_constructor (is_declaration : bool) (class_id : m Identifier.t) (loc :
   let cnstr_stmt = Statement.AssignFunction.build loc class_id [] [] in 
   decl @ [cnstr_stmt]
 
-and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (class_proto : m Expression.t) (element : ('M, 'T) Ast.Class.Body.element) : norm_stmt_t = 
+and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (class_proto : m Expression.t) (element : ('M, 'T) Ast'.Class.Body.element) : norm_stmt_t = 
   match element with 
     | Method (_, {key; value=(loc, func); _}) -> 
       let id = get_key_identifier key in
@@ -981,7 +980,7 @@ and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (
     (* TODO : saw some *)
     | PrivateField _ -> []
 
-and get_key_identifier (key : ('M, 'T) Ast.Expression.Object.Property.key) : m Identifier.t = 
+and get_key_identifier (key : ('M, 'T) Ast'.Expression.Object.Property.key) : m Identifier.t = 
   match key with 
     | StringLiteral ((loc, _) as str) -> Identifier.build (loc_f loc) (get_string str) 
     | Identifier id -> normalize_identifier id
@@ -989,7 +988,7 @@ and get_key_identifier (key : ('M, 'T) Ast.Expression.Object.Property.key) : m I
     | _ -> failwith "class method key cannot be translated"
 
 
-and is_constructor (element : ('M, 'T) Ast.Class.Body.element) : bool =
+and is_constructor (element : ('M, 'T) Ast'.Class.Body.element) : bool =
   match element with 
     | Method (_, {key; _}) -> 
       let id = get_key_identifier key in 
@@ -999,7 +998,7 @@ and is_constructor (element : ('M, 'T) Ast.Class.Body.element) : bool =
 and is_specified_name ((_, {name; _}) : m Identifier.t) (specified_name : string) : bool = 
   name = specified_name
 
-and normalize_extend (class_id : m Identifier.t) ((loc', {expr=(loc, _) as expr; _}) : ('M, 'T) Ast.Class.Extends.t) : norm_expr_t = 
+and normalize_extend (class_id : m Identifier.t) ((loc', {expr=(loc, _) as expr; _}) : ('M, 'T) Ast'.Class.Extends.t) : norm_expr_t = 
   let ext_stmts, ext_expr = normalize_expression empty_context expr in 
   
   let loc = loc_f loc in
@@ -1018,7 +1017,7 @@ and no_extend (class_id : m Identifier.t) (loc : m) : norm_expr_t =
 
   decl @ [assign], Some (Identifier.to_expression id)
 
-and normalize_member_property (property : ('M, 'T) Ast.Expression.Member.property) : m Statement.t list * property = 
+and normalize_member_property (property : ('M, 'T) Ast'.Expression.Member.property) : m Statement.t list * property = 
   match property with
     | PropertyIdentifier id -> [], Static (normalize_identifier id)
     | PropertyExpression expr -> 
@@ -1029,7 +1028,7 @@ and normalize_member_property (property : ('M, 'T) Ast.Expression.Member.propert
     | PropertyPrivateName _ -> failwith "property private name not implemented"
   
 
-and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast.Expression.Object.property) : norm_stmt_t = 
+and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast'.Expression.Object.property) : norm_stmt_t = 
   let nk = normalize_property_key in
   let ne = normalize_expression empty_context in 
   let obj_id = Identifier.to_expression obj_id in 
@@ -1049,7 +1048,7 @@ and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast.Expres
     | Property (_, Get {key; value=(loc, func); _}) 
     | Property (_, Set {key; value=(loc, func); _}) -> 
       let key_stmts, key_expr = nk key in 
-      let val_stmts, val_expr = ne (loc, Ast.Expression.Function func) in 
+      let val_stmts, val_expr = ne (loc, Ast'.Expression.Function func) in 
       let set_prop = match key_expr with
         | Static  prop -> Statement.StaticMemberAssign.build (loc_f loc) obj_id prop (Option.get val_expr)
         | Dynamic prop -> Statement.DynmicMemberAssign.build (loc_f loc) obj_id prop (Option.get val_expr)
@@ -1059,41 +1058,41 @@ and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast.Expres
     (* TODO : spread property not implemented *)
     | _ -> failwith "spread property not implemented"
 
-and normalize_property_key (key : ('M, 'T) Ast.Expression.Object.Property.key) : m Statement.t list * property = 
+and normalize_property_key (key : ('M, 'T) Ast'.Expression.Object.Property.key) : m Statement.t list * property = 
   let ne = normalize_expression empty_context in 
   match key with
     | StringLiteral (loc, literal) -> 
-      let stmts, expr = ne (loc, Ast.Expression.StringLiteral literal) in 
+      let stmts, expr = ne (loc, Ast'.Expression.StringLiteral literal) in 
       stmts, Dynamic (Option.get expr)
     | NumberLiteral (loc, literal) -> 
-      let stmts, expr = ne (loc, Ast.Expression.NumberLiteral literal) in 
+      let stmts, expr = ne (loc, Ast'.Expression.NumberLiteral literal) in 
       stmts, Dynamic (Option.get expr)
     | BigIntLiteral (loc, literal) -> 
-      let stmts, expr = ne (loc, Ast.Expression.BigIntLiteral literal) in 
+      let stmts, expr = ne (loc, Ast'.Expression.BigIntLiteral literal) in 
       stmts, Dynamic (Option.get expr)
     | Identifier id -> [], Static (normalize_identifier id)
     
     (* TODO : private name and computed key not implemented *)
     | _ -> failwith "private name and computed key not implemented"
 
-and normalize_init (init : ('M, 'T) Ast.Statement.For.init) : norm_expr_t =
+and normalize_init (init : ('M, 'T) Ast'.Statement.For.init) : norm_expr_t =
   let ne = normalize_expression empty_context in 
   let ns = normalize_statement empty_context in
   match init with 
-    | InitDeclaration (loc, decl) -> ns (loc, Ast.Statement.VariableDeclaration decl), None 
+    | InitDeclaration (loc, decl) -> ns (loc, Ast'.Statement.VariableDeclaration decl), None 
     | InitExpression expr -> ne expr
 
-and normalize_identifier ((loc, {name; _}) : ('M, 'T) Ast.Identifier.t) : m Identifier.t = 
+and normalize_identifier ((loc, {name; _}) : ('M, 'T) Ast'.Identifier.t) : m Identifier.t = 
   Identifier.build (loc_f loc) name
 
-and build_template_element (loc, {Ast.Expression.TemplateLiteral.Element.value={raw; cooked}; tail}) : m Expression.TemplateLiteral.Element.t =
+and build_template_element (loc, {Ast'.Expression.TemplateLiteral.Element.value={raw; cooked}; tail}) : m Expression.TemplateLiteral.Element.t =
   Expression.TemplateLiteral.Element.build (loc_f loc) raw cooked tail
 
 and get_identifier (loc : m) (id : m Identifier.t option) : m Identifier.t = 
   let random_id = lazy (Identifier.build_random loc) in
   map_default_lazy identity random_id id
 
-and get_string ((_, {Ast.StringLiteral.value; _})) : string = value
+and get_string ((_, {Ast'.StringLiteral.value; _})) : string = value
 
 and id_is_generated ((_, {is_generated; _}) : m Identifier.t) : bool = is_generated
 
@@ -1108,41 +1107,41 @@ and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Stateme
   
   (id, [decl] @ Option.to_list assign)
 
-and is_special_assignment ((_, expr) : ('M, 'T) Ast.Expression.t) : bool =
+and is_special_assignment ((_, expr) : ('M, 'T) Ast'.Expression.t) : bool =
   match expr with 
     (* -- ASSIGN OP -- *)
-    | Ast.Expression.Binary _
-    | Ast.Expression.Logical _ 
-    | Ast.Expression.Update _
-    | Ast.Expression.Unary _
+    | Ast'.Expression.Binary _
+    | Ast'.Expression.Logical _ 
+    | Ast'.Expression.Update _
+    | Ast'.Expression.Unary _
     (* -- ASSIGN NEW -- *)
-    | Ast.Expression.New _ 
+    | Ast'.Expression.New _ 
     (* -- ASSIGN CALL -- *)
-    | Ast.Expression.Call _
+    | Ast'.Expression.Call _
     (* -- ASSING MEMBER -- *)
-    | Ast.Expression.Member _    
+    | Ast'.Expression.Member _    
     (* -- ASSING OBJECT -- *)
-    | Ast.Expression.Object _
+    | Ast'.Expression.Object _
     (* -- ASSIGN FUNCTION -- *)
-    | Ast.Expression.Function _
-    | Ast.Expression.ArrowFunction _
-    | Ast.Expression.Class _
+    | Ast'.Expression.Function _
+    | Ast'.Expression.ArrowFunction _
+    | Ast'.Expression.Class _
     (* -- ASSIGN ARRAY --*)
-    | Ast.Expression.Array _ -> true
+    | Ast'.Expression.Array _ -> true
     | _ -> false
 
-and is_operation ((_, expr) : ('M, 'T) Ast.Expression.t) : bool =
+and is_operation ((_, expr) : ('M, 'T) Ast'.Expression.t) : bool =
   match expr with 
     (* -- ASSIGN OP -- *)
-    | Ast.Expression.Binary _
-    | Ast.Expression.Logical _ 
-    | Ast.Expression.Update _ 
-    | Ast.Expression.Unary _ -> true
+    | Ast'.Expression.Binary _
+    | Ast'.Expression.Logical _ 
+    | Ast'.Expression.Update _ 
+    | Ast'.Expression.Unary _ -> true
     | _ -> false
 
 
-and block_to_statement (loc, block) : (Loc.t, Loc.t) Ast.Statement.t =
-  (loc, Ast.Statement.Block block)
+and block_to_statement (loc, block) : (Loc.t, Loc.t) Ast'.Statement.t =
+  (loc, Ast'.Statement.Block block)
 
 and change_kind (kind' : Statement.VarDecl.kind) ((loc, stmt) : m Statement.t) : m Statement.t =
   match stmt with
@@ -1158,18 +1157,18 @@ and is_declaration ((_, stmt) : m Statement.t) : bool =
 and build_operation (left : m Identifier.t) ((loc, _) as right : m Expression.t) (op : Operator.Assignment.t): m Statement.t = 
   let left_expr = Identifier.to_expression left in 
   match op with 
-          | PlusAssign    -> Statement.AssignBinary.build loc left Operator.Binary.Plus left_expr right       
-          | MinusAssign   -> Statement.AssignBinary.build loc left Operator.Binary.Minus left_expr right
-          | MultAssign    -> Statement.AssignBinary.build loc left Operator.Binary.Mult left_expr right        
-          | ExpAssign     -> Statement.AssignBinary.build loc left Operator.Binary.Exp left_expr right 
-          | DivAssign     -> Statement.AssignBinary.build loc left Operator.Binary.Div left_expr right          
-          | ModAssign     -> Statement.AssignBinary.build loc left Operator.Binary.Mod left_expr right 
-          | LShiftAssign  -> Statement.AssignBinary.build loc left Operator.Binary.LShift left_expr right    
-          | RShiftAssign  -> Statement.AssignBinary.build loc left Operator.Binary.RShift left_expr right 
-          | RShift3Assign -> Statement.AssignBinary.build loc left Operator.Binary.RShift3 left_expr right 
-          | BitOrAssign   -> Statement.AssignBinary.build loc left Operator.Binary.BitOr left_expr right 
-          | BitXorAssign  -> Statement.AssignBinary.build loc left Operator.Binary.Xor left_expr right    
-          | BitAndAssign  -> Statement.AssignBinary.build loc left Operator.Binary.BitAnd left_expr right 
-          | NullishAssign -> Statement.AssignBinary.build loc left Operator.Binary.NullishCoalesce left_expr right  
-          | AndAssign     -> Statement.AssignBinary.build loc left Operator.Binary.And left_expr right 
-          | OrAssign      -> Statement.AssignBinary.build loc left Operator.Binary.Or left_expr right
+    | PlusAssign    -> Statement.AssignBinary.build loc left Operator.Binary.Plus left_expr right       
+    | MinusAssign   -> Statement.AssignBinary.build loc left Operator.Binary.Minus left_expr right
+    | MultAssign    -> Statement.AssignBinary.build loc left Operator.Binary.Mult left_expr right        
+    | ExpAssign     -> Statement.AssignBinary.build loc left Operator.Binary.Exp left_expr right 
+    | DivAssign     -> Statement.AssignBinary.build loc left Operator.Binary.Div left_expr right          
+    | ModAssign     -> Statement.AssignBinary.build loc left Operator.Binary.Mod left_expr right 
+    | LShiftAssign  -> Statement.AssignBinary.build loc left Operator.Binary.LShift left_expr right    
+    | RShiftAssign  -> Statement.AssignBinary.build loc left Operator.Binary.RShift left_expr right 
+    | RShift3Assign -> Statement.AssignBinary.build loc left Operator.Binary.RShift3 left_expr right 
+    | BitOrAssign   -> Statement.AssignBinary.build loc left Operator.Binary.BitOr left_expr right 
+    | BitXorAssign  -> Statement.AssignBinary.build loc left Operator.Binary.Xor left_expr right    
+    | BitAndAssign  -> Statement.AssignBinary.build loc left Operator.Binary.BitAnd left_expr right 
+    | NullishAssign -> Statement.AssignBinary.build loc left Operator.Binary.NullishCoalesce left_expr right  
+    | AndAssign     -> Statement.AssignBinary.build loc left Operator.Binary.And left_expr right 
+    | OrAssign      -> Statement.AssignBinary.build loc left Operator.Binary.Or left_expr right

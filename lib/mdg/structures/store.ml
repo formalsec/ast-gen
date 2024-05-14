@@ -1,5 +1,5 @@
 open Structures
-open Normalizer.Structures
+open Ast.Grammar
 open Auxiliary.Structures
 open Auxiliary.Functions
 
@@ -19,10 +19,9 @@ let this_loc = LocationSet.singleton "this"
 let iter (f : location -> LocationSet.t -> unit) (store : t): unit  = HashTable.iter f store.data
 let find_opt (store : t) : location -> LocationSet.t option = HashTable.find_opt store.data
 
-
 let replace (store : t) (location : location) (locations : LocationSet.t) : unit = 
-  let old_locs = find_opt store location in
-  map_default (fun old_locs -> if not (LocationSet.subset locations old_locs) then store.register () ) (store.register ()) old_locs;
+  (* let old_locs = find_opt store location in
+  map_default_lazy (fun old_locs -> if not (LocationSet.subset locations old_locs) then (store.register ())) (lazy (store.register ())) old_locs; *)
   HashTable.replace store.data location locations
 let copy (store : t) : t = {store with data = HashTable.copy store.data}
 

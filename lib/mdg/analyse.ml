@@ -1,5 +1,5 @@
 (* open Auxiliary.Functions *)
-open Normalizer.Structures
+open Ast.Grammar
 open Auxiliary.Functions
 open Structures
 open State
@@ -146,21 +146,24 @@ and analyse (state : state) (statement : m Statement.t) : unit =
           (* failwith "statement node analysis not defined" *)
   
   if (!verbose) then (
-    print_endline "----------";
-    print_endline "Graph\n------";
+    print_endline "--------------";
+    print_string (Ast.Pp.Js.print_stmt statement 0);
+    print_endline "--------------";
+
+    print_endline "Graph: ";
     Graph.print graph; 
     
-    print_endline "Store\n------";
-    Store.print store; 
-    print_endline "----------"; )
+    print_endline "Store: ";
+    Store.print store; )
           
 and analyse_sequence (state : state) = List.iter (analyse state)
 
 and ifp (f : state -> unit) (state : state) : unit =
   setup ();
   f state;
-  if not (was_changed ()) 
-    then ifp f state
+  if was_changed ()
+    then ifp f state;
+  
 
 
 and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) : LocationSet.t = 
@@ -193,12 +196,12 @@ and analyse_functions (state : state) : unit =
 
     (* add param nodes and edges *)
     List.iteri (fun i param -> 
-      let l_p = alloc_param (func ^ "." ^ param) in 
+      let l_p = alloc_param (func ^ "_" ^ param) in 
       add_param_node l_p param;
       add_param_edge l_f l_p (Int.to_string i)
     ) params;
 
     (* add this param node and edge*)
-    let l_p = alloc_param (func ^ ".this") in
+    let l_p = alloc_param (func ^ "_this") in
     add_param_edge l_f l_p "this";
   ) functions

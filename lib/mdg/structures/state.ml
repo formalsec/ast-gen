@@ -1,5 +1,5 @@
 open Structures
-open Normalizer.Structures
+open Ast.Grammar
 
 type state = {
   graph : Graph.t;

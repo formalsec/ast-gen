@@ -1,7 +1,5 @@
-module OcamlGraph = Graph
-open Mdg 
-open Mdg.Structures
-open Mdg.Graph
+(* module OcamlGraph = Graph
+open Structures
 
 module Node = struct
   type t = location
@@ -48,4 +46,4 @@ let output (filename : string) (graph : Graph.t) : unit =
   let file = open_out_bin dot_file in
   Dot.output_graph file (convert_graph graph);
   let _  = Sys.command ("dot -Tsvg " ^ dot_file ^ " -o " ^ svg_file) in
-  ()
+  () *)

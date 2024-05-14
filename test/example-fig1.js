@@ -1,3 +1,4 @@
+function exec (cmd) {}
 // function params
 let config = {}
 let op = 1 + 2
@@ -7,3 +8,5 @@ let url = 4 + 5
 const options = config[op]
 options[branch_name] = url
 options.cmd = "git reset"
+
+exec(`${options.cmd} HEAD~${options.commit}`)

@@ -1,6 +1,6 @@
 open Auxiliary.Structures
 open Auxiliary.Functions
-module Ast = Flow_ast
+module Ast' = Flow_ast
 
 module Location = struct
   type position = {
@@ -64,7 +64,7 @@ module Operator = struct
              ModAssign | LShiftAssign | RShiftAssign | RShift3Assign | BitOrAssign |
              BitXorAssign | BitAndAssign | NullishAssign | AndAssign | OrAssign
     
-    let translate (op : Ast.Expression.Assignment.operator) : t = 
+    let translate (op : Ast'.Expression.Assignment.operator) : t = 
       match op with 
         | PlusAssign -> PlusAssign       | MinusAssign -> MinusAssign
         | MultAssign -> MultAssign       | ExpAssign -> ExpAssign
@@ -84,7 +84,7 @@ module Operator = struct
              (* ------------------------ L O G I C A L -----------------------*)
              Or | And | NullishCoalesce
 
-    let translate_binary (op : Ast.Expression.Binary.operator) : t =
+    let translate_binary (op : Ast'.Expression.Binary.operator) : t =
       match op with
         | Equal -> Equal             | NotEqual -> NotEqual
         | StrictEqual -> StrictEqual | StrictNotEqual -> StrictNotEqual
@@ -98,11 +98,11 @@ module Operator = struct
         | Xor -> Xor                 | BitAnd -> BitAnd
         | In -> In                   | Instanceof -> Instanceof
     
-    let translate_logical (op : Ast.Expression.Logical.operator) : t =
+    let translate_logical (op : Ast'.Expression.Logical.operator) : t =
       match op with
         | Or -> Or | And -> And | NullishCoalesce -> NullishCoalesce
 
-    let translate_update (op : Ast.Expression.Update.operator) : t =
+    let translate_update (op : Ast'.Expression.Update.operator) : t =
       match op with 
         | Increment -> Plus  | Decrement -> Minus 
 
@@ -111,7 +111,7 @@ module Operator = struct
   module Unary = struct
     type t = Minus | Plus | Not | BitNot | Typeof | Void | Delete | Await
 
-    let translate (op : Ast.Expression.Unary.operator) : t =
+    let translate (op : Ast'.Expression.Unary.operator) : t =
       match op with
         | Minus -> Minus   | Plus -> Plus
         | Not -> Not       | BitNot -> BitNot
