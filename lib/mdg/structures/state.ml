@@ -1,5 +1,7 @@
 open Structures
 open Ast.Grammar
+module Graph = Graph'
+
 
 type state = {
   graph : Graph.t;

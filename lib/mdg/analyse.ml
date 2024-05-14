@@ -1,8 +1,10 @@
 (* open Auxiliary.Functions *)
+module Graph = Graph'
 open Ast.Grammar
 open Auxiliary.Functions
 open Structures
 open State
+
 
 let verbose = ref false;;
 
