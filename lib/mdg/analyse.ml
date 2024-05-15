@@ -83,7 +83,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     | _, AssignStaticMember {left; _object; property=(_, {name=property; _}); id} -> 
       let _L = eval_expr _object in 
       add_property _L property id;
-      let _L' = LocationSet.map (fun loc -> lookup loc property) _L  in
+      let _L' = LocationSet.map (flip lookup property) _L  in
       store_update left _L'
 
     (* -------- D Y N A M I C   P R O P E R T Y   L O O K U P -------- *)
@@ -162,9 +162,11 @@ and analyse_sequence (state : state) = List.iter (analyse state)
 
 and ifp (f : state -> unit) (state : state) : unit =
   setup ();
+  let store' = Store.copy state.store in 
+  
   f state;
-  if was_changed ()
-    then ifp f state;
+  if was_changed () || not (Store.equal state.store store')
+    then (Store.lub state.store store'; ifp f state)
   
 
 

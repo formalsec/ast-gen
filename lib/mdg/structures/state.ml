@@ -12,7 +12,7 @@ type state = {
 
 let empty_state (register : unit -> unit) (functions : FunctionInfo.t) = { 
   graph = Graph.empty register; 
-  store = Store.empty register; 
+  store = Store.empty; 
   this  = Store.this_loc;
   functions = functions;
 }

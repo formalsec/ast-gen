@@ -4,26 +4,21 @@ open Auxiliary.Structures
 open Auxiliary.Functions
 
 
-type t = {
-  data : LocationSet.t HashTable.t;
-  register : unit -> unit;
-}
+type t = LocationSet.t HashTable.t
 
-let empty (register : unit -> unit) : t = {data = HashTable.create 100; register = register}
+
+let empty : t = HashTable.create 100
 let literal_loc = LocationSet.singleton (loc_obj_prefix ^ "literal") 
 let this_loc = LocationSet.singleton "this"
 
 (* =============== F U N C T I O N S =============== *)
 
 (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
-let iter (f : location -> LocationSet.t -> unit) (store : t): unit  = HashTable.iter f store.data
-let find_opt (store : t) : location -> LocationSet.t option = HashTable.find_opt store.data
+let iter : (location -> LocationSet.t -> unit) -> t -> unit  = HashTable.iter
+let find_opt : t -> location -> LocationSet.t option = HashTable.find_opt
 
-let replace (store : t) (location : location) (locations : LocationSet.t) : unit = 
-  (* let old_locs = find_opt store location in
-  map_default_lazy (fun old_locs -> if not (LocationSet.subset locations old_locs) then (store.register ())) (lazy (store.register ())) old_locs; *)
-  HashTable.replace store.data location locations
-let copy (store : t) : t = {store with data = HashTable.copy store.data}
+let replace : t -> location -> LocationSet.t -> unit = HashTable.replace 
+let copy : t -> t = HashTable.copy
 
 let rec print (store : t) : unit =
   iter (print_locations) store;
@@ -32,6 +27,7 @@ let rec print (store : t) : unit =
 and print_locations (id : location) (locations : LocationSet.t) : unit = 
   print_endline (id ^ " : [" ^ String.concat ", " (LocationSet.elements locations) ^ "]")
 
+let equal (store : t) (store' : t) : bool = HashTable.equals (LocationSet.equal) store store'
 
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
 let get_locations (store : t) (id : location) : LocationSet.t =
