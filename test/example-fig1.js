@@ -1,9 +1,9 @@
 function exec (cmd) {}
 // function params
 let config = {}
-let op = 1 + 2
-let branch_name = 2 + 3
-let url = 4 + 5
+let op = {}
+let branch_name = {}
+let url = {}
 
 const options = config[op]
 options[branch_name] = url

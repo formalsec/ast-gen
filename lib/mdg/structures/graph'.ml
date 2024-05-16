@@ -172,24 +172,39 @@ let rec orig (graph : t) (l : location) : location =
   map_default (orig graph) (l) parent
 
         
-let rec lookup (graph : t) (location : location) (property : property) : location =
-  (* Direct Lookup - Known Property *)
-  if has_property graph location (Some property) 
-    then get_property graph location (Some property)
+let rec lookup (graph : t) (location : location) (property : property) : LocationSet.t =
+  let property = if property = "*" then None else Some property in
+  lookup' graph [location] LocationSet.empty property
 
-  (* Direct Lookup - Unknown Property *)
-  else if has_property graph location None 
-    then get_property graph location None
+and lookup' (graph : t) (to_process : location list) (result : LocationSet.t) (property : property option) : LocationSet.t =
+  match to_process with
+  | [] -> result
+  | location::ls -> 
+    let result = ref result in 
+    let to_process = ref ls in 
 
-  else 
-    let lp, vproperty = get_parent_version graph location in 
-    match lp, vproperty with 
-      (* Indirect Lookup - Known Version *)
-      | Some lp, Some vproperty -> if vproperty != property then lookup graph lp property else failwith "ye"
-      (* Indirect Lookup - Unknown Version *)
-      | Some lp, None -> lookup graph lp property
-      | None, _ -> failwith "failed to lookup provided property"
-  
+    (* Direct Lookup - Known Property *)
+    if (Option.is_some property && has_property graph location property) then 
+      let l' = get_property graph location property in
+      result := LocationSet.add l' !result;
+
+    else (
+      (* Direct Lookup - Unknown Property *)
+      if (has_property graph location None) then 
+        let l' = get_property graph location None in 
+        result := LocationSet.add l' !result
+      else (); 
+      
+      (* Indirect Lookup - Known and Unknown version *)
+      match get_parent_version graph location with
+        | Some lp, ((Some _) as vproperty) -> if vproperty != property then 
+                                                to_process := lp:: !to_process
+        | Some lp, None                    -> to_process := lp :: !to_process
+        | _ -> ();
+    );
+
+    lookup' graph !to_process !result property
+
 
 
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
