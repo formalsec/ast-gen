@@ -83,14 +83,14 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     | _, AssignStaticMember {left; _object; property=(_, {name=property; _}); id} -> 
       let _L = eval_expr _object in 
       add_property _L property id;
-      let _L' = LocationSet.map (flip lookup property) _L  in
+      let _L' = LocationSet.map (flip lookup property) _L in 
       store_update left _L'
 
     (* -------- D Y N A M I C   P R O P E R T Y   L O O K U P -------- *)
     | _, AssignDynmicMember {left; _object; property; id} ->
       let _L1, _L2 = eval_expr _object, eval_expr property in 
       add_property' _L1 _L2 id;
-      let _L' = LocationSet.map (fun loc -> lookup loc "*") _L1 in
+      let _L' = LocationSet.map (flip lookup "*") _L1 in 
       store_update left _L'
 
     (* -------- S T A T I C   P R O P E R T Y   U P D A T E -------- *)

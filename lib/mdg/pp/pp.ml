@@ -33,7 +33,7 @@ module Dot = struct
   
   let convert_graph (graph : Graph.t) : G.t =
     let result = ref G.empty in 
-    Graph.iter_edges (fun from edegs -> 
+    Graph.iter (fun from edegs _ -> 
         result := G.add_vertex !result from;
         EdgeSet.iter (fun ({_to ; _} as edge) -> 
           let edge = G.E.create from (Graph.Edge.label edge) _to in 
