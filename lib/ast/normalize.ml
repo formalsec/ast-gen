@@ -787,7 +787,7 @@ and normalize_default_declaration (declaration : ('M, 'T) Ast'.Statement.ExportD
       let export_exprs = List.filter_map (
         fun stmt -> 
           match stmt with 
-            | _, Statement.VarDecl {id; _} -> if not (id_is_generated id) then Some (Identifier.to_expression id) else None
+            | _, Statement.VarDecl {id; _} -> if not (Identifier.is_generated id) then Some (Identifier.to_expression id) else None
             | _ -> None
       ) stmt' in 
       
@@ -803,7 +803,7 @@ and normalize_named_declaration (loc : m) (source : string option) (declatation 
   let exports = List.filter_map (fun (_, stmt) -> 
     match stmt with 
     | Statement.VarDecl {id; _} ->
-      if not (id_is_generated id) then
+      if not (Identifier.is_generated id) then
         let export = Statement.ExportNamedDecl.build loc (Some id) None false source  in 
         Some export  
       else 
@@ -1093,8 +1093,6 @@ and get_identifier (loc : m) (id : m Identifier.t option) : m Identifier.t =
   map_default_lazy identity random_id id
 
 and get_string ((_, {Ast'.StringLiteral.value; _})) : string = value
-
-and id_is_generated ((_, {is_generated; _}) : m Identifier.t) : bool = is_generated
 
 and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Statement.VarDecl.kind = _const) (obj : m Expression.t option) (loc : m) : m Identifier.t * norm_stmt_t =
   let id = match objId with 

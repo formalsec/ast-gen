@@ -6,20 +6,20 @@ open Ast.Grammar
 (* =============== S T R U C T U R E S =============== *)
 module Node = struct            
   type t = 
-    | Object
+    | Object of string
     | Function of string
     | Parameter of string 
 
   let equals (node : t) (node' : t) = match (node, node') with
-    | Object, Object -> true
+    | Object x, Object x'
     | Function x, Function x'
     | Parameter x, Parameter x' -> String.equal x x'
     | _ -> false
     
   let label (node : t) = match node with
-    | Object -> "(obj)"
-    | Function func -> "(fun " ^ func ^ ")"
-    | Parameter param -> "(param " ^ param ^ ")"
+    | Object obj -> obj 
+    | Function func -> func
+    | Parameter param -> param
   
 end
 
@@ -107,7 +107,8 @@ and print_edge (from : location) (edges : EdgeSet.t) : unit =
 (* > NODE FUNCTIONS : *)
 let iter_nodes (f : location -> Node.t -> unit) (graph : t) = HashTable.iter f graph.nodes
 
-let find_node_opt (graph : t) : location -> Node.t option = HashTable.find_opt graph.nodes
+let find_node_opt' : Node.t HashTable.t -> location -> Node.t option = HashTable.find_opt
+let find_node_opt (graph : t) : location -> Node.t option = find_node_opt' graph.nodes
 
 let replace_node (graph : t) (location : location) (node : Node.t) = 
   let old_node = find_node_opt graph location in
@@ -126,17 +127,12 @@ let get_edges (graph : t) (origin : location) : EdgeSet.t =
 
 let is_version_edge (_to : location) (edge : Edge.t) : bool = Edge.is_version edge && Edge.get_to edge = _to
 
-let has_version (graph : t) (location : location) (_to : location) : bool =
-  let edges = get_edges graph location in 
-  EdgeSet.exists (is_version_edge _to) edges 
-
-let get_parent_version (graph : t) (location : location) : location option * property option =
+let get_parent_version (graph : t) (location : location) : (location * property option) list =
   fold_edges (fun from edges acc ->
-    if has_version graph from location 
-      then let edge = List.find (is_version_edge location) (EdgeSet.elements edges) in 
-           (Some from, Edge.get_property edge)
-      else acc
-  ) graph (None, None)
+    let version_edges = EdgeSet.filter (is_version_edge location) edges in 
+    let result = List.map (fun edge -> (from, Edge.get_property edge)) (EdgeSet.elements version_edges) in 
+    acc @ result
+  ) graph []
 
 let is_property_edge (property : property option) (edge : Edge.t) : bool = Edge.is_property edge && (Edge.get_property edge) = property
 
@@ -144,16 +140,14 @@ let has_property (graph : t) (location : location) (property : property option) 
   let edges = get_edges graph location in 
   EdgeSet.exists (is_property_edge property) edges
 
+let get_properties (graph : t) (location : location) : (location * property option) list = 
+  let edges = get_edges graph location in 
+  let prop_edges = EdgeSet.filter Edge.is_property edges in 
+  List.map (fun edge -> (Edge.get_to edge, Edge.get_property edge)) (EdgeSet.elements prop_edges)
+
 let get_property (graph : t) (location : location) (property : property option) : location =
   let edges = get_edges graph location in 
   Edge.get_to (List.find (is_property_edge property) (EdgeSet.elements edges))
-
-
-let get_expression_id (expr : m Expression.t) : string =
-  match expr with 
-    | _, Identifier {name; _} -> name
-    | _, This _ -> "this"
-    | _ -> failwith "expression cannot be converted into an id"
 
 (* ------- M A I N   F U N C T I O N S -------*)
 let lub (graph : t) (graph' : t) : unit = 
@@ -163,97 +157,137 @@ let lub (graph : t) (graph' : t) : unit =
     replace_edges graph from (EdgeSet.union edges edges');
   ) graph'
 
-let alloc (_ : t) (id : int) : location = loc_obj_prefix ^ (Int.to_string id)
-let alloc_param (_ : t) (param : string) = loc_par_prefix ^ param
-let alloc_function (_ : t) (func : string) = loc_fun_prefix ^ func
+let alloc (_ : t) (id : int) : location = 
+  loc_obj_prefix ^ (Int.to_string id)
 
-let rec orig (graph : t) (l : location) : location = 
-  let parent, _ = get_parent_version graph l in 
-  map_default (orig graph) (l) parent
+let alloc_param : t -> location =
+  let id : int ref = ref 0 in
+  let alloc (_ : t) : location = 
+    id := !id + 1;
+    loc_par_prefix ^ (string_of_int !id) 
+  in
+  alloc
+
+let alloc_function : t -> location =
+  let id : int ref = ref 0 in
+  let alloc (_ : t) : location = 
+    id := !id + 1;
+    loc_fun_prefix ^ (string_of_int !id) 
+  in
+  alloc
+
+
+let orig (graph : t) (l : location) : LocationSet.t = 
+  let rec orig' (to_process : location list) (acc : LocationSet.t) =
+    match to_process with
+      | [] -> acc 
+      | l :: rest ->
+        let parents, _ = List.split (get_parent_version graph l) in
+        if parents = [] 
+          then orig' rest (LocationSet.add l acc)
+          else orig' (parents @ rest) acc
+  in
+  orig' [l] LocationSet.empty
+
+    
+   
+(* List.fold_left (fun acc parent -> LocationSet.union acc (orig graph parent)) LocationSet.empty parents *)
 
         
-let rec lookup (graph : t) (location : location) (property : property) : LocationSet.t =
-  let property = if property = "*" then None else Some property in
-  lookup' graph [location] LocationSet.empty property
-
-and lookup' (graph : t) (to_process : location list) (result : LocationSet.t) (property : property option) : LocationSet.t =
-  match to_process with
-  | [] -> result
-  | location::ls -> 
-    let result = ref result in 
-    let to_process = ref ls in 
-
-    (* Direct Lookup - Known Property *)
-    if (Option.is_some property && has_property graph location property) then 
-      let l' = get_property graph location property in
-      result := LocationSet.add l' !result;
-
-    else (
-      (* Direct Lookup - Unknown Property *)
-      if (has_property graph location None) then 
-        let l' = get_property graph location None in 
-        result := LocationSet.add l' !result
-      else (); 
+let lookup (graph : t) (loc : location) (property : property) : LocationSet.t =
+  let rec lookup' (graph : t) (to_process : location list) (properties : property list) (result : LocationSet.t) (property : property option) : LocationSet.t =
+    match to_process with
+    | [] -> result
+    | location::ls -> 
+      let result = ref result in 
+      let to_process = ref ls in 
+      let seen_properties = ref properties in 
       
-      (* Indirect Lookup - Known and Unknown version *)
-      match get_parent_version graph location with
-        | Some lp, ((Some _) as vproperty) -> if vproperty != property then 
-                                                to_process := lp:: !to_process
-        | Some lp, None                    -> to_process := lp :: !to_process
-        | _ -> ();
-    );
+      let properties = get_properties graph location in 
+      let known, unknown = List.partition (Option.is_some << snd) properties in 
 
-    lookup' graph !to_process !result property
+      (* Direct Lookup - Unknown Property *)
+      let unknown, _ = List.split unknown in 
+      result := LocationSet.union !result (LocationSet.of_list unknown);
 
+      (* Direct Lookup - Known Property *)
+      if (Option.is_some property && has_property graph location property) then 
+        let l' = get_property graph location property in
+        result := LocationSet.add l' !result;
+
+      else (
+        (* Direct Lookup - Known Property *)
+        if (Option.is_none property) then (
+          let known = List.filter (not << (flip List.mem !seen_properties) << Option.get << snd) known in 
+          let locations, properties = List.split known in 
+          result := LocationSet.union !result (LocationSet.of_list locations);
+          seen_properties := !seen_properties @ List.map Option.get properties);
+
+        (* Indirect Lookup - Known and Unknown version *)
+        let origins = get_parent_version graph location in
+        List.iter (fun origin -> 
+          match origin with
+          | l_p, ((Some _) as vproperty) -> if vproperty != property then 
+                                            to_process := l_p :: !to_process
+          | l_p, None                    ->  to_process := l_p :: !to_process
+        ) origins
+
+      );
+
+      lookup' graph !to_process !seen_properties !result property
+  in 
+
+  let property = if property = "*" then None else Some property in
+  lookup' graph [loc] [] LocationSet.empty property
 
 
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
-let addNode (graph : t) (loc : location) (node : Node.t) : unit =
+let add_node (graph : t) (loc : location) (node : Node.t) : unit =
   replace_node  graph loc node;
   replace_edges graph loc (get_edges graph loc)
 
-let addObjNode (graph : t) (loc : location) : unit =
-  let node : Node.t = Object in 
-  addNode graph loc node
+let add_obj_node (graph : t) (loc : location) (name : string) : unit =
+  let node : Node.t = Object name in 
+  add_node graph loc node
 
-let addFuncNode (graph : t) (loc : location) (func_name) : unit =
+let add_func_node (graph : t) (loc : location) (func_name) : unit =
   let node : Node.t = Function func_name in 
-  addNode graph loc node
+  add_node graph loc node
   
-let addParamNode (graph : t) (loc : location) (param : string) : unit =
+let add_param_node (graph : t) (loc : location) (param : string) : unit =
   let node : Node.t = Parameter param in 
-  addNode graph loc node
+  add_node graph loc node
 
 
-let addEdge (graph : t) (edge : Edge.t) (_to : location) (from : location) : unit = 
+let add_edge (graph : t) (edge : Edge.t) (_to : location) (from : location) : unit = 
   let edges = get_edges graph from in 
   replace_edges graph from (EdgeSet.add edge edges)
 
-let addDepEdge (graph : t) (from : location) (_to : location) : unit = 
+let add_dep_edge (graph : t) (from : location) (_to : location) : unit = 
   let edge = {Edge._to = _to; _type = Dependency} in 
-  addEdge graph edge _to from
+  add_edge graph edge _to from
 
-let addPropEdge (graph : t) (from : location) (_to : location) (property : property option) : unit = 
+let add_prop_edge (graph : t) (from : location) (_to : location) (property : property option) : unit = 
   let edge = {Edge._to = _to; _type = Property property} in 
-  addEdge graph edge _to from
+  add_edge graph edge _to from
 
-let addVersionEdge (graph : t) (from : location) (_to : location) (property : property option) : unit =
+let add_version_edge (graph : t) (from : location) (_to : location) (property : property option) : unit =
   let edge = {Edge._to = _to; _type = Version property} in 
-  addEdge graph edge _to from
+  add_edge graph edge _to from
 
-let addArgEdge (graph : t) (from : location) (_to : location) (identifier : string) : unit = 
+let add_arg_edge (graph : t) (from : location) (_to : location) (identifier : string) : unit = 
   let edge = {Edge._to = _to; _type = Argument identifier} in 
-  addEdge graph edge _to from
+  add_edge graph edge _to from
 
-let addParamEdge (graph : t) (from : location) (_to : location) (index : string) : unit = 
+let add_param_edge (graph : t) (from : location) (_to : location) (index : string) : unit = 
   let edge = {Edge._to = _to; _type = Parameter index} in 
-  addEdge graph edge _to from
+  add_edge graph edge _to from
 
-let addCallEdge (graph : t) (from : location) (_to : location) : unit = 
+let add_call_edge (graph : t) (from : location) (_to : location) : unit = 
   let edge = {Edge._to = _to; _type = Call} in 
-  addEdge graph edge _to from
+  add_edge graph edge _to from
 
-let getFuncNode (graph : t) (func_name : string) : location option = 
+let get_func_node (graph : t) (func_name : string) : location option = 
   let res : location option ref = ref None in 
   iter_nodes ( fun location node ->
     match node with 
@@ -263,46 +297,54 @@ let getFuncNode (graph : t) (func_name : string) : location option =
   !res
 
 
-let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id : int) : unit =
+let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id : int) (name : string) : unit =
   LocationSet.iter (fun l -> 
-    let l_o = orig graph l in 
+    let l_Os = orig graph l in 
 
-    if not (has_property graph l_o (Some property)) 
-      (* Add Known Property - Non-Existing *)
-      then let l_i = alloc graph id in 
-           addPropEdge graph l_o l_i (Some property)
+    LocationSet.iter (fun l_o ->
+      if not (has_property graph l_o (Some property)) 
+        (* Add Known Property - Non-Existing *)
+        then (let l_i = alloc graph id in 
+              add_obj_node graph l_i name;
+              add_prop_edge graph l_o l_i (Some property))
+    ) l_Os
   ) _L 
 
-let dynamicAddProperty (graph : t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : unit =
+let dynamicAddProperty (graph : t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) (name : string): unit =
   LocationSet.iter (fun l -> 
-    let l_o = orig graph l in 
-
-    if has_property graph l None then 
-      (* Add Unknown Property - Existing*)
-      let l' = get_property graph l None in 
-      LocationSet.iter (flip (addDepEdge graph) l') _L_prop
-    else (
-      (* Add Unknown Property - Non-Existing*)
-      let l_i = alloc graph id in 
-      addPropEdge graph l_o l_i None;
-      LocationSet.iter (flip (addDepEdge graph) l_i) _L_prop 
-    )
+    let l_Os = orig graph l in
+    
+    LocationSet.iter (fun l_o ->
+      if has_property graph l_o None then 
+        (* Add Unknown Property - Existing*)
+        let l' = get_property graph l_o None in 
+        LocationSet.iter (flip (add_dep_edge graph) l') _L_prop
+      else (
+        (* Add Unknown Property - Non-Existing*)
+        let l_i = alloc graph id in 
+        add_obj_node graph l_i name;
+        add_prop_edge graph l_o l_i None;
+        LocationSet.iter (flip (add_dep_edge graph) l_i) _L_prop 
+      )
+    ) l_Os
+    
   ) _L_obj  
 
 
-let sNVStrongUpdate (graph : t) (store : Store.t) (l : location) (property : property) (id : int) : LocationSet.t = 
+let sNVStrongUpdate (graph : t) (store : Store.t) (_object : string) (l : location) (property : property) (id : int) : LocationSet.t = 
   let l_i = alloc graph id in 
-  addVersionEdge graph l l_i (Some property);
+  add_version_edge graph l l_i (Some property);
   Store.strong_update store l l_i;
 
   (* return *)
+  add_obj_node graph l_i _object;
   LocationSet.singleton l_i
 
 let sNVWeakUpdate (graph : t) (store : Store.t) (_object : string) (_L : LocationSet.t) (property : property) (id : int) : LocationSet.t = 
   let l_i = alloc graph id in 
   LocationSet.iter ( fun l ->
     (* add version edges *)
-    addVersionEdge graph l l_i (Some property);
+    add_version_edge graph l l_i (Some property);
     
     (* store update *)
     let _new = LocationSet.of_list [l; l_i] in
@@ -311,33 +353,36 @@ let sNVWeakUpdate (graph : t) (store : Store.t) (_object : string) (_L : Locatio
   Store.update' store _object (LocationSet.singleton l_i);
 
   (* return *)
+  add_obj_node graph l_i _object;
   LocationSet.singleton l_i
 
 let staticNewVersion (graph : t) (store : Store.t) (_object : m Expression.t) (_L : LocationSet.t) (property : property) (id : int) : LocationSet.t = 
+  let obj_id = Expression.get_id _object in 
   if LocationSet.cardinal _L = 1 
-    then sNVStrongUpdate graph store (LocationSet.min_elt _L) property id
-    else sNVWeakUpdate graph store (get_expression_id _object) _L property id
+    then sNVStrongUpdate graph store obj_id (LocationSet.min_elt _L) property id
+    else sNVWeakUpdate graph store obj_id _L property id
 
 
-let dNVStrongUpdate (graph : t) (store : Store.t) (l_obj : location) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
+let dNVStrongUpdate (graph : t) (store : Store.t) (_object : string) (l_obj : location) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
   let l_i = alloc graph id in 
-  addVersionEdge graph l_obj l_i None;
+  add_version_edge graph l_obj l_i None;
 
   (* add dependency edges *)
   LocationSet.iter (fun l_prop ->
-    addDepEdge graph l_prop l_i 
+    add_dep_edge graph l_prop l_i 
   ) _L_prop;
 
   Store.strong_update store l_obj l_i;
 
   (* return *)
+  add_obj_node graph l_i _object;
   LocationSet.singleton l_i
 
 let dNVWeakUpdate (graph : t) (store : Store.t) (_object : string) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
   let l_i = alloc graph id in 
   LocationSet.iter ( fun l -> 
     (* add version edges *)
-    addVersionEdge graph l l_i None;
+    add_version_edge graph l l_i None;
 
     (* store update *)
     let _new = LocationSet.of_list [l; l_i] in
@@ -345,17 +390,18 @@ let dNVWeakUpdate (graph : t) (store : Store.t) (_object : string) (_L_obj : Loc
   ) _L_obj;
   Store.update' store _object (LocationSet.singleton l_i);
 
-
   (* add dependency edges *)
   LocationSet.iter (fun l_prop ->
-    addDepEdge graph l_prop l_i 
+    add_dep_edge graph l_prop l_i 
   ) _L_prop;
   
   (* return *)
+  add_obj_node graph l_i _object;
   LocationSet.singleton l_i
 
 let dynamicNewVersion (graph : t) (store : Store.t) (_object : m Expression.t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) : LocationSet.t = 
+  let obj_id = Expression.get_id _object in 
   if LocationSet.cardinal _L_obj = 1 
-    then dNVStrongUpdate graph store (LocationSet.min_elt _L_obj) _L_prop id
-    else dNVWeakUpdate graph store (get_expression_id _object) _L_obj _L_prop id
+    then dNVStrongUpdate graph store obj_id (LocationSet.min_elt _L_obj) _L_prop id
+    else dNVWeakUpdate graph store obj_id _L_obj _L_prop id
   

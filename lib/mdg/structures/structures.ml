@@ -13,4 +13,7 @@ module LocationSet = struct
 
   let map_flat (f : 'a -> LocationSet'.t) (locations : LocationSet'.t) : LocationSet'.t = 
     LocationSet'.fold (fun l acc -> LocationSet'.union acc (f l)) locations LocationSet'.empty
+
+  let apply (f : 'a -> unit) (locations : LocationSet'.t) = 
+    LocationSet'.iter f locations
 end

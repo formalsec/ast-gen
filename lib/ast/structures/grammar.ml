@@ -136,6 +136,7 @@ module rec Identifier : sig
   val to_expression: 'M t -> 'M Expression.t
   val from_expression : 'M Expression.t -> 'M t
   val get_name : 'M t -> string 
+  val is_generated : 'M t -> bool
 
 end = struct
   type t' = {
@@ -172,7 +173,8 @@ end = struct
       | Expression.Identifier {name; _} -> build loc name
       | _ -> failwith "attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier."
 
-  let get_name ((_, {name; _}) : 'M t) : string = name
+  let get_name ((_, id) : 'M t) : string = id.name
+  let is_generated ((_, id) : 'M t) : bool = id.is_generated
 end
 
 and Statement : sig
@@ -1284,6 +1286,7 @@ and Expression : sig
   end *)
 
   val to_statement : 'M Expression.t -> 'M Statement.t
+  val get_id : 'M Expression.t -> string
 
   type 'M t' = 
     | Literal         of    Literal.t 
@@ -1392,6 +1395,12 @@ end = struct
 
   let to_statement ((loc, _) as expr : 'M Expression.t) : 'M Statement.t = 
     (loc, Statement.Expression expr)
+
+  let get_id (expr : 'M Expression.t) : string =
+    match expr with 
+      | _, Identifier {name; _} -> name
+      | _, This _ -> "this"
+      | _ -> failwith "expression cannot be converted into an id"
 
   type 'M t' = 
     | Literal         of    Literal.t 
