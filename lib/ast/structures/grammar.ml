@@ -262,7 +262,6 @@ and Statement : sig
       }
   
       type 'M t = 'M * 'M t'
-  
       val build : 'M -> 'M Identifier.t option -> 'M Statement.t list -> 'M t
     end
 

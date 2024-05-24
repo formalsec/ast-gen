@@ -147,13 +147,39 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       
       Graph.lub state.graph state'.graph;
       Store.lub state.store state'.store;
+    
+    (* -------- S W I T C H --------*)
+    | _, Switch {cases; _} -> 
+      let bodies = List.map (fun (_, case) -> case.Statement.Switch.Case.consequent) cases in 
+      List.iter ( fun body -> analyse_sequence state body) bodies
 
-    (* -------- W H I L E -------- *)
+    (* -------- W H I L E  /  F O R -------- *)
+    | _, ForIn {body; _}
+    | _, ForOf {body; _} 
     | _, While {body; _} -> 
-      ifp (flip analyse_sequence body) state
+       ifp (flip analyse_sequence body) state
+
+    (* -------- T R Y  -  C A T C H -------- *)
+    | _, Try {body; handler; finalizer} ->
+      analyse_sequence state body;
+      let handler_body = Option.map (fun (_, handler) -> handler.Statement.Try.Catch.body) handler in 
+      option_may (analyse_sequence state) handler_body;
+      option_may (analyse_sequence state) finalizer
+
+    (* -------- W I T H  /  L A B E L E D -------- *)
+    | _, Labeled {body; _}
+    | _, With    {body; _} -> 
+      analyse_sequence state body
+
+    (* -------- O T H E R   C O N S T R U C T S -------- *)
+    | _, VarDecl  _
+    | _, Throw    _ 
+    | _, Break    _ 
+    | _, Yield    _ 
+    | _, Continue _ 
+    | _, Debugger _ -> ()
         
-    | _ -> ());
-          (* failwith "statement node analysis not defined" *)
+    | _ -> failwith "statement node analysis not defined");
   
   if (!verbose) then (
     print_endline "--------------";
