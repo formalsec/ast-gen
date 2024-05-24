@@ -501,18 +501,17 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
 
   (* --------- A S S I G N   A R R A Y ---------*)
   | loc, Ast'.Expression.Array {elements; _} -> 
-    let elems_stmts, elems_exprs = List.split (List.map normalize_array_elem elements) in 
-    let elems_exprs = List.map Option.get (List.filter Option.is_some elems_exprs) in 
-
     let loc = loc_f loc in
     let id = get_identifier loc context.identifier in
-    let assign = Statement.AssignArray.build loc id elems_exprs in
+    let assign = Statement.AssignArray.build loc id in
+
+    let elems_stmts = List.mapi (normalize_array_elem id) elements in 
     
     if not context.is_assignment then 
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in 
-      ((List.flatten elems_stmts) @ decl @ [assign] , Some (Identifier.to_expression id))
+      (decl @ [assign] @ (List.flatten elems_stmts) , Some (Identifier.to_expression id))
     else
-      (List.flatten elems_stmts) @ [assign], Some (Identifier.to_expression id)
+      [assign] @ (List.flatten elems_stmts), Some (Identifier.to_expression id)
   
   (* --------- A S S I G N   N E W ---------*)
   | loc, Ast'.Expression.New {callee; arguments; _} -> 
@@ -874,11 +873,15 @@ and normalize_catch (loc, { Ast'.Statement.Try.CatchClause.param; body; _}) : no
     let catch = Statement.Try.Catch.build (loc_f loc) param' body_stmts in
     (body_stmts, Some catch)
   
-and normalize_array_elem (element : ('M, 'T) Ast'.Expression.Array.element) : norm_expr_t = 
-  (* TODO : other cases *)
+and normalize_array_elem (array : m Identifier.t) (index : int) (element : ('M, 'T) Ast'.Expression.Array.element) : norm_stmt_t = 
+
   match element with
-    | Ast'.Expression.Array.Expression expr -> normalize_expression empty_context expr
-    | _ -> failwith "normalize array element case not defined"
+    | Expression ((loc, _) as expr) -> 
+      let stmts, expr = normalize_expression empty_context expr in 
+      let update_stmt = Statement.StaticMemberAssign.build (loc_f loc) (Identifier.to_expression array) (string_of_int index) true (Option.get expr) in 
+      stmts @ [update_stmt]
+    | Hole _ -> []
+    | _ -> failwith "cannot process spread array element"
 
 and normalize_argument_list (_, {Ast'.Expression.ArgList.arguments; _}) : norm_expr_t list = 
   List.map normalize_argument arguments

@@ -1,8 +1,9 @@
   $ dune exec ast_gen -f input-code-1.js
   let src;
-  src = [1, 
-        2, 
-        3];
+  src = [];
+  src["0"] = 1;
+  src["1"] = 2;
+  src["2"] = 3;
   let dest;
   dest = [];
   for (var p in src) {
@@ -28,9 +29,10 @@
   
   $ dune exec ast_gen -f input-code-4.js
   let iterable;
-  iterable = [10, 
-        20, 
-        30];
+  iterable = [];
+  iterable["0"] = 10;
+  iterable["1"] = 20;
+  iterable["2"] = 30;
   for (let value of iterable) {
      const v1;
      v1 = console.log(value);

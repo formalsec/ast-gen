@@ -404,12 +404,11 @@ and Statement : sig
 
   module AssignArray : sig
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
-      (* -- right -- *)
-      array : 'M Expression.t list;
     }
 
-    val build : 'M -> 'M Identifier.t -> 'M Expression.t list -> 'M Statement.t
+    val build : 'M -> 'M Identifier.t -> 'M Statement.t
   end
 
   module AssignObject : sig
@@ -954,15 +953,14 @@ end = struct
 
   module AssignArray = struct
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
-      (* -- right -- *)
-      array : 'M Expression.t list;
     }
 
-    let build (metadata : 'M) (left' : 'M Identifier.t) (array' : 'M Expression.t list) : 'M Statement.t =
+    let build (metadata : 'M) (left' : 'M Identifier.t) : 'M Statement.t =
       let assign_info = Statement.AssignArray {
+        id = get_id ();
         left = left';
-        array = array';
       } 
       in
       (metadata, assign_info)
@@ -1124,7 +1122,7 @@ end = struct
         _object = _object';
         property = property';
         is_literal = is_literal';
-        
+
         arguments = arguments';
       } in 
       (metadata, assign_info)

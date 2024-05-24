@@ -32,10 +32,11 @@
   $ dune exec ast_gen -f input-code-4.js
   const a;
   const v1;
-  v1 = [0, 
-        1, 
-        2, 
-        3];
+  v1 = [];
+  v1["0"] = 0;
+  v1["1"] = 1;
+  v1["2"] = 2;
+  v1["3"] = 3;
   const v2;
   v2 = function (_f) {
      const v3;
@@ -47,10 +48,11 @@
   $ dune exec ast_gen -f input-code-5.js
   const a;
   const v1;
-  v1 = [0, 
-        1, 
-        2, 
-        3];
+  v1 = [];
+  v1["0"] = 0;
+  v1["1"] = 1;
+  v1["2"] = 2;
+  v1["3"] = 3;
   const v2;
   v2 = function (_f) {
      const v3;

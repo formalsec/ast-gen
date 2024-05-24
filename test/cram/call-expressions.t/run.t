@@ -17,8 +17,9 @@
   v2 = v1();
   
   $ dune exec ast_gen -f input-code-4.js
-  cmd = ["1", 
-        "2"];
+  cmd = [];
+  cmd["0"] = "1";
+  cmd["1"] = "2";
   const v1;
   v1 = cmd.push("3");
   const v2;

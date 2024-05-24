@@ -161,10 +161,9 @@ module Js = struct
         let argument' = print_expr argument in
         identation_str ^ left' ^ " = " ^ operator' ^ argument' ^ ";\n"
 
-      | _, AssignArray {left; array} ->
+      | _, AssignArray {left; _} ->
         let left' = print_identifier left in
-        let array' = "[" ^ String.concat (", \n      " ^ identation_str) (List.map print_expr array) ^ "]" in 
-        identation_str ^ left' ^ " = " ^ array' ^ ";\n"
+        identation_str ^ left' ^ " = [];\n"
 
       | _, AssignObject {left; _} -> 
         let left' = print_identifier left in
