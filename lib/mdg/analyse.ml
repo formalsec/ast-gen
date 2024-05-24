@@ -79,10 +79,12 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 
 
     (* -------- N E W   O B J E C T -------- *)
+    | _, AssignArray {id; left} 
     | _, AssignObject {id; left} -> 
       let l_i = alloc id in
       store_update left (LocationSet.singleton l_i);
       add_node l_i (Identifier.get_name left);
+    
 
     (* -------- S T A T I C   P R O P E R T Y   L O O K U P -------- *)
     | _, AssignStaticMember {left; _object; property; id; _} -> 
