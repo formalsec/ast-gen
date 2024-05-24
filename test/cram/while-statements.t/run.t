@@ -2,7 +2,6 @@
   while (false) {
      const v1;
      v1 = 1 + 2;
-     v1;
   }
   
   $ dune exec ast_gen -f input-code-2.js
@@ -13,7 +12,6 @@
   while (v1) {
      const v2;
      v2 = x + 1;
-     v2;
      v1 = x < 1;
   }
   
@@ -25,7 +23,6 @@
   while (v1) {
      const v2;
      v2 = x + 1;
-     v2;
      v1 = x < 1;
   }
   
@@ -37,7 +34,6 @@
   while (v1) {
      const v2;
      v2 = x + 1;
-     v2;
      break;
      v1 = x < 1;
   }
@@ -50,7 +46,6 @@
   while (v1) {
      const v3;
      v3 = alert(i);
-     v3;
      const v2;
      v2 = i + 1;
      v1 = i < 10;
@@ -64,7 +59,6 @@
   while (v1) {
      const v3;
      v3 = alert(i);
-     v3;
      const v2;
      v2 = i + 1;
      v1 = i < 10;

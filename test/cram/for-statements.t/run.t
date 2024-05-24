@@ -34,7 +34,6 @@
   for (let value of iterable) {
      const v1;
      v1 = console.log(value);
-     v1;
   }
   
   $ dune exec ast_gen -f input-code-5.js

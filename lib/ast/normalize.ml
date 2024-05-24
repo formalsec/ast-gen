@@ -112,8 +112,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
       let loc = loc_f loc in 
       let true_val = Expression.Literal.build loc (Expression.Literal.Boolean true) "true" in 
 
-      let init_stmts, init_expr = map_default normalize_init ([], None) init in
-      let new_init = if List.length init_stmts > 0 then init_stmts else Option.to_list (Option.map Expression.to_statement init_expr) in 
+      let init_stmts, _ = map_default normalize_init ([], None) init in
       
       let test_stmts, test_expr = map_default ne ([], Some true_val) test in 
       let updt_stmts, _         = map_default ne ([], None) update in 
@@ -123,7 +122,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
       let updt_stmts = updt_stmts @ List.filter (not << is_declaration) test_stmts in 
       let for_stmt = Statement.While.build loc (Option.get test_expr) (body_stmts @ updt_stmts) in 
       
-      new_init @ test_stmts @ [for_stmt]
+      init_stmts @ test_stmts @ [for_stmt]
     
     
     (* --------- F O R - I N --------- *)
@@ -282,8 +281,8 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
     (* --------- S T A T E M E N T   E X P R E S S I O N ---------*)
     | _, Ast'.Statement.Expression {expression; _} -> 
       let new_context = {context with is_statement = true} in 
-      let stmts, expr = nec new_context expression in 
-      stmts @ Option.to_list (Option.map Expression.to_statement expr)
+      let stmts, _ = nec new_context expression in 
+      stmts
     
     | _, Ast'.Statement.Empty _ -> []
 

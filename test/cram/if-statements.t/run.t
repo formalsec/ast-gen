@@ -2,7 +2,6 @@
   if (true) {
      const v1;
      v1 = 1 + 2;
-     v1;
   }
   
   $ dune exec ast_gen -f input-code-2.js
@@ -28,7 +27,6 @@
   if (v1) {
      const v2;
      v2 = alert("They are the same!");
-     v2;
   }
   
   $ dune exec ast_gen -f input-code-4.js

@@ -6,7 +6,6 @@
   const v3;
   v3 = [v1, 
         v2];
-  v3;
   
   $ dune exec ast_gen -f input-code-2.js
   const v1;
@@ -21,7 +20,6 @@
   const v5;
   v5 = [v3, 
         v4];
-  v5;
   
   $ dune exec ast_gen -f input-code-3.js
   ast_gen: internal error, uncaught exception:

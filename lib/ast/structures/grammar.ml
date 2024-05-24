@@ -562,8 +562,6 @@ and Statement : sig
     | Continue of 'M Continue.t
     | Debugger of    Debugger.t
     
-    | Expression of 'M Expression.t
-
     (* ----- imports // exports ------ *)
     | ExportDefaultDecl of 'M ExportDefaultDecl.t
     | ExportNamedDecl   of 'M ExportNamedDecl.t
@@ -1191,8 +1189,6 @@ end = struct
     | Continue of 'M Continue.t
     | Debugger of    Debugger.t
 
-    | Expression of 'M Expression.t
-
     (* ----- imports // exports ------ *)
     | ExportDefaultDecl of 'M ExportDefaultDecl.t
     | ExportNamedDecl   of 'M ExportNamedDecl.t
@@ -1285,7 +1281,6 @@ and Expression : sig
     val build : 'M -> 'M Identifier.t -> 'M Identifier.t -> 'M Expression.t
   end *)
 
-  val to_statement : 'M Expression.t -> 'M Statement.t
   val get_id : 'M Expression.t -> string
 
   type 'M t' = 
@@ -1392,9 +1387,6 @@ end = struct
       } in 
       (metadata, metaprop_info)
   end *)
-
-  let to_statement ((loc, _) as expr : 'M Expression.t) : 'M Statement.t = 
-    (loc, Statement.Expression expr)
 
   let get_id (expr : 'M Expression.t) : string =
     match expr with 

@@ -25,6 +25,5 @@
      a = await v1;
      const v2;
      v2 = eval(a);
-     v2;
   }
   

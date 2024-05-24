@@ -10,7 +10,6 @@
   f = function (x, y, z) {
      const v1;
      v1 = x + 1;
-     v1;
   }
   
   $ dune exec ast_gen -f input-code-3.js
@@ -23,7 +22,6 @@
      while (v1) {
         const v2;
         v2 = alert(i);
-        v2;
         v1 = i < 10;
      }
   }
@@ -38,7 +36,6 @@
         v2 = n * 2;
         const v3;
         v3 = alert(v2);
-        v3;
      }
   }
   

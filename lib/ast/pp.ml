@@ -99,9 +99,6 @@ module Js = struct
         identation_str ^ "continue" ^ label' ^ ";\n" 
 
       | _, Debugger _ -> identation_str ^ "debugger;\n"
-
-      | _, Expression expr -> 
-        identation_str ^ print_expr expr ^ ";\n" 
       
       | _, ExportDefaultDecl {declaration} -> 
         let declaration' = print_expr declaration in 
