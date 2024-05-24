@@ -22,7 +22,7 @@ let register, setup, was_changed =
   	| _ -> failwith "no element to pop" in 
   
   reg, push, pop;;
-  
+
 
 let rec program (is_verbose : bool) ((_, {body; functions}) : m Program.t) : Graph.t * Store.t = 
   verbose := is_verbose;
@@ -167,7 +167,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 and analyse_sequence (state : state) = List.iter (analyse state)
 
 and ifp (f : state -> unit) (state : state) : unit =
-  print_endline "loop";
+
   setup ();
   let store' = Store.copy state.store in 
   

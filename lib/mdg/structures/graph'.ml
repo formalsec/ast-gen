@@ -178,29 +178,30 @@ let alloc_function : t -> location =
 
 
 let orig (graph : t) (l : location) : LocationSet.t = 
-  let rec orig' (to_process : location list) (acc : LocationSet.t) =
+  let rec orig' (to_process : location list) (visited : location list) (acc : LocationSet.t) =
     match to_process with
       | [] -> acc 
       | l :: rest ->
-        let parents, _ = List.split (get_parent_version graph l) in
-        if parents = [] 
-          then orig' rest (LocationSet.add l acc)
-          else orig' (parents @ rest) acc
+        if not (List.mem l visited) then
+          let parents, _ = List.split (get_parent_version graph l) in
+          let visited' = l :: visited in 
+          if parents = [] 
+            then orig' rest visited' (LocationSet.add l acc)
+            else orig' (parents @ rest) visited' acc
+        
+        else orig' rest visited acc
   in
-  orig' [l] LocationSet.empty
+  orig' [l] [] LocationSet.empty
 
     
-   
-(* List.fold_left (fun acc parent -> LocationSet.union acc (orig graph parent)) LocationSet.empty parents *)
-
-        
 let lookup (graph : t) (loc : location) (property : property) : LocationSet.t =
-  let rec lookup' (graph : t) (to_process : location list) (properties : property list) (result : LocationSet.t) (property : property option) : LocationSet.t =
+  let rec lookup' (graph : t) (to_process : location list) (visited : location list) (properties : property list) (result : LocationSet.t) (property : property option) : LocationSet.t =
     match to_process with
     | [] -> result
     | location::ls -> 
       let result = ref result in 
       let to_process = ref ls in 
+      let visited = ref visited in 
       let seen_properties = ref properties in 
       
       let properties = get_properties graph location in 
@@ -227,18 +228,21 @@ let lookup (graph : t) (loc : location) (property : property) : LocationSet.t =
         let origins = get_parent_version graph location in
         List.iter (fun origin -> 
           match origin with
-          | l_p, ((Some _) as vproperty) -> if vproperty != property then 
-                                            to_process := l_p :: !to_process
-          | l_p, None                    ->  to_process := l_p :: !to_process
+          | l_p, ((Some _) as vproperty) -> if not (List.mem l_p !visited) && vproperty != property then 
+                                                to_process := l_p :: !to_process;
+                                                visited := l_p :: !visited
+          | l_p, None                    -> if not (List.mem l_p !visited) then
+                                                to_process := l_p :: !to_process;
+                                                visited := l_p :: !visited
         ) origins
 
       );
 
-      lookup' graph !to_process !seen_properties !result property
+      lookup' graph !to_process !visited !seen_properties !result property
   in 
 
   let property = if property = "*" then None else Some property in
-  lookup' graph [loc] [] LocationSet.empty property
+  lookup' graph [loc] [] [] LocationSet.empty property
 
 
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
