@@ -85,7 +85,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       add_node l_i (Identifier.get_name left);
 
     (* -------- S T A T I C   P R O P E R T Y   L O O K U P -------- *)
-    | _, AssignStaticMember {left; _object; property=(_, {name=property; _}); id} -> 
+    | _, AssignStaticMember {left; _object; property; id; _} -> 
       let _L = eval_expr _object in 
       add_property _L property id (property_lookup_name left _object property);
       let _L' = LocationSet.map_flat (flip lookup property) _L in 
@@ -99,7 +99,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       store_update left _L'
 
     (* -------- S T A T I C   P R O P E R T Y   U P D A T E -------- *)
-    | _, StaticMemberAssign {_object; property=(_, {name=property; _}); right; id} -> 
+    | _, StaticMemberAssign {_object; property; right; id; _} -> 
       let _L1, _L2 = eval_expr _object, eval_expr right in
       let _L1' = new_version store _object _L1 property id in 
       LocationSet.iter ( fun l_1 ->

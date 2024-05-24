@@ -426,12 +426,13 @@ and Statement : sig
       id : int;
       (* -- left -- *)
       _object : 'M Expression.t;
-      property : 'M Identifier.t;
+      property : string;
+      is_literal : bool;
 
-      right : 'M Expression.t
+      right : 'M Expression.t;
     }
 
-    val build : 'M -> 'M Expression.t -> 'M Identifier.t -> 'M Expression.t -> 'M Statement.t
+    val build : 'M -> 'M Expression.t -> string -> bool -> 'M Expression.t -> 'M Statement.t
   end
 
   module DynmicMemberAssign : sig
@@ -453,10 +454,11 @@ and Statement : sig
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
-      property : 'M Identifier.t;
+      property : string;
+      is_literal : bool;
     }
 
-    val build : 'M  -> 'M Identifier.t ->'M Expression.t ->'M Identifier.t ->'M Statement.t
+    val build : 'M  -> 'M Identifier.t ->'M Expression.t -> string -> bool ->'M Statement.t
   end
 
   module AssignDynmicMember : sig
@@ -501,12 +503,13 @@ and Statement : sig
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
-      property : 'M Identifier.t;
+      property : string;
+      is_literal : bool;
 
       arguments : 'M Expression.t list;
     }
 
-    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Identifier.t -> 'M Expression.t list -> 'M Statement.t
+    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> string -> bool -> 'M Expression.t list -> 'M Statement.t
   end
 
   module AssignMetCallDynmic : sig
@@ -1004,16 +1007,19 @@ end = struct
       id : int;
       (* -- left -- *)
       _object : 'M Expression.t;
-      property : 'M Identifier.t;
+      property : string;
+      is_literal : bool;
+
 
       right : 'M Expression.t
     }
 
-    let build (metadata : 'M) (_object' : 'M Expression.t) (property' : 'M Identifier.t) (right' : 'M Expression.t): 'M Statement.t =
+    let build (metadata : 'M) (_object' : 'M Expression.t) (property' : string) (is_literal' : bool) (right' : 'M Expression.t): 'M Statement.t =
       let assign_info = Statement.StaticMemberAssign {
         id = get_id ();
         _object = _object';
         property = property';
+        is_literal = is_literal';
         right = right';
       } in 
       (metadata, assign_info)
@@ -1045,15 +1051,17 @@ end = struct
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
-      property : 'M Identifier.t;
+      property : string;
+      is_literal : bool;
     }
 
-    let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Identifier.t) : 'M Statement.t =
+    let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : string) (is_literal' : bool) : 'M Statement.t =
       let assign_info = Statement.AssignStaticMember {
         id = get_id ();
         left = left';
         _object = _object';
-        property = property'
+        property = property';
+        is_literal = is_literal'
       } in
       (metadata, assign_info)
 
@@ -1103,16 +1111,20 @@ end = struct
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
-      property : 'M Identifier.t;
+      property : string;
+      is_literal : bool;
+
       arguments : 'M Expression.t list;
     }
 
-    let build (metadata : 'M) (left' : 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Identifier.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
+    let build (metadata : 'M) (left' : 'M Identifier.t) (_object' : 'M Expression.t) (property' : string) (is_literal' : bool) (arguments' : 'M Expression.t list) : 'M Statement.t =
       let assign_info = Statement.AssignMetCallStatic {
         id = get_id ();
         left = left';
         _object = _object';
         property = property';
+        is_literal = is_literal';
+        
         arguments = arguments';
       } in 
       (metadata, assign_info)
