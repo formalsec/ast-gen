@@ -30,7 +30,8 @@ module Edge = struct
       | Dependency
       | Argument of string   
       | Parameter of string 
-      | Call 
+      | Call
+      | Return 
 
     type t = {
         _to  : location;
@@ -47,6 +48,7 @@ module Edge = struct
       | Property _  -> 0   | Version  _  -> 1
       | Dependency  -> 2   | Argument _  -> 3
       | Parameter _ -> 4   | Call        -> 5
+      | Return      -> 6
 
 
     let compare_type (t : _type) (t' : _type) : int =
@@ -70,6 +72,7 @@ module Edge = struct
         | Argument id -> "ARG(" ^ id ^ ")"
         | Parameter pos -> "param " ^ pos
         | Call -> "CG"
+        | Return -> "RET"
     
     let to_string (edge : t) : string = " --" ^ label edge ^ "-> " ^ edge._to 
 end
@@ -289,6 +292,10 @@ let add_param_edge (graph : t) (from : location) (_to : location) (index : strin
 
 let add_call_edge (graph : t) (from : location) (_to : location) : unit = 
   let edge = {Edge._to = _to; _type = Call} in 
+  add_edge graph edge _to from
+
+let add_ret_edge (graph : t) (from : location) (_to : location) : unit = 
+  let edge = {Edge._to = _to; _type = Return} in 
   add_edge graph edge _to from
 
 let get_func_node (graph : t) (func_name : string) : location option = 

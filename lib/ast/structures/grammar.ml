@@ -473,7 +473,8 @@ and Statement : sig
 
   module AssignNewCall : sig
     type 'M t = {
-      id : int;
+      id_call : int;
+      id_retn : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       callee : 'M Identifier.t;
@@ -485,7 +486,8 @@ and Statement : sig
 
   module AssignFunCall : sig
     type 'M t = {
-      id : int;
+      id_call : int;
+      id_retn : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       callee : 'M Identifier.t;
@@ -982,7 +984,8 @@ end = struct
 
   module AssignNewCall = struct
     type 'M t = {
-      id : int;
+      id_call : int;
+      id_retn : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       callee : 'M Identifier.t;
@@ -991,7 +994,8 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (callee' : 'M Identifier.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
       let assign_info = Statement.AssignNewCall {
-        id = get_id ();
+        id_call = get_id ();
+        id_retn = get_id ();
         left = left';
         callee = callee';
         arguments = arguments';
@@ -1085,7 +1089,8 @@ end = struct
 
   module AssignFunCall = struct
     type 'M t = {
-      id : int;
+      id_call : int;
+      id_retn : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       callee : 'M Identifier.t;
@@ -1094,7 +1099,8 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (callee' : 'M Identifier.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
       let assign_info = Statement.AssignFunCall {
-        id = get_id ();
+        id_call = get_id ();
+        id_retn = get_id ();
         left = left';
         callee = callee';
         arguments = arguments';

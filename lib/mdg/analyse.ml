@@ -42,6 +42,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let add_prop_edge = Graph.add_prop_edge graph in 
   let add_arg_edge = Graph.add_arg_edge graph in
   let add_call_edge = Graph.add_call_edge graph in 
+  let add_ret_edge = Graph.add_ret_edge graph in 
   let store_update = Store.update store in 
   let alloc = Graph.alloc graph in 
   let add_node = Graph.add_obj_node graph in 
@@ -125,19 +126,25 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 
 
     (* -------- C A L L -------- *)
-    | _, AssignNewCall {left; callee=(_, {name=f; _}); arguments; id; _}
-    | _, AssignFunCall {left; callee=(_, {name=f; _}); arguments; id; _} -> 
+    | _, AssignNewCall {left; callee=(_, {name=f; _}); arguments; id_call; id_retn; _}
+    | _, AssignFunCall {left; callee=(_, {name=f; _}); arguments; id_call; id_retn; _} -> 
       let _Lss = List.map eval_expr arguments in 
-      let l_call = alloc id in 
+      let l_call = alloc id_call in 
+      (* argument edges *)
       List.iteri ( fun i _Ls -> 
         LocationSet.iter (fun l -> add_arg_edge l l_call (get_param_name f i)) _Ls
       ) _Lss;
       
+      (* call edge *)
       let l_f = Graph.get_func_node graph f in 
       add_call_edge l_call (Option.get l_f);
-
       add_node l_call (f ^ "()");
-      store_update left (LocationSet.singleton l_call);
+
+      (* add return edge *)
+      let l_retn = alloc id_retn in 
+      add_ret_edge l_call l_retn;
+      add_node l_retn (Identifier.get_name left);
+      store_update left (LocationSet.singleton l_retn);
 
     (* -------- I F -------- *)
     | _, If {consequent; alternate; _} ->
