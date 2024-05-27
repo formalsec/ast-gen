@@ -31,15 +31,31 @@ type m = Location.t;;
 
 module FunctionInfo = struct
   type info = {
+    id     : int;
     params : string list;
+    funcs  : info HashTable.t;
   }
 
   type t = info HashTable.t
 
   (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
   let create = HashTable.create
-  let add : t -> string -> info -> unit = HashTable.replace
-  let find : t -> string -> info option = HashTable.find_opt
+  let find : t -> string -> info = HashTable.find
+  let find_opt : t -> string -> info option = HashTable.find_opt
+
+  let rec add (context : string list) (info : t) (func : string) (id' : int) (params' : string list) : unit = 
+    match context with
+      | [] -> (* add information to the currnt context *)
+        let func_info : info = {
+          id = id';
+          params = params';
+          funcs = create 5;
+        } in 
+        HashTable.replace info func func_info
+      | top::rest -> (* traverse the context *)
+        let new_info = find info top in 
+        add rest new_info.funcs func id' params'
+
   let iter : (string -> info -> unit) -> t -> unit = HashTable.iter
 
   let rec print (functions : t) : unit =
@@ -48,10 +64,10 @@ module FunctionInfo = struct
   
   (* ------- I N F O   M A N I P U L A T I O N ------- *)
   let get_param_name_opt (functions : t) (identifier : string) (index : int) : string option =
-    map_default (fun {params} -> List.nth_opt params index) None (find functions identifier)
+    map_default (fun {params; _} -> List.nth_opt params index) None (find_opt functions identifier)
   
     let get_param_name (functions : t) (identifier : string) (index : int) : string =
-    let info = find functions identifier in 
+    let info = find_opt functions identifier in 
     if Option.is_some info
       then let info = Option.get info in 
                List.nth info.params index
@@ -539,6 +555,7 @@ and Statement : sig
     end
     
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       params : 'M Param.t list;
@@ -1172,6 +1189,7 @@ end = struct
     end
 
     type 'M t = {
+      id : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       params : 'M Param.t list;
@@ -1180,6 +1198,7 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (params' : 'M Param.t list) (body' : 'M Statement.t list) : 'M Statement.t =
       let assign_info = Statement.AssignFunction {
+        id = get_id ();
         left = left';
         params = params';
         body = body';
@@ -1443,47 +1462,48 @@ end = struct
 
   type 'M t = 'M * 'M t'
   let build (metadata : 'M) (stmts : 'M Statement.t list) : 'M t = 
-    (metadata, { body = stmts; functions = FunctionInfo.create 100 });; 
+    (metadata, { body = stmts; functions = FunctionInfo.create 20 });; 
 
   let set_function_info ((_, {body; functions}) : 'M t) : unit =
-    let rec traverse_body (stmts : 'M Statement.t list) : unit =
-      List.iter search_functions stmts
-    and search_functions (stmt : 'M Statement.t) : unit =
+    let rec traverse_body (context : string list) (stmts : 'M Statement.t list) : unit =
+      List.iter (search_functions context) stmts
+    
+      and search_functions (context : string list) (stmt : 'M Statement.t) : unit =
       match stmt with
-        | _, Statement.AssignFunction {left; params; body; _} -> 
+        | _, Statement.AssignFunction {id; left; params; body; _} -> 
           (* add function information *)
           let left' = Identifier.get_name left in 
           let params' = List.map (fun (_, {Statement.AssignFunction.Param.argument; _}) -> Identifier.get_name argument) params in
           
-          FunctionInfo.add functions left' {params = params'};
-          traverse_body body;
+          FunctionInfo.add context functions left' id params';
+          traverse_body (context @ [left']) body;         
           
         (* --------- traverse ast --------- *)
         | _, Statement.If {consequent; alternate; _} -> 
-          traverse_body consequent;
-          option_may traverse_body alternate;
+          traverse_body context consequent;
+          option_may (traverse_body context) alternate;
 
         | _, Statement.Switch {cases; _} -> 
           List.iter (fun (_, {Statement.Switch.Case.consequent; _}) -> 
-            traverse_body consequent;
+            traverse_body context consequent;
           ) cases
 
-        | _, Statement.While   {body; _} -> traverse_body body
-        | _, Statement.ForIn   {body; _} -> traverse_body body
-        | _, Statement.ForOf   {body; _} -> traverse_body body
-        | _, Statement.With    {body;_ } -> traverse_body body
-        | _, Statement.Labeled {body; _} -> traverse_body body
+        | _, Statement.While   {body; _} -> traverse_body context body
+        | _, Statement.ForIn   {body; _} -> traverse_body context body
+        | _, Statement.ForOf   {body; _} -> traverse_body context body
+        | _, Statement.With    {body;_ } -> traverse_body context body
+        | _, Statement.Labeled {body; _} -> traverse_body context body
         
         | _, Statement.Try     {body; handler; finalizer} -> 
-          traverse_body body;
-          option_may (fun (_, {Statement.Try.Catch.body; _}) -> traverse_body body) handler;
-          option_may traverse_body finalizer;
+          traverse_body context body;
+          option_may (fun (_, {Statement.Try.Catch.body; _}) -> traverse_body context body) handler;
+          option_may (traverse_body context) finalizer;
 
         (* ------- ignore all other statements ------- *)
         | _ -> ()
       
     in
 
-    traverse_body body
+    traverse_body [] body
 
 end

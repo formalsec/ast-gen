@@ -1,13 +1,10 @@
-// function params
-let obj = {}
-var dotPath = {}
-let value = {}
-
-const path = dotPath.path + {}
-for (let i = 0; i < path.length; i++) {
-    const key = path[i]
-    if (i == path.length - 1) {
-        obj[key] = value
+function setValue (obj, dotPath, value) {
+    const path = dotPath.path + {}
+    for (let i = 0; i < path.length; i++) {
+        const key = path[i]
+        if (i == path.length - 1) {
+            obj[key] = value
+        }
+        obj = obj[key]
     }
-    obj = obj[key]
 }

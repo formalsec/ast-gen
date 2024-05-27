@@ -27,7 +27,8 @@ let register, setup, was_changed =
 let rec program (is_verbose : bool) ((_, {body; functions}) : m Program.t) : Graph.t * Store.t = 
   verbose := is_verbose;
   let state = empty_state register functions in 
-  analyse_functions state;
+  
+  initialize_functions state;
   analyse_sequence state body;
   state.graph, state.store
 
@@ -59,7 +60,17 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let _L = eval_expr right in 
       store_update left _L
 
-    | _, AssignFunction _ -> ()
+    | _, AssignFunction {id; left; body; _} -> 
+      let func_name = Identifier.get_name left in 
+      let info = FunctionInfo.find funcs func_name in
+      if (info.id = id) 
+        then (
+          let param_locs = Graph.get_param_locations graph func_name in 
+          let new_store = Store.empty in 
+          List.iteri (fun i loc -> Store.update' new_store (List.nth info.params i) (LocationSet.singleton loc)) param_locs;
+          let new_state = {state with store = new_store} in
+          analyse_sequence new_state body;
+        );
 
     (* -------- A S S I G N - O P -------- *)
     | _, AssignBinary {left; opLeft; opRght; id; _} -> 
@@ -231,29 +242,27 @@ and property_lookup_name (left : m Identifier.t) (_object : m Expression.t) (pro
   let obj_prop = Expression.get_id _object ^ "." ^ property in 
   if Identifier.is_generated left then obj_prop else Identifier.get_name left ^ ", " ^ obj_prop
 
-and analyse_functions (state : state) : unit =
+and initialize_functions (state : state) : unit =
   let graph = state.graph in 
   let functions = state.functions in 
 
-  let alloc_func = Graph.alloc_function in
-  let alloc_param = Graph.alloc_param in
   let add_func_node = Graph.add_func_node graph in
   let add_param_node = Graph.add_param_node graph in
   let add_param_edge = Graph.add_param_edge graph in 
 
   FunctionInfo.iter (fun func {params; _}  -> 
-    let l_f = alloc_func graph in 
+    let l_f = Graph.alloc_function graph in 
     add_func_node l_f func;
 
     (* add this param node and edge*)
-    let l_p = alloc_param graph in
+    let l_p = Graph.alloc_param graph in
 
     add_param_node l_p "this";
     add_param_edge l_f l_p "this";
 
     (* add param nodes and edges *)
     List.iteri (fun i param -> 
-      let l_p = alloc_param graph in 
+      let l_p = Graph.alloc_param graph in 
       add_param_node l_p param;
       add_param_edge l_f l_p (Int.to_string i)
     ) params;

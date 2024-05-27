@@ -39,7 +39,8 @@ module Edge = struct
       }
 
     let is_property (edge : t) = match edge._type with Property _ -> true | _ -> false
-    let is_version (edge : t) = match edge._type with Version _ -> true | _ -> false
+    let is_version  (edge : t) = match edge._type with Version _ -> true | _ -> false
+    let is_param    (edge : t) = match edge._type with Parameter _ -> true | _ -> false
     let get_property (edge : t) : property option = match edge._type with Property p | Version p -> p | _ -> failwith "edge is neither a property edge nor a version edge"
     let get_to (edge : t) : location = edge._to
 
@@ -77,7 +78,17 @@ module Edge = struct
     let to_string (edge : t) : string = " --" ^ label edge ^ "-> " ^ edge._to 
 end
 
-module EdgeSet = Set.Make(Edge)
+module EdgeSet = struct
+  module  Set' = Set.Make(Edge)
+  include Set'
+
+  let map_list (f : Set'.elt -> 'a) (set : Set'.t) : 'a list = 
+    List.map f (Set'.elements set)
+
+  let find_pred (f : Set'.elt -> bool) (set : Set'.t) : Set'.elt = 
+    List.find f (Set'.elements set)
+end
+
 type t = {
   edges : EdgeSet.t HashTable.t;
   nodes : Node.t HashTable.t;
@@ -133,7 +144,7 @@ let is_version_edge (_to : location) (edge : Edge.t) : bool = Edge.is_version ed
 let get_parent_version (graph : t) (location : location) : (location * property option) list =
   fold_edges (fun from edges acc ->
     let version_edges = EdgeSet.filter (is_version_edge location) edges in 
-    let result = List.map (fun edge -> (from, Edge.get_property edge)) (EdgeSet.elements version_edges) in 
+    let result = EdgeSet.map_list (fun edge -> (from, Edge.get_property edge)) version_edges in 
     acc @ result
   ) graph []
 
@@ -146,11 +157,16 @@ let has_property (graph : t) (location : location) (property : property option) 
 let get_properties (graph : t) (location : location) : (location * property option) list = 
   let edges = get_edges graph location in 
   let prop_edges = EdgeSet.filter Edge.is_property edges in 
-  List.map (fun edge -> (Edge.get_to edge, Edge.get_property edge)) (EdgeSet.elements prop_edges)
+  EdgeSet.map_list (fun edge -> (Edge.get_to edge, Edge.get_property edge)) prop_edges
 
 let get_property (graph : t) (location : location) (property : property option) : location =
   let edges = get_edges graph location in 
-  Edge.get_to (List.find (is_property_edge property) (EdgeSet.elements edges))
+  Edge.get_to (EdgeSet.find_pred (is_property_edge property) edges)
+
+let get_params (graph : t) (location : location) : location list = 
+  let edges = get_edges graph location in 
+  let params = EdgeSet.filter (Edge.is_param) edges in 
+  EdgeSet.map_list (Edge.get_to) params
 
 (* ------- M A I N   F U N C T I O N S -------*)
 let lub (graph : t) (graph' : t) : unit = 
@@ -307,6 +323,11 @@ let get_func_node (graph : t) (func_name : string) : location option =
   ) graph;
   !res
 
+let get_param_locations (graph : t) (func_name : string) : location list = 
+  let func_loc = get_func_node graph func_name in 
+  (* remove this from the parameter list *)
+  List.tl (get_params graph (Option.get func_loc))
+  
 
 let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id : int) (name : string) : unit =
   LocationSet.iter (fun l -> 
