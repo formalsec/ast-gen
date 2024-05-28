@@ -40,8 +40,9 @@ module FunctionInfo = struct
 
   (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
   let create = HashTable.create
-  let find : t -> string -> info = HashTable.find
+  let get_info : t -> string -> info = HashTable.find
   let find_opt : t -> string -> info option = HashTable.find_opt
+  let get_func_names (info : t) : string list = List.of_seq (HashTable.to_seq_keys info)
 
   let rec add (context : string list) (info : t) (func : string) (id' : int) (params' : string list) : unit = 
     match context with
@@ -53,7 +54,7 @@ module FunctionInfo = struct
         } in 
         HashTable.replace info func func_info
       | top::rest -> (* traverse the context *)
-        let new_info = find info top in 
+        let new_info = get_info info top in 
         add rest new_info.funcs func id' params'
 
   let iter : (string -> info -> unit) -> t -> unit = HashTable.iter
@@ -310,6 +311,7 @@ and Statement : sig
 
   module Return : sig
     type 'M t = {
+      id : int;
       argument : 'M Expression.t option
     }
 
@@ -799,11 +801,12 @@ end = struct
 
   module Return = struct
     type 'M t = {
+      id : int;
       argument : 'M Expression.t option
     }
 
     let build (metadata : 'M) (argument' : 'M Expression.t option) : 'M Statement.t =
-      let return_info = Statement.Return {argument = argument'} in
+      let return_info = Statement.Return {id = get_id (); argument = argument'} in
       (metadata, return_info)
   end
 
@@ -813,7 +816,7 @@ end = struct
     }
 
     let build (metadata : 'M) (argument' : 'M Expression.t option) : 'M Statement.t =
-      let return_info = Statement.Return {argument = argument'} in
+      let return_info = Statement.Throw {argument = argument'} in
       (metadata, return_info)
   end
 

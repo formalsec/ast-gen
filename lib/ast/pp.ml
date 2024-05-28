@@ -78,7 +78,7 @@ module Js = struct
         let id' = print_identifier id in
         identation_str ^ kind' ^ id' ^ ";\n"
 
-      | _, Return {argument} -> 
+      | _, Return {argument; _} -> 
         let argument' = map_default print_expr "" argument in
         identation_str ^ "return " ^ argument' ^ ";\n" 
 

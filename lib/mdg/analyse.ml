@@ -8,28 +8,13 @@ open State
 
 let verbose = ref false;;
 
-let register, setup, was_changed =
-  let bs : bool list ref = ref [] in 
- 
-  let reg = fun () -> match !bs with 
-  	| _ :: bs' -> bs := true :: bs'
-  	| _ -> () in
-  	
-  let push = fun () -> bs := false :: !bs in
-   
-  let pop = fun () -> match !bs with 
-  	| b :: bs' -> bs := bs'; b
-  	| _ -> failwith "no element to pop" in 
-  
-  reg, push, pop;;
 
-
-let rec program (is_verbose : bool) ((_, {body; functions}) : m Program.t) : Graph.t * Store.t = 
+let rec program (is_verbose : bool) ((_, program) : m Program.t) : Graph.t * Store.t = 
   verbose := is_verbose;
-  let state = empty_state register functions in 
-  
+  let state = empty_state program.functions in 
+
   initialize_functions state;
-  analyse_sequence state body;
+  analyse_sequence state program.body;
   state.graph, state.store
 
 and analyse (state : state) (statement : m Statement.t) : unit =
@@ -62,15 +47,14 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 
     | _, AssignFunction {id; left; body; _} -> 
       let func_name = Identifier.get_name left in 
-      let info = FunctionInfo.find funcs func_name in
-      if (info.id = id) 
-        then (
-          let param_locs = Graph.get_param_locations graph func_name in 
-          let new_store = Store.empty in 
-          List.iteri (fun i loc -> Store.update' new_store (List.nth info.params i) (LocationSet.singleton loc)) param_locs;
-          let new_state = {state with store = new_store} in
-          analyse_sequence new_state body;
-        );
+      let info = FunctionInfo.get_info funcs func_name in
+      if (info.id = id) then (
+        let param_locs = Graph.get_param_locations graph func_name in 
+        let new_store = Store.empty in 
+        List.iteri (fun i loc -> Store.update' new_store (List.nth info.params i) (LocationSet.singleton loc)) param_locs;
+        let new_state = {state with store = new_store; } in
+        analyse_sequence new_state body;
+      );
 
     (* -------- A S S I G N - O P -------- *)
     | _, AssignBinary {left; opLeft; opRght; id; _} -> 
@@ -189,6 +173,19 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     | _, With    {body; _} -> 
       analyse_sequence state body
 
+    (* -------- R E T U R N -------- *)
+    | _, Return {id; argument} -> 
+      let _L = Option.map eval_expr argument in 
+      let l_retn = alloc id in 
+
+      if (Option.is_some _L) then (
+        let _L = Option.get _L in
+        LocationSet.iter (flip add_dep_edge l_retn) _L
+      );
+
+      add_node l_retn "PDG_RETURN";
+
+
     (* -------- O T H E R   C O N S T R U C T S -------- *)
     | _, VarDecl  _
     | _, Throw    _ 
@@ -244,26 +241,35 @@ and property_lookup_name (left : m Identifier.t) (_object : m Expression.t) (pro
 
 and initialize_functions (state : state) : unit =
   let graph = state.graph in 
-  let functions = state.functions in 
+  let func_info = state.functions in 
 
   let add_func_node = Graph.add_func_node graph in
   let add_param_node = Graph.add_param_node graph in
   let add_param_edge = Graph.add_param_edge graph in 
 
-  FunctionInfo.iter (fun func {params; _}  -> 
-    let l_f = Graph.alloc_function graph in 
-    add_func_node l_f func;
+  let rec initizalize_context (state: state) (funcs : string list) (funcs_info : FunctionInfo.t) : unit = 
+    match funcs with
+      | [] -> ()
+      | func::rest -> 
+        let info = FunctionInfo.get_info funcs_info func in 
+        let l_f = Graph.alloc_function graph in 
+        add_func_node l_f func;
 
-    (* add this param node and edge*)
-    let l_p = Graph.alloc_param graph in
+        (* add this param node and edge*)
+        let l_p = Graph.alloc_param graph in
 
-    add_param_node l_p "this";
-    add_param_edge l_f l_p "this";
+        add_param_node l_p "this";
+        add_param_edge l_f l_p "this";
 
-    (* add param nodes and edges *)
-    List.iteri (fun i param -> 
-      let l_p = Graph.alloc_param graph in 
-      add_param_node l_p param;
-      add_param_edge l_f l_p (Int.to_string i)
-    ) params;
-  ) functions
+        (* add param nodes and edges *)
+        List.iteri (fun i param -> 
+          let l_p = Graph.alloc_param graph in 
+          add_param_node l_p param;
+          add_param_edge l_f l_p (Int.to_string i)
+        ) info.params;
+
+        initizalize_context state (FunctionInfo.get_func_names info.funcs) info.funcs;
+        initizalize_context state rest funcs_info;
+  in
+
+  initizalize_context state (FunctionInfo.get_func_names func_info) func_info;
