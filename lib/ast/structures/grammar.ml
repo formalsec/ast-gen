@@ -29,50 +29,71 @@ end
 
 type m = Location.t;;
 
-module FunctionInfo = struct
+module rec FunctionsInfo : sig
   type info = {
     id     : int;
     params : string list;
-    funcs  : info HashTable.t;
+    context  : FunctionsInfo.t;
   }
 
+  type context = string list
+  type t = info HashTable.t
+
+  (* ---- primitive functions ----- *)
+  val create   : int -> t
+  val get_info : t -> string -> info
+  val find_opt : t -> string -> info option
+  val add : t -> string -> int -> string list -> t
+  val iter : (string -> info -> unit) -> t -> unit
+
+  val get_func_names : t -> string list
+  val get_param_name_opt : t -> string -> int -> string option
+  val get_param_name : t list -> string -> int -> string
+
+end = struct
+  type info = {
+    id     : int;
+    params : string list;
+    context  : FunctionsInfo.t;
+  }
+
+  type context = string list
   type t = info HashTable.t
 
   (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
   let create = HashTable.create
   let get_info : t -> string -> info = HashTable.find
   let find_opt : t -> string -> info option = HashTable.find_opt
-  let get_func_names (info : t) : string list = List.of_seq (HashTable.to_seq_keys info)
 
-  let rec add (context : string list) (info : t) (func : string) (id' : int) (params' : string list) : unit = 
-    match context with
-      | [] -> (* add information to the currnt context *)
-        let func_info : info = {
-          id = id';
-          params = params';
-          funcs = create 5;
-        } in 
-        HashTable.replace info func func_info
-      | top::rest -> (* traverse the context *)
-        let new_info = get_info info top in 
-        add rest new_info.funcs func id' params'
+  let add (info : t) (func : string) (id' : int) (params' : string list) : t = 
+    let new_context = create 5 in
+    let func_info : info = {
+      id = id';
+      params = params';
+      context = new_context;
+    } in 
+
+    HashTable.replace info func func_info;
+    new_context
 
   let iter : (string -> info -> unit) -> t -> unit = HashTable.iter
 
-  let rec print (functions : t) : unit =
-    iter (print_info) functions
-  and print_info (func : string )( info : info) : unit =  print_endline (func ^ " : " ^ (String.concat ", " info.params ))
   
   (* ------- I N F O   M A N I P U L A T I O N ------- *)
+  let get_func_names (info : t) : string list = List.of_seq (HashTable.to_seq_keys info)
+  
   let get_param_name_opt (functions : t) (identifier : string) (index : int) : string option =
     map_default (fun {params; _} -> List.nth_opt params index) None (find_opt functions identifier)
   
-    let get_param_name (functions : t) (identifier : string) (index : int) : string =
-    let info = find_opt functions identifier in 
-    if Option.is_some info
-      then let info = Option.get info in 
-               List.nth info.params index
-      else (failwith "function name wasn't found")
+  let rec get_param_name (functions : t list) (identifier : string) (index : int) : string =
+    match functions with 
+      | [] -> failwith "function name wasn't found"
+      | context::rest -> 
+        let info = find_opt context identifier in 
+        if Option.is_some info
+          then let info = Option.get info in 
+                  List.nth info.params index
+          else get_param_name rest identifier index
 end
 
 module Operator = struct
@@ -1450,36 +1471,33 @@ end
 and Program : sig
   type 'M t' = {
     body : 'M Statement.t list;
-    functions : FunctionInfo.t
+    functions : FunctionsInfo.t
   }
 
   type 'M t = 'M * 'M t'
   val build :  'M -> 'M Statement.t list -> 'M t
-  val set_function_info : 'M t -> unit
 
 end = struct
   type 'M t' = {
     body : 'M Statement.t list;
-    functions : FunctionInfo.t
+    functions : FunctionsInfo.t
   }
 
   type 'M t = 'M * 'M t'
-  let build (metadata : 'M) (stmts : 'M Statement.t list) : 'M t = 
-    (metadata, { body = stmts; functions = FunctionInfo.create 20 });; 
 
-  let set_function_info ((_, {body; functions}) : 'M t) : unit =
-    let rec traverse_body (context : string list) (stmts : 'M Statement.t list) : unit =
+  let build_function_info (body : 'M Statement.t list) : FunctionsInfo.t =
+    let rec traverse_body (context : FunctionsInfo.t) (stmts : 'M Statement.t list) : unit =
       List.iter (search_functions context) stmts
     
-      and search_functions (context : string list) (stmt : 'M Statement.t) : unit =
+    and search_functions (context : FunctionsInfo.t) (stmt : 'M Statement.t) : unit =
       match stmt with
         | _, Statement.AssignFunction {id; left; params; body; _} -> 
           (* add function information *)
           let left' = Identifier.get_name left in 
           let params' = List.map (fun (_, {Statement.AssignFunction.Param.argument; _}) -> Identifier.get_name argument) params in
           
-          FunctionInfo.add context functions left' id params';
-          traverse_body (context @ [left']) body;         
+          let new_context = FunctionsInfo.add context left' id params' in 
+          traverse_body new_context body;         
           
         (* --------- traverse ast --------- *)
         | _, Statement.If {consequent; alternate; _} -> 
@@ -1497,7 +1515,7 @@ end = struct
         | _, Statement.With    {body;_ } -> traverse_body context body
         | _, Statement.Labeled {body; _} -> traverse_body context body
         
-        | _, Statement.Try     {body; handler; finalizer} -> 
+        | _, Statement.Try {body; handler; finalizer} -> 
           traverse_body context body;
           option_may (fun (_, {Statement.Try.Catch.body; _}) -> traverse_body context body) handler;
           option_may (traverse_body context) finalizer;
@@ -1507,6 +1525,11 @@ end = struct
       
     in
 
-    traverse_body [] body
+    let funcs_info = FunctionsInfo.create 20 in 
+    traverse_body funcs_info body;
+    funcs_info
+
+  let build (metadata : 'M) (stmts : 'M Statement.t list) : 'M t = 
+    (metadata, { body = stmts; functions = build_function_info stmts});; 
 
 end

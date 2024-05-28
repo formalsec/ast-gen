@@ -21,14 +21,18 @@ type state = {
   graph : Graph.t;
   store : Store.t;
   this  : LocationSet.t;
-  functions : FunctionInfo.t;
+  (* function information *)
+  functions : FunctionsInfo.t;
+  context   : FunctionsInfo.t list;
 }
 
-let empty_state (functions : FunctionInfo.t) = { 
+let empty_state = { 
   graph = Graph.empty register; 
   store = Store.empty; 
   this  = Store.this_loc;
-  functions = functions;
+  (* function information *)
+  functions =  FunctionsInfo.create 1;
+  context   = [];
 }
 
 let copy ({graph; store; _} as state : state) : state = 

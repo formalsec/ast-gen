@@ -45,7 +45,6 @@ let empty_context : context = { parent_type = ""; identifier = None; is_assignme
 let rec program (loc , { Ast'.Program.statements; _ }) : m Program.t = 
   let body = List.flatten (List.map (normalize_statement empty_context) statements) in
   let program = Program.build (loc_f loc) body in
-  Program.set_function_info program; 
   program;
 
 
