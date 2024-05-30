@@ -171,9 +171,14 @@ let get_params (graph : t) (location : location) : location list =
 (* ------- M A I N   F U N C T I O N S -------*)
 let lub (graph : t) (graph' : t) : unit = 
   (* least upper bound *)
-  iter_edges (fun from edges' -> 
+  iter (fun from edges' node' ->
     let edges = get_edges graph from in 
     replace_edges graph from (EdgeSet.union edges edges');
+    
+    (* also update node info *)
+    if Option.is_none node' then
+      let node = find_node_opt graph from in 
+      option_may (replace_node graph from) node
   ) graph'
 
 let alloc (_ : t) (id : int) : location = 

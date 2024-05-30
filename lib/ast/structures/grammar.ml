@@ -36,18 +36,14 @@ module rec FunctionsInfo : sig
     context  : FunctionsInfo.t;
   }
 
-  type context = string list
   type t = info HashTable.t
 
   (* ---- primitive functions ----- *)
   val create   : int -> t
-  val get_info : t -> string -> info
-  val find_opt : t -> string -> info option
   val add : t -> string -> int -> string list -> t
   val iter : (string -> info -> unit) -> t -> unit
 
-  val get_func_names : t -> string list
-  val get_param_name_opt : t -> string -> int -> string option
+  val get_info       : t list -> string -> info
   val get_param_name : t list -> string -> int -> string
 
 end = struct
@@ -57,12 +53,10 @@ end = struct
     context  : FunctionsInfo.t;
   }
 
-  type context = string list
   type t = info HashTable.t
 
   (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
   let create = HashTable.create
-  let get_info : t -> string -> info = HashTable.find
   let find_opt : t -> string -> info option = HashTable.find_opt
 
   let add (info : t) (func : string) (id' : int) (params' : string list) : t = 
@@ -80,20 +74,19 @@ end = struct
 
   
   (* ------- I N F O   M A N I P U L A T I O N ------- *)
-  let get_func_names (info : t) : string list = List.of_seq (HashTable.to_seq_keys info)
-  
-  let get_param_name_opt (functions : t) (identifier : string) (index : int) : string option =
-    map_default (fun {params; _} -> List.nth_opt params index) None (find_opt functions identifier)
-  
-  let rec get_param_name (functions : t list) (identifier : string) (index : int) : string =
+  let rec get_info (functions : t list) (func_name : string) : info = 
     match functions with 
-      | [] -> failwith "function name wasn't found"
+      | [] -> failwith "function not defined in the given context"
       | context::rest -> 
-        let info = find_opt context identifier in 
+        let info = find_opt context func_name in 
         if Option.is_some info
-          then let info = Option.get info in 
-                  List.nth info.params index
-          else get_param_name rest identifier index
+          then Option.get info
+          else  get_info rest func_name
+    
+  let get_param_name (functions : t list) (func_name : string) (index : int) : string =
+    let info = get_info functions func_name in
+    List.nth info.params index
+
 end
 
 module Operator = struct

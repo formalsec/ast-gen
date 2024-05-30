@@ -2,7 +2,6 @@
 module Graph = Graph'
 open Ast.Grammar
 open Auxiliary.Functions
-open Auxiliary.Structures
 open Structures
 open State
 
@@ -15,15 +14,12 @@ let rec program (is_verbose : bool) ((_, program) : m Program.t) : Graph.t * Sto
   let state = empty_state in 
   let state' = initialize_functions state program.functions in
 
-  print_endline (string_of_int (HashTable.length state'.functions));
-  
   analyse_sequence state' program.body;
   state'.graph, state'.store
 
 and analyse (state : state) (statement : m Statement.t) : unit =
   let graph = state.graph in 
   let store = state.store in 
-  let funcs = state.functions in 
   let contx = state.context in
 
   (* aliases *)
@@ -41,9 +37,12 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let lookup = Graph.lookup graph in  
   let new_version = Graph.staticNewVersion graph in 
   let new_version' = Graph.dynamicNewVersion graph in 
+  let get_info = FunctionsInfo.get_info contx in 
   let get_param_name = FunctionsInfo.get_param_name contx in 
 
-
+  print_string (Ast.Pp.Js.print_stmt statement 0);
+  Store.print store;
+  print_endline "--------------";
   (match statement with
     (* -------- A S S I G N - E X P R -------- *)
     | _, AssignSimple {left; right} -> 
@@ -52,7 +51,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 
     | _, AssignFunction {id; left; body; _} -> 
       let func_name = Identifier.get_name left in 
-      let info = FunctionsInfo.get_info funcs func_name in
+      let info = get_info func_name in
       if (info.id = id) then (
         let param_locs = Graph.get_param_locations graph func_name in 
         let new_store = Store.empty in 
@@ -245,17 +244,16 @@ and property_lookup_name (left : m Identifier.t) (_object : m Expression.t) (pro
   if Identifier.is_generated left then obj_prop else Identifier.get_name left ^ ", " ^ obj_prop
 
 and initialize_functions (state : state) (funcs_info : FunctionsInfo.t) : state =
-
   let rec initialize_functions' (state : state) (to_process : FunctionsInfo.t list) : unit = 
     match to_process with
+    | [] -> ()
     | context::rest ->
       let to_process = ref rest in 
       FunctionsInfo.iter (fun func info -> 
         initilize_function' state func info;
         to_process := info.context :: !to_process;
-        ) context;
-        initialize_functions' state !to_process
-    | [] -> ()
+      ) context;
+      initialize_functions' state !to_process
 
   and initilize_function' (state : state) (func_name : string) (info : FunctionsInfo.info) : unit =
     let graph = state.graph in
@@ -278,4 +276,4 @@ and initialize_functions (state : state) (funcs_info : FunctionsInfo.t) : state 
   in
 
   initialize_functions' state [funcs_info];
-  {state with functions = funcs_info; context = [funcs_info] }
+  {state with context = [funcs_info] }

@@ -22,7 +22,6 @@ type state = {
   store : Store.t;
   this  : LocationSet.t;
   (* function information *)
-  functions : FunctionsInfo.t;
   context   : FunctionsInfo.t list;
 }
 
@@ -31,7 +30,6 @@ let empty_state = {
   store = Store.empty; 
   this  = Store.this_loc;
   (* function information *)
-  functions =  FunctionsInfo.create 1;
   context   = [];
 }
 
