@@ -21,7 +21,14 @@
  (name ast_gen)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune (flow_parser (>= "0.229.1")) cmdliner yojson)
+ (depends
+  ocaml
+  dune
+  (flow_parser (>= "0.229.1"))
+  cmdliner
+  yojson
+  ocamlgraph
+  ppx_import)
  (tags
   (topics "to describe" your project)))
 
