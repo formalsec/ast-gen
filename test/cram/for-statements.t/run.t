@@ -12,14 +12,14 @@
   }
   
   $ dune exec ast_gen -f input-code-2.js
-  for (const v1 in src) {
+  for (let v1 in src) {
      p = v1;
      x = src[p];
      y = dest[p];
   }
   
   $ dune exec ast_gen -f input-code-3.js
-  const extend;
+  let extend;
   extend = function (dest, src) {
      for (var p in src) {
         x = src[p];
@@ -34,7 +34,7 @@
   iterable["1"] = 20;
   iterable["2"] = 30;
   for (let value of iterable) {
-     const v1;
+     let v1;
      v1 = console.log(value);
   }
   

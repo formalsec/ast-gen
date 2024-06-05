@@ -7,7 +7,7 @@
   
   $ dune exec ast_gen -f input-code-2.js
   const y;
-  const v1;
+  let v1;
   v1 = f();
   y = x[v1];
   

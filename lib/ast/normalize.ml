@@ -89,7 +89,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
       let setup, update, test_expr = if test_stmts = [] 
         then
           (* simple test expression: false, 1, x, ...*)
-          let id, decl = createVariableDeclaration (Some true_val) loc ~kind:_let in
+          let id, decl = createVariableDeclaration (Some true_val) loc in
           let update = Statement.AssignSimple.build loc id (Option.get test_expr) in 
           decl, [update], Identifier.to_expression id 
         else
@@ -415,12 +415,12 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let loc = loc_f loc in 
     if context.parent_type = func_call then
       (* var v1 = this.prototype *)
-      let class_proto, proto_decl = createVariableDeclaration ~kind:_let None loc in 
+      let class_proto, proto_decl = createVariableDeclaration None loc in 
       let this = Expression.This.build loc in 
       let assign_proto = Statement.AssignStaticMember.build loc class_proto this "prototype" false in 
       
       (* var v2 = v1.constructor *)
-      let super_constr, constr_decl = createVariableDeclaration ~kind:_let None loc in 
+      let super_constr, constr_decl = createVariableDeclaration None loc in 
       let assign_constr = Statement.AssignStaticMember.build loc super_constr (Identifier.to_expression class_proto) "constructor" false in
       
       proto_decl @ [assign_proto] @ constr_decl @ [assign_constr], Some (Identifier.to_expression super_constr)
@@ -439,7 +439,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let loc = loc_f loc in 
 
     let stmts, exprs = List.split (List.map ne expressions) in 
-    let ids, decls = List.split (List.map (fun expr -> createVariableDeclaration ~kind:_let expr loc) exprs) in 
+    let ids, decls = List.split (List.map (fun expr -> createVariableDeclaration expr loc) exprs) in 
     let last_expr = Identifier.to_expression (List.hd (List.rev ids)) in 
    
     List.flatten stmts @ List.flatten decls, Some last_expr
@@ -464,7 +464,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   (* --------- C O N D I T I O N A L --------- *)
   | loc, Ast'.Expression.Conditional {test; consequent; alternate; _} ->
     let loc = loc_f loc in 
-    let id, decl = createVariableDeclaration ~kind:_let None loc in
+    let id, decl = createVariableDeclaration None loc in
 
     let test_stmts, test_expr = ne test in
     let cnsq_stmts, cnsq_expr = ne consequent in 
@@ -714,7 +714,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
       
       let stmts, expr = map_default 
         (fun op -> 
-          let mem_id, mem_decl = createVariableDeclaration ~kind:_let None loc in 
+          let mem_id, mem_decl = createVariableDeclaration None loc in 
           let mem_assign = match prop_expr with 
             | Static  (prop, lit) -> Statement.AssignStaticMember.build loc mem_id (Option.get obj_expr) prop lit
             | Dynamic  prop       -> Statement.AssignDynmicMember.build loc mem_id (Option.get obj_expr) prop
@@ -743,7 +743,7 @@ and get_pattern_expr (pattern : ('M, 'T) Ast'.Pattern.t) : norm_expr_t =
     
     | _, Expression (loc, Member {_object; property; _}) -> 
       let loc = loc_f loc in 
-      let id, decl = createVariableDeclaration ~kind:_let None loc in
+      let id, decl = createVariableDeclaration None loc in
       
       let obj_stmts, obj_expr = normalize_expression empty_context _object in 
       let prop_stmts, prop_expr = normalize_member_property property in 
@@ -941,7 +941,7 @@ and normalize_class (context : context) (loc : Loc.t) ({id; body=(_, {body; _});
   cnstr_stmts @ exts_stmts @ List.flatten body_stmts, Some (Identifier.to_expression id)
 
 and empty_constructor (is_declaration : bool) (class_id : m Identifier.t) (loc : m) : norm_stmt_t = 
-  let decl = if not is_declaration then snd (createVariableDeclaration ~kind:_let ~objId:(Id class_id) None loc) else [] in 
+  let decl = if not is_declaration then snd (createVariableDeclaration ~objId:(Id class_id) None loc) else [] in 
   let cnstr_stmt = Statement.AssignFunction.build loc class_id [] [] in 
   decl @ [cnstr_stmt]
 
@@ -1001,7 +1001,7 @@ and normalize_extend (class_id : m Identifier.t) ((loc', {expr=(loc, _) as expr;
   
   let loc = loc_f loc in
   (* let v1 = new ext_expr(); *)
-  let id, decl = createVariableDeclaration ~kind:_let None loc  in 
+  let id, decl = createVariableDeclaration None loc  in 
   let super_init = Statement.AssignNewCall.build loc id (Identifier.from_expression (Option.get ext_expr)) [] in
 
   (* class_id.prototype = v1; *)
@@ -1010,7 +1010,7 @@ and normalize_extend (class_id : m Identifier.t) ((loc', {expr=(loc, _) as expr;
 
 and no_extend (class_id : m Identifier.t) (loc : m) : norm_expr_t =
   (* let v1 = X.prototype; *)
-  let id, decl = createVariableDeclaration ~kind:_let None loc  in 
+  let id, decl = createVariableDeclaration None loc  in 
   let assign = Statement.AssignStaticMember.build loc id (Identifier.to_expression class_id) "prototype" false in
 
   decl @ [assign], Some (Identifier.to_expression id)
@@ -1093,7 +1093,7 @@ and get_identifier (loc : m) (id : m Identifier.t option) : m Identifier.t =
 
 and get_string ((_, {Ast'.StringLiteral.value; _})) : string = value
 
-and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Statement.VarDecl.kind = _const) (obj : m Expression.t option) (loc : m) : m Identifier.t * norm_stmt_t =
+and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Statement.VarDecl.kind = _let) (obj : m Expression.t option) (loc : m) : m Identifier.t * norm_stmt_t =
   let id = match objId with 
     | Name objId -> map_default_lazy (Identifier.build loc) (lazy (Identifier.build_random loc)) objId
     | Id objId   -> objId 

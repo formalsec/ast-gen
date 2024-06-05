@@ -14,7 +14,7 @@
   const x;
   x = `string`;
   const temp;
-  const v1;
+  let v1;
   v1 = x + 2;
   temp = `head template ${v1} end tail`;
   

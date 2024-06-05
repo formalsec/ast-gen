@@ -1,9 +1,9 @@
   $ dune exec ast_gen -f input-code-1.js
-  const v1;
+  let v1;
   v1 = 1 + 2;
   
   $ dune exec ast_gen -f input-code-2.js
-  const v1;
+  let v1;
   v1 = x + y;
   
   $ dune exec ast_gen -f input-code-3.js

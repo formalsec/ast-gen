@@ -1,2 +1,0 @@
-const f = function (...args) {
-};

@@ -13,7 +13,7 @@
   let v2;
   v2 = new Bar();
   Foo.prototype = v2;
-  const v3;
+  let v3;
   v3 = function () {
   }
   v2.foo = v3;
@@ -25,15 +25,15 @@
      v3 = this.prototype;
      let v4;
      v4 = v3.constructor;
-     const v5;
+     let v5;
      v5 = v4();
   }
   let v2;
   v2 = new Bar();
   Foo.prototype = v2;
-  const v6;
+  let v6;
   v6 = function () {
-     const v7;
+     let v7;
      v7 = 1 + 2;
   }
   v2.foo = v6;

@@ -13,16 +13,16 @@
   x = 6;
   let status;
   let v1;
-  const v2;
+  let v2;
   v2 = x === 6;
   if (v2) {
-     const v3;
+     let v3;
      v3 = 1 + 2;
      v1 = v3;
   } else {
-     const v4;
+     let v4;
      v4 = 1 + 2;
-     const v5;
+     let v5;
      v5 = v4 + 3;
      v1 = v5;
   }
@@ -32,10 +32,10 @@
   let x;
   x = 0;
   let v1;
-  const v2;
+  let v2;
   v2 = x === 0;
   if (v2) {
-     const v3;
+     let v3;
      v3 = -1;
      v1 = v3;
   } else {
@@ -46,7 +46,7 @@
   $ dune exec ast_gen -f input-code-4.js
   let v1;
   if (stderr) {
-     const v2;
+     let v2;
      v2 = format('Wmic reported the following error: %s.', stderr);
      v1 = v2;
   } else {
