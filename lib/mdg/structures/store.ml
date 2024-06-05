@@ -7,7 +7,7 @@ open Auxiliary.Functions
 type t = LocationSet.t HashTable.t
 
 
-let empty : t = HashTable.create 100
+let empty () : t = HashTable.create 100
 let literal_loc = LocationSet.singleton (loc_obj_prefix ^ "literal") 
 let this_loc = LocationSet.singleton "this"
 

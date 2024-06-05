@@ -1,4 +1,3 @@
-open Auxiliary.Structures
 open Auxiliary.Functions
 module Ast' = Flow_ast
 
@@ -14,9 +13,9 @@ module Location = struct
     _end   : position; 
   } 
 
-  let empty : t = 
-    let empty_position = {line = 0; column = 0} in
-    { _start = empty_position; _end = empty_position };; 
+  let empty () : t = 
+    let empty_position () : position = {line = 0; column = 0} in
+    { _start = empty_position (); _end = empty_position ()};; 
 
   let rec convert_flow_loc ({start; _end; _} : Loc.t) : t = 
     let start' = convert_flow_pos start in
@@ -29,65 +28,6 @@ end
 
 type m = Location.t;;
 
-module rec FunctionsInfo : sig
-  type info = {
-    id     : int;
-    params : string list;
-    context  : FunctionsInfo.t;
-  }
-
-  type t = info HashTable.t
-
-  (* ---- primitive functions ----- *)
-  val create   : int -> t
-  val add : t -> string -> int -> string list -> t
-  val iter : (string -> info -> unit) -> t -> unit
-
-  val get_info       : t list -> string -> info
-  val get_param_name : t list -> string -> int -> string
-
-end = struct
-  type info = {
-    id     : int;
-    params : string list;
-    context  : FunctionsInfo.t;
-  }
-
-  type t = info HashTable.t
-
-  (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
-  let create = HashTable.create
-  let find_opt : t -> string -> info option = HashTable.find_opt
-
-  let add (info : t) (func : string) (id' : int) (params' : string list) : t = 
-    let new_context = create 5 in
-    let func_info : info = {
-      id = id';
-      params = params';
-      context = new_context;
-    } in 
-
-    HashTable.replace info func func_info;
-    new_context
-
-  let iter : (string -> info -> unit) -> t -> unit = HashTable.iter
-
-  
-  (* ------- I N F O   M A N I P U L A T I O N ------- *)
-  let rec get_info (functions : t list) (func_name : string) : info = 
-    match functions with 
-      | [] -> failwith "function not defined in the given context"
-      | context::rest -> 
-        let info = find_opt context func_name in 
-        if Option.is_some info
-          then Option.get info
-          else  get_info rest func_name
-    
-  let get_param_name (functions : t list) (func_name : string) (index : int) : string =
-    let info = get_info functions func_name in
-    List.nth info.params index
-
-end
 
 module Operator = struct
   module Assignment = struct
@@ -1464,7 +1404,7 @@ end
 and Program : sig
   type 'M t' = {
     body : 'M Statement.t list;
-    functions : FunctionsInfo.t
+    functions : Functions.Info.t
   }
 
   type 'M t = 'M * 'M t'
@@ -1473,54 +1413,55 @@ and Program : sig
 end = struct
   type 'M t' = {
     body : 'M Statement.t list;
-    functions : FunctionsInfo.t
+    functions : Functions.Info.t
   }
 
   type 'M t = 'M * 'M t'
 
-  let build_function_info (body : 'M Statement.t list) : FunctionsInfo.t =
-    let rec traverse_body (context : FunctionsInfo.t) (stmts : 'M Statement.t list) : unit =
-      List.iter (search_functions context) stmts
+  let build_function_info (body : 'M Statement.t list) : Functions.Info.t =
+    let rec traverse_body found_funcs parent_id body : unit =
+      List.iter (search_functions found_funcs parent_id) body
     
-    and search_functions (context : FunctionsInfo.t) (stmt : 'M Statement.t) : unit =
-      match stmt with
+    and search_functions found_funcs parent_id statement : unit =
+      match statement with
         | _, Statement.AssignFunction {id; left; params; body; _} -> 
           (* add function information *)
-          let left' = Identifier.get_name left in 
+          let func_id = Functions.Id.create id (Identifier.get_name left) in
           let params' = List.map (fun (_, {Statement.AssignFunction.Param.argument; _}) -> Identifier.get_name argument) params in
           
-          let new_context = FunctionsInfo.add context left' id params' in 
-          traverse_body new_context body;         
+
+          Functions.Info.add found_funcs func_id parent_id params'; 
+          traverse_body found_funcs (Some func_id) body;         
           
         (* --------- traverse ast --------- *)
         | _, Statement.If {consequent; alternate; _} -> 
-          traverse_body context consequent;
-          option_may (traverse_body context) alternate;
+          traverse_body found_funcs parent_id consequent;
+          option_may (traverse_body found_funcs parent_id) alternate;
 
         | _, Statement.Switch {cases; _} -> 
           List.iter (fun (_, {Statement.Switch.Case.consequent; _}) -> 
-            traverse_body context consequent;
+            traverse_body found_funcs parent_id consequent;
           ) cases
 
-        | _, Statement.While   {body; _} -> traverse_body context body
-        | _, Statement.ForIn   {body; _} -> traverse_body context body
-        | _, Statement.ForOf   {body; _} -> traverse_body context body
-        | _, Statement.With    {body;_ } -> traverse_body context body
-        | _, Statement.Labeled {body; _} -> traverse_body context body
+        | _, Statement.While   {body; _} -> traverse_body found_funcs parent_id body
+        | _, Statement.ForIn   {body; _} -> traverse_body found_funcs parent_id body
+        | _, Statement.ForOf   {body; _} -> traverse_body found_funcs parent_id body
+        | _, Statement.With    {body;_ } -> traverse_body found_funcs parent_id body
+        | _, Statement.Labeled {body; _} -> traverse_body found_funcs parent_id body
         
         | _, Statement.Try {body; handler; finalizer} -> 
-          traverse_body context body;
-          option_may (fun (_, {Statement.Try.Catch.body; _}) -> traverse_body context body) handler;
-          option_may (traverse_body context) finalizer;
+          traverse_body found_funcs parent_id body;
+          option_may (fun (_, {Statement.Try.Catch.body; _}) -> traverse_body found_funcs parent_id body) handler;
+          option_may (traverse_body found_funcs parent_id) finalizer;
 
         (* ------- ignore all other statements ------- *)
         | _ -> ()
       
     in
 
-    let funcs_info = FunctionsInfo.create 20 in 
-    traverse_body funcs_info body;
-    funcs_info
+    let info = Functions.Info.create 20 in 
+    traverse_body info None body;
+    info
 
   let build (metadata : 'M) (stmts : 'M Statement.t list) : 'M t = 
     (metadata, { body = stmts; functions = build_function_info stmts});; 

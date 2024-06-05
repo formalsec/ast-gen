@@ -1,5 +1,5 @@
 open Structures
-open Ast.Grammar
+module Functions = Ast.Functions 
 module Graph = Graph'
 
 let register, setup, was_changed =
@@ -22,15 +22,15 @@ type state = {
   store : Store.t;
   this  : LocationSet.t;
   (* function information *)
-  context   : FunctionsInfo.t list;
+  context   : Functions.Context.t;
 }
 
 let empty_state = { 
   graph = Graph.empty register; 
-  store = Store.empty; 
+  store = Store.empty (); 
   this  = Store.this_loc;
   (* function information *)
-  context   = [];
+  context   = Functions.Context.empty;
 }
 
 let copy ({graph; store; _} as state : state) : state = 

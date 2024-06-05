@@ -17,3 +17,8 @@ let option_may f x : unit =
   match x with 
     | Some x -> f x
     | None   -> ()
+
+let hd_opt (lst : 'a list) : 'a option =
+  match lst with 
+    | [] -> None 
+    | fst::_ -> Some fst

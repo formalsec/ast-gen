@@ -850,7 +850,7 @@ and normalize_for_left (left : ('M, 'T) generic_left) : norm_stmt_t * m Statemen
       [], to_var_decl (List.hd decl_stmts)
     
     | LeftPattern pattern -> 
-      let id, decl_stmts = createVariableDeclaration None Location.empty in
+      let id, decl_stmts = createVariableDeclaration None (Location.empty ()) in
       let stmts, _ = normalize_pattern (Identifier.to_expression id) pattern None in 
       stmts, to_var_decl (List.hd decl_stmts)
 

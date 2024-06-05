@@ -1,3 +1,4 @@
+module Functions = Ast.Functions
 open Structures
 open Auxiliary.Functions
 open Auxiliary.Structures
@@ -7,18 +8,18 @@ open Ast.Grammar
 module Node = struct            
   type t = 
     | Object of string
-    | Function of string
+    | Function of Functions.Id.t
     | Parameter of string 
 
-  let equals (node : t) (node' : t) = match (node, node') with
+  let equal (node : t) (node' : t) = match (node, node') with
     | Object x, Object x'
-    | Function x, Function x'
     | Parameter x, Parameter x' -> String.equal x x'
+    | Function x, Function x' -> Functions.Id.equal x x'
     | _ -> false
     
   let label (node : t) = match node with
     | Object obj -> obj 
-    | Function func -> func
+    | Function func -> func.name
     | Parameter param -> param
   
 end
@@ -123,10 +124,11 @@ let iter_nodes (f : location -> Node.t -> unit) (graph : t) = HashTable.iter f g
 
 let find_node_opt' : Node.t HashTable.t -> location -> Node.t option = HashTable.find_opt
 let find_node_opt (graph : t) : location -> Node.t option = find_node_opt' graph.nodes
+let find_node (graph : t) : location -> Node.t = HashTable.find graph.nodes
 
 let replace_node (graph : t) (location : location) (node : Node.t) = 
   let old_node = find_node_opt graph location in
-  map_default_lazy (fun old_node -> if not (Node.equals old_node node) then (graph.register ()) ) (lazy (graph.register ())) old_node;
+  map_default_lazy (fun old_node -> if not (Node.equal old_node node) then (graph.register ()) ) (lazy (graph.register ())) old_node;
   HashTable.replace graph.nodes location node
 
 (* > GRAPH FUNCTIONS : *)
@@ -163,10 +165,10 @@ let get_property (graph : t) (location : location) (property : property option) 
   let edges = get_edges graph location in 
   Edge.get_to (EdgeSet.find_pred (is_property_edge property) edges)
 
-let get_params (graph : t) (location : location) : location list = 
+let get_params (graph : t) (location : location) : EdgeSet.t  = 
   let edges = get_edges graph location in 
   let params = EdgeSet.filter (Edge.is_param) edges in 
-  EdgeSet.map_list (Edge.get_to) params
+  params
 
 (* ------- M A I N   F U N C T I O N S -------*)
 let lub (graph : t) (graph' : t) : unit = 
@@ -176,9 +178,10 @@ let lub (graph : t) (graph' : t) : unit =
     replace_edges graph from (EdgeSet.union edges edges');
     
     (* also update node info *)
-    if Option.is_none node' then
-      let node = find_node_opt graph from in 
-      option_may (replace_node graph from) node
+    let node = find_node_opt graph from in 
+    if Option.is_none node then
+      option_may (replace_node graph from) node'
+
   ) graph'
 
 let alloc (_ : t) (id : int) : location = 
@@ -192,13 +195,8 @@ let alloc_param : t -> location =
   in
   alloc
 
-let alloc_function : t -> location =
-  let id : int ref = ref 0 in
-  let alloc (_ : t) : location = 
-    id := !id + 1;
-    loc_fun_prefix ^ (string_of_int !id) 
-  in
-  alloc
+let alloc_function (_ : t) (id : int) : location =
+  loc_fun_prefix ^ (Int.to_string id)
 
 
 let orig (graph : t) (l : location) : LocationSet.t = 
@@ -278,8 +276,8 @@ let add_obj_node (graph : t) (loc : location) (name : string) : unit =
   let node : Node.t = Object name in 
   add_node graph loc node
 
-let add_func_node (graph : t) (loc : location) (func_name) : unit =
-  let node : Node.t = Function func_name in 
+let add_func_node (graph : t) (loc : location) (func_id : Functions.Id.t) : unit =
+  let node : Node.t = Function func_id in 
   add_node graph loc node
   
 let add_param_node (graph : t) (loc : location) (param : string) : unit =
@@ -319,19 +317,27 @@ let add_ret_edge (graph : t) (from : location) (_to : location) : unit =
   let edge = {Edge._to = _to; _type = Return} in 
   add_edge graph edge _to from
 
-let get_func_node (graph : t) (func_name : string) : location option = 
+let get_func_node (graph : t) (func_id : Functions.Id.t) : location option = 
   let res : location option ref = ref None in 
   iter_nodes ( fun location node ->
     match node with 
-      | Function func_name' -> if func_name = func_name' then res := Some location
+      | Function func_id' -> if Functions.Id.equal func_id func_id' then res := Some location
       | _ -> ()
   ) graph;
   !res
 
-let get_param_locations (graph : t) (func_name : string) : location list = 
-  let func_loc = get_func_node graph func_name in 
-  (* remove this from the parameter list *)
-  List.tl (get_params graph (Option.get func_loc))
+let get_param_locations (graph : t) (func_id : Functions.Id.t) : Store.t =
+  let func_loc = get_func_node graph func_id in 
+  let params = get_params graph (Option.get func_loc) in
+  
+  let store = Store.empty () in 
+  EdgeSet.iter (fun edge ->
+    let location = Edge.get_to edge in 
+    let param_name = Node.label (find_node graph location) in 
+    Store.update' store param_name (LocationSet.singleton location) 
+  ) params;
+
+  store
   
 
 let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id : int) (name : string) : unit =
