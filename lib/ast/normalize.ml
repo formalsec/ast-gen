@@ -165,12 +165,12 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
       let fnlzr_stmts = Option.map (ns << block_to_statement) finalizer in
 
       (* process catch clause *)
-      let handler_stmts, handler' = map_default normalize_catch ([], None) handler in
+      let handler' = map_default normalize_catch (None) handler in
     
       (* build try statement*)
       let try_stmt = Statement.Try.build (loc_f loc) block_stmts handler' fnlzr_stmts in
-
-      handler_stmts @ [try_stmt]
+      
+      [try_stmt]
     
     (* --------- W I T H --------- *)
     | loc, Ast'.Statement.With {_object; body; _} ->
@@ -864,14 +864,14 @@ and normalize_case (loc, {Ast'.Statement.Switch.Case.test; consequent; _}) : m S
   let case = Statement.Switch.Case.build (loc_f loc) test_expr cnsq_stmts in
   (case, test_stmts)
 
-and normalize_catch (loc, { Ast'.Statement.Try.CatchClause.param; body; _}) : norm_stmt_t * m Statement.Try.Catch.t option = 
+and normalize_catch (loc, { Ast'.Statement.Try.CatchClause.param; body; _}) : m Statement.Try.Catch.t option = 
     let is_id, id = map_default is_identifier (false, None) param in
     let param' = if is_id then id else failwith "param is not an identifier" in 
     let body_stmts = normalize_statement empty_context (block_to_statement body) in 
 
     let catch = Statement.Try.Catch.build (loc_f loc) param' body_stmts in
-    (body_stmts, Some catch)
-  
+    Some catch
+
 and normalize_array_elem (array : m Identifier.t) (index : int) (element : ('M, 'T) Ast'.Expression.Array.element) : norm_stmt_t = 
 
   match element with
