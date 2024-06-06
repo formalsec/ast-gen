@@ -9,7 +9,8 @@
   let f;
   f = function (x, y, z) {
      let v1;
-     v1 = x + 1;
+     v1 = x;
+     x = x + 1;
   }
   
   $ dune exec ast_gen -f input-code-3.js

@@ -3,7 +3,7 @@ from pathlib import Path
 import subprocess
 
 test_root = None
-USE_STRICT = "use strict;\n"
+USE_STRICT = "\"use strict\";\n"
 TO_PROCESS = ["tests/language/expressions/", "tests/language/statements/"]
 TIME_OUT = 10
 
@@ -28,8 +28,9 @@ ok = 0
 def simplify_path (path):
     return path.relative_to(test_root/"tests/language")
 
-def test_output (negative, path, color, normalization, semantics):
-    print(f"{color}{negative}{simplify_path(path)}\t norm [{normalization}]\tsemantics [{semantics}]{RESET}")
+def test_output (failed, path, color, normalization, semantics):
+    failed = "NOK" if failed else "OK " 
+    print(f"[{failed}] {simplify_path(path)}\t norm [{normalization}]\tsemantics [{semantics}]")
 
 
 def normalize(path):
@@ -99,19 +100,21 @@ def main():
 
                 # output report
                 failed  = (norm_info == FAIL or test_info == FAIL)
+                concrete_fail = failed != is_negative
                 timed_out = (norm_info == TOUT or test_info == TOUT)
                 color = YELLOW
-                if failed == is_negative:
-                    color = GREEN
-                    ok += 1
-                else:
+                if concrete_fail:
                     color = RED
                     norm_error += norm_info == FAIL
                     smnt_error += test_info == FAIL
+                else:
+                    color = GREEN
+                    ok += 1
                 
                 timeout += timed_out
-                test_output(negative, path, color, norm_info, test_info)
-                print(test_error, end="")
+                test_output(concrete_fail or timed_out, path, color, norm_info, test_info)
+                if not is_negative:
+                    print(test_error, end="")
 
     # report
     print("==============================")

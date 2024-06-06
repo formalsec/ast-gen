@@ -8,7 +8,8 @@
   let foo;
   foo = function (index) {
      let v1;
-     v1 = index + 1;
+     v1 = index;
+     index = index + 1;
      yield v1;
   }
   

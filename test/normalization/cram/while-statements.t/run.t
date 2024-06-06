@@ -11,7 +11,8 @@
   v1 = x < 1;
   while (v1) {
      let v2;
-     v2 = x + 1;
+     v2 = x;
+     x = x + 1;
      v1 = x < 1;
   }
   
@@ -22,7 +23,8 @@
   v1 = true;
   while (v1) {
      let v2;
-     v2 = x + 1;
+     v2 = x;
+     x = x + 1;
      v1 = x < 1;
   }
   
@@ -33,7 +35,8 @@
   v1 = true;
   while (v1) {
      let v2;
-     v2 = x + 1;
+     v2 = x;
+     x = x + 1;
      break;
      v1 = x < 1;
   }
@@ -47,7 +50,8 @@
      let v3;
      v3 = alert(i);
      let v2;
-     v2 = i + 1;
+     i = i + 1;
+     v2 = i;
      v1 = i < 10;
   }
   
@@ -60,7 +64,8 @@
      let v3;
      v3 = alert(i);
      let v2;
-     v2 = i + 1;
+     i = i + 1;
+     v2 = i;
      v1 = i < 10;
   }
   
