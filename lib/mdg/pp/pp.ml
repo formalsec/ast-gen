@@ -59,9 +59,12 @@ end
   let output (filename : string) (graph : Graph.t) : unit = 
     let dot_file = filename ^ ".dot" in
     let svg_file = filename ^ ".svg" in 
-    let file = open_out_bin dot_file in
+    
+    let file = Out_channel.open_bin dot_file in
     Dot.set_info graph.nodes;
     Dot.output_graph file (convert_graph graph);
-    let _  = Sys.command ("dot -Tsvg " ^ dot_file ^ " -o " ^ svg_file) in
+    Out_channel.close file;
+
+    let _  = Sys.command ("dot -Tsvg " ^ dot_file ^ " -o " ^ svg_file ^ "; rm " ^ dot_file) in
     ()
 end

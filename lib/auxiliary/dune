@@ -2,5 +2,5 @@
 
 (library
  (name auxiliary)
- (libraries flow_parser yojson))
+ (libraries flow_parser yojson unix))
 
