@@ -1,4 +1,4 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   let v1;
   v1 = 23 + 19;
   switch (v1) {
@@ -14,7 +14,7 @@
   
   }
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   let v1;
   v1 = 23 + 19;
   switch (v1) {
@@ -29,7 +29,7 @@
   
   }
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   let v1;
   v1 = 23 + 19;
   switch (v1) {
@@ -46,17 +46,17 @@
   
   }
   
-  $ dune exec ast_gen -f input-code-4.js
+  $ ast_gen input-code-4.js
   switch (42) {
   }
   
-  $ dune exec ast_gen -f input-code-5.js
+  $ ast_gen input-code-5.js
   switch (42) {
      case 23: 
   
   }
   
-  $ dune exec ast_gen -f input-code-6.js
+  $ ast_gen input-code-6.js
   switch (x) {
      case 0: 
         let v1;
@@ -69,7 +69,7 @@
   
   }
   
-  $ dune exec ast_gen -f input-code-7.js
+  $ ast_gen input-code-7.js
   switch (x) {
      case 0: 
         let v1;
@@ -81,7 +81,7 @@
   
   }
   
-  $ dune exec ast_gen -f input-code-8.js
+  $ ast_gen input-code-8.js
   switch (x) {
      case 0: 
         let v1;
@@ -99,7 +99,7 @@
   
   }
   
-  $ dune exec ast_gen -f input-code-9.js
+  $ ast_gen input-code-9.js
   switch (x) {
      case 0: 
         let v1;
@@ -122,7 +122,7 @@
   
   }
   
-  $ dune exec ast_gen -f input-code-10.js
+  $ ast_gen input-code-10.js
   let v1;
   v1 = 2 + 3;
   let v2;

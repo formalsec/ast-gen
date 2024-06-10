@@ -1,10 +1,10 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   while (false) {
      let v1;
      v1 = 1 + 2;
   }
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   let x;
   x = 0;
   let v1;
@@ -16,7 +16,7 @@
      v1 = x < 1;
   }
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   let x;
   x = 0;
   let v1;
@@ -28,7 +28,7 @@
      v1 = x < 1;
   }
   
-  $ dune exec ast_gen -f input-code-4.js
+  $ ast_gen input-code-4.js
   let x;
   x = 0;
   let v1;
@@ -41,7 +41,7 @@
      v1 = x < 1;
   }
   
-  $ dune exec ast_gen -f input-code-5.js
+  $ ast_gen input-code-5.js
   var i;
   i = 0;
   let v1;
@@ -55,7 +55,7 @@
      v1 = i < 10;
   }
   
-  $ dune exec ast_gen -f input-code-6.js
+  $ ast_gen input-code-6.js
   var i;
   i = 0;
   let v1;

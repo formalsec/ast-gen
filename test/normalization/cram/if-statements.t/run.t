@@ -1,10 +1,10 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   if (true) {
      let v1;
      v1 = 1 + 2;
   }
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   let x;
   x = 'Oi';
   let v1;
@@ -21,7 +21,7 @@
      z = v3 + 3;
   }
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   let v1;
   v1 = x === y;
   if (v1) {
@@ -29,7 +29,7 @@
      v2 = alert("They are the same!");
   }
   
-  $ dune exec ast_gen -f input-code-4.js
+  $ ast_gen input-code-4.js
   const x;
   x = 1;
   let y;

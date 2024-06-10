@@ -1,4 +1,4 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   let x;
   x = function (z) {
      let v1;
@@ -8,7 +8,7 @@
      return v2;
   }
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   let x;
   x = function (z) {
      let v1;
@@ -18,7 +18,7 @@
      return v2;
   }
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   let v1;
   v1 = function (z) {
      let v2;
@@ -29,7 +29,7 @@
   }
   a.b = v1;
   
-  $ dune exec ast_gen -f input-code-4.js
+  $ ast_gen input-code-4.js
   const a;
   let v1;
   v1 = [];
@@ -45,7 +45,7 @@
   }
   a = v1.find(v2);
   
-  $ dune exec ast_gen -f input-code-5.js
+  $ ast_gen input-code-5.js
   const a;
   let v1;
   v1 = [];

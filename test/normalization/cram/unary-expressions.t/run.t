@@ -1,15 +1,15 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   let v1;
   v1 = !false;
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   const x;
   x = 0;
   let v1;
   v1 = x;
   x = x + 1;
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   let f;
   f = function (x) {
      let v1;

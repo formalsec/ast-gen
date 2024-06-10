@@ -1,10 +1,10 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   let foo;
   foo = function (index) {
      yield index;
   }
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   let foo;
   foo = function (index) {
      let v1;

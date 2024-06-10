@@ -1,4 +1,4 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   let src;
   src = [];
   src["0"] = 1;
@@ -11,14 +11,14 @@
      y = dest[p];
   }
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   for (let v1 in src) {
      p = v1;
      x = src[p];
      y = dest[p];
   }
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   let extend;
   extend = function (dest, src) {
      for (var p in src) {
@@ -27,7 +27,7 @@
      }
   }
   
-  $ dune exec ast_gen -f input-code-4.js
+  $ ast_gen input-code-4.js
   let iterable;
   iterable = [];
   iterable["0"] = 10;
@@ -38,7 +38,7 @@
      v1 = console.log(value);
   }
   
-  $ dune exec ast_gen -f input-code-5.js
+  $ ast_gen input-code-5.js
   ast_gen: internal error, uncaught exception:
            Failure("hd")
            

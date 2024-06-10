@@ -1,4 +1,4 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   try {
      let v1;
      v1 = 1 + 2;
@@ -7,7 +7,7 @@
      v2 = 1 + 2;
   }
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   try {
      let v1;
      v1 = 1 + 2;
@@ -19,7 +19,7 @@
      v2 = 1 + 2;
   }
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   try {
      let v1;
      v1 = f();
@@ -31,7 +31,7 @@
      v2 = alert("done");
   }
   
-  $ dune exec ast_gen -f input-code-4.js
+  $ ast_gen input-code-4.js
   let f;
   f = function (x) {
      try {

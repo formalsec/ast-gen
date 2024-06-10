@@ -1,11 +1,11 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   let f1;
   f1 = function () {
      let x;
      x = await 10;
   }
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   let f1;
   f1 = function () {
      let x;
@@ -16,7 +16,7 @@
      x = await v2;
   }
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   let f;
   f = function (x) {
      let a;

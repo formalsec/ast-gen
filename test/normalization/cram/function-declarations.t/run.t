@@ -1,11 +1,11 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   let f1;
   f1 = function () {
      let x;
      x = 0;
   }
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   let f;
   f = function (x, y, z) {
      let v1;
@@ -13,7 +13,7 @@
      x = x + 1;
   }
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   let count;
   count = function () {
      var i;
@@ -27,7 +27,7 @@
      }
   }
   
-  $ dune exec ast_gen -f input-code-4.js
+  $ ast_gen input-code-4.js
   let positive;
   positive = function (n) {
      let v1;
@@ -40,7 +40,7 @@
      }
   }
   
-  $ dune exec ast_gen -f input-code-5.js
+  $ ast_gen input-code-5.js
   let f;
   f = function () {
   }

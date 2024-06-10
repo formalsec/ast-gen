@@ -1,4 +1,4 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   let Foo;
   Foo = function () {
   }
@@ -6,7 +6,7 @@
   v2 = new Bar();
   Foo.prototype = v2;
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   let Foo;
   Foo = function () {
   }
@@ -18,7 +18,7 @@
   }
   v2.foo = v3;
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   let Foo;
   Foo = function () {
      let v3;

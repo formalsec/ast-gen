@@ -1,4 +1,4 @@
-  $ dune exec ast_gen -f input-code-1.js
+  $ ast_gen input-code-1.js
   let status;
   let v1;
   if (true) {
@@ -8,7 +8,7 @@
   }
   status = v1;
   
-  $ dune exec ast_gen -f input-code-2.js
+  $ ast_gen input-code-2.js
   let x;
   x = 6;
   let status;
@@ -28,7 +28,7 @@
   }
   status = v1;
   
-  $ dune exec ast_gen -f input-code-3.js
+  $ ast_gen input-code-3.js
   let x;
   x = 0;
   let v1;
@@ -43,7 +43,7 @@
   }
   x = v1;
   
-  $ dune exec ast_gen -f input-code-4.js
+  $ ast_gen input-code-4.js
   let v1;
   if (stderr) {
      let v2;
