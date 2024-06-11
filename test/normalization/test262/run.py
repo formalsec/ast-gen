@@ -1,9 +1,12 @@
 import argparse
 from pathlib import Path
+import os
 import subprocess
 
 
 TIMEOUT = 10
+OUTPUT_PATH = "out/"
+NORMALIZED_CODE = f"{OUTPUT_PATH}/graph/normalized.js"
 
 # paths
 TESTS = "tests"
@@ -33,9 +36,10 @@ RESET = "\033[0m"
 def normalize(path):
     try:
         # run normalization
-        result = subprocess.run(["ast_gen", path], capture_output=True, text=True, check=True, timeout=TIMEOUT)
-        norm_program = result.stdout
-        
+        subprocess.run(["ast_gen", path, "-o", OUTPUT_PATH], capture_output=True, text=True, check=True, timeout=TIMEOUT)
+        with open(NORMALIZED_CODE, "r") as file:
+            norm_program = file.read()
+            
         return PASS, norm_program
     except subprocess.CalledProcessError:
         info = FAIL
@@ -172,6 +176,8 @@ def main():
 
         # output detailed report
         report(info, out_file)
+    
+    os.system(f"rm -fr {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":
