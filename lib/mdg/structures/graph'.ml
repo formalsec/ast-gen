@@ -10,17 +10,30 @@ module Node = struct
     | Object of string
     | Function of Functions.Id.t
     | Parameter of string 
+    | Literal
 
   let equal (node : t) (node' : t) = match (node, node') with
     | Object x, Object x'
     | Parameter x, Parameter x' -> String.equal x x'
     | Function x, Function x' -> Functions.Id.equal x x'
+    | Literal, Literal -> true
     | _ -> false
     
   let label (node : t) = match node with
     | Object obj -> obj 
     | Function func -> func.name
     | Parameter param -> param
+    | Literal -> "literal value"
+
+  (* get node information *)
+  let get_type (_ : t) : string = ""
+  let get_subtype (_ : t) : string = ""
+  let get_id (_ : t) : string = ""
+  let get_raw (_ : t) : string = ""
+  let get_structure (_ : t) : string = ""
+  let get_location (_ : t) : string = ""
+  let get_code (_ : t) : string = ""
+  let get_label (_ : t) : string = ""
   
 end
 
@@ -29,7 +42,7 @@ module Edge = struct
       | Property of property option
       | Version  of property option
       | Dependency
-      | Argument of string   
+      | Argument of int (* argument index *) * string (* argument name *)   
       | Parameter of string 
       | Call
       | Return 
@@ -43,7 +56,6 @@ module Edge = struct
     let is_version  (edge : t) = match edge._type with Version _ -> true | _ -> false
     let is_param    (edge : t) = match edge._type with Parameter _ -> true | _ -> false
     let get_property (edge : t) : property option = match edge._type with Property p | Version p -> p | _ -> failwith "edge is neither a property edge nor a version edge"
-    let get_to (edge : t) : location = edge._to
 
     let _type_to_int (t : _type) : int =
       match t with
@@ -57,7 +69,7 @@ module Edge = struct
       match Int.compare (_type_to_int t) (_type_to_int t'), t, t' with
       | 0, Property x, Property x'
       | 0, Version  x, Version  x' -> Option.compare (String.compare) x x'
-      | 0, Argument  x, Argument  x'
+      | 0, Argument  (_, x), Argument  (_, x') 
       | 0, Parameter x, Parameter x' -> String.compare x x'
       | c, _, _ -> c
     
@@ -71,12 +83,39 @@ module Edge = struct
         | Property prop -> map_default (fun prop -> "P(" ^ prop ^ ")") "P(*)" prop
         | Version prop -> map_default (fun prop -> "V(" ^ prop ^ ")") "V(*)" prop
         | Dependency -> "D" 
-        | Argument id -> "ARG(" ^ id ^ ")"
+        | Argument (_, id) -> "ARG(" ^ id ^ ")"
         | Parameter pos -> "param " ^ pos
         | Call -> "CG"
         | Return -> "RET"
     
     let to_string (edge : t) : string = " --" ^ label edge ^ "-> " ^ edge._to 
+
+    (* get edge information *)
+    let get_to (edge : t) : location = edge._to
+    let get_rel_label (edge : t) : string = 
+      match edge._type with 
+        | Property _ | Version _ | Dependency -> "MDG"
+        | Call -> "CG"
+        | _ -> "TODO"
+
+    let get_rel_type (_ : t) : string = ""
+    let get_id (_ : t) : string = ""
+    let get_arg_i (edge : t) : string = 
+      match edge._type with 
+        | Argument (i, _) -> string_of_int i
+        | _          -> ""
+
+    let get_par_i (edge : t) : string =
+      match edge._type with
+        | Parameter i -> i
+        | _           -> "" 
+  
+    let get_stm_i (_ : t) : string = ""
+    let get_elm_i (_ : t) : string = ""
+    let get_exp_i (_ : t) : string = ""
+    let get_met_i (_ : t) : string = ""
+    let get_src_obj (_ : t) : string = ""
+    let get_dep_of_prop (_ : t) : string = ""
 end
 
 module EdgeSet = struct
@@ -101,11 +140,12 @@ type t = {
 (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
 
 (* > EDGES FUNCTIONS : *)
-let iter_edges (f : location -> EdgeSet.t -> unit) (graph : t) = HashTable.iter f graph.edges
+let iter_edges (f : location -> Edge.t -> unit) (graph : t) = HashTable.iter (fun loc edges -> EdgeSet.iter (f loc) edges) graph.edges
 let fold_edges (f : location -> EdgeSet.t -> 'acc -> 'acc) (graph : t) : 'acc -> 'acc = HashTable.fold f graph.edges
 let find_edges_opt (graph : t) : location -> EdgeSet.t option = HashTable.find_opt graph.edges
 let find_edges (graph : t) : location -> EdgeSet.t = HashTable.find graph.edges
 let mem_edges (graph : t) : location -> bool =  HashTable.mem graph.edges
+let num_edges (graph : t) : int = HashTable.fold (fun _ edges acc -> acc + EdgeSet.cardinal edges) graph.edges 0
 
 let replace_edges (graph : t) (location : location) (edges : EdgeSet.t) : unit = 
   let old_edges = find_edges_opt graph location in
@@ -116,8 +156,8 @@ let rec print (graph : t) : unit =
   iter_edges print_edge graph;
   print_string "\n";
 
-and print_edge (from : location) (edges : EdgeSet.t) : unit = 
-  EdgeSet.iter (fun edge -> print_string (from ^ (Edge.to_string edge) ^ "\n")) edges
+and print_edge (from : location) (edge : Edge.t) : unit = 
+  print_string (from ^ (Edge.to_string edge) ^ "\n")
 
 (* > NODE FUNCTIONS : *)
 let iter_nodes (f : location -> Node.t -> unit) (graph : t) = HashTable.iter f graph.nodes
@@ -125,6 +165,7 @@ let iter_nodes (f : location -> Node.t -> unit) (graph : t) = HashTable.iter f g
 let find_node_opt' : Node.t HashTable.t -> location -> Node.t option = HashTable.find_opt
 let find_node_opt (graph : t) : location -> Node.t option = find_node_opt' graph.nodes
 let find_node (graph : t) : location -> Node.t = HashTable.find graph.nodes
+let num_nodes (graph : t) : int = HashTable.length graph.nodes
 
 let replace_node (graph : t) (location : location) (node : Node.t) = 
   let old_node = find_node_opt graph location in
@@ -134,7 +175,7 @@ let replace_node (graph : t) (location : location) (node : Node.t) =
 (* > GRAPH FUNCTIONS : *)
 let copy (graph : t) : t = {graph with edges = HashTable.copy graph.edges; nodes = HashTable.copy graph.nodes}
 let empty (register : unit -> unit) : t = {edges = HashTable.create 100; nodes = HashTable.create 50; register = register}
-let iter (f : location -> EdgeSet.t -> Node.t option -> unit) (graph : t) = iter_edges (fun loc edges -> let node = find_node_opt graph loc in f loc edges node) graph
+let iter (f : location -> EdgeSet.t -> Node.t option -> unit) (graph : t) = HashTable.iter (fun loc edges -> let node = find_node_opt graph loc in f loc edges node) graph.edges
 
 
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
@@ -284,6 +325,10 @@ let add_param_node (graph : t) (loc : location) (param : string) : unit =
   let node : Node.t = Parameter param in 
   add_node graph loc node
 
+let add_literal_node (graph : t) : unit =
+  let node : Node.t = Literal in 
+  add_node graph literal node 
+
 
 let add_edge (graph : t) (edge : Edge.t) (_to : location) (from : location) : unit = 
   let edges = get_edges graph from in 
@@ -301,8 +346,8 @@ let add_version_edge (graph : t) (from : location) (_to : location) (property : 
   let edge = {Edge._to = _to; _type = Version property} in 
   add_edge graph edge _to from
 
-let add_arg_edge (graph : t) (from : location) (_to : location) (identifier : string) : unit = 
-  let edge = {Edge._to = _to; _type = Argument identifier} in 
+let add_arg_edge (graph : t) (from : location) (_to : location) (index : int) (identifier : string) : unit = 
+  let edge = {Edge._to = _to; _type = Argument (index, identifier)} in 
   add_edge graph edge _to from
 
 let add_param_edge (graph : t) (from : location) (_to : location) (index : string) : unit = 

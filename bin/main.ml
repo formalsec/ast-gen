@@ -17,8 +17,9 @@ let main (filename : string) (output_path : string) (verbose : bool) (generate_m
 
       (* STEP 2 : Generate MDG for the normalized code *)
       if generate_mdg then (
-        let graph, _ = Mdg.Analyse.program verbose norm_program in
-        Mdg.Pp.Dot.output (graph_dir ^ "graph") graph
+        let graph = Mdg.Analyse.program verbose norm_program in
+        Mdg.Pp.Dot.output graph_dir graph;
+        Mdg.Pp.CSV.output graph_dir graph
       );
 
       0

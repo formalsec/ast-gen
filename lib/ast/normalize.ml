@@ -84,7 +84,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
       let loc = loc_f loc in 
       let test_stmts, test_expr = ne test in 
       let body_stmts = ns body in
-      
+
       let true_val = Expression.Literal.build loc (Expression.Literal.Boolean true) "true" in 
       let setup, update, test_expr = if test_stmts = [] 
         then

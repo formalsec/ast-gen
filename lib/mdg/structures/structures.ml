@@ -7,6 +7,9 @@ let loc_obj_prefix : location = "l_"
 let loc_par_prefix : location = "p_"
 let loc_fun_prefix : location = "f_"
 
+let literal : location = loc_obj_prefix ^ "literal"
+let this : location = "this"
+
 module LocationSet = struct 
   module LocationSet' = Set.Make(AbstractLocation)
   include LocationSet'

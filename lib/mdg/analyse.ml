@@ -10,13 +10,13 @@ open State
 let verbose = ref false;;
 
 
-let rec program (is_verbose : bool) ((_, program) : m Program.t) : Graph.t * Store.t = 
+let rec program (is_verbose : bool) ((_, program) : m Program.t) : Graph.t = 
   verbose := is_verbose;
   let state = empty_state in 
   let state' = initialize_functions state program.functions in
 
   analyse_sequence state' program.body;
-  state'.graph, state'.store
+  state'.graph
 
 and analyse (state : state) (statement : m Statement.t) : unit =
   let graph = state.graph in 
@@ -134,7 +134,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       (* argument edges *)
       let params = get_param_names f in 
       List.iteri ( fun i _Ls -> 
-        LocationSet.iter (fun l -> add_arg_edge l l_call (List.nth params i)) _Ls
+        let param_name = List.nth params i in 
+        LocationSet.iter (fun l -> add_arg_edge l l_call i param_name) _Ls
       ) _Lss;
       
       (* call edge *)

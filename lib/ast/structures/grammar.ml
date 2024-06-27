@@ -24,6 +24,11 @@ module Location = struct
   and convert_flow_pos ({line; column} : Loc.position) : position = 
     { line = line; column = column };;
 
+  let rec to_string (loc : t) : string =
+    "{\"start\":" ^ position_to_string loc._start ^ ",\"end\":" ^ position_to_string loc._end ^ "}"
+  and position_to_string (position : position) : string =
+    "{\"line\":" ^ string_of_int position.line ^ ",\"column\":" ^ string_of_int position.column ^ "}"
+
 end
 
 type m = Location.t;;
