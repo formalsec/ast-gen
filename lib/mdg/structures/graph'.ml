@@ -180,7 +180,7 @@ let iter (f : location -> EdgeSet.t -> Node.t option -> unit) (graph : t) = Hash
 
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
 let get_edges (graph : t) (origin : location) : EdgeSet.t = 
-  map_default identity EdgeSet.empty (find_edges_opt graph origin)
+  Option.value (find_edges_opt graph origin) ~default:EdgeSet.empty
 
 let is_version_edge (_to : location) (edge : Edge.t) : bool = Edge.is_version edge && Edge.get_to edge = _to
 

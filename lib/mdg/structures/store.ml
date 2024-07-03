@@ -1,8 +1,6 @@
 open Structures
 open Ast.Grammar
 open Auxiliary.Structures
-open Auxiliary.Functions
-
 
 type t = LocationSet.t HashTable.t
 
@@ -31,7 +29,7 @@ let equal (store : t) (store' : t) : bool = HashTable.equals (LocationSet.equal)
 
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
 let get_locations (store : t) (id : location) : LocationSet.t =
-  map_default identity LocationSet.empty (find_opt store id)
+  Option.value (find_opt store id) ~default:LocationSet.empty
   
 (* ------- S T O R E   M A N I P U L A T I O N ------- *)
 let get (store : t) ((_, {name; _}) : m Identifier.t) : LocationSet.t =

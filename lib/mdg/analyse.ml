@@ -39,7 +39,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let new_version = Graph.staticNewVersion graph in 
   let new_version' = Graph.dynamicNewVersion graph in 
   let get_param_locs = Graph.get_param_locations graph in
-  let get_param_names = Functions.Context.get_param_names contx in 
+  let get_param_names = Functions.Context.get_param_names' contx in 
   let get_func_id = Functions.Context.get_func_id contx in 
   let is_last_definition = Functions.Context.is_last_definition contx in 
   let visit = Functions.Context.visit contx in 
@@ -128,26 +128,34 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     (* -------- C A L L -------- *)
     | _, AssignNewCall {left; callee; arguments; id_call; id_retn; _}
     | _, AssignFunCall {left; callee; arguments; id_call; id_retn; _} -> 
-      let f = Identifier.get_name callee in 
       let _Lss = List.map eval_expr arguments in 
       let l_call = alloc id_call in 
+      let l_retn = alloc id_retn in 
+
+      (* get function definition information *)
+      let f    = Identifier.get_name callee in 
+      let f_id = get_func_id f in 
+
+      (* node information *)
+      add_node l_call (f ^ "()");
+      add_node l_retn (Identifier.get_name left);
+      
       (* argument edges *)
-      let params = get_param_names f in 
+      let params = map_default get_param_names [] f_id in 
       List.iteri ( fun i _Ls -> 
-        let param_name = List.nth params i in 
+        let param_name = Option.value (List.nth_opt params i) ~default:"undefined" in 
         LocationSet.iter (fun l -> add_arg_edge l l_call i param_name) _Ls
       ) _Lss;
-      
-      (* call edge *)
-      let l_f = Graph.get_func_node graph (get_func_id f) in 
-      add_call_edge l_call (Option.get l_f);
-      add_node l_call (f ^ "()");
 
-      (* add return edge *)
-      let l_retn = alloc id_retn in 
+      (* return edge *)
       add_ret_edge l_call l_retn;
-      add_node l_retn (Identifier.get_name left);
       store_update left (LocationSet.singleton l_retn);
+
+      (* call edge to function definition (if defined) *)
+      option_may (fun id ->
+        let l_f = Graph.get_func_node graph id in 
+        add_call_edge l_call (Option.get l_f)
+      ) f_id;
 
     (* -------- I F -------- *)
     | _, If {consequent; alternate; _} ->
