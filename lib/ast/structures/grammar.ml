@@ -396,7 +396,7 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t -> 'M Statement.t
   end
 
-  module StaticMemberAssign : sig
+  module StaticUpdate : sig
     type 'M t = {
       id : int;
       (* -- left -- *)
@@ -410,7 +410,7 @@ and Statement : sig
     val build : 'M -> 'M Expression.t -> string -> bool -> 'M Expression.t -> 'M Statement.t
   end
 
-  module DynmicMemberAssign : sig
+  module DynmicUpdate : sig
     type 'M t = {
       id : int;
       (* -- left -- *)
@@ -423,7 +423,7 @@ and Statement : sig
     val build : 'M -> 'M Expression.t -> 'M Expression.t -> 'M Expression.t -> 'M Statement.t
   end
 
-  module AssignStaticMember : sig
+  module StaticLookup : sig
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
@@ -436,7 +436,7 @@ and Statement : sig
     val build : 'M  -> 'M Identifier.t ->'M Expression.t -> string -> bool ->'M Statement.t
   end
 
-  module AssignDynmicMember : sig
+  module DynmicLookup : sig
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
@@ -554,10 +554,10 @@ and Statement : sig
     | AssignUnary         of 'M AssignUnary.t
     | AssignArray         of 'M AssignArray.t
     | AssignObject        of 'M AssignObject.t
-    | StaticMemberAssign  of 'M StaticMemberAssign.t
-    | DynmicMemberAssign  of 'M DynmicMemberAssign.t
-    | AssignStaticMember  of 'M AssignStaticMember.t
-    | AssignDynmicMember  of 'M AssignDynmicMember.t
+    | StaticUpdate        of 'M StaticUpdate.t
+    | DynmicUpdate        of 'M DynmicUpdate.t
+    | StaticLookup        of 'M StaticLookup.t
+    | DynmicLookup        of 'M DynmicLookup.t
     | AssignNewCall       of 'M AssignNewCall.t
     | AssignFunCall       of 'M AssignFunCall.t
     | AssignMetCallStatic of 'M AssignMetCallStatic.t
@@ -982,7 +982,7 @@ end = struct
       (metadata, assign_info)
   end
 
-  module StaticMemberAssign = struct
+  module StaticUpdate = struct
     type 'M t = {
       id : int;
       (* -- left -- *)
@@ -995,7 +995,7 @@ end = struct
     }
 
     let build (metadata : 'M) (_object' : 'M Expression.t) (property' : string) (is_literal' : bool) (right' : 'M Expression.t): 'M Statement.t =
-      let assign_info = Statement.StaticMemberAssign {
+      let assign_info = Statement.StaticUpdate {
         id = get_id ();
         _object = _object';
         property = property';
@@ -1005,7 +1005,7 @@ end = struct
       (metadata, assign_info)
   end
 
-  module DynmicMemberAssign = struct
+  module DynmicUpdate = struct
     type 'M t = {
       id : int;
       (* -- left -- *)
@@ -1016,7 +1016,7 @@ end = struct
     }
 
     let build (metadata : 'M) (_object' : 'M Expression.t) (property' : 'M Expression.t) (right' : 'M Expression.t): 'M Statement.t =
-      let assign_info = Statement.DynmicMemberAssign {
+      let assign_info = Statement.DynmicUpdate {
         id = get_id ();
         _object = _object';
         property = property';
@@ -1025,7 +1025,7 @@ end = struct
       (metadata, assign_info)
   end
 
-  module AssignStaticMember = struct
+  module StaticLookup = struct
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
@@ -1036,7 +1036,7 @@ end = struct
     }
 
     let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : string) (is_literal' : bool) : 'M Statement.t =
-      let assign_info = Statement.AssignStaticMember {
+      let assign_info = Statement.StaticLookup {
         id = get_id ();
         left = left';
         _object = _object';
@@ -1047,7 +1047,7 @@ end = struct
 
   end
 
-  module AssignDynmicMember = struct
+  module DynmicLookup = struct
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
@@ -1057,7 +1057,7 @@ end = struct
     }
 
     let build (metadata : 'M) (left': 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Expression.t) : 'M Statement.t =
-      let assign_info = Statement.AssignDynmicMember {
+      let assign_info = Statement.DynmicLookup {
         id = get_id ();
         left = left';
         _object = _object';
@@ -1196,10 +1196,10 @@ end = struct
     | AssignUnary         of 'M AssignUnary.t
     | AssignArray         of 'M AssignArray.t
     | AssignObject        of 'M AssignObject.t
-    | StaticMemberAssign  of 'M StaticMemberAssign.t
-    | DynmicMemberAssign  of 'M DynmicMemberAssign.t
-    | AssignStaticMember  of 'M AssignStaticMember.t
-    | AssignDynmicMember  of 'M AssignDynmicMember.t
+    | StaticUpdate        of 'M StaticUpdate.t
+    | DynmicUpdate        of 'M DynmicUpdate.t
+    | StaticLookup        of 'M StaticLookup.t
+    | DynmicLookup        of 'M DynmicLookup.t
     | AssignNewCall       of 'M AssignNewCall.t
     | AssignFunCall       of 'M AssignFunCall.t
     | AssignMetCallStatic of 'M AssignMetCallStatic.t
@@ -1229,11 +1229,6 @@ and Expression : sig
     val build : 'M -> value -> string -> 'M Expression.t
   end
 
-  module This : sig
-    type t = unit
-    val build : 'M -> 'M Expression.t
-  end
-
   module TemplateLiteral : sig
     module Element : sig
       type value = {
@@ -1259,35 +1254,18 @@ and Expression : sig
     val build : 'M -> 'M Element.t list -> 'M Expression.t list -> 'M Expression.t
   end
 
-  (* module TaggedTemplate : sig
-    type 'M t = {
-      tag : 'M Expression.t;
-      quasi : 'M TemplateLiteral.t
-    }
-
-    val build : 'M -> 'M Expression.t -> 'M TemplateLiteral.t -> 'M Expression.t
-  end 
-  
-  module MetaProperty : sig
-    type 'M t = {
-      meta : 'M Identifier.t;
-      property : 'M Identifier.t
-    }
-
-    val build : 'M -> 'M Identifier.t -> 'M Identifier.t -> 'M Expression.t
-  end *)
+  module This : sig
+    type t = unit
+    val build : 'M -> 'M Expression.t
+  end
 
   val get_id : 'M Expression.t -> string
 
   type 'M t' = 
     | Literal         of    Literal.t 
+    | TemplateLiteral of 'M TemplateLiteral.t
     | Identifier      of    Identifier.t' 
     | This            of    This.t
-    | TemplateLiteral of 'M TemplateLiteral.t
-    (* 
-    | TaggedTemplate  of 'M TaggedTemplate.t
-    | MetaProperty    of 'M MetaProperty.t 
-    *)
 
 
   type 'M t = 'M * 'M t'
@@ -1311,13 +1289,6 @@ end = struct
       let literal_info = Expression.Literal { value = value'; raw = raw' } in
       (metadata, literal_info)
 
-  end
-
-  module This = struct
-    type t = unit
-
-    let build (metadata: 'M) : 'M Expression.t =
-      (metadata, Expression.This ())
   end
 
   module TemplateLiteral = struct
@@ -1355,34 +1326,12 @@ end = struct
       (metadata, literal_info)
   end
 
-  (* module TaggedTemplate = struct
-    type 'M t = {
-      tag : 'M Expression.t;
-      quasi : 'M TemplateLiteral.t
-    }
+  module This = struct
+    type t = unit
 
-    let build (metadata : 'M) (tag' : 'M Expression.t) (quasi' : 'M TemplateLiteral.t) : 'M Expression.t =
-      let tagged_info = Expression.TaggedTemplate {
-        tag = tag';
-        quasi = quasi'
-      } in
-      (metadata, tagged_info)
-
-  end 
-  
-  module MetaProperty = struct
-    type 'M t = {
-      meta : 'M Identifier.t;
-      property : 'M Identifier.t
-    }
-
-    let build (metadata : 'M) (meta' : 'M Identifier.t) (property' : 'M Identifier.t) : 'M Expression.t =
-      let metaprop_info = Expression.MetaProperty {
-        meta = meta';
-        property = property'
-      } in 
-      (metadata, metaprop_info)
-  end *)
+    let build (metadata: 'M) : 'M Expression.t =
+      (metadata, Expression.This ())
+  end
 
   let get_id (expr : 'M Expression.t) : string =
     match expr with 
@@ -1392,15 +1341,9 @@ end = struct
 
   type 'M t' = 
     | Literal         of    Literal.t 
+    | TemplateLiteral of 'M TemplateLiteral.t
     | Identifier      of    Identifier.t' 
     | This            of    This.t
-    | TemplateLiteral of 'M TemplateLiteral.t
-    (* 
-    | TaggedTemplate  of 'M TaggedTemplate.t
-    | MetaProperty    of 'M MetaProperty.t 
-    *)
-  
-
 
   type 'M t = 'M * 'M t'
      

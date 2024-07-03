@@ -196,27 +196,27 @@ module Js = struct
           let arguments' = List.map print_expr arguments in 
           identation_str ^ left' ^ " = " ^ _object' ^ "[" ^ property' ^ "]" ^ "(" ^ (String.concat ", " arguments') ^ ");\n"
 
-      | _, StaticMemberAssign {_object; property; right; is_literal; _} ->
+      | _, StaticUpdate {_object; property; right; is_literal; _} ->
           let _object' = print_expr _object in
           let right' = print_expr right in  
           if is_literal 
             then identation_str ^ _object' ^ "[\"" ^ property ^ "\"]" ^ " = " ^ right' ^ ";\n"
             else identation_str ^ _object' ^ "." ^ property ^ " = " ^ right' ^ ";\n"
 
-      | _, DynmicMemberAssign {_object; property; right; _} ->
+      | _, DynmicUpdate {_object; property; right; _} ->
           let _object' = print_expr _object in
           let property' = print_expr property in 
           let right' = print_expr right in  
           identation_str ^ _object' ^ "[" ^ property' ^ "] = " ^ right' ^ ";\n"
 
-      | _, AssignStaticMember {left; _object; property; is_literal; _} ->
+      | _, StaticLookup {left; _object; property; is_literal; _} ->
         let left' = print_identifier left in 
         let _object' = print_expr _object in 
         if is_literal 
           then identation_str ^ left' ^ " = " ^ _object' ^ "[\"" ^ property ^ "\"]" ^ ";\n"
           else identation_str ^ left' ^ " = " ^ _object' ^  "." ^ property ^ ";\n"
 
-      | _, AssignDynmicMember {left; _object; property; _} ->
+      | _, DynmicLookup {left; _object; property; _} ->
         let left' = print_identifier left in 
         let _object' = print_expr _object in 
         let property' = print_expr property in

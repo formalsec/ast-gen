@@ -426,11 +426,11 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
       (* var v1 = this.prototype *)
       let class_proto, proto_decl = createVariableDeclaration None loc in 
       let this = Expression.This.build loc in 
-      let assign_proto = Statement.AssignStaticMember.build loc class_proto this "prototype" false in 
+      let assign_proto = Statement.StaticLookup.build loc class_proto this "prototype" false in 
       
       (* var v2 = v1.constructor *)
       let super_constr, constr_decl = createVariableDeclaration None loc in 
-      let assign_constr = Statement.AssignStaticMember.build loc super_constr (Identifier.to_expression class_proto) "constructor" false in
+      let assign_constr = Statement.StaticLookup.build loc super_constr (Identifier.to_expression class_proto) "constructor" false in
       
       proto_decl @ [assign_proto] @ constr_decl @ [assign_constr], Some (Identifier.to_expression super_constr)
     else
@@ -547,8 +547,8 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
 
     (* Statement.AssignMember.build loc id (Option.get obj_expr) (Option.get prop_expr) *)
     let assign = match prop_expr with 
-      | Static  (prop, lit) -> Statement.AssignStaticMember.build loc id (Option.get obj_expr) prop lit
-      | Dynamic  prop       -> Statement.AssignDynmicMember.build loc id (Option.get obj_expr) prop
+      | Static  (prop, lit) -> Statement.StaticLookup.build loc id (Option.get obj_expr) prop lit
+      | Dynamic  prop       -> Statement.DynmicLookup.build loc id (Option.get obj_expr) prop
     in
 
     (* TODO : it has some more restrictions more than being an assignment, like is function call and new expression *)
@@ -654,12 +654,12 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
             let is_id, id = is_identifier argument in
             if not is_id then 
               let id, decl = createVariableDeclaration None loc in 
-              let assign = Statement.AssignDynmicMember.build loc id expression index in 
+              let assign = Statement.DynmicLookup.build loc id expression index in 
               
               let stmts, ids = normalize_pattern (Identifier.to_expression id) argument op in 
               decl @ [assign] @ stmts, ids
             else 
-              let assign = Statement.AssignDynmicMember.build loc (Option.get id) expression index in 
+              let assign = Statement.DynmicLookup.build loc (Option.get id) expression index in 
               [assign], Option.to_list id
 
           | Hole _ -> [], [] (* just ignore *)
@@ -669,7 +669,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
             let index = Expression.Literal.build loc (Expression.Literal.BigInt (Some (Int64.of_int i))) (string_of_int i) in
             (* generate expr.slice(i) *)
             let slide_id, slice_decl = createVariableDeclaration None loc in 
-            let member = Statement.AssignStaticMember.build loc slide_id expression "slice" false in 
+            let member = Statement.StaticLookup.build loc slide_id expression "slice" false in 
             
             (* simplify generated code *)
             let is_id, id = is_identifier argument in
@@ -699,15 +699,15 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
           if not is_id then
             let id, decl = createVariableDeclaration None loc in 
             let assign = match key_expr with 
-              | Static  (prop, lit) -> Statement.AssignStaticMember.build loc id expression prop lit
-              | Dynamic  prop       -> Statement.AssignDynmicMember.build loc id expression prop
+              | Static  (prop, lit) -> Statement.StaticLookup.build loc id expression prop lit
+              | Dynamic  prop       -> Statement.DynmicLookup.build loc id expression prop
             in 
             let stmts, ids = normalize_pattern (Identifier.to_expression id) pattern op in 
             decl @ [assign] @ stmts, ids
           else
             let assign = match key_expr with 
-              | Static  (prop, lit) -> Statement.AssignStaticMember.build loc (Option.get id) expression prop lit
-              | Dynamic  prop       -> Statement.AssignDynmicMember.build loc (Option.get id) expression prop
+              | Static  (prop, lit) -> Statement.StaticLookup.build loc (Option.get id) expression prop lit
+              | Dynamic  prop       -> Statement.DynmicLookup.build loc (Option.get id) expression prop
             in 
             [assign], Option.to_list id
 
@@ -725,16 +725,16 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
         (fun op -> 
           let mem_id, mem_decl = createVariableDeclaration None loc in 
           let mem_assign = match prop_expr with 
-            | Static  (prop, lit) -> Statement.AssignStaticMember.build loc mem_id (Option.get obj_expr) prop lit
-            | Dynamic  prop       -> Statement.AssignDynmicMember.build loc mem_id (Option.get obj_expr) prop
+            | Static  (prop, lit) -> Statement.StaticLookup.build loc mem_id (Option.get obj_expr) prop lit
+            | Dynamic  prop       -> Statement.DynmicLookup.build loc mem_id (Option.get obj_expr) prop
           in
           let assign_op = build_operation mem_id expression op in 
           mem_decl @ [mem_assign; assign_op], Identifier.to_expression mem_id
         ) ([], expression) op in 
       
       let assign = match prop_expr with 
-        | Static  (prop, lit) -> Statement.StaticMemberAssign.build loc (Option.get obj_expr) prop lit expr
-        | Dynamic  prop       -> Statement.DynmicMemberAssign.build loc (Option.get obj_expr) prop     expr
+        | Static  (prop, lit) -> Statement.StaticUpdate.build loc (Option.get obj_expr) prop lit expr
+        | Dynamic  prop       -> Statement.DynmicUpdate.build loc (Option.get obj_expr) prop     expr
       in 
       obj_stmts @ prop_stmts @ stmts @ [assign], []
 
@@ -757,8 +757,8 @@ and get_pattern_expr (pattern : ('M, 'T) Ast'.Pattern.t) : norm_expr_t =
       let obj_stmts, obj_expr = normalize_expression empty_context _object in 
       let prop_stmts, prop_expr = normalize_member_property property in 
       let assign = match prop_expr with 
-        | Static  (prop, lit) -> Statement.AssignStaticMember.build loc id (Option.get obj_expr) prop lit
-        | Dynamic  prop       -> Statement.AssignDynmicMember.build loc id (Option.get obj_expr) prop     in 
+        | Static  (prop, lit) -> Statement.StaticLookup.build loc id (Option.get obj_expr) prop lit
+        | Dynamic  prop       -> Statement.DynmicLookup.build loc id (Option.get obj_expr) prop     in 
     
       decl @ obj_stmts @ prop_stmts @ [assign], Some (Identifier.to_expression id)
     
@@ -886,7 +886,7 @@ and normalize_array_elem (array : m Identifier.t) (index : int) (element : ('M, 
   match element with
     | Expression ((loc, _) as expr) -> 
       let stmts, expr = normalize_expression empty_context expr in 
-      let update_stmt = Statement.StaticMemberAssign.build (loc_f loc) (Identifier.to_expression array) (string_of_int index) true (Option.get expr) in 
+      let update_stmt = Statement.StaticUpdate.build (loc_f loc) (Identifier.to_expression array) (string_of_int index) true (Option.get expr) in 
       stmts @ [update_stmt]
     | Hole _ -> []
     | _ -> failwith "cannot process spread array element"
@@ -969,7 +969,7 @@ and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (
         decl @ func_stmts
       else
         let func_stmts, func_expr = normalize_function empty_context loc func in 
-        let assign = Statement.StaticMemberAssign.build (loc_f loc) class_proto (Identifier.get_name id) false (Option.get func_expr)  in 
+        let assign = Statement.StaticUpdate.build (loc_f loc) class_proto (Identifier.get_name id) false (Option.get func_expr)  in 
         func_stmts @ [assign]
 
     | Property (loc, {key; value; _}) -> 
@@ -981,7 +981,7 @@ and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (
         | Uninitialized | Declared -> [], None
       in
 
-      let assign = Option.map (Statement.StaticMemberAssign.build (loc_f loc) class_proto (Identifier.get_name id) false) val_expr  in 
+      let assign = Option.map (Statement.StaticUpdate.build (loc_f loc) class_proto (Identifier.get_name id) false) val_expr  in 
       val_stmts @ Option.to_list assign 
 
     (* TODO : saw some *)
@@ -1014,13 +1014,13 @@ and normalize_extend (class_id : m Identifier.t) ((loc', {expr=(loc, _) as expr;
   let super_init = Statement.AssignNewCall.build loc id (Identifier.from_expression (Option.get ext_expr)) [] in
 
   (* class_id.prototype = v1; *)
-  let assign_proto = Statement.StaticMemberAssign.build (loc_f loc') (Identifier.to_expression class_id) "prototype" false (Identifier.to_expression id) in
+  let assign_proto = Statement.StaticUpdate.build (loc_f loc') (Identifier.to_expression class_id) "prototype" false (Identifier.to_expression id) in
   ext_stmts @ decl @ [super_init; assign_proto] , Some (Identifier.to_expression id)
 
 and no_extend (class_id : m Identifier.t) (loc : m) : norm_expr_t =
   (* let v1 = X.prototype; *)
   let id, decl = createVariableDeclaration None loc  in 
-  let assign = Statement.AssignStaticMember.build loc id (Identifier.to_expression class_id) "prototype" false in
+  let assign = Statement.StaticLookup.build loc id (Identifier.to_expression class_id) "prototype" false in
 
   decl @ [assign], Some (Identifier.to_expression id)
 
@@ -1054,8 +1054,8 @@ and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast'.Expre
       let val_stmts, val_expr = ne value in 
       
       let set_prop = match key_expr with
-        | Static  (prop, lit) -> Statement.StaticMemberAssign.build (loc_f loc) obj_id prop lit (Option.get val_expr)
-        | Dynamic  prop       -> Statement.DynmicMemberAssign.build (loc_f loc) obj_id prop     (Option.get val_expr)
+        | Static  (prop, lit) -> Statement.StaticUpdate.build (loc_f loc) obj_id prop lit (Option.get val_expr)
+        | Dynamic  prop       -> Statement.DynmicUpdate.build (loc_f loc) obj_id prop     (Option.get val_expr)
       in
       key_stmts @ val_stmts @ [set_prop]
 
@@ -1065,8 +1065,8 @@ and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast'.Expre
       let key_stmts, key_expr = nk key in 
       let val_stmts, val_expr = ne (loc, Ast'.Expression.Function func) in 
       let set_prop = match key_expr with
-        | Static  (prop, lit) -> Statement.StaticMemberAssign.build (loc_f loc) obj_id prop lit (Option.get val_expr)
-        | Dynamic  prop       -> Statement.DynmicMemberAssign.build (loc_f loc) obj_id prop     (Option.get val_expr)
+        | Static  (prop, lit) -> Statement.StaticUpdate.build (loc_f loc) obj_id prop lit (Option.get val_expr)
+        | Dynamic  prop       -> Statement.DynmicUpdate.build (loc_f loc) obj_id prop     (Option.get val_expr)
       in
       key_stmts @ val_stmts @ [set_prop]
 

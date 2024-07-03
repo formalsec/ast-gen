@@ -88,21 +88,21 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     
 
     (* -------- S T A T I C   P R O P E R T Y   L O O K U P -------- *)
-    | _, AssignStaticMember {left; _object; property; id; _} -> 
+    | _, StaticLookup {left; _object; property; id; _} -> 
       let _L = eval_expr _object in 
       add_property _L property id (property_lookup_name left _object property);
       let _L' = LocationSet.map_flat (flip lookup property) _L in 
       store_update left _L'
 
     (* -------- D Y N A M I C   P R O P E R T Y   L O O K U P -------- *)
-    | _, AssignDynmicMember {left; _object; property; id} ->
+    | _, DynmicLookup {left; _object; property; id} ->
       let _L1, _L2 = eval_expr _object, eval_expr property in 
       add_property' _L1 _L2 id (property_lookup_name left _object "*");
       let _L' = LocationSet.map_flat (flip lookup "*") _L1 in 
       store_update left _L'
 
     (* -------- S T A T I C   P R O P E R T Y   U P D A T E -------- *)
-    | _, StaticMemberAssign {_object; property; right; id; _} -> 
+    | _, StaticUpdate {_object; property; right; id; _} -> 
       let _L1, _L2 = eval_expr _object, eval_expr right in
       let _L1' = new_version store _object _L1 property id in 
       LocationSet.iter ( fun l_1 ->
@@ -112,7 +112,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       ) _L1';
 
     (* -------- D Y N A M I C   P R O P E R T Y   U P D A T E -------- *)
-    | _, DynmicMemberAssign {_object; property; right; id} -> 
+    | _, DynmicUpdate {_object; property; right; id} -> 
       let _L1, _L2, _L3 = eval_expr _object, 
                           eval_expr property, 
                           eval_expr right in
