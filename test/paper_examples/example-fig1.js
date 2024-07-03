@@ -1,5 +1,3 @@
-function exec (cmd) {}
-
 function git_reset (config, op, branch_name, url) {
     const options = config[op]
     options[branch_name] = url

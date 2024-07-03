@@ -32,6 +32,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let add_ret_edge = Graph.add_ret_edge graph in 
   let store_update = Store.update store in 
   let alloc = Graph.alloc graph in 
+  let falloc = Graph.alloc_function graph in 
   let add_node = Graph.add_obj_node graph in 
   let add_property = Graph.staticAddProperty graph in 
   let add_property' = Graph.dynamicAddProperty graph in
@@ -51,10 +52,20 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       store_update left _L
 
     | _, AssignFunction {left; id; body; _} ->
+
       let func_id : Functions.Id.t = {uid = id; name = Identifier.get_name left} in 
       (* functions with the same name can be nested inside the same context 
          (only consider the last definition with such name) *)
       if is_last_definition func_id then 
+        (* add object that represents the function *)
+        let l_i = alloc id in 
+        add_node l_i (Identifier.get_name left);
+        store_update left (LocationSet.singleton l_i);
+
+        (* add function definition dependency *)
+        let f_i = falloc id in 
+        add_dep_edge f_i l_i;
+        
         (* setup new store with only the param and corresponding locations *)
         let param_locs = get_param_locs func_id in 
         let new_state = {state with store = param_locs; context = visit func_id} in
