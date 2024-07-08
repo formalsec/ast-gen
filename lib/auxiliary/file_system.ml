@@ -13,3 +13,5 @@ let write_to_file (file : string) (contents : string) =
   let oc = open_out file in
   output_string oc contents;
   close_out oc
+
+let real_path : string -> string = Unix.realpath

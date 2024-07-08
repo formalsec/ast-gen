@@ -10,22 +10,23 @@ module Location = struct
   type t = {
     (* maybe add file source*)
     _start : position;
-    _end   : position; 
+    _end   : position;
+    _file  : string; 
   } 
 
   let empty () : t = 
     let empty_position () : position = {line = 0; column = 0} in
-    { _start = empty_position (); _end = empty_position ()};; 
+    { _start = empty_position (); _end = empty_position (); _file = ""};; 
 
-  let rec convert_flow_loc ({start; _end; _} : Loc.t) : t = 
+  let rec convert_flow_loc (file' : string) ({start; _end; _} : Loc.t) : t = 
     let start' = convert_flow_pos start in
     let end'   = convert_flow_pos _end  in
-    { _start = start'; _end = end' }
+    { _start = start'; _end = end' ; _file = file'}
   and convert_flow_pos ({line; column} : Loc.position) : position = 
     { line = line; column = column };;
 
   let rec to_string (loc : t) : string =
-    "{\"start\":" ^ position_to_string loc._start ^ ",\"end\":" ^ position_to_string loc._end ^ "}"
+    "{\"start\":" ^ position_to_string loc._start ^ ",\"end\":" ^ position_to_string loc._end ^ ",\"fname\":\"" ^ loc._file ^ "\"}"
   and position_to_string (position : position) : string =
     "{\"line\":" ^ string_of_int position.line ^ ",\"column\":" ^ string_of_int position.column ^ "}"
 

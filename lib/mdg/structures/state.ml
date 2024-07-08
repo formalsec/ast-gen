@@ -28,7 +28,7 @@ type state = {
 let empty_state = { 
   graph = Graph.empty register; 
   store = Store.empty (); 
-  this  = Store.this_loc;
+  this  = Store.loc_this;
   (* function information *)
   context   = Functions.Context.empty;
 }

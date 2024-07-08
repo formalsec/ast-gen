@@ -3,12 +3,14 @@ type property = string
 type location = string
 module AbstractLocation = String
 
-let loc_obj_prefix : location = "l_"
-let loc_par_prefix : location = "p_"
-let loc_fun_prefix : location = "f_"
+let loc_obj_prefix  : location = "l_" 
+let loc_par_prefix  : location = "p_"
+let loc_fun_prefix  : location = "f_"
+let loc_sink_prefix : location = "s_"
 
-let literal : location = loc_obj_prefix ^ "literal"
-let this : location = "this"
+let loc_literal : location = loc_obj_prefix ^ "literal"
+let loc_taint_source : location = loc_obj_prefix ^ "tsource"
+let loc_this : location = "this"
 
 module LocationSet = struct 
   module LocationSet' = Set.Make(AbstractLocation)

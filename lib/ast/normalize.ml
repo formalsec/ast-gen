@@ -6,7 +6,8 @@ open Grammar
 type norm_stmt_t = m Statement.t list;;
 type norm_expr_t = m Statement.t list * m Expression.t option;;
 
-let loc_f = Location.convert_flow_loc;;
+let file_path : string ref = ref ""
+
 let _const = Statement.VarDecl.Const;;
 let _let = Statement.VarDecl.Let;;
 let _var = Statement.VarDecl.Var;;
@@ -25,8 +26,7 @@ type ('M, 'T) generic_left =
   | LeftPattern of ('M, 'T) Ast'.Pattern.t
 
 
-
-
+  
 let func_call = "FunctionCall";;
 
 
@@ -40,17 +40,23 @@ type context = {
   is_declaration : bool;
   is_statement : bool;
 }
-let empty_context : context = { parent_type = ""; identifier = None; is_assignment = false; is_declaration = false; has_op = false; is_statement = false; } 
 
-let rec program (loc , { Ast'.Program.statements; _ }) : m Program.t = 
+let empty_context : context = {parent_type = ""; identifier = None; is_assignment = false; is_declaration = false; has_op = false; is_statement = false; } 
+
+let rec program (loc , { Ast'.Program.statements; _ }) (file : string): m Program.t = 
+  file_path := file;
+
   let body = List.flatten (List.map (normalize_statement empty_context) statements) in
-  let program = Program.build (loc_f loc) body in
+  let program = Program.build (Location.convert_flow_loc !file_path loc) body in
+
   program;
 
 
 and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) : norm_stmt_t =
   let ns  = normalize_statement empty_context in
   let ne  = normalize_expression empty_context in
+  let loc_f = Location.convert_flow_loc !file_path in
+
   let nec = normalize_expression in 
 
   match stmt with
@@ -289,6 +295,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
 and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t) : norm_expr_t =
   let ne = normalize_expression empty_context in 
   let nec = normalize_expression in 
+  let loc_f = Location.convert_flow_loc !file_path in
 
   match expr with
   (* --------- L I T E R A L --------- *)
@@ -595,7 +602,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
 
   | loc, Ast'.Expression.Call {callee; arguments; _} -> 
     let new_context = {empty_context with parent_type = func_call} in 
-
+    
     let callee_stmts, callee_expr = nec new_context callee in
     let args_stmts, args_exprs = List.split (normalize_argument_list arguments) in 
     let args_exprs = List.flatten (List.map Option.to_list args_exprs) in
@@ -636,6 +643,7 @@ and normalize_assignment (context : context) (left : ('M, 'T) Ast'.Pattern.t) (o
 
   
 and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
+  let loc_f = Location.convert_flow_loc !file_path in
   match pattern with 
     | loc, Identifier {name; _} -> 
       let id = normalize_identifier name in 
@@ -746,6 +754,7 @@ and is_identifier (pattern : ('M, 'T) Ast'.Pattern.t) : bool * m Identifier.t op
   | _                       -> false, None
 
 and get_pattern_expr (pattern : ('M, 'T) Ast'.Pattern.t) : norm_expr_t = 
+  let loc_f = Location.convert_flow_loc !file_path in
   match pattern with 
     | _, Identifier {name; _} -> 
       [], Some ((Identifier.to_expression << normalize_identifier) name)
@@ -866,6 +875,7 @@ and normalize_for_left (left : ('M, 'T) generic_left) : norm_stmt_t * m Statemen
 and normalize_case (loc, {Ast'.Statement.Switch.Case.test; consequent; _}) : m Statement.Switch.Case.t * norm_stmt_t = 
   let ns = normalize_statement empty_context in
   let ne = normalize_expression empty_context in
+  let loc_f = Location.convert_flow_loc !file_path in
 
   let test_stmts, test_expr = map_default ne ([], None) test in
   let cnsq_stmts = List.flatten (List.map ns consequent) in 
@@ -874,6 +884,7 @@ and normalize_case (loc, {Ast'.Statement.Switch.Case.test; consequent; _}) : m S
   (case, test_stmts)
 
 and normalize_catch (loc, { Ast'.Statement.Try.CatchClause.param; body; _}) : m Statement.Try.Catch.t option = 
+    let loc_f = Location.convert_flow_loc !file_path in
     let is_id, id = map_default is_identifier (false, None) param in
     let param' = if is_id then id else failwith "param is not an identifier" in 
     let body_stmts = normalize_statement empty_context (block_to_statement body) in 
@@ -882,7 +893,7 @@ and normalize_catch (loc, { Ast'.Statement.Try.CatchClause.param; body; _}) : m 
     Some catch
 
 and normalize_array_elem (array : m Identifier.t) (index : int) (element : ('M, 'T) Ast'.Expression.Array.element) : norm_stmt_t = 
-
+  let loc_f = Location.convert_flow_loc !file_path in
   match element with
     | Expression ((loc, _) as expr) -> 
       let stmts, expr = normalize_expression empty_context expr in 
@@ -902,6 +913,8 @@ and normalize_argument (arg : ('M, 'T) Ast'.Expression.expression_or_spread) : n
 
 
 and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {params; _}); body; _} : ('M, 'T) Ast'.Function.t) : norm_expr_t =
+  let loc_f = Location.convert_flow_loc !file_path in
+
   let loc = loc_f loc in 
   let id = get_identifier loc (if Option.is_some id then Option.map normalize_identifier id else context.identifier) in 
   
@@ -916,6 +929,7 @@ and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {param
     (List.flatten params_stmts @ [assign], Some (Identifier.to_expression id)) 
 
 and normalize_param (loc, {Ast'.Function.Param.argument; default} : ('M, 'T) Ast'.Function.Param.t) : m Statement.t list * m Statement.AssignFunction.Param.t  = 
+let loc_f = Location.convert_flow_loc !file_path in
   (* TODO : param can be spread element or other patterns (maybe do like the normalize_for_left ) *)
   let is_id, id = is_identifier argument in 
   let argument' = if is_id then Option.get id else failwith "argument is not an identifier" in 
@@ -925,6 +939,7 @@ and normalize_param (loc, {Ast'.Function.Param.argument; default} : ('M, 'T) Ast
   (def_stmts, param)
 
 and normalize_func_body (body : ('M, 'T) Ast'.Function.body) : norm_stmt_t =
+  let loc_f = Location.convert_flow_loc !file_path in
   match body with 
     | Ast'.Function.BodyBlock body-> 
       normalize_statement empty_context (block_to_statement body) 
@@ -935,6 +950,8 @@ and normalize_func_body (body : ('M, 'T) Ast'.Function.body) : norm_stmt_t =
       body_stmts @ [return]
 
 and normalize_class (context : context) (loc : Loc.t) ({id; body=(_, {body; _}); extends; (* implements; *) _} : ('M, 'T) Ast'.Class.t): norm_expr_t = 
+  let loc_f = Location.convert_flow_loc !file_path in
+  
   let loc = loc_f loc in 
   let id = get_identifier loc (if Option.is_some id then Option.map normalize_identifier id else context.identifier) in 
   let is_decl = context.is_declaration in 
@@ -955,6 +972,7 @@ and empty_constructor (is_declaration : bool) (class_id : m Identifier.t) (loc :
   decl @ [cnstr_stmt]
 
 and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (class_proto : m Expression.t) (element : ('M, 'T) Ast'.Class.Body.element) : norm_stmt_t = 
+  let loc_f = Location.convert_flow_loc !file_path in
   match element with 
     | Method (_, {key; value=(loc, func); _}) -> 
       let id = get_key_identifier key in
@@ -988,6 +1006,7 @@ and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (
     | PrivateField _ -> []
 
 and get_key_identifier (key : ('M, 'T) Ast'.Expression.Object.Property.key) : m Identifier.t = 
+  let loc_f = Location.convert_flow_loc !file_path in
   match key with 
     | StringLiteral ((loc, _) as str) -> Identifier.build (loc_f loc) (get_string str) 
     | Identifier id -> normalize_identifier id
@@ -1006,6 +1025,7 @@ and is_specified_name ((_, {name; _}) : m Identifier.t) (specified_name : string
   name = specified_name
 
 and normalize_extend (class_id : m Identifier.t) ((loc', {expr=(loc, _) as expr; _}) : ('M, 'T) Ast'.Class.Extends.t) : norm_expr_t = 
+  let loc_f = Location.convert_flow_loc !file_path in
   let ext_stmts, ext_expr = normalize_expression empty_context expr in 
   
   let loc = loc_f loc in
@@ -1046,6 +1066,7 @@ and normalize_member_property (property : ('M, 'T) Ast'.Expression.Member.proper
 and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast'.Expression.Object.property) : norm_stmt_t = 
   let nk = normalize_property_key in
   let ne = normalize_expression empty_context in 
+  let loc_f = Location.convert_flow_loc !file_path in
   let obj_id = Identifier.to_expression obj_id in 
 
   match property with
@@ -1091,10 +1112,10 @@ and normalize_init (init : ('M, 'T) Ast'.Statement.For.init) : norm_expr_t =
     | InitExpression expr -> ne expr
 
 and normalize_identifier ((loc, {name; _}) : ('M, 'T) Ast'.Identifier.t) : m Identifier.t = 
-  Identifier.build (loc_f loc) name
+  Identifier.build (Location.convert_flow_loc !file_path loc) name
 
 and build_template_element (loc, {Ast'.Expression.TemplateLiteral.Element.value={raw; cooked}; tail}) : m Expression.TemplateLiteral.Element.t =
-  Expression.TemplateLiteral.Element.build (loc_f loc) raw cooked tail
+  Expression.TemplateLiteral.Element.build (Location.convert_flow_loc !file_path loc) raw cooked tail
 
 and get_identifier (loc : m) (id : m Identifier.t option) : m Identifier.t = 
   let random_id = lazy (Identifier.build_random loc) in

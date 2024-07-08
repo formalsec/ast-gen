@@ -30,10 +30,13 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let add_arg_edge = Graph.add_arg_edge graph in
   let add_call_edge = Graph.add_call_edge graph in 
   let add_ret_edge = Graph.add_ret_edge graph in 
+  let add_sink_edge = Graph.add_sink_edge graph in
   let store_update = Store.update store in 
   let alloc = Graph.alloc graph in 
   let falloc = Graph.alloc_function graph in 
+  let salloc = Graph.alloc_tsink graph in
   let add_node = Graph.add_obj_node graph in 
+  let add_tsink = Graph.add_taint_sink graph in 
   let add_property = Graph.staticAddProperty graph in 
   let add_property' = Graph.dynamicAddProperty graph in
   let lookup = Graph.lookup graph in  
@@ -51,7 +54,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let _L = eval_expr right in 
       store_update left _L
 
-    | _, AssignFunction {left; id; body; _} ->
+    | loc, AssignFunction {left; id; body; _} ->
 
       let func_id : Functions.Id.t = {uid = id; name = Identifier.get_name left} in 
       (* functions with the same name can be nested inside the same context 
@@ -59,7 +62,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       if is_last_definition func_id then 
         (* add object that represents the function *)
         let l_i = alloc id in 
-        add_node l_i (Identifier.get_name left);
+        add_node l_i (Identifier.get_name left) loc;
         store_update left (LocationSet.singleton l_i);
 
         (* add function definition dependency *)
@@ -73,49 +76,55 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       
 
     (* -------- A S S I G N - O P -------- *)
-    | _, AssignBinary {left; opLeft; opRght; id; _} -> 
+    | loc, AssignBinary {left; opLeft; opRght; id; _} -> 
       let _L1, _L2 = eval_expr opLeft, eval_expr opRght in 
       let l_i = alloc id in 
       LocationSet.iter (flip add_dep_edge l_i) (LocationSet.union _L1 _L2);
       store_update left (LocationSet.singleton l_i);
       (* add node info*)
-      add_node l_i (Identifier.get_name left)
+      add_node l_i (Identifier.get_name left) loc
     
-    | _, AssignUnary {left; argument; id; _} -> 
+    | loc, AssignUnary {left; argument; id; _} -> 
       let _L1 = eval_expr argument in 
       let l_i = alloc id in 
       LocationSet.iter (flip add_dep_edge l_i) _L1;
       store_update left (LocationSet.singleton l_i);
       (* add node info*)
-      add_node l_i (Identifier.get_name left)
+      add_node l_i (Identifier.get_name left) loc
 
 
     (* -------- N E W   O B J E C T -------- *)
-    | _, AssignArray {id; left} 
-    | _, AssignObject {id; left} -> 
+    | loc, AssignArray {id; left} 
+    | loc, AssignObject {id; left} -> 
       let l_i = alloc id in
       store_update left (LocationSet.singleton l_i);
-      add_node l_i (Identifier.get_name left);
+      add_node l_i (Identifier.get_name left) loc;
     
 
     (* -------- S T A T I C   P R O P E R T Y   L O O K U P -------- *)
-    | _, StaticLookup {left; _object; property; id; _} -> 
+    | loc, StaticLookup {left; _object; property; id; _} -> 
+      let add_node' : location -> unit = fun abs_loc -> add_node abs_loc (property_lookup_name left _object property) loc in 
+      
       let _L = eval_expr _object in 
-      add_property _L property id (property_lookup_name left _object property);
+      add_property _L property id add_node';
       let _L' = LocationSet.map_flat (flip lookup property) _L in 
       store_update left _L'
 
     (* -------- D Y N A M I C   P R O P E R T Y   L O O K U P -------- *)
-    | _, DynmicLookup {left; _object; property; id} ->
+    | loc, DynmicLookup {left; _object; property; id} ->
+      let add_node' : location -> unit = fun abs_loc -> add_node abs_loc (property_lookup_name left _object "*") loc in 
+
       let _L1, _L2 = eval_expr _object, eval_expr property in 
-      add_property' _L1 _L2 id (property_lookup_name left _object "*");
+      add_property' _L1 _L2 id add_node';
       let _L' = LocationSet.map_flat (flip lookup "*") _L1 in 
       store_update left _L'
 
     (* -------- S T A T I C   P R O P E R T Y   U P D A T E -------- *)
-    | _, StaticUpdate {_object; property; right; id; _} -> 
+    | loc, StaticUpdate {_object; property; right; id; _} ->
+      let add_node' : location -> unit = fun abs_loc -> add_node abs_loc (Expression.get_id _object) loc in 
+      
       let _L1, _L2 = eval_expr _object, eval_expr right in
-      let _L1' = new_version store _object _L1 property id in 
+      let _L1' = new_version store _L1 property id add_node' in 
       LocationSet.iter ( fun l_1 ->
         LocationSet.iter (fun l_2 ->
             add_prop_edge l_1 l_2 (Some property)
@@ -123,12 +132,14 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       ) _L1';
 
     (* -------- D Y N A M I C   P R O P E R T Y   U P D A T E -------- *)
-    | _, DynmicUpdate {_object; property; right; id} -> 
+    | loc, DynmicUpdate {_object; property; right; id} -> 
+      let add_node' : location -> unit = fun abs_loc -> add_node abs_loc (Expression.get_id _object) loc in 
+
       let _L1, _L2, _L3 = eval_expr _object, 
                           eval_expr property, 
                           eval_expr right in
-       
-      let _L1' = new_version' store _object _L1 _L2 id in 
+
+      let _L1' = new_version' store _L1 _L2 id add_node' in 
       LocationSet.iter ( fun l_1 ->
         LocationSet.iter (fun l_3 ->
             add_prop_edge l_1 l_3 None
@@ -137,19 +148,19 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 
 
     (* -------- C A L L -------- *)
-    | _, AssignNewCall {left; callee; arguments; id_call; id_retn; _}
-    | _, AssignFunCall {left; callee; arguments; id_call; id_retn; _} -> 
+    | loc, AssignNewCall {left; callee; arguments; id_call; id_retn; _}
+    | loc, AssignFunCall {left; callee; arguments; id_call; id_retn; _} -> 
       let _Lss = List.map eval_expr arguments in 
       let l_call = alloc id_call in 
       let l_retn = alloc id_retn in 
 
       (* get function definition information *)
       let f    = Identifier.get_name callee in 
-      let f_id = get_func_id f in 
+      let f_id = get_func_id f in
 
       (* node information *)
-      add_node l_call (f ^ "()");
-      add_node l_retn (Identifier.get_name left);
+      add_node l_call (f ^ "()") loc;
+      add_node l_retn (Identifier.get_name left) loc;
       
       (* argument edges *)
       let params = map_default get_param_names [] f_id in 
@@ -157,6 +168,18 @@ and analyse (state : state) (statement : m Statement.t) : unit =
         let param_name = Option.value (List.nth_opt params i) ~default:"undefined" in 
         LocationSet.iter (fun l -> add_arg_edge l l_call i param_name) _Ls
       ) _Lss;
+
+      (* TODO : only as temporary solution *)
+      (* TODO : also there is node per sink, rn we only accept if the sink is "eval" *)
+      if (f = "eval") then (
+        let l_tsink = salloc id_call in
+        add_tsink l_tsink f loc;
+        add_sink_edge l_call l_tsink f;
+
+        List.iter ( fun _Ls -> 
+          LocationSet.iter (fun l -> add_dep_edge l l_tsink) _Ls
+        ) _Lss;
+      );
 
       (* return edge *)
       add_ret_edge l_call l_retn;
@@ -201,7 +224,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       analyse_sequence state body
 
     (* -------- R E T U R N -------- *)
-    | _, Return {id; argument} -> 
+    | loc, Return {id; argument} -> 
       let _L = Option.map eval_expr argument in 
       let l_retn = alloc id in 
 
@@ -210,7 +233,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
         LocationSet.iter (flip add_dep_edge l_retn) _L
       );
 
-      add_node l_retn "PDG_RETURN";
+      add_node l_retn "PDG_RETURN" loc;
 
 
     (* -------- O T H E R   C O N S T R U C T S -------- *)
@@ -254,7 +277,7 @@ and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) :
       let id = Identifier.from_expression id in 
       Store.get store id 
     
-    | _, Literal _ -> Store.literal_loc
+    | _, Literal _ -> Store.loc_literal
 
     | _, This _ -> this
 
@@ -267,23 +290,27 @@ and property_lookup_name (left : m Identifier.t) (_object : m Expression.t) (pro
   if Identifier.is_generated left then obj_prop else Identifier.get_name left ^ ", " ^ obj_prop
 
 and initialize_functions (state : state) (funcs_info : Functions.Info.t) : state =
+  let l_tsource = loc_taint_source in 
   let init_func_header (state : state) (func : Functions.Id.t) (info : Functions.Info.info) : unit =
     let graph = state.graph in 
-    let alloc_fun    = Graph.alloc_function graph in 
-    let add_fun_node = Graph.add_func_node  graph in 
-    let add_par_node = Graph.add_param_node graph in 
-    let add_par_edge = Graph.add_param_edge graph in 
+    let alloc_fun      = Graph.alloc_function graph in 
+    let add_func_node  = Graph.add_func_node  graph in 
+    let add_param_node = Graph.add_param_node graph in 
+    let add_param_edge = Graph.add_param_edge graph in 
+    let add_taint_edge = Graph.add_taint_edge graph in
 
     let l_f = alloc_fun func.uid in 
-    add_fun_node l_f func;
+    add_func_node l_f func (Location.empty ());
 
     (* add param nodes and edges *)
     List.iteri (fun i param -> 
       let l_p = Graph.alloc_param graph in 
-      add_par_node l_p param;
+      add_param_node l_p param (Location.empty ());
+      (* TODO : only as temporary solution *)
+      add_taint_edge l_tsource l_p;
       if param = "this" 
-        then add_par_edge l_f l_p "this"
-        else add_par_edge l_f l_p (Int.to_string (i - 1))
+        then add_param_edge l_f l_p "this"
+        else add_param_edge l_f l_p (Int.to_string (i - 1))
     ) ("this" :: info.params);
   in
 

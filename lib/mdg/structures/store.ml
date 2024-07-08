@@ -6,8 +6,8 @@ type t = LocationSet.t HashTable.t
 
 
 let empty () : t = HashTable.create 100
-let literal_loc = LocationSet.singleton literal 
-let this_loc = LocationSet.singleton this
+let loc_literal = LocationSet.singleton Structures.loc_literal 
+let loc_this = LocationSet.singleton Structures.loc_literal
 
 (* =============== F U N C T I O N S =============== *)
 

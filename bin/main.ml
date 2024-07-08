@@ -1,6 +1,7 @@
 open Cmdliner
 
 let main (filename : string) (output_path : string) (verbose : bool) (generate_mdg : bool) : int =
+  let filename = Auxiliary.File_system.real_path filename in 
   (* STEP 0 : Generate AST using Flow library *)
   match Auxiliary.Js_parser.from_file filename with
   | Ok ast ->
@@ -11,7 +12,7 @@ let main (filename : string) (output_path : string) (verbose : bool) (generate_m
       Auxiliary.File_system.create_dir run_dir;
 
       (* STEP 1 : Normalize AST *)
-      let norm_program = Ast.Normalize.program ast in
+      let norm_program = Ast.Normalize.program ast filename in
       let js_program = Ast.Pp.Js.print norm_program in
       Auxiliary.File_system.write_to_file (graph_dir ^ "normalized.js") js_program;
 
