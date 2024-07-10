@@ -367,7 +367,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   | loc, Ast'.Expression.Binary {operator; left; right; _} -> 
     let operator' = Operator.Binary.translate_binary operator in
     let left_stmt, left_expr = ne left in  
-    let right_stmt, right_expr = ne right in  
+    let right_stmt, right_expr = ne right in
 
     let loc = loc_f loc in
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
@@ -415,7 +415,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
       else [assign; update]   
     in
 
-    if not context.is_assignment then
+    if not context.is_assignment || context.has_op then
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
       (arg_stmts @ decl @ update_stmts , Some (Identifier.to_expression id))
     else
@@ -507,6 +507,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let operator' = Option.map Operator.Assignment.translate operator in
     let assign_stmts, _ = normalize_assignment context left operator' right  in 
 
+    (* check if the assignment is done as a statement or an expression *)
     let stmts, expr = if not context.is_statement
       then get_pattern_expr left
       else [], None 
@@ -517,12 +518,12 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   (* --------- A S S I G N   A R R A Y ---------*)
   | loc, Ast'.Expression.Array {elements; _} -> 
     let loc = loc_f loc in
-    let id = get_identifier loc context.identifier in
+    let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
     let assign = Statement.AssignArray.build loc id in
 
     let elems_stmts = List.mapi (normalize_array_elem id) elements in 
     
-    if not context.is_assignment then 
+    if not context.is_assignment || context.has_op then 
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in 
       (decl @ [assign] @ (List.flatten elems_stmts) , Some (Identifier.to_expression id))
     else
@@ -535,10 +536,10 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let args_exprs = List.flatten (List.map Option.to_list args_exprs) in
 
     let loc = loc_f loc in
-    let id = get_identifier loc context.identifier in
+    let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
     let assign = Statement.AssignNewCall.build loc id (Identifier.from_expression (Option.get callee_expr)) args_exprs in
 
-    if not context.is_assignment then
+    if not context.is_assignment || context.has_op then
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
       (callee_stmts @ (List.flatten args_stmts) @ decl @ [assign] , Some (Identifier.to_expression id))
     else
@@ -550,7 +551,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let prop_stmts, prop_expr = normalize_member_property property in 
 
     let loc = loc_f loc in
-    let id = get_identifier loc context.identifier in
+    let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
 
     (* Statement.AssignMember.build loc id (Option.get obj_expr) (Option.get prop_expr) *)
     let assign = match prop_expr with 
@@ -559,7 +560,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     in
 
     (* TODO : it has some more restrictions more than being an assignment, like is function call and new expression *)
-    if not context.is_assignment then
+    if not context.is_assignment || context.has_op then
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
       (obj_stmts @ prop_stmts @ decl @ [assign] , Some (Identifier.to_expression id))
     else
@@ -569,11 +570,11 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   | loc, Ast'.Expression.Object {properties; _} -> 
       let loc = loc_f loc in
 
-      let id = get_identifier loc context.identifier in
+      let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
       let empty_obj = Statement.AssignObject.build loc id in
       let props_stmts = List.flatten (List.map (normalize_property id) properties) in 
       
-      if not context.is_assignment then
+      if not context.is_assignment || context.has_op then
         let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
         (decl @ [empty_obj] @ props_stmts , Some (Identifier.to_expression id))
       else
@@ -589,12 +590,12 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let args_exprs = List.flatten (List.map Option.to_list args_exprs) in
 
     let loc = loc_f loc in
-    let id = get_identifier loc context.identifier in
+    let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
     let assign = match prop_expr with 
       | Static  (prop, lit) -> Statement.AssignMetCallStatic.build loc id (Option.get obj_expr) prop lit args_exprs
       | Dynamic  prop       -> Statement.AssignMetCallDynmic.build loc id (Option.get obj_expr) prop     args_exprs in
 
-    if not context.is_assignment then
+    if not context.is_assignment || context.has_op then
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
       (obj_stmts @ prop_stmts @ (List.flatten args_stmts) @ decl @ [assign] , Some (Identifier.to_expression id))
     else 
@@ -618,7 +619,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
       (callee_stmts @ (List.flatten args_stmts) @ [assign], Some (Identifier.to_expression id))
 
   (* --------- A S S I G N   F U N C T I O N ---------*)
-  | loc, Ast'.Expression.ArrowFunction _function -> normalize_function context loc _function
+  | loc, Ast'.Expression.ArrowFunction _function 
   | loc, Ast'.Expression.Function _function      -> normalize_function context loc _function
   
   (* --------- C L A S S   E X P R E S S I O N ---------*)
@@ -631,25 +632,30 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
 and normalize_assignment (context : context) (left : ('M, 'T) Ast'.Pattern.t) (op : Operator.Assignment.t option) (right : ('M, 'T) Ast'.Expression.t) : norm_stmt_t * m Identifier.t list = 
   let ne = normalize_expression in
   let is_id, id = is_identifier left in  
-  let new_context = if is_id then {context with identifier = id; is_assignment = true; has_op = Option.is_some op} else context in
+  let new_context = if is_id then {context with identifier = id; is_assignment = true; has_op = Option.is_some op; is_statement = false} else context in
   
   let init_stmts, init_expr = ne new_context right in
-  let pat_stmts, ids = if not (is_id && is_special_assignment right) || (is_operation right && Option.is_some op)
+  let pat_stmts, ids = normalize_pattern (Option.get init_expr) left op (is_special_assignment right) in 
+  
+  (* let pat_stmts, ids = if not (is_id && is_special_assignment right) || (is_operation right && Option.is_some op)
     then normalize_pattern (Option.get init_expr) left op
     else [], [Option.get id] 
-  in 
+  in  *)
 
   init_stmts @ pat_stmts, ids
 
   
-and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pattern.t) (op : Operator.Assignment.t option) : norm_stmt_t * m Identifier.t list =
+and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pattern.t) (op : Operator.Assignment.t option) (is_special_assignment : bool): norm_stmt_t * m Identifier.t list =
   let loc_f = Location.convert_flow_loc !file_path in
   match pattern with 
     | loc, Identifier {name; _} -> 
       let id = normalize_identifier name in 
-      let assign = map_default (build_operation id expression) (Statement.AssignSimple.build (loc_f loc) id expression) op in 
+      let assign = if Option.is_some op 
+        then Some (build_operation id expression (Option.get op))
+        else if is_special_assignment then None
+        else Some (Statement.AssignSimple.build (loc_f loc) id expression) in 
 
-      [assign], [id]
+      Option.to_list assign, [id]
     
     | _, Array {elements; _} -> let assigns, ids = List.split (List.mapi (
       fun i elem ->
@@ -664,7 +670,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
               let id, decl = createVariableDeclaration None loc in 
               let assign = Statement.DynmicLookup.build loc id expression index in 
               
-              let stmts, ids = normalize_pattern (Identifier.to_expression id) argument op in 
+              let stmts, ids = normalize_pattern (Identifier.to_expression id) argument op is_special_assignment in 
               decl @ [assign] @ stmts, ids
             else 
               let assign = Statement.DynmicLookup.build loc (Option.get id) expression index in 
@@ -684,7 +690,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
             if not is_id then 
               let id, decl = createVariableDeclaration None loc in 
               let call = Statement.AssignFunCall.build loc id slide_id [index] in 
-              let stmts, ids = normalize_pattern (Identifier.to_expression id) argument op in 
+              let stmts, ids = normalize_pattern (Identifier.to_expression id) argument op is_special_assignment in 
 
               slice_decl @ [member] @ decl @ [call] @ stmts, ids
             else 
@@ -710,7 +716,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
               | Static  (prop, lit) -> Statement.StaticLookup.build loc id expression prop lit
               | Dynamic  prop       -> Statement.DynmicLookup.build loc id expression prop
             in 
-            let stmts, ids = normalize_pattern (Identifier.to_expression id) pattern op in 
+            let stmts, ids = normalize_pattern (Identifier.to_expression id) pattern op is_special_assignment in 
             decl @ [assign] @ stmts, ids
           else
             let assign = match key_expr with 
@@ -869,7 +875,7 @@ and normalize_for_left (left : ('M, 'T) generic_left) : norm_stmt_t * m Statemen
     
     | LeftPattern pattern -> 
       let id, decl_stmts = createVariableDeclaration None (Location.empty ()) in
-      let stmts, _ = normalize_pattern (Identifier.to_expression id) pattern None in 
+      let stmts, _ = normalize_pattern (Identifier.to_expression id) pattern None false in 
       stmts, to_var_decl (List.hd decl_stmts)
 
 and normalize_case (loc, {Ast'.Statement.Switch.Case.test; consequent; _}) : m Statement.Switch.Case.t * norm_stmt_t = 
@@ -916,13 +922,15 @@ and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {param
   let loc_f = Location.convert_flow_loc !file_path in
 
   let loc = loc_f loc in 
-  let id = get_identifier loc (if Option.is_some id then Option.map normalize_identifier id else context.identifier) in 
+  let id = if not context.has_op 
+    then get_identifier loc (if Option.is_some id then Option.map normalize_identifier id else context.identifier)
+    else Identifier.build_random loc in
   
   let params_stmts, params_exprs = List.split (List.map normalize_param params) in
   let body_stmts = normalize_func_body body in 
   let assign = Statement.AssignFunction.build loc id params_exprs body_stmts in 
   
-  if not context.is_assignment then 
+  if not context.is_assignment || context.has_op then 
     let _, decl = createVariableDeclaration None loc ~objId:(Id id) in 
     (List.flatten params_stmts @ decl @ [assign], Some (Identifier.to_expression id))
   else
@@ -953,7 +961,10 @@ and normalize_class (context : context) (loc : Loc.t) ({id; body=(_, {body; _});
   let loc_f = Location.convert_flow_loc !file_path in
   
   let loc = loc_f loc in 
-  let id = get_identifier loc (if Option.is_some id then Option.map normalize_identifier id else context.identifier) in 
+  let id = if not context.has_op 
+    then get_identifier loc (if Option.is_some id then Option.map normalize_identifier id else context.identifier) 
+    else Identifier.build_random loc in
+
   let is_decl = context.is_declaration in 
 
   let exts_stmts, exts_expr = map_default (normalize_extend id) (no_extend id loc) extends in

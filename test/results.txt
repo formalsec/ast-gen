@@ -2122,7 +2122,6 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/assignment/S11.13.1_A4_T1.js	 norm [fail]	semantics []
 [NOK] language/expressions/assignment/11.13.1-1-3.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -2472,17 +2471,6 @@ RangeError: Maximum call stack size exceeded
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x *= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T2.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -2503,35 +2491,12 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x >>>= new Number(1); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A6.10_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: '#1: innerX === 2. Actual: 6' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T6.js	 norm [fail]	semantics []
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x &= new Number(1); x === 0. Actual: 1'
-}
 
 Node.js v21.6.2
 
@@ -2566,94 +2531,6 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T1.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x &= new String("1"); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x >>>= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x |= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x += new Boolean(true); x === 2. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x <<= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x -= new String("1"); x === -1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x += new String("1"); x === "11". Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x >>= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -2674,90 +2551,12 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x *= new Number(1); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: '#1: scope.x === 6. Actual: NaN' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x *= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x >>>= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T2.js	 norm [fail]	semantics []
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x ^= new Number(1); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x |= new Number(1); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x += new Number(1); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x |= new Boolean(true); x === 1. Actual: true'
-}
 
 Node.js v21.6.2
 
@@ -2768,28 +2567,6 @@ Node.js v21.6.2
 
 Test262Error {
   message: 'Expected a DummyError but got a Test262Error'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x -= new Number(1); x === -1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T1.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x ^= new String("1"); x === 0. Actual: 1'
 }
 
 Node.js v21.6.2
@@ -2822,28 +2599,6 @@ Test262Error { message: 'Expected true but got false' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T1.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x *= new String("1"); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x *= new Number(1); x === Not-a-Number. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T4.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -2859,18 +2614,6 @@ Node.js v21.6.2
     ^
 
 Test262Error { message: 'Expected true but got false' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T3.js	 norm [fail]	semantics []
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x &= new Boolean(true); x === 1. Actual: true'
-}
 
 Node.js v21.6.2
 
@@ -2893,17 +2636,6 @@ RangeError: Maximum call stack size exceeded
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x ^= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -2913,78 +2645,12 @@ Test262Error { message: '#1: scope.x === 1. Actual: NaN' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T1.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x |= new String("1"); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x += new Number(1); x === Not-a-Number. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A6.4_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: '#1: innerX === 2. Actual: 3' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T1.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x += new String("1"); x === "11". Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x |= new Number(1); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x -= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x ^= new Number(1); x === 0. Actual: 1'
-}
 
 Node.js v21.6.2
 
@@ -3006,35 +2672,12 @@ Test262Error { message: '#1: innerX === 2. Actual: 16' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T1.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x >>>= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T7.js	 norm [fail]	semantics []
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: '#1: scope.x === 2. Actual: 0' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x &= new Boolean(true); x === 1. Actual: true'
-}
 
 Node.js v21.6.2
 
@@ -3058,67 +2701,12 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x &= new Number(1); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x >>>= new Number(1); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x <<= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T4.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: 'Expected true but got false' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x -= new String("1"); x === Not-a-Number. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x -= new Boolean(true); x === 0. Actual: true'
-}
 
 Node.js v21.6.2
 
@@ -3141,39 +2729,6 @@ RangeError: Maximum call stack size exceeded
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x ^= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x += new Boolean(true); x === "1true". Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x >>= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -3185,57 +2740,12 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T11.js	 norm [fail]	semantics []
 [NOK] language/expressions/compound-assignment/S11.13.2_A6.1_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: '#1: innerX === 2. Actual: 8' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x /= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T1.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x %= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x %= new Number(1); x === Not-a-Number. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x /= new Number(1); x === 1. Actual: 1'
-}
 
 Node.js v21.6.2
 
@@ -3267,17 +2777,6 @@ RangeError: Maximum call stack size exceeded
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x <<= new Number(1); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -3285,17 +2784,6 @@ Node.js v21.6.2
 
 Test262Error {
   message: 'Expected a DummyError but got a Test262Error'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x >>= new String("1"); x === 0. Actual: 1'
 }
 
 Node.js v21.6.2
@@ -3342,7 +2830,6 @@ Test262Error { message: '#1: innerX === 2. Actual: 6' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T8.js	 norm [fail]	semantics []
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T3.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -3370,17 +2857,6 @@ Test262Error { message: '#1: scope.x === 1. Actual: 3' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x /= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -3396,61 +2872,6 @@ Node.js v21.6.2
     ^
 
 Test262Error { message: '#2: x === 3. Actual: 7' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x >>= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x += new String("1"); x === "undefined1". Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x -= new Boolean(true); x === -1. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x <<= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x >>= new Boolean(true); x === 0. Actual: true'
-}
 
 Node.js v21.6.2
 
@@ -3474,7 +2895,6 @@ Test262Error { message: '#1: innerX === 2. Actual: 1' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T9.js	 norm [fail]	semantics []
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -3490,17 +2910,6 @@ Node.js v21.6.2
     ^
 
 Test262Error { message: '#1: scope.x === 2. Actual: 0' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x %= new Boolean(true); x === 0. Actual: true'
-}
 
 Node.js v21.6.2
 
@@ -3524,17 +2933,6 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x >>= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T5.js	 norm [pass]	semantics [fail]
 [eval]:394
    v3 = this.x;
@@ -3551,50 +2949,6 @@ RangeError: Maximum call stack size exceeded
     at v2 ([eval]:394:14)
     at v2 ([eval]:394:14)
     at v2 ([eval]:394:14)
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x += new String("1"); x === "null1". Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x <<= new Boolean(true); x === 2. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x -= new Boolean(true); x === Not-a-Number. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x <<= new String("1"); x === 0. Actual: 1'
-}
 
 Node.js v21.6.2
 
@@ -3644,40 +2998,6 @@ Test262Error { message: 'Expected true but got false' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x /= new Number(1); x === Not-a-Number. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T10.js	 norm [fail]	semantics []
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x %= new Number(1); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x %= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -3685,39 +3005,6 @@ Node.js v21.6.2
 
 Test262Error {
   message: 'Expected a DummyError but got a Test262Error'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T1.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x /= new String("1"); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x <<= new String("1"); x === 2. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x >>= new Number(1); x === 0. Actual: 1'
 }
 
 Node.js v21.6.2
@@ -3759,17 +3046,6 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x >>>= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -3797,17 +3073,6 @@ Test262Error { message: '#2: x === 1. Actual: 5' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x &= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T3.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -3815,28 +3080,6 @@ Node.js v21.6.2
 
 Test262Error {
   message: 'Expected a DummyError but got a Test262Error'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x %= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x /= new Number(1); x === 0. Actual: 1'
 }
 
 Node.js v21.6.2
@@ -3857,50 +3100,6 @@ Node.js v21.6.2
 
 Test262Error {
   message: 'Expected a DummyError but got a Test262Error'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x <<= new Number(1); x === 2. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x >>= new Number(1); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T1.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x >>= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x <<= new Boolean(true); x === 2. Actual: true'
 }
 
 Node.js v21.6.2
@@ -3933,50 +3132,6 @@ Test262Error { message: 'Expected true but got false' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x %= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x /= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x *= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x %= new String("1"); x === Not-a-Number. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T2.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -3999,39 +3154,6 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x |= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x <<= new Boolean(true); x === 2. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x ^= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T2.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -4045,50 +3167,6 @@ Test262Error {
     '   v3 = delete v2;\n' +
     '   return 2;\n' +
     '}1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x /= new String("1"); x === Not-a-Number. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x *= new Boolean(true); x === Not-a-Number. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x /= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x %= new String("1"); x === 0. Actual: 1'
 }
 
 Node.js v21.6.2
@@ -4134,39 +3212,6 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x |= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x ^= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x >>= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T3.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -4195,17 +3240,6 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x >>>= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -4226,17 +3260,6 @@ Test262Error { message: '#1: innerScope.x === 16. Actual: 0' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x &= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T2.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -4248,34 +3271,12 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x %= new Number(1); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: '#1: scope.x === 1. Actual: 3' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x /= new String("1"); x === 1. Actual: 1'
-}
 
 Node.js v21.6.2
 
@@ -4299,61 +3300,6 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T1.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x <<= new String("1"); x === 2. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x >>= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.7_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x >>= new Number(1); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.6_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x <<= new Number(1); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x %= new Boolean(true); x === Not-a-Number. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T3.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -4363,56 +3309,12 @@ Test262Error { message: '#1: innerScope.x === 6. Actual: NaN' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x *= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x /= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x >>>= new Number(1); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T4.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: 'Expected true but got false' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x &= new String("1"); x === 1. Actual: 1'
-}
 
 Node.js v21.6.2
 
@@ -4444,28 +3346,6 @@ Test262Error { message: '#1: scope.x === 1. Actual: NaN' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x ^= new String("1"); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x ^= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T3.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -4473,39 +3353,6 @@ Node.js v21.6.2
 
 Test262Error {
   message: 'Expected a DummyError but got a Test262Error'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x -= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x |= new String("1"); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x *= new Number(1); x === 0. Actual: 1'
 }
 
 Node.js v21.6.2
@@ -4519,24 +3366,12 @@ Test262Error { message: '#1: scope.x === 1. Actual: 0' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T4.js	 norm [fail]	semantics []
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T2.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: '#1: scope.x === 2. Actual: 0' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x &= new String("1"); x === 0. Actual: 1'
-}
 
 Node.js v21.6.2
 
@@ -4560,28 +3395,6 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x >>>= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x &= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T3.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -4589,61 +3402,6 @@ Node.js v21.6.2
 
 Test262Error {
   message: 'Expected a DummyError but got a Test262Error'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = "1"; x -= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x |= new Number(1); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x += new Boolean(true); x === Not-a-Number. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x ^= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x -= new Number(1); x === 0. Actual: 1'
 }
 
 Node.js v21.6.2
@@ -4668,35 +3426,12 @@ Test262Error { message: '#1: innerScope.x === 2. Actual: NaN' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x *= new String("1"); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T1.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: '#1: scope.x === 6. Actual: 4' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T5.js	 norm [fail]	semantics []
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x &= new String("1"); x === 0. Actual: 1'
-}
 
 Node.js v21.6.2
 
@@ -4716,28 +3451,6 @@ Node.js v21.6.2
 
 Test262Error {
   message: 'Expected a DummyError but got a Test262Error'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x >>>= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x >>>= new String("1"); x === 0. Actual: 1'
 }
 
 Node.js v21.6.2
@@ -4764,72 +3477,6 @@ Test262Error {
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T2.4.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x -= new Number(1); x === Not-a-Number. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T1.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = 1; x += new Number(1); x === 2. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x |= new String("1"); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T2.5.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x += new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x ^= new Number(1); x === 1. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.5_T1.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = "1"; x -= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T3.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
@@ -4847,28 +3494,6 @@ Node.js v21.6.2
     ^
 
 Test262Error { message: '#1: scope.x === 2. Actual: NaN' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.3_T2.9.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x %= new Boolean(true); x === 0. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x *= new Boolean(true); x === 1. Actual: true'
-}
 
 Node.js v21.6.2
 
@@ -4900,90 +3525,12 @@ Test262Error { message: '#1: scope.x === 6. Actual: NaN' }
 
 Node.js v21.6.2
 
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.1_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x *= new String("1"); x === Not-a-Number. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.2_T2.8.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x /= new Boolean(true); x === Not-a-Number. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.8_T2.2.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x >>>= new String("1"); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T1.js	 norm [fail]	semantics []
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.9_T2.3.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x &= new Number(1); x === 0. Actual: 1'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.4_T2.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = 1; x += new Boolean(true); x === 2. Actual: true'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T1.1.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#3: x = true; x |= new Boolean(true); x === 1. Actual: true'
-}
-
-Node.js v21.6.2
-
 [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T3.js	 norm [pass]	semantics [fail]
 [eval]:15
     throw new Test262Error(message);
     ^
 
 Test262Error { message: '#1: innerScope.x === 1. Actual: NaN' }
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.10_T2.7.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = null; x ^= new String("1"); x === 1. Actual: 1'
-}
 
 Node.js v21.6.2
 
@@ -4994,17 +3541,6 @@ Node.js v21.6.2
 
 Test262Error {
   message: 'Expected a DummyError but got a Test262Error'
-}
-
-Node.js v21.6.2
-
-[NOK] language/expressions/compound-assignment/S11.13.2_A4.11_T2.6.js	 norm [pass]	semantics [fail]
-[eval]:15
-    throw new Test262Error(message);
-    ^
-
-Test262Error {
-  message: '#4: x = undefined; x |= new String("1"); x === 1. Actual: 1'
 }
 
 Node.js v21.6.2
@@ -5161,7 +3697,7 @@ Node.js v21.6.2
 (PASSED 85.7%)	language/expressions/in	 failed : 0/2   timeout : 0
 (PASSED 90.0%)	language/expressions/grouping	 failed : 0/1   timeout : 0
 (PASSED 81.2%)	language/expressions/prefix-decrement	 failed : 0/6   timeout : 0
-(PASSED 79.7%)	language/expressions/assignment	 failed : 1/11   timeout : 0
+(PASSED 81.4%)	language/expressions/assignment	 failed : 0/11   timeout : 0
 (PASSED 100.0%)	language/expressions/comma	 failed : 0/0   timeout : 0
 (PASSED 100.0%)	language/expressions/exponentiation	 failed : 0/0   timeout : 0
 (PASSED 95.2%)	language/expressions/function	 failed : 0/1   timeout : 0
@@ -5179,7 +3715,7 @@ Node.js v21.6.2
 (PASSED 90.9%)	language/expressions/strict-equals	 failed : 0/2   timeout : 0
 (PASSED 100.0%)	language/expressions/import.meta/syntax	 failed : 0/0   timeout : 0
 (PASSED 47.1%)	language/expressions/new	 failed : 5/4   timeout : 0
-(PASSED 43.7%)	language/expressions/compound-assignment	 failed : 11/231   timeout : 0
+(PASSED 77.0%)	language/expressions/compound-assignment	 failed : 0/99   timeout : 0
 (PASSED 100.0%)	language/expressions/this	 failed : 0/0   timeout : 0
 (PASSED 100.0%)	language/expressions/bitwise-not	 failed : 0/0   timeout : 0
 (PASSED 87.5%)	language/expressions/logical-or	 failed : 0/2   timeout : 0
@@ -5193,8 +3729,8 @@ Node.js v21.6.2
 
     ==============================
     total : 2561
-    ok    : 2076
-    error : 33 + 449 (normalization + semantics)
+    ok    : 2220
+    error : 21 + 317 (normalization + semantics)
     timeout : 12
     ==============================
     
