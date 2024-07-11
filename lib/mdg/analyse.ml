@@ -79,7 +79,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     | loc, AssignBinary {left; opLeft; opRght; id; _} -> 
       let _L1, _L2 = eval_expr opLeft, eval_expr opRght in 
       let l_i = alloc id in 
-      LocationSet.iter (flip add_dep_edge l_i) (LocationSet.union _L1 _L2);
+      LocationSet.apply (flip add_dep_edge l_i) (LocationSet.union _L1 _L2);
       store_update left (LocationSet.singleton l_i);
       (* add node info*)
       add_node l_i (Identifier.get_name left) loc
@@ -87,7 +87,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     | loc, AssignUnary {left; argument; id; _} -> 
       let _L1 = eval_expr argument in 
       let l_i = alloc id in 
-      LocationSet.iter (flip add_dep_edge l_i) _L1;
+      LocationSet.apply (flip add_dep_edge l_i) _L1;
       store_update left (LocationSet.singleton l_i);
       (* add node info*)
       add_node l_i (Identifier.get_name left) loc
@@ -125,8 +125,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       
       let _L1, _L2 = eval_expr _object, eval_expr right in
       let _L1' = new_version store _L1 property id add_node' in 
-      LocationSet.iter ( fun l_1 ->
-        LocationSet.iter (fun l_2 ->
+      LocationSet.apply ( fun l_1 ->
+        LocationSet.apply (fun l_2 ->
             add_prop_edge l_1 l_2 (Some property)
           ) _L2
       ) _L1';
@@ -140,8 +140,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
                           eval_expr right in
 
       let _L1' = new_version' store _L1 _L2 id add_node' in 
-      LocationSet.iter ( fun l_1 ->
-        LocationSet.iter (fun l_3 ->
+      LocationSet.apply ( fun l_1 ->
+        LocationSet.apply (fun l_3 ->
             add_prop_edge l_1 l_3 None
           ) _L3
       ) _L1';
@@ -166,9 +166,10 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let params = map_default get_param_names [] f_id in 
       List.iteri ( fun i _Ls -> 
         let param_name = Option.value (List.nth_opt params i) ~default:"undefined" in 
-        LocationSet.iter (fun l -> add_arg_edge l l_call i param_name) _Ls
+        LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) param_name) _Ls
       ) _Lss;
 
+      (* checks if it is a sink and process it accordingly *)
       (* TODO : only as temporary solution *)
       (* TODO : also there is node per sink, rn we only accept if the sink is "eval" *)
       if (f = "eval") then (
@@ -177,7 +178,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
         add_sink_edge l_call l_tsink f;
 
         List.iter ( fun _Ls -> 
-          LocationSet.iter (fun l -> add_dep_edge l l_tsink) _Ls
+          LocationSet.apply (fun l -> add_dep_edge l l_tsink) _Ls
         ) _Lss;
       );
 
@@ -190,6 +191,15 @@ and analyse (state : state) (statement : m Statement.t) : unit =
         let l_f = Graph.get_func_node graph id in 
         add_call_edge l_call (Option.get l_f)
       ) f_id;
+    
+    | loc, AssignMetCallStatic {left; _object; property; arguments; id_call; id_retn; _} -> 
+      analyse_method_call state loc left _object property arguments id_call id_retn;
+    
+    | loc, AssignMetCallDynmic {left; _object; property; arguments; id_call; id_retn; _} -> 
+      let property' = Expression.get_id property in 
+      analyse_method_call state loc left _object property' arguments id_call id_retn;
+
+
 
     (* -------- I F -------- *)
     | _, If {consequent; alternate; _} ->
@@ -230,7 +240,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 
       if (Option.is_some _L) then (
         let _L = Option.get _L in
-        LocationSet.iter (flip add_dep_edge l_retn) _L
+        LocationSet.apply (flip add_dep_edge l_retn) _L
       );
 
       add_node l_retn "PDG_RETURN" loc;
@@ -269,7 +279,39 @@ and ifp (f : state -> unit) (state : state) : unit =
   if not (Store.equal state.store store')
     then ifp f state
   
+and analyse_method_call (state : state) (loc : Location.t) (left : m Identifier.t) (_object : m Expression.t) (property : property) (arguments : m Expression.t list) (id_call : int) (id_retn : int) : unit =
+  (* aliases *)
+  let eval_expr = eval_expr state.store state.this in 
+  let store_update = Store.update state.store in 
+  let alloc = Graph.alloc state.graph in 
+  let add_node = Graph.add_obj_node state.graph in
+  let add_ret_edge = Graph.add_ret_edge state.graph in 
+  let add_arg_edge = Graph.add_arg_edge state.graph in
 
+
+
+  let _Lss = List.map eval_expr arguments in 
+      
+  let _Lthis = eval_expr _object in
+  let l_call = alloc id_call in 
+  let l_retn = alloc id_retn in 
+  
+  (* get function definition information *)
+  let f = Expression.get_id _object ^ "." ^ property in 
+
+  (* node information *)
+  add_node l_call (f ^ "()") loc;
+  add_node l_retn (Identifier.get_name left) loc;
+
+  (* ! graphjs only adds edge for this property *)
+  LocationSet.apply (fun l_this -> add_arg_edge  l_this l_call "this" "this") _Lthis;
+  List.iteri ( fun i _Ls -> 
+    LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) "undefined") _Ls
+  ) _Lss;
+
+  (* return edge *)
+  add_ret_edge l_call l_retn;
+  store_update left (LocationSet.singleton l_retn);
 
 and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) : LocationSet.t = 
   match expr with

@@ -1013,7 +1013,6 @@ and normalize_body_element (is_declaration : bool) (class_id : m Identifier.t) (
       let assign = Option.map (Statement.StaticUpdate.build (loc_f loc) class_proto (Identifier.get_name id) false) val_expr  in 
       val_stmts @ Option.to_list assign 
 
-    (* TODO : saw some *)
     | PrivateField _ -> []
 
 and get_key_identifier (key : ('M, 'T) Ast'.Expression.Object.Property.key) : m Identifier.t = 

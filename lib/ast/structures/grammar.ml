@@ -477,7 +477,8 @@ and Statement : sig
 
   module AssignMetCallStatic : sig
     type 'M t = {
-      id : int;
+      id_call : int;
+      id_retn : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
@@ -492,7 +493,8 @@ and Statement : sig
 
   module AssignMetCallDynmic : sig
     type 'M t = {
-      id : int;
+      id_call : int;
+      id_retn : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
@@ -1090,7 +1092,8 @@ end = struct
 
   module AssignMetCallStatic = struct
     type 'M t = {
-      id : int;
+      id_call : int;
+      id_retn : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
@@ -1102,7 +1105,8 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (_object' : 'M Expression.t) (property' : string) (is_literal' : bool) (arguments' : 'M Expression.t list) : 'M Statement.t =
       let assign_info = Statement.AssignMetCallStatic {
-        id = get_id ();
+        id_call = get_id ();
+        id_retn = get_id ();
         left = left';
         _object = _object';
         property = property';
@@ -1115,7 +1119,8 @@ end = struct
 
   module AssignMetCallDynmic = struct
     type 'M t = {
-      id : int;
+      id_call : int;
+      id_retn : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       _object : 'M Expression.t;
@@ -1125,7 +1130,8 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Expression.t) (arguments' : 'M Expression.t list) : 'M Statement.t =
       let assign_info = Statement.AssignMetCallDynmic {
-        id = get_id ();
+        id_call = get_id ();
+        id_retn = get_id ();
         left = left';
         _object = _object';
         property = property';

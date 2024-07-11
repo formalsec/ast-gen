@@ -93,7 +93,7 @@ module Edge = struct
       | Property of property option
       | Version  of property option
       | Dependency
-      | Argument of int (* argument index *) * string (* argument name *)   
+      | Argument of string (* argument index *) * string (* argument name *)   
       | Parameter of string 
       | Call
       | Return 
@@ -180,7 +180,7 @@ module Edge = struct
 
     let get_arg_i (edge : t) : string = 
       match edge._type with 
-        (* | Argument (i, _) -> string_of_int i *)
+        (* | Argument (i, _) -> i *)
         | _          -> ""
 
     let get_par_i (edge : t) : string =
@@ -450,7 +450,7 @@ let add_version_edge (graph : t) (from : location) (_to : location) (property : 
   let edge = {Edge._to = _to; _type = Version property} in 
   add_edge graph edge _to from
 
-let add_arg_edge (graph : t) (from : location) (_to : location) (index : int) (identifier : string) : unit = 
+let add_arg_edge (graph : t) (from : location) (_to : location) (index : string) (identifier : string) : unit = 
   let edge = {Edge._to = _to; _type = Argument (index, identifier)} in 
   add_edge graph edge _to from
 
@@ -499,10 +499,10 @@ let get_param_locations (graph : t) (func_id : Functions.Id.t) : Store.t =
   
 
 let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id : int) (add_node : location -> unit) : unit =
-  LocationSet.iter (fun l -> 
+  LocationSet.apply (fun l -> 
     let l_Os = orig graph l in 
 
-    LocationSet.iter (fun l_o ->
+    LocationSet.apply (fun l_o ->
       if not (has_property graph l_o (Some property)) 
         (* Add Known Property - Non-Existing *)
         then (let l_i = alloc graph id in 
@@ -512,20 +512,20 @@ let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id
   ) _L 
 
 let dynamicAddProperty (graph : t) (_L_obj : LocationSet.t) (_L_prop : LocationSet.t) (id : int) (add_node : location -> unit): unit =
-  LocationSet.iter (fun l -> 
+  LocationSet.apply (fun l -> 
     let l_Os = orig graph l in
     
-    LocationSet.iter (fun l_o ->
+    LocationSet.apply (fun l_o ->
       if has_property graph l_o None then 
         (* Add Unknown Property - Existing*)
         let l' = get_property graph l_o None in 
-        LocationSet.iter (flip (add_dep_edge graph) l') _L_prop
+        LocationSet.apply (flip (add_dep_edge graph) l') _L_prop
       else (
         (* Add Unknown Property - Non-Existing*)
         let l_i = alloc graph id in 
         add_node l_i;
         add_prop_edge graph l_o l_i None;
-        LocationSet.iter (flip (add_dep_edge graph) l_i) _L_prop 
+        LocationSet.apply (flip (add_dep_edge graph) l_i) _L_prop 
       )
     ) l_Os
     
@@ -545,7 +545,7 @@ let sNVWeakUpdate (graph : t) (store : Store.t) (_L : LocationSet.t) (property :
   let l_i = alloc graph id in 
   add_node l_i;
 
-  LocationSet.iter ( fun l ->
+  LocationSet.apply ( fun l ->
     (* add version edges *)
     add_version_edge graph l l_i (Some property);
     
@@ -569,7 +569,7 @@ let dNVStrongUpdate (graph : t) (store : Store.t) (l_obj : location) (_L_prop : 
   add_version_edge graph l_obj l_i None;
 
   (* add dependency edges *)
-  LocationSet.iter (fun l_prop ->
+  LocationSet.apply (fun l_prop ->
     add_dep_edge graph l_prop l_i 
   ) _L_prop;
 
@@ -583,7 +583,7 @@ let dNVWeakUpdate (graph : t) (store : Store.t) (_L_obj : LocationSet.t) (_L_pro
   let l_i = alloc graph id in 
   add_node l_i;
 
-  LocationSet.iter ( fun l -> 
+  LocationSet.apply ( fun l -> 
     (* add version edges *)
     add_version_edge graph l l_i None;
 
@@ -594,7 +594,7 @@ let dNVWeakUpdate (graph : t) (store : Store.t) (_L_obj : LocationSet.t) (_L_pro
   Store.update' store (get_node_name graph l_i) (LocationSet.singleton l_i);
 
   (* add dependency edges *)
-  LocationSet.iter (fun l_prop ->
+  LocationSet.apply (fun l_prop ->
     add_dep_edge graph l_prop l_i 
   ) _L_prop;
   
