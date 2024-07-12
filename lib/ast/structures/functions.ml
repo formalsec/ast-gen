@@ -128,6 +128,8 @@ module Context = struct
   let create (functions' : Info.t) : t = { path = []; functions = functions'}
   let visit (context : t) (id : Id.t) : t = {context with path = id :: context.path}
 
+  let get_current_function (context : t) () : Id.t option = List.nth_opt context.path 0
+
   let get_func_id (context : t) (func_name : string) : Id.t option = 
     let get_func_info_id = Info.get_func_id context.functions in 
     let rec aux (path : Id.t list)  : Id.t option =

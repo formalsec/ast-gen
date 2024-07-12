@@ -29,6 +29,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let add_prop_edge = Graph.add_prop_edge graph in 
   let add_arg_edge = Graph.add_arg_edge graph in
   let add_call_edge = Graph.add_call_edge graph in 
+  let add_ref_call_edge = Graph.add_ref_call_edge graph in 
   let add_ret_edge = Graph.add_ret_edge graph in 
   let add_sink_edge = Graph.add_sink_edge graph in
   let store_update = Store.update store in 
@@ -36,7 +37,9 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let falloc = Graph.alloc_function graph in 
   let salloc = Graph.alloc_tsink graph in
   let add_node = Graph.add_obj_node graph in 
+  let add_cnode = Graph.add_call_node graph in
   let add_tsink = Graph.add_taint_sink graph in 
+  let add_ret_node = Graph.add_return_node graph in
   let add_property = Graph.staticAddProperty graph in 
   let add_property' = Graph.dynamicAddProperty graph in
   let lookup = Graph.lookup graph in  
@@ -46,7 +49,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let get_param_names = Functions.Context.get_param_names' contx in 
   let get_func_id = Functions.Context.get_func_id contx in 
   let is_last_definition = Functions.Context.is_last_definition contx in 
-  let visit = Functions.Context.visit contx in 
+  let visit = Functions.Context.visit contx in
+  let get_curr_func = Functions.Context.get_current_function contx in  
 
   (match statement with
     (* -------- A S S I G N - E X P R -------- *)
@@ -60,7 +64,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       (* functions with the same name can be nested inside the same context 
          (only consider the last definition with such name) *)
       if is_last_definition func_id then 
-        (* add object that represents the function *)
+        (* ! add object that represents the function *)
         let l_i = alloc id in 
         add_node l_i (Identifier.get_name left) loc;
         store_update left (LocationSet.singleton l_i);
@@ -159,7 +163,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let f_id = get_func_id f in
 
       (* node information *)
-      add_node l_call (f ^ "()") loc;
+      add_cnode l_call f loc;
       add_node l_retn (Identifier.get_name left) loc;
       
       (* argument edges *)
@@ -170,9 +174,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       ) _Lss;
 
       (* checks if it is a sink and process it accordingly *)
-      (* TODO : only as temporary solution *)
-      (* TODO : also there is node per sink, rn we only accept if the sink is "eval" *)
-      if (f = "eval") then (
+      (* ! not loading from config *)
+      if (f = "eval" || f = "exec") then (
         let l_tsink = salloc id_call in
         add_tsink l_tsink f loc;
         add_sink_edge l_call l_tsink f;
@@ -181,6 +184,14 @@ and analyse (state : state) (statement : m Statement.t) : unit =
           LocationSet.apply (fun l -> add_dep_edge l l_tsink) _Ls
         ) _Lss;
       );
+
+      (* ! add ref call edge (shotcut) from function definition to this call *)
+      let f_orig = get_curr_func () in
+      option_may (fun id ->
+        let l_f = Graph.get_func_node graph id in 
+        add_ref_call_edge (Option.get l_f) l_call;
+        ()
+      ) f_orig;
 
       (* return edge *)
       add_ret_edge l_call l_retn;
@@ -243,7 +254,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
         LocationSet.apply (flip add_dep_edge l_retn) _L
       );
 
-      add_node l_retn "PDG_RETURN" loc;
+      add_ret_node l_retn loc;
 
 
     (* -------- O T H E R   C O N S T R U C T S -------- *)
@@ -280,13 +291,17 @@ and ifp (f : state -> unit) (state : state) : unit =
     then ifp f state
   
 and analyse_method_call (state : state) (loc : Location.t) (left : m Identifier.t) (_object : m Expression.t) (property : property) (arguments : m Expression.t list) (id_call : int) (id_retn : int) : unit =
+  (* ! is this a way to represent it? *)
   (* aliases *)
   let eval_expr = eval_expr state.store state.this in 
   let store_update = Store.update state.store in 
   let alloc = Graph.alloc state.graph in 
   let add_node = Graph.add_obj_node state.graph in
+  let add_cnode = Graph.add_call_node state.graph in
   let add_ret_edge = Graph.add_ret_edge state.graph in 
   let add_arg_edge = Graph.add_arg_edge state.graph in
+  let add_ref_call_edge = Graph.add_ref_call_edge state.graph in 
+  let get_curr_func = Functions.Context.get_current_function state.context in  
 
 
 
@@ -300,7 +315,7 @@ and analyse_method_call (state : state) (loc : Location.t) (left : m Identifier.
   let f = Expression.get_id _object ^ "." ^ property in 
 
   (* node information *)
-  add_node l_call (f ^ "()") loc;
+  add_cnode l_call f loc;
   add_node l_retn (Identifier.get_name left) loc;
 
   (* ! graphjs only adds edge for this property *)
@@ -308,6 +323,14 @@ and analyse_method_call (state : state) (loc : Location.t) (left : m Identifier.
   List.iteri ( fun i _Ls -> 
     LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) "undefined") _Ls
   ) _Lss;
+
+  (* ! add ref call edge (shotcut) from function definition to this call *)
+  let f_orig = get_curr_func () in
+  option_may (fun id ->
+    let l_f = Graph.get_func_node state.graph id in 
+    add_ref_call_edge (Option.get l_f) l_call;
+    ()
+  ) f_orig;
 
   (* return edge *)
   add_ret_edge l_call l_retn;
@@ -348,7 +371,7 @@ and initialize_functions (state : state) (funcs_info : Functions.Info.t) : state
     List.iteri (fun i param -> 
       let l_p = Graph.alloc_param graph in 
       add_param_node l_p param (Location.empty ());
-      (* TODO : only as temporary solution *)
+      (* ! what are taint sources? *)
       add_taint_edge l_tsource l_p;
       if param = "this" 
         then add_param_edge l_f l_p "this"

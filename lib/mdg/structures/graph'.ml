@@ -8,8 +8,10 @@ open Ast.Grammar
 module Node = struct            
   type _type = 
     | Object of string
+    | Call of string
     | Function of Functions.Id.t
     | Parameter of string 
+    | Return 
     | TaintSource
     | TaintSink of string
     | Literal
@@ -34,8 +36,12 @@ module Node = struct
   let equal (node : t) (node' : t) =
     let same_type = match (node._type, node'._type) with
       | Object x, Object x'
+      | Call x, Call x'
+      | TaintSink x, TaintSink x'
       | Parameter x, Parameter x' -> String.equal x x'
       | Function x, Function x' -> Functions.Id.equal x x'
+      | Return, Return
+      | TaintSource, TaintSource
       | Literal, Literal -> true
       | _ -> false in 
     
@@ -43,11 +49,13 @@ module Node = struct
     
   let label (node : t) = match node._type with
     | Object obj -> obj 
+    | Call func -> func ^ "()" 
     | Function func -> func.name
     | Parameter param -> param
     | TaintSource -> "taint source"
     | TaintSink _ -> "taint sink"
     | Literal -> "literal value"
+    | Return -> "RET_OBJ"
 
   (* get node information *)
   let get_id (node : t) : string = string_of_int node.id
@@ -60,14 +68,16 @@ module Node = struct
     match node._type with
       | TaintSource -> "TAINT_SOURCE"
       | TaintSink _  -> "TAINT_SINK"
-      (* ! just made this up in order for bottom_up queries to work *)
+      | Call _ -> "PDG_CALL"
       | Function _ -> "PDG_FUNC"
+      | Return -> "PDG_RETURN"
       | _ -> "PDG_OBJECT"
 
   let get_subtype (_ : t) : string = ""
   let get_id_name (node : t) : string =
     match node._type with 
       | Object name -> name
+      | Call func -> func ^ "()"
       | Function id -> id.name
       | Parameter name -> name
       | TaintSource -> "TAINT_SOURCE"
@@ -95,6 +105,7 @@ module Edge = struct
       | Dependency
       | Argument of string (* argument index *) * string (* argument name *)   
       | Parameter of string 
+      | RefCall
       | Call
       | Return 
       | Taint
@@ -116,7 +127,7 @@ module Edge = struct
       | Dependency  -> 2   | Argument _  -> 3
       | Parameter _ -> 4   | Call        -> 5
       | Return      -> 6   | Taint       -> 7
-      | Sink _      -> 8
+      | Sink _      -> 8   | RefCall     -> 9
 
 
     let compare_type (t : _type) (t' : _type) : int =
@@ -140,6 +151,7 @@ module Edge = struct
         | Dependency -> "D" 
         | Argument (_, id) -> "ARG(" ^ id ^ ")"
         | Parameter pos -> "param " ^ pos
+        | RefCall -> "call"
         | Call -> "CG"
         | Return -> "RET"
         | Taint -> "TAINT"
@@ -152,6 +164,7 @@ module Edge = struct
     let get_rel_label (edge : t) : string = 
       match edge._type with 
         | Parameter _ -> "REF"
+        | RefCall -> "REF"
         | Call -> "CG"
         | Sink _ -> "SINK"
         | _ -> "PDG"
@@ -161,6 +174,7 @@ module Edge = struct
         | Property _ -> "SO"
         | Version _ -> "NV"
         | Dependency -> "DEP"
+        | RefCall -> "call"
         | Call -> "CG"
         | Taint -> "TAINT"
         | Sink _ -> "SINK"
@@ -170,8 +184,6 @@ module Edge = struct
 
     let get_id_name (edge : t) : string = 
       match edge._type with 
-        (* ! hardcode *)
-        | Dependency -> "x"
         | Property name 
         | Version  name -> Option.value name ~default:"*"
         | Argument (_, name) -> name
@@ -407,12 +419,20 @@ let add_obj_node (graph : t) (abs_loc : location) (name : string) (crt_loc : Loc
   let node : Node.t = Node.create (Object name) crt_loc in 
   add_node graph abs_loc node
 
+let add_call_node (graph : t) (abs_loc : location) (func : string) (crt_loc : Location.t) : unit =
+  let node : Node.t = Node.create (Call func) crt_loc in 
+  add_node graph abs_loc node
+
 let add_func_node (graph : t) (abs_loc : location) (func_id : Functions.Id.t) (crt_loc : Location.t) : unit =
   let node : Node.t = Node.create (Function func_id) crt_loc in 
   add_node graph abs_loc node
   
 let add_param_node (graph : t) (abs_loc : location) (param : string) (crt_loc : Location.t): unit =
   let node : Node.t = Node.create (Parameter param) crt_loc in 
+  add_node graph abs_loc node
+
+let add_return_node (graph : t) (abs_loc : location) (crt_loc : Location.t) : unit =
+  let node : Node.t = Node.create Return crt_loc in 
   add_node graph abs_loc node
 
 let add_literal_node (graph : t) : unit =
@@ -460,6 +480,10 @@ let add_param_edge (graph : t) (from : location) (_to : location) (index : strin
 
 let add_call_edge (graph : t) (from : location) (_to : location) : unit = 
   let edge = {Edge._to = _to; _type = Call} in 
+  add_edge graph edge _to from
+
+let add_ref_call_edge (graph : t) (from : location) (_to : location) : unit = 
+  let edge = {Edge._to = _to; _type= RefCall } in 
   add_edge graph edge _to from
 
 let add_ret_edge (graph : t) (from : location) (_to : location) : unit = 
