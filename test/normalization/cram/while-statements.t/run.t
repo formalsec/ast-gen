@@ -1,10 +1,10 @@
-  $ ast_gen input-code-1.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-1.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   while (false) {
      let v1;
      v1 = 1 + 2;
   }
   
-  $ ast_gen input-code-2.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-2.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   let x;
   x = 0;
   let v1;
@@ -16,7 +16,7 @@
      v1 = x < 1;
   }
   
-  $ ast_gen input-code-3.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-3.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   let x;
   x = 0;
   let v1;
@@ -28,7 +28,7 @@
      v1 = x < 1;
   }
   
-  $ ast_gen input-code-4.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-4.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   let x;
   x = 0;
   let v1;
@@ -41,7 +41,7 @@
      v1 = x < 1;
   }
   
-  $ ast_gen input-code-5.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-5.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   var i;
   i = 0;
   let v1;
@@ -55,7 +55,7 @@
      v1 = i < 10;
   }
   
-  $ ast_gen input-code-6.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-6.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   var i;
   i = 0;
   let v1;

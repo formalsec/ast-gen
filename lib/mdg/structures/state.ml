@@ -18,17 +18,19 @@ let register, setup, was_changed =
   reg, push, pop;;
 
 type state = {
-  graph : Graph.t;
-  store : Store.t;
-  this  : LocationSet.t;
+  graph  : Graph.t;
+  store  : Store.t;
+  this   : LocationSet.t;
+  config : Config.t;
   (* function information *)
   context   : Functions.Context.t;
 }
 
-let empty_state = { 
-  graph = Graph.empty register; 
-  store = Store.empty (); 
-  this  = Store.loc_this;
+let empty_state (config : Config.t) = { 
+  graph  = Graph.empty register; 
+  store  = Store.empty (); 
+  this   = Store.loc_this;
+  config = config;
   (* function information *)
   context   = Functions.Context.empty;
 }

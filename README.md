@@ -20,5 +20,6 @@ opam install . --deps-only --with-test
 
 ```shell-session
 dune build
-dune runtest
+dune test
+dune install
 ```

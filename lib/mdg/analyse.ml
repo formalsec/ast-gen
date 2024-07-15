@@ -10,9 +10,9 @@ open State
 let verbose = ref false;;
 
 
-let rec program (is_verbose : bool) ((_, program) : m Program.t) : Graph.t = 
+let rec program (is_verbose : bool) (config : Config.t) ((_, program) : m Program.t) : Graph.t = 
   verbose := is_verbose;
-  let state = empty_state in 
+  let state = empty_state config in 
   let state' = initialize_functions state program.functions in
 
   analyse_sequence state' program.body;
@@ -22,6 +22,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let graph = state.graph in 
   let store = state.store in 
   let contx = state.context in
+  let confg = state.config in 
 
   (* aliases *)
   let eval_expr = eval_expr store state.this in 
@@ -31,14 +32,11 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let add_call_edge = Graph.add_call_edge graph in 
   let add_ref_call_edge = Graph.add_ref_call_edge graph in 
   let add_ret_edge = Graph.add_ret_edge graph in 
-  let add_sink_edge = Graph.add_sink_edge graph in
   let store_update = Store.update store in 
   let alloc = Graph.alloc graph in 
   let falloc = Graph.alloc_function graph in 
-  let salloc = Graph.alloc_tsink graph in
   let add_node = Graph.add_obj_node graph in 
   let add_cnode = Graph.add_call_node graph in
-  let add_tsink = Graph.add_taint_sink graph in 
   let add_ret_node = Graph.add_return_node graph in
   let add_property = Graph.staticAddProperty graph in 
   let add_property' = Graph.dynamicAddProperty graph in
@@ -50,7 +48,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let get_func_id = Functions.Context.get_func_id contx in 
   let is_last_definition = Functions.Context.is_last_definition contx in 
   let visit = Functions.Context.visit contx in
-  let get_curr_func = Functions.Context.get_current_function contx in  
+  let get_curr_func = Functions.Context.get_current_function contx in 
+  let get_func_sink_info = Config.get_function_sink_info confg in 
 
   (match statement with
     (* -------- A S S I G N - E X P R -------- *)
@@ -63,7 +62,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let func_id : Functions.Id.t = {uid = id; name = Identifier.get_name left} in 
       (* functions with the same name can be nested inside the same context 
          (only consider the last definition with such name) *)
-      if is_last_definition func_id then 
+      if is_last_definition func_id then (
         (* ! add object that represents the function *)
         let l_i = alloc id in 
         add_node l_i (Identifier.get_name left) loc;
@@ -76,7 +75,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
         (* setup new store with only the param and corresponding locations *)
         let param_locs = get_param_locs func_id in 
         let new_state = {state with store = param_locs; context = visit func_id} in
-        analyse_sequence new_state body;
+        analyse_sequence new_state body
+      );
       
 
     (* -------- A S S I G N - O P -------- *)
@@ -174,16 +174,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       ) _Lss;
 
       (* checks if it is a sink and process it accordingly *)
-      (* ! not loading from config *)
-      if (f = "eval" || f = "exec") then (
-        let l_tsink = salloc id_call in
-        add_tsink l_tsink f loc;
-        add_sink_edge l_call l_tsink f;
-
-        List.iter ( fun _Ls -> 
-          LocationSet.apply (fun l -> add_dep_edge l l_tsink) _Ls
-        ) _Lss;
-      );
+      let sink_info = get_func_sink_info f in
+      option_may (add_func_sink_node graph id_call l_call loc _Lss) sink_info;
 
       (* ! add ref call edge (shotcut) from function definition to this call *)
       let f_orig = get_curr_func () in
@@ -277,7 +269,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     
     print_endline "Store: ";
     Store.print store; )
-          
+
+(* ------- P R I M I T I V E   F U N C T I O N S --------*)
 and analyse_sequence (state : state) = List.iter (analyse state)
 
 and ifp (f : state -> unit) (state : state) : unit =
@@ -289,7 +282,22 @@ and ifp (f : state -> unit) (state : state) : unit =
   Store.lub state.store store';
   if not (Store.equal state.store store')
     then ifp f state
-  
+
+and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) : LocationSet.t = 
+  match expr with
+    | (_, Identifier _) as id -> 
+      let id = Identifier.from_expression id in 
+      Store.get store id 
+    
+    | _, Literal _ -> Store.loc_literal
+
+    | _, This _ -> this
+
+    | _, TemplateLiteral {expressions; _} -> 
+      List.fold_left (fun acc elem -> LocationSet.union acc (eval_expr store this elem)) LocationSet.empty expressions
+
+
+(* ----- A N A L I S Y S   F U N C T I O N S ----- *)
 and analyse_method_call (state : state) (loc : Location.t) (left : m Identifier.t) (_object : m Expression.t) (property : property) (arguments : m Expression.t list) (id_call : int) (id_retn : int) : unit =
   (* ! is this a way to represent it? *)
   (* aliases *)
@@ -336,23 +344,6 @@ and analyse_method_call (state : state) (loc : Location.t) (left : m Identifier.
   add_ret_edge l_call l_retn;
   store_update left (LocationSet.singleton l_retn);
 
-and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) : LocationSet.t = 
-  match expr with
-    | (_, Identifier _) as id -> 
-      let id = Identifier.from_expression id in 
-      Store.get store id 
-    
-    | _, Literal _ -> Store.loc_literal
-
-    | _, This _ -> this
-
-    | _, TemplateLiteral {expressions; _} -> 
-      List.fold_left (fun acc elem -> LocationSet.union acc (eval_expr store this elem)) LocationSet.empty expressions
-
-
-and property_lookup_name (left : m Identifier.t) (_object : m Expression.t) (property : string) : string =
-  let obj_prop = Expression.get_id _object ^ "." ^ property in 
-  if Identifier.is_generated left then obj_prop else Identifier.get_name left ^ ", " ^ obj_prop
 
 and initialize_functions (state : state) (funcs_info : Functions.Info.t) : state =
   let l_tsource = loc_taint_source in 
@@ -381,3 +372,26 @@ and initialize_functions (state : state) (funcs_info : Functions.Info.t) : state
 
   Functions.Info.iter (init_func_header state) funcs_info;
   {state with context = Functions.Context.create funcs_info }
+
+(* ----- O T H E R   F U N C T I O N S ------ *)
+and property_lookup_name (left : m Identifier.t) (_object : m Expression.t) (property : string) : string =
+  let obj_prop = Expression.get_id _object ^ "." ^ property in 
+  if Identifier.is_generated left then obj_prop else Identifier.get_name left ^ ", " ^ obj_prop
+
+and add_func_sink_node (graph : Graph.t) (id_call : int) (l_call : location) (loc : Location.t) (args : LocationSet.t list) (sink_info : Config.functionSink) : unit = 
+  let salloc = Graph.alloc_tsink graph in
+  let add_tsink = Graph.add_taint_sink graph in 
+  let add_sink_edge = Graph.add_sink_edge graph in
+  let add_dep_edge = Graph.add_dep_edge graph in 
+  let sink_name = sink_info.sink in 
+
+  let l_tsink = salloc id_call in
+  add_tsink l_tsink sink_name loc;
+  add_sink_edge l_call l_tsink sink_name;
+
+  (* add depedency edges from dangerous inputs (arguments) to taint sink *)
+  let dangerous_inputs = sink_info.args in
+  List.iter (fun dangerous_index ->
+    let arg_locs = List.nth args (dangerous_index - 1)  in
+    LocationSet.apply (fun l -> add_dep_edge l l_tsink) arg_locs
+  ) dangerous_inputs

@@ -1,0 +1,13 @@
+Id:ID¿Type¿SubType¿IdentifierName¿Raw¿InternalStructure¿Location¿Code¿Label:LABEL
+5¿PDG_OBJECT¿¿o¿¿¿{"start":{"line":0,"column":0},"end":{"line":0,"column":0},"fname":""}¿¿PDG_OBJECT
+12¿PDG_OBJECT¿¿v1¿¿¿{"start":{"line":3,"column":4},"end":{"line":3,"column":11},"fname":"/Users/tomastavares/projects/ast-gen/test/paper_examples/test.js"}¿¿PDG_OBJECT
+13¿PDG_OBJECT¿¿¿¿¿{"start":{"line":0,"column":0},"end":{"line":0,"column":0},"fname":""}¿¿PDG_OBJECT
+4¿PDG_OBJECT¿¿this¿¿¿{"start":{"line":0,"column":0},"end":{"line":0,"column":0},"fname":""}¿¿PDG_OBJECT
+10¿PDG_OBJECT¿¿z_dash¿¿¿{"start":{"line":2,"column":13},"end":{"line":2,"column":18},"fname":"/Users/tomastavares/projects/ast-gen/test/paper_examples/test.js"}¿¿PDG_OBJECT
+11¿PDG_OBJECT¿¿o.*¿¿¿{"start":{"line":3,"column":4},"end":{"line":3,"column":8},"fname":"/Users/tomastavares/projects/ast-gen/test/paper_examples/test.js"}¿¿PDG_OBJECT
+7¿PDG_OBJECT¿¿y¿¿¿{"start":{"line":0,"column":0},"end":{"line":0,"column":0},"fname":""}¿¿PDG_OBJECT
+9¿PDG_OBJECT¿¿f¿¿¿{"start":{"line":1,"column":0},"end":{"line":4,"column":1},"fname":"/Users/tomastavares/projects/ast-gen/test/paper_examples/test.js"}¿¿PDG_OBJECT
+3¿PDG_FUNC¿¿f¿¿¿{"start":{"line":0,"column":0},"end":{"line":0,"column":0},"fname":""}¿¿PDG_FUNC
+8¿PDG_OBJECT¿¿z¿¿¿{"start":{"line":0,"column":0},"end":{"line":0,"column":0},"fname":""}¿¿PDG_OBJECT
+2¿TAINT_SOURCE¿¿TAINT_SOURCE¿¿¿{"start":{"line":0,"column":0},"end":{"line":0,"column":0},"fname":""}¿¿TAINT_SOURCE
+6¿PDG_OBJECT¿¿x¿¿¿{"start":{"line":0,"column":0},"end":{"line":0,"column":0},"fname":""}¿¿PDG_OBJECT

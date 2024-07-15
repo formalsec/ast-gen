@@ -1,4 +1,4 @@
-  $ ast_gen input-code-1.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-1.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   let x;
   x = function (z) {
      let v1;
@@ -8,7 +8,7 @@
      return v2;
   }
   
-  $ ast_gen input-code-2.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-2.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   let x;
   x = function (z) {
      let v1;
@@ -18,7 +18,7 @@
      return v2;
   }
   
-  $ ast_gen input-code-3.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-3.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   let v1;
   v1 = function (z) {
      let v2;
@@ -29,7 +29,7 @@
   }
   a.b = v1;
   
-  $ ast_gen input-code-4.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-4.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   const a;
   let v1;
   v1 = [];
@@ -45,7 +45,7 @@
   }
   a = v1.find(v2);
   
-  $ ast_gen input-code-5.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-5.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   const a;
   let v1;
   v1 = [];

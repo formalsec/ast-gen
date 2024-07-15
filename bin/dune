@@ -1,4 +1,12 @@
 (executable
  (public_name ast_gen)
  (name main)
- (libraries auxiliary ast mdg cmdliner))
+ (libraries auxiliary ast mdg cmdliner)
+)
+
+(install
+ (section lib)
+ (files 
+  (../config.json as config.json)
+ )
+)

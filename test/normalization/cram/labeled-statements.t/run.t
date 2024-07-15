@@ -1,16 +1,16 @@
-  $ ast_gen input-code-1.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-1.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   lbl:
   break lbl;
   
   
-  $ ast_gen input-code-2.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-2.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   lbl1:
   lbl2:
   break lbl1;
   
   
   
-  $ ast_gen input-code-3.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-3.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   lbl:
   let v1;
   v1 = x === true;

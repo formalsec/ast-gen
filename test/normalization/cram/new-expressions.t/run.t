@@ -1,4 +1,4 @@
-  $ ast_gen input-code-1.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-1.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   const x;
   let v1;
   v1 = 1 + 2;

@@ -1,4 +1,4 @@
-  $ ast_gen input-code-1.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-1.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   let v;
   Foo = function () {
   }
@@ -6,7 +6,7 @@
   v2 = new Bar();
   Foo.prototype = v2;
   
-  $ ast_gen input-code-2.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-2.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   let v;
   Foo = function () {
   }
@@ -18,7 +18,7 @@
   }
   v2.foo = v3;
   
-  $ ast_gen input-code-3.js -o out; cat out/graph/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-3.js -o out; cat out/code/normalized.js; echo; rm -fr out;
   let v;
   Foo = function () {
      let v3;
