@@ -30,3 +30,4 @@ setup.log
 _opam/
 
 package-lock.json
+graphjs-results/*
