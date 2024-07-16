@@ -32,6 +32,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let add_call_edge = Graph.add_call_edge graph in 
   let add_ref_call_edge = Graph.add_ref_call_edge graph in 
   let add_ret_edge = Graph.add_ret_edge graph in 
+  let add_taint_edge = Graph.add_taint_edge graph in
   let store_update = Store.update store in 
   let alloc = Graph.alloc graph in 
   let falloc = Graph.alloc_function graph in 
@@ -50,6 +51,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
   let visit = Functions.Context.visit contx in
   let get_curr_func = Functions.Context.get_current_function contx in 
   let get_func_sink_info = Config.get_function_sink_info confg in 
+  let get_pckg_src_info = Config.get_package_source_info confg in 
 
   (match statement with
     (* -------- A S S I G N - E X P R -------- *)
@@ -112,7 +114,12 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let _L = eval_expr _object in 
       add_property _L property id add_node';
       let _L' = LocationSet.map_flat (flip lookup property) _L in 
-      store_update left _L'
+      store_update left _L';
+
+      (* check if it is a package taint source *)
+      let source_info = get_pckg_src_info (Expression.get_id _object) property in
+      if Option.is_some source_info then 
+        LocationSet.apply (add_taint_edge loc_taint_source) _L'
 
     (* -------- D Y N A M I C   P R O P E R T Y   L O O K U P -------- *)
     | loc, DynmicLookup {left; _object; property; id} ->
@@ -173,7 +180,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
         LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) param_name) _Ls
       ) _Lss;
 
-      (* checks if it is a sink and process it accordingly *)
+      (* check if it is a function sink *)
       let sink_info = get_func_sink_info f in
       option_may (add_func_sink_node graph id_call l_call loc _Lss) sink_info;
 

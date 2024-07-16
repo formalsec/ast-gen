@@ -112,3 +112,8 @@ let get_function_sink_info (config : t) (func_name : string) : functionSink opti
   List.nth_opt sink_infos 0
 
 
+let get_package_source_info (config : t) (package : string) (property : string) : packageSource option = 
+  let source_infos = (List.filter (fun source_info -> source_info.source = property && List.exists (fun pkg -> pkg.package = package) source_info.packages) config.packageSources) in 
+  List.nth_opt source_infos 0
+
+
