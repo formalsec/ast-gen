@@ -1,4 +1,4 @@
-  $ ast_gen input-code-1.js -o out; cat out/code/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
   let src;
   src = [];
   src["0"] = 1;
@@ -11,14 +11,14 @@
      y = dest[p];
   }
   
-  $ ast_gen input-code-2.js -o out; cat out/code/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   for (let v1 in src) {
      p = v1;
      x = src[p];
      y = dest[p];
   }
   
-  $ ast_gen input-code-3.js -o out; cat out/code/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let extend;
   extend = function (dest, src) {
      for (var p in src) {
@@ -27,7 +27,7 @@
      }
   }
   
-  $ ast_gen input-code-4.js -o out; cat out/code/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
   let iterable;
   iterable = [];
   iterable["0"] = 10;
@@ -38,9 +38,9 @@
      v1 = console.log(value);
   }
   
-  $ ast_gen input-code-5.js -o out; cat out/code/normalized.js; echo; rm -fr out;
+  $ ast_gen input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
   ast_gen: internal error, uncaught exception:
            Failure("hd")
            
-  cat: out/code/normalized.js: No such file or directory
+  cat: out/code/input-code-5.js: No such file or directory
   
