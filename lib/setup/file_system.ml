@@ -8,10 +8,32 @@ let rec create_dir (path : string) : unit =
     )
   | None -> ()
 
+let rec clean_dir (path : string) : unit = 
+  if (Sys.is_directory path)
+    then (
+      Sys.readdir path |>
+      Array.iter (fun name -> clean_dir (Filename.concat path name));
+      Unix.rmdir path
+    )
+    else Sys.remove path
+
+
 
 let write_to_file (file : string) (contents : string) =
   let oc = open_out file in
   output_string oc contents;
   close_out oc
 
+let run_command (command : string) : string = 
+  let ic = Unix.open_process_in command in
+  let buf = Buffer.create 16 in
+  (try
+     while true do
+       Buffer.add_channel buf ic 1
+     done
+   with End_of_file -> ());
+  close_in ic;
+  Buffer.contents buf
+
 let real_path : string -> string = Unix.realpath
+let file_name : string -> string = Filename.basename 

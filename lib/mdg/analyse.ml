@@ -4,6 +4,7 @@ module Functions = Ast.Functions
 open Ast.Grammar
 open Auxiliary.Functions
 open Structures
+open Setup
 open State
 
 
@@ -19,6 +20,52 @@ let rec program (is_verbose : bool) (config : Config.t) ((_, program) : m Progra
   state'.graph
 
 and analyse (state : state) (statement : m Statement.t) : unit =
+  match statement with
+    (* -------- I F -------- *)
+    | _, If {consequent; alternate; _} ->
+      let state' = State.copy state in 
+      analyse_sequence state consequent;
+      option_may (analyse_sequence state') alternate;
+      
+      Graph.lub state.graph state'.graph;
+      Store.lub state.store state'.store;
+    
+    (* -------- S W I T C H --------*)
+    | _, Switch {cases; _} -> 
+      let bodies = List.map (fun (_, case) -> case.Statement.Switch.Case.consequent) cases in 
+      List.iter ( fun body -> analyse_sequence state body) bodies
+
+    (* -------- W H I L E  /  F O R -------- *)
+    | _, ForIn {body; _}
+    | _, ForOf {body; _} 
+    | _, While {body; _} -> 
+      let rec fixed_point_computation (state : state) : unit =
+        setup ();
+        let store' = Store.copy state.store in 
+        
+        analyse_sequence state body;
+        Store.lub state.store store';
+        if not (Store.equal state.store store')
+          then fixed_point_computation state
+      
+      in 
+      fixed_point_computation state
+
+    (* -------- T R Y  -  C A T C H -------- *)
+    | _, Try {body; handler; finalizer} ->
+      analyse_sequence state body;
+      let handler_body = Option.map (fun (_, handler) -> handler.Statement.Try.Catch.body) handler in 
+      option_may (analyse_sequence state) handler_body;
+      option_may (analyse_sequence state) finalizer
+
+    (* -------- W I T H  /  L A B E L E D -------- *)
+    | _, Labeled {body; _}
+    | _, With    {body; _} -> 
+      analyse_sequence state body
+
+    | _ -> analyse_simple state statement;
+
+and analyse_simple (state : state) (statement : m Statement.t) : unit = 
   let graph = state.graph in 
   let store = state.store in 
   let contx = state.context in
@@ -63,9 +110,9 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 
       let func_id : Functions.Id.t = {uid = id; name = Identifier.get_name left} in 
       (* functions with the same name can be nested inside the same context 
-         (only consider the last definition with such name) *)
+          (only consider the last definition with such name) *)
       if is_last_definition func_id then (
-        (* ! add object that represents the function *)
+        (* ? add object that represents the function *)
         let l_i = alloc id in 
         add_node l_i (Identifier.get_name left) loc;
         store_update left (LocationSet.singleton l_i);
@@ -87,7 +134,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let l_i = alloc id in 
       LocationSet.apply (flip add_dep_edge l_i) (LocationSet.union _L1 _L2);
       store_update left (LocationSet.singleton l_i);
-      (* add node info*)
+      
+      (* ! add node info*)
       add_node l_i (Identifier.get_name left) loc
     
     | loc, AssignUnary {left; argument; id; _} -> 
@@ -95,7 +143,8 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let l_i = alloc id in 
       LocationSet.apply (flip add_dep_edge l_i) _L1;
       store_update left (LocationSet.singleton l_i);
-      (* add node info*)
+      
+      (* ! add node info*)
       add_node l_i (Identifier.get_name left) loc
 
 
@@ -116,7 +165,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let _L' = LocationSet.map_flat (flip lookup property) _L in 
       store_update left _L';
 
-      (* check if it is a package taint source *)
+      (* ! check if it is a package taint source *)
       let source_info = get_pckg_src_info (Expression.get_id _object) property in
       if Option.is_some source_info then 
         LocationSet.apply (add_taint_edge loc_taint_source) _L'
@@ -209,40 +258,6 @@ and analyse (state : state) (statement : m Statement.t) : unit =
       let property' = Expression.get_id property in 
       analyse_method_call state loc left _object property' arguments id_call id_retn;
 
-
-
-    (* -------- I F -------- *)
-    | _, If {consequent; alternate; _} ->
-      let state' = State.copy state in 
-      analyse_sequence state consequent;
-      option_may (analyse_sequence state') alternate;
-      
-      Graph.lub state.graph state'.graph;
-      Store.lub state.store state'.store;
-    
-    (* -------- S W I T C H --------*)
-    | _, Switch {cases; _} -> 
-      let bodies = List.map (fun (_, case) -> case.Statement.Switch.Case.consequent) cases in 
-      List.iter ( fun body -> analyse_sequence state body) bodies
-
-    (* -------- W H I L E  /  F O R -------- *)
-    | _, ForIn {body; _}
-    | _, ForOf {body; _} 
-    | _, While {body; _} -> 
-       ifp (flip analyse_sequence body) state
-
-    (* -------- T R Y  -  C A T C H -------- *)
-    | _, Try {body; handler; finalizer} ->
-      analyse_sequence state body;
-      let handler_body = Option.map (fun (_, handler) -> handler.Statement.Try.Catch.body) handler in 
-      option_may (analyse_sequence state) handler_body;
-      option_may (analyse_sequence state) finalizer
-
-    (* -------- W I T H  /  L A B E L E D -------- *)
-    | _, Labeled {body; _}
-    | _, With    {body; _} -> 
-      analyse_sequence state body
-
     (* -------- R E T U R N -------- *)
     | loc, Return {id; argument} -> 
       let _L = Option.map eval_expr argument in 
@@ -265,30 +280,10 @@ and analyse (state : state) (statement : m Statement.t) : unit =
     | _, Debugger _ -> ()
         
     | _ -> failwith "statement node analysis not defined");
-  
-  if (!verbose) then (
-    print_endline "--------------";
-    print_string (Ast.Pp.Js.print_stmt statement 0);
-    print_endline "--------------";
 
-    print_endline "Graph: ";
-    Graph.print graph; 
-    
-    print_endline "Store: ";
-    Store.print store; )
 
 (* ------- P R I M I T I V E   F U N C T I O N S --------*)
 and analyse_sequence (state : state) = List.iter (analyse state)
-
-and ifp (f : state -> unit) (state : state) : unit =
-
-  setup ();
-  let store' = Store.copy state.store in 
-  
-  f state;
-  Store.lub state.store store';
-  if not (Store.equal state.store store')
-    then ifp f state
 
 and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) : LocationSet.t = 
   match expr with
@@ -318,8 +313,6 @@ and analyse_method_call (state : state) (loc : Location.t) (left : m Identifier.
   let add_ref_call_edge = Graph.add_ref_call_edge state.graph in 
   let get_curr_func = Functions.Context.get_current_function state.context in  
 
-
-
   let _Lss = List.map eval_expr arguments in 
       
   let _Lthis = eval_expr _object in
@@ -339,9 +332,10 @@ and analyse_method_call (state : state) (loc : Location.t) (left : m Identifier.
     LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) "undefined") _Ls
   ) _Lss;
 
-  (* ! add ref call edge (shotcut) from function definition to this call *)
+  (* ! add ref call edge (shotcut) from function definition to this call 
+     ! did this to be comaptible with graphjs queries *)
   let f_orig = get_curr_func () in
-  option_may (fun id ->
+  option_may (fun id -> 
     let l_f = Graph.get_func_node state.graph id in 
     add_ref_call_edge (Option.get l_f) l_call;
     ()

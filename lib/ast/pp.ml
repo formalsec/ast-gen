@@ -65,8 +65,9 @@ module Js = struct
         identation_str ^ "with (" ^ _object' ^ ") {\n" ^ body' ^ identation_str ^ "}\n"
         
       | _, Labeled {label; body} ->
-        let label' = print_identifier label in  
-        let body' = print_stmts body identation in 
+        let label' = print_identifier label in
+        let new_identation = identation + spaces_per_identation in
+        let body' = print_stmts body new_identation in 
         identation_str ^ label' ^ ":\n" ^ body' ^ "\n"
 
       | _, VarDecl {kind; id} -> 

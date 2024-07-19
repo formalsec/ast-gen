@@ -1,4 +1,5 @@
 open Structures
+open Setup
 module Functions = Ast.Functions 
 module Graph = Graph'
 

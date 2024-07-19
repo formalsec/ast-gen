@@ -1,38 +1,80 @@
 open Cmdliner
+open Setup
+open Auxiliary.Structures
+module Graph = Mdg.Graph'
 
-let rec main (filename : string) (output_path : string) (config_path : string) (_multifile : bool) (generate_mdg : bool) (verbose : bool) : int =
-  let filename = Auxiliary.File_system.real_path filename in 
-  (* STEP 0 : Generate AST using Flow library *)
-  match Auxiliary.Js_parser.from_file filename with
-  | Ok ast ->
-      (* create output fs structure *)
-      let code_dir, graph_dir, _ = setup_output output_path in 
+(* some useful structures *)
+type module_graphs = Graph.t HashTable.t
+let empty_module_graphs () : module_graphs = HashTable.create 10
+let add_graph : module_graphs -> string -> Graph.t -> unit = HashTable.add
+let get_graph : module_graphs -> string -> Graph.t = HashTable.find
 
-      (* STEP 1 : Normalize AST *)
-      let norm_program = Ast.Normalize.program ast filename in
-      let js_program = Ast.Pp.Js.print norm_program in
-      Auxiliary.File_system.write_to_file (code_dir ^ "normalized.js") js_program;
+type summaries = string HashTable.t
+let empty_summaries () : summaries = HashTable.create 10
+let add_summary : summaries -> string -> string -> unit = HashTable.add
 
-      (* STEP 2 : Generate MDG for the normalized code *)
-      if generate_mdg then (
-        let config = Mdg.Config.read config_path in 
-        let graph = Mdg.Analyse.program verbose config norm_program in
-        Mdg.Pp.Dot.output graph_dir graph;
-        Mdg.Pp.CSV.output graph_dir graph
-      );
 
-      0
-  | Error msg ->
-      Format.eprintf "%s@." msg;
-      1
+let rec main (filename : string) (output_path : string) (config_path : string) (multifile : bool) (generate_mdg : bool) (verbose : bool) : int =
+  
+  (* SETUP *)
+  let config = Config.read config_path in 
+  let dep_tree = DependencyTree.generate filename multifile in  
+
+  (* create output fs structure *)
+  let code_dir, graph_dir, _ = setup_output output_path in 
+
+  (* process dependencies first with the aid of the depedency tree *)
+  let summaries = empty_summaries () in 
+  let module_graphs = empty_module_graphs () in 
+  List.iter (fun file_path -> 
+    let filename = File_system.file_name file_path in 
+    (* print_endline ("PROCESSING : " ^ filename); *)
+    (* STEP 0 : Generate AST using Flow library *)
+    let ast = Js_parser.from_file file_path in 
+
+    (* STEP 1 : Normalize AST *)
+    let norm_program = Ast.Normalize.program ast file_path in
+    let js_program = Ast.Pp.Js.print norm_program in
+    File_system.write_to_file (code_dir ^ filename) js_program;
+
+    (* STEP 2 : Generate MDG for the normalized code *)
+    if generate_mdg then (
+      let graph = Mdg.Analyse.program verbose config norm_program in
+      (* 
+      TODO : .
+      Graph.iter_external_calls (
+        fun call -> 
+          let _module = call._module in 
+          let func = get_func (get_summary summaries _module) call.func in
+          let func_graph = Graph.get_func_graph (get_graph module_graphs _module) func in
+          Graph.add_external_func graph func_graph; 
+      ) graph; *)
+
+      add_graph module_graphs file_path graph;
+      add_summary summaries file_path "TODO" (* TODO *)
+    );
+
+  ) (DependencyTree.bottom_up_visit dep_tree);
+
+  (* output *)
+  if generate_mdg then (
+    let main = DependencyTree.get_main dep_tree in 
+    let graph = get_graph module_graphs main in 
+    Mdg.Pp.Dot.output graph_dir graph;
+    Mdg.Pp.CSV.output graph_dir graph
+  );
+
+  0
+
 
 and setup_output (output_path : string) : (string * string * string) = 
   let code_dir = output_path  ^ "/code/" in 
   let graph_dir = output_path ^ "/graph/" in 
   let run_dir   = output_path ^ "/run/" in
-  Auxiliary.File_system.create_dir code_dir;
-  Auxiliary.File_system.create_dir graph_dir;
-  Auxiliary.File_system.create_dir run_dir;
+  File_system.clean_dir output_path;
+  File_system.create_dir code_dir;
+  File_system.create_dir graph_dir;
+  File_system.create_dir run_dir;
   
   code_dir, graph_dir, run_dir
 
@@ -59,7 +101,8 @@ let output_path : string Term.t =
 
 let config_path : string Term.t =
   let doc = "Path to configuration file." in
-  let default_path = "config.json" in 
+  let env_path = Filename.dirname Sys.executable_name in
+  let default_path = env_path ^ "/config.json" in 
   Arg.(value & opt non_dir_file default_path & info ["c"; "config"] ~doc)
 
 let verbose : bool Term.t =
