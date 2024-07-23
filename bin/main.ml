@@ -17,10 +17,7 @@ let add_summary : summaries -> string -> string -> unit = HashTable.add
 let rec main (filename : string) (output_path : string) (config_path : string) (multifile : bool) (generate_mdg : bool) (verbose : bool) : int =
   
   (* SETUP *)
-  let config = Config.read config_path in 
   let dep_tree = DependencyTree.generate filename multifile in  
-
-  (* create output fs structure *)
   let code_dir, graph_dir, _ = setup_output output_path in 
 
   (* process dependencies first with the aid of the depedency tree *)
@@ -39,7 +36,7 @@ let rec main (filename : string) (output_path : string) (config_path : string) (
 
     (* STEP 2 : Generate MDG for the normalized code *)
     if generate_mdg then (
-      let graph = Mdg.Analyse.program verbose config norm_program in
+      let graph = Mdg.Analyse.program verbose config_path norm_program in
       (* 
       TODO : .
       Graph.iter_external_calls (

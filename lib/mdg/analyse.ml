@@ -1,39 +1,42 @@
-(* open Auxiliary.Functions *)
 module Graph = Graph'
 module Functions = Ast.Functions
 open Ast.Grammar
 open Auxiliary.Functions
 open Structures
-open Setup
 open State
 
+module Analysis = BuildExportsObject.Analysis
 
 let verbose = ref false;;
 
-
-let rec program (is_verbose : bool) (config : Config.t) ((_, program) : m Program.t) : Graph.t = 
+let rec program (is_verbose : bool) (_config_path : string) ((_, program) : m Program.t) : Graph.t = 
   verbose := is_verbose;
-  let state = empty_state config in 
-  let state' = initialize_functions state program.functions in
+  let state = empty_state program.functions in 
 
-  analyse_sequence state' program.body;
-  state'.graph
+  (* setup auxiliary analysis *)
+  
+  let analysis = ref (Analysis.init ()) in 
 
-and analyse (state : state) (statement : m Statement.t) : unit =
+  initialize_functions state program.functions;
+  analyse_sequence state analysis program.body;
+
+  state.graph
+
+and analyse (state : state) (analysis : 'a) (statement : m Statement.t) : unit =
   match statement with
     (* -------- I F -------- *)
     | _, If {consequent; alternate; _} ->
       let state' = State.copy state in 
-      analyse_sequence state consequent;
-      option_may (analyse_sequence state') alternate;
-      
+      analyse_sequence state analysis consequent;
+      option_may (analyse_sequence state' analysis) alternate;
+       
       Graph.lub state.graph state'.graph;
       Store.lub state.store state'.store;
     
     (* -------- S W I T C H --------*)
     | _, Switch {cases; _} -> 
       let bodies = List.map (fun (_, case) -> case.Statement.Switch.Case.consequent) cases in 
-      List.iter ( fun body -> analyse_sequence state body) bodies
+      List.iter ( fun body -> analyse_sequence state analysis body) bodies
 
     (* -------- W H I L E  /  F O R -------- *)
     | _, ForIn {body; _}
@@ -43,7 +46,7 @@ and analyse (state : state) (statement : m Statement.t) : unit =
         setup ();
         let store' = Store.copy state.store in 
         
-        analyse_sequence state body;
+        analyse_sequence state analysis body;
         Store.lub state.store store';
         if not (Store.equal state.store store')
           then fixed_point_computation state
@@ -53,23 +56,22 @@ and analyse (state : state) (statement : m Statement.t) : unit =
 
     (* -------- T R Y  -  C A T C H -------- *)
     | _, Try {body; handler; finalizer} ->
-      analyse_sequence state body;
+      analyse_sequence state analysis body;
       let handler_body = Option.map (fun (_, handler) -> handler.Statement.Try.Catch.body) handler in 
-      option_may (analyse_sequence state) handler_body;
-      option_may (analyse_sequence state) finalizer
+      option_may (analyse_sequence state analysis) handler_body;
+      option_may (analyse_sequence state analysis) finalizer
 
     (* -------- W I T H  /  L A B E L E D -------- *)
     | _, Labeled {body; _}
     | _, With    {body; _} -> 
-      analyse_sequence state body
+      analyse_sequence state analysis body
 
-    | _ -> analyse_simple state statement;
+    | _ -> analyse_simple state analysis statement;
 
-and analyse_simple (state : state) (statement : m Statement.t) : unit = 
+and analyse_simple (state : state) (analysis : 'a) (statement : m Statement.t) : unit = 
   let graph = state.graph in 
   let store = state.store in 
   let contx = state.context in
-  let confg = state.config in 
 
   (* aliases *)
   let eval_expr = eval_expr store state.this in 
@@ -79,7 +81,6 @@ and analyse_simple (state : state) (statement : m Statement.t) : unit =
   let add_call_edge = Graph.add_call_edge graph in 
   let add_ref_call_edge = Graph.add_ref_call_edge graph in 
   let add_ret_edge = Graph.add_ret_edge graph in 
-  let add_taint_edge = Graph.add_taint_edge graph in
   let store_update = Store.update store in 
   let alloc = Graph.alloc graph in 
   let falloc = Graph.alloc_function graph in 
@@ -97,9 +98,10 @@ and analyse_simple (state : state) (statement : m Statement.t) : unit =
   let is_last_definition = Functions.Context.is_last_definition contx in 
   let visit = Functions.Context.visit contx in
   let get_curr_func = Functions.Context.get_current_function contx in 
-  let get_func_sink_info = Config.get_function_sink_info confg in 
-  let get_pckg_src_info = Config.get_package_source_info confg in 
+  (* let get_func_sink_info = Config.get_function_sink_info confg in 
+  let get_pckg_src_info = Config.get_package_source_info confg in  *)
 
+  analysis := Analysis.analyse !analysis statement;
   (match statement with
     (* -------- A S S I G N - E X P R -------- *)
     | _, AssignSimple {left; right} -> 
@@ -124,7 +126,7 @@ and analyse_simple (state : state) (statement : m Statement.t) : unit =
         (* setup new store with only the param and corresponding locations *)
         let param_locs = get_param_locs func_id in 
         let new_state = {state with store = param_locs; context = visit func_id} in
-        analyse_sequence new_state body
+        analyse_sequence new_state analysis body
       );
       
 
@@ -166,9 +168,9 @@ and analyse_simple (state : state) (statement : m Statement.t) : unit =
       store_update left _L';
 
       (* ! check if it is a package taint source *)
-      let source_info = get_pckg_src_info (Expression.get_id _object) property in
+      (* let source_info = get_pckg_src_info (Expression.get_id _object) property in
       if Option.is_some source_info then 
-        LocationSet.apply (add_taint_edge loc_taint_source) _L'
+        LocationSet.apply (add_taint_edge loc_taint_source) _L' *)
 
     (* -------- D Y N A M I C   P R O P E R T Y   L O O K U P -------- *)
     | loc, DynmicLookup {left; _object; property; id} ->
@@ -230,8 +232,8 @@ and analyse_simple (state : state) (statement : m Statement.t) : unit =
       ) _Lss;
 
       (* check if it is a function sink *)
-      let sink_info = get_func_sink_info f in
-      option_may (add_func_sink_node graph id_call l_call loc _Lss) sink_info;
+      (* let sink_info = get_func_sink_info f in
+      option_may (add_func_sink_node graph id_call l_call loc _Lss) sink_info; *)
 
       (* ! add ref call edge (shotcut) from function definition to this call *)
       let f_orig = get_curr_func () in
@@ -283,7 +285,8 @@ and analyse_simple (state : state) (statement : m Statement.t) : unit =
 
 
 (* ------- P R I M I T I V E   F U N C T I O N S --------*)
-and analyse_sequence (state : state) = List.iter (analyse state)
+and analyse_sequence (state : state) (analysis : 'a) = List.iter (analyse state analysis)
+
 
 and eval_expr (store : Store.t) (this : LocationSet.t) (expr : m Expression.t) : LocationSet.t = 
   match expr with
@@ -346,7 +349,7 @@ and analyse_method_call (state : state) (loc : Location.t) (left : m Identifier.
   store_update left (LocationSet.singleton l_retn);
 
 
-and initialize_functions (state : state) (funcs_info : Functions.Info.t) : state =
+and initialize_functions (state : state) (funcs_info : Functions.Info.t) : unit =
   let l_tsource = loc_taint_source in 
   let init_func_header (state : state) (func : Functions.Id.t) (info : Functions.Info.info) : unit =
     let graph = state.graph in 
@@ -372,14 +375,13 @@ and initialize_functions (state : state) (funcs_info : Functions.Info.t) : state
   in
 
   Functions.Info.iter (init_func_header state) funcs_info;
-  {state with context = Functions.Context.create funcs_info }
 
 (* ----- O T H E R   F U N C T I O N S ------ *)
 and property_lookup_name (left : m Identifier.t) (_object : m Expression.t) (property : string) : string =
   let obj_prop = Expression.get_id _object ^ "." ^ property in 
   if Identifier.is_generated left then obj_prop else Identifier.get_name left ^ ", " ^ obj_prop
 
-and add_func_sink_node (graph : Graph.t) (id_call : int) (l_call : location) (loc : Location.t) (args : LocationSet.t list) (sink_info : Config.functionSink) : unit = 
+(* and add_func_sink_node (graph : Graph.t) (id_call : int) (l_call : location) (loc : Location.t) (args : LocationSet.t list) (sink_info : Config.functionSink) : unit = 
   let salloc = Graph.alloc_tsink graph in
   let add_tsink = Graph.add_taint_sink graph in 
   let add_sink_edge = Graph.add_sink_edge graph in
@@ -395,4 +397,4 @@ and add_func_sink_node (graph : Graph.t) (id_call : int) (l_call : location) (lo
   List.iter (fun dangerous_index ->
     let arg_locs = List.nth args (dangerous_index - 1)  in
     LocationSet.apply (fun l -> add_dep_edge l l_tsink) arg_locs
-  ) dangerous_inputs
+  ) dangerous_inputs *)

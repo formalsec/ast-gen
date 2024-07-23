@@ -22,3 +22,5 @@ module LocationSet = struct
   let apply (f : 'a -> unit) (locations : LocationSet'.t) = 
     LocationSet'.iter f locations
 end
+
+module AliasSet = Set.Make(String)

@@ -1267,6 +1267,7 @@ and Expression : sig
   end
 
   val get_id : 'M Expression.t -> string
+  val get_id_opt : 'M Expression.t -> string option
 
   type 'M t' = 
     | Literal         of    Literal.t 
@@ -1345,6 +1346,12 @@ end = struct
       | _, Identifier {name; _} -> name
       | _, This _ -> "this"
       | _ -> failwith "expression cannot be converted into an id"
+  
+  let get_id_opt (expr : 'M Expression.t) : string option = 
+    match expr with 
+    | _, Identifier {name; _} -> Some name
+    | _, This _ -> Some "this"
+    | _ -> None
 
   type 'M t' = 
     | Literal         of    Literal.t 

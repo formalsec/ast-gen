@@ -1,5 +1,4 @@
 open Structures
-open Setup
 module Functions = Ast.Functions 
 module Graph = Graph'
 
@@ -22,18 +21,16 @@ type state = {
   graph  : Graph.t;
   store  : Store.t;
   this   : LocationSet.t;
-  config : Config.t;
   (* function information *)
   context   : Functions.Context.t;
 }
 
-let empty_state (config : Config.t) = { 
+let empty_state (info : Functions.Info.t) = { 
   graph  = Graph.empty register; 
   store  = Store.empty (); 
   this   = Store.loc_this;
-  config = config;
   (* function information *)
-  context   = Functions.Context.empty;
+  context   = Functions.Context.create info;
 }
 
 let copy ({graph; store; _} as state : state) : state = 
