@@ -375,10 +375,12 @@ let rec program (is_verbose : bool) (config_path : string) ((_, program) : m Pro
   let init_state      = BuildMDG.init program.functions in 
   let state, analysis = BuildMDG.run init_state program.body in
 
-  let _exportsObject, config = get_analysis_output (Analysis.finish analysis) in 
+  (* process auxiliary analysis outputs*)
+  let exportsObject, config = get_analysis_output (Analysis.finish analysis) in 
 
   add_taint_sinks state config;
   add_taint_sources state config;
+  buildExportsObject state exportsObject;
 
   state.graph;
 
@@ -422,4 +424,9 @@ and add_taint_sinks (state : State.t) (config : Config.t) : unit =
   ) graph;
 
 
-and add_taint_sources (_state : State.t) (_config : Config.t) : unit = ()
+and add_taint_sources (_state : State.t) (_config : Config.t) : unit = 
+  (* TODO *)
+  ()
+
+and buildExportsObject (_state : State.t) (_exportsObject : buildExportsObject) : unit = 
+  ()
