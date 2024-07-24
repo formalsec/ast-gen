@@ -520,6 +520,18 @@ let get_param_locations (graph : t) (func_id : Functions.Id.t) : Store.t =
   ) params;
 
   store
+
+let get_arg_locations (graph : t) (callee : location) : (string * location) list =
+  let result = ref [] in 
+  iter_edges (fun loc edge -> 
+    match edge._type with 
+      | Argument (index, _) -> 
+        if edge._to = callee then
+          result := (index, loc) :: !result
+      | _ -> ()
+  ) graph;
+
+  !result
   
 
 let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id : int) (add_node : location -> unit) : unit =

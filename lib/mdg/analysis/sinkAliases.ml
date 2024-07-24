@@ -6,16 +6,20 @@ module type InitConfig = sig
 end
 
 module Analysis (Init : InitConfig) : AbstractAnalysis.T = struct
-  include Init
 
-  type t = Config.t
-  let analyse (analysis : t) (statement : m Statement.t) : t = 
-    match statement with
-      | _, AssignSimple _ -> analysis
-      | _, StaticLookup _ -> analysis
+  type t = AnalysisType.sinkAliases
+  let analyse (analysis : t) (_statement : m Statement.t) : t = 
+    (* match statement with
+      | _, AssignSimple {left; right} -> analysis
+      | _, StaticLookup {left; _object; property}-> analysis
       
       (* dont do anything on other statements *)
-      | _ -> analysis
+      | _ -> analysis *)
+      analysis
 
-  let init () : t = Config.read filename
+  let init () : t = Config.read Init.filename
+  
+  let finish (state : t) : AnalysisType.t =
+    AnalysisType.SinkAliases state
+
 end

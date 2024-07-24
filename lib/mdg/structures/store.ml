@@ -62,3 +62,16 @@ let lub (store : t) (store' : t) : unit =
     let locs = get_locations store id in 
     replace store id (LocationSet.union locs locs')
   ) store'
+
+let rec eval_expr (store : t) (this : LocationSet.t) (expr : m Expression.t) : LocationSet.t = 
+  match expr with
+    | (_, Identifier _) as id -> 
+      let id = Identifier.from_expression id in 
+      get store id 
+    
+    | _, Literal _ -> loc_literal
+
+    | _, This _ -> this
+
+    | _, TemplateLiteral {expressions; _} -> 
+      List.fold_left (fun acc elem -> LocationSet.union acc (eval_expr store this elem)) LocationSet.empty expressions

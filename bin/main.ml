@@ -13,9 +13,19 @@ type summaries = string HashTable.t
 let empty_summaries () : summaries = HashTable.create 10
 let add_summary : summaries -> string -> string -> unit = HashTable.add
 
+let setup_output (output_path : string) : (string * string * string) = 
+  let code_dir = output_path  ^ "/code/" in 
+  let graph_dir = output_path ^ "/graph/" in 
+  let run_dir   = output_path ^ "/run/" in
 
-let rec main (filename : string) (output_path : string) (config_path : string) (multifile : bool) (generate_mdg : bool) (verbose : bool) : int =
+  File_system.clean_dir output_path;
+  File_system.create_dir code_dir;
+  File_system.create_dir graph_dir;
+  File_system.create_dir run_dir;
   
+  code_dir, graph_dir, run_dir
+
+let main (filename : string) (output_path : string) (config_path : string) (multifile : bool) (generate_mdg : bool) (verbose : bool) : int =
   (* SETUP *)
   let dep_tree = DependencyTree.generate filename multifile in  
   let code_dir, graph_dir, _ = setup_output output_path in 
@@ -62,20 +72,6 @@ let rec main (filename : string) (output_path : string) (config_path : string) (
   );
 
   0
-
-
-and setup_output (output_path : string) : (string * string * string) = 
-  let code_dir = output_path  ^ "/code/" in 
-  let graph_dir = output_path ^ "/graph/" in 
-  let run_dir   = output_path ^ "/run/" in
-  File_system.clean_dir output_path;
-  File_system.create_dir code_dir;
-  File_system.create_dir graph_dir;
-  File_system.create_dir run_dir;
-  
-  code_dir, graph_dir, run_dir
-
-
 
 (* setup comand line interface using CMDLiner library*)
 let input_file : string Term.t =

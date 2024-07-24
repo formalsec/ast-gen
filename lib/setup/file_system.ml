@@ -9,13 +9,14 @@ let rec create_dir (path : string) : unit =
   | None -> ()
 
 let rec clean_dir (path : string) : unit = 
-  if (Sys.is_directory path)
-    then (
-      Sys.readdir path |>
-      Array.iter (fun name -> clean_dir (Filename.concat path name));
-      Unix.rmdir path
-    )
-    else Sys.remove path
+  if (Sys.file_exists path) then (
+    if (Sys.is_directory path)
+      then (
+        Sys.readdir path |>
+        Array.iter (fun name -> clean_dir (Filename.concat path name));
+        Unix.rmdir path
+      )
+      else Sys.remove path)
 
 
 

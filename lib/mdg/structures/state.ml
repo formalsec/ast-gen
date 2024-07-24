@@ -17,7 +17,7 @@ let register, setup, was_changed =
   
   reg, push, pop;;
 
-type state = {
+type t = {
   graph  : Graph.t;
   store  : Store.t;
   this   : LocationSet.t;
@@ -33,7 +33,7 @@ let empty_state (info : Functions.Info.t) = {
   context   = Functions.Context.create info;
 }
 
-let copy ({graph; store; _} as state : state) : state = 
+let copy ({graph; store; _} as state : t) : t = 
   { state with 
      graph = Graph.copy graph;
      store = Store.copy store;
