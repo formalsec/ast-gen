@@ -4,6 +4,8 @@ open Auxiliary.Structures
 module Graph = Mdg.Graph'
 module ExportedObject = Mdg.ExportedObject
 
+let env_path = Filename.dirname (Filename.dirname Sys.executable_name) ^ "/lib/ast_gen/";;
+
 (* some useful structures *)
 type module_graphs = Graph.t HashTable.t
 let empty_module_graphs () : module_graphs = HashTable.create 10
@@ -26,9 +28,34 @@ let setup_output (output_path : string) : (string * string * string) =
   
   code_dir, graph_dir, run_dir
 
+let setup_node (multifile : bool) : string = 
+  (* !REFACTOR : inbed this functionality into the dune build and install process *)
+  let js_folder    = env_path ^ "js/" in 
+  let node_modules = js_folder ^ "node_modules" in 
+  let package_info = js_folder ^ "package.json" in 
+  let script       = js_folder ^ "generate_cg.js" in 
+
+  if not (Sys.file_exists script)
+    then failwith "dependency tree genetarion script not found";
+
+  if not (Sys.file_exists package_info)
+    then failwith "package.json not found";
+
+  if multifile && not (Sys.file_exists node_modules)
+    then (
+      print_endline "installing js dependencies";
+      let result = Sys.command ("npm install --prefix " ^ js_folder) in 
+      if result != 0 then failwith "error installing js depedencies";
+      print_endline "DONE!");
+
+  script
+
+
 let main (filename : string) (output_path : string) (config_path : string) (multifile : bool) (generate_mdg : bool) (verbose : bool) : int =
+  
   (* SETUP *)
-  let dep_tree = DependencyTree.generate filename multifile in  
+  let script = setup_node multifile in
+  let dep_tree = DependencyTree.generate script filename multifile in  
   let code_dir, graph_dir, _ = setup_output output_path in 
 
   (* process dependencies first with the aid of the depedency tree *)
@@ -36,7 +63,7 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
   let module_graphs = empty_module_graphs () in 
   List.iter (fun file_path -> 
     let filename = File_system.file_name file_path in 
-    (* print_endline ("PROCESSING : " ^ filename); *)
+
     (* STEP 0 : Generate AST using Flow library *)
     let ast = Js_parser.from_file file_path in 
 
@@ -60,8 +87,10 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
 
       add_graph module_graphs file_path graph;
       add_summary summaries file_path exportedObject; (* TODO *)
+      
       print_endline file_path;
-      ExportedObject.print exportedObject
+      ExportedObject.print exportedObject;
+      print_newline ();
     );
 
   ) (DependencyTree.bottom_up_visit dep_tree);
@@ -97,8 +126,7 @@ let output_path : string Term.t =
 
 let config_path : string Term.t =
   let doc = "Path to configuration file." in
-  let env_path = Filename.dirname Sys.executable_name in
-  let default_path = env_path ^ "/config.json" in 
+  let default_path = env_path ^ "config.json" in 
   Arg.(value & opt non_dir_file default_path & info ["c"; "config"] ~doc)
 
 let verbose : bool Term.t =

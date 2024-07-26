@@ -5,8 +5,11 @@
 )
 
 (install
- (section bin)
+ (section lib)
  (files 
   (../resources/config.json as config.json)
+  (../resources/js/generate_cg.js as js/generate_cg.js)
+  (../resources/js/package.json as js/package.json)
  )
 )
+
