@@ -1,3 +1,4 @@
+
 type property = string
 
 type location = string
@@ -21,6 +22,10 @@ module LocationSet = struct
 
   let apply (f : 'a -> unit) (locations : LocationSet'.t) = 
     LocationSet'.iter f locations
+
+  let print (locations : LocationSet'.t) : unit = 
+    apply (fun loc -> print_string (loc ^ ", ") ) locations;
+    print_newline ();
 end
 
 module AliasSet = Set.Make(String)

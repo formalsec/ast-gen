@@ -1,9 +1,12 @@
 module Graph = Graph'
 module Functions = Ast.Functions
 module Config = Setup.Config
+module EdgeSet = Graph.EdgeSet
+module Edge = Graph.Edge
 open Config
 open Ast.Grammar
 open Auxiliary.Functions
+open Auxiliary.Structures
 open Structures
 open AnalysisType
 
@@ -17,14 +20,12 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
   (* ------- I N I T I A L I Z E ------- *)
   let initialize_functions (state : State.t) (funcs_info : Functions.Info.t) : unit =
-    let l_tsource = loc_taint_source in 
     let init_func_header (state : State.t) (func : Functions.Id.t) (info : Functions.Info.info) : unit =
       let graph = state.graph in 
       let alloc_fun      = Graph.alloc_function graph in 
       let add_func_node  = Graph.add_func_node  graph in 
       let add_param_node = Graph.add_param_node graph in 
       let add_param_edge = Graph.add_param_edge graph in 
-      let add_taint_edge = Graph.add_taint_edge graph in
 
       let l_f = alloc_fun func.uid in 
       add_func_node l_f func (Location.empty ());
@@ -33,8 +34,6 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       List.iteri (fun i param -> 
         let l_p = Graph.alloc_param graph in 
         add_param_node l_p param (Location.empty ());
-        (* ! what are taint sources? *)
-        add_taint_edge l_tsource l_p;
         if param = "this" 
           then add_param_edge l_f l_p "this"
           else add_param_edge l_f l_p (Int.to_string (i - 1))
@@ -130,28 +129,23 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     let is_last_definition = Functions.Context.is_last_definition contx in 
     let visit = Functions.Context.visit contx in
     let get_curr_func = Functions.Context.get_current_function contx in 
-  
-    analysis := Auxiliary.analyse !analysis statement;
+    
     (match statement with
       (* -------- A S S I G N - E X P R -------- *)
       | _, AssignSimple {left; right} -> 
         let _L = eval_expr right in 
         store_update left _L
   
-      | loc, AssignFunction {left; id; body; _} ->
+      | _, AssignFunction {left; id; body; _} ->
   
         let func_id : Functions.Id.t = {uid = id; name = Identifier.get_name left} in 
         (* functions with the same name can be nested inside the same context 
             (only consider the last definition with such name) *)
         if is_last_definition func_id then (
-          (* ? add object that represents the function *)
-          let l_i = alloc id in 
-          add_node l_i (Identifier.get_name left) loc;
-          store_update left (LocationSet.singleton l_i);
-  
           (* add function definition dependency *)
           let f_i = falloc id in 
-          add_dep_edge f_i l_i;
+          store_update left (LocationSet.singleton f_i);
+
           
           (* setup new store with only the param and corresponding locations *)
           let param_locs = get_param_locs func_id in 
@@ -302,7 +296,9 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       | _, Continue _ 
       | _, Debugger _ -> ()
           
-      | _ -> failwith "statement node analysis not defined")
+      | _ -> failwith "statement node analysis not defined");
+    analysis := Auxiliary.analyse !analysis state statement;
+
   
   and property_lookup_name (left : m Identifier.t) (_object : m Expression.t) (property : string) : string =
     let obj_prop = Expression.get_id _object ^ "." ^ property in 
@@ -361,37 +357,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     
 end
 
-
-
-let rec program (is_verbose : bool) (config_path : string) ((_, program) : m Program.t) : Graph.t = 
-  verbose := is_verbose;
-
-  let module Analysis = AbstractAnalysis.Combine 
-    (BuildExportsObject.Analysis) 
-    (SinkAliases.Analysis (struct let filename = config_path end))
-  in 
-  let module BuildMDG = GraphConstrunction (Analysis) in 
-
-  let init_state      = BuildMDG.init program.functions in 
-  let state, analysis = BuildMDG.run init_state program.body in
-
-  (* process auxiliary analysis outputs*)
-  let exportsObject, config = get_analysis_output (Analysis.finish analysis) in 
-
-  add_taint_sinks state config;
-  add_taint_sources state config;
-  buildExportsObject state exportsObject;
-
-  state.graph;
-
-and get_analysis_output (result : AnalysisType.t) : buildExportsObject * sinkAliases = 
-  match result with 
-    | Combined 
-        (BuildExportsObject exportsObject, 
-         SinkAliases config               ) -> exportsObject, config
-    | _ -> failwith "unable to extract analysis output"
-
-and add_taint_sinks (state : State.t) (config : Config.t) : unit = 
+let add_taint_sinks (state : State.t) (config : Config.t) : unit = 
   let graph = state.graph in 
   let salloc = Graph.alloc_tsink graph in
   let add_tsink = Graph.add_taint_sink graph in 
@@ -421,12 +387,112 @@ and add_taint_sinks (state : State.t) (config : Config.t) : unit =
         ) sink_info
 
       | _ -> ()
-  ) graph;
+  ) graph;;
 
 
-and add_taint_sources (_state : State.t) (_config : Config.t) : unit = 
-  (* TODO *)
-  ()
+let add_taint_sources (state : State.t) (_config : Config.t) : unit = 
+  let graph = state.graph in 
+  let l_tsource = loc_taint_source in 
+  let add_taint_edge = Graph.add_taint_edge graph in
+  (* BASIC ATTACKER MODEL : 
+    -> the attacker controlls all function parameters
+  .*)
+  Graph.iter_nodes (fun location node ->
+    match node._type with
+      | Function _ -> 
+        let edges = Graph.get_edges graph location in 
+        EdgeSet.iter (fun (edge : Edge.t) -> 
+          match edge._type with
+            | Edge.Parameter _ -> add_taint_edge l_tsource edge._to
+            | _ -> ()
+        ) edges
 
-and buildExportsObject (_state : State.t) (_exportsObject : buildExportsObject) : unit = 
-  ()
+      | _ -> ()
+  ) graph
+
+  (* TODO : SINGLE-FILE ATTACKER MODEL 
+    -> the attacker controlls all exported functions of the input file
+  .*)
+
+  (* TODO : MULTI-FILE ATTACKER MODEL
+    ->
+  .*)
+
+let rec buildExportsObject (state : State.t) (info : buildExportsObject) : ExportedObject.t = 
+  (* module.exports is assigned to a variable *)
+  let exportsObject = ref (ExportedObject.create 10) in 
+  option_may (fun loc -> 
+    exportsObject := construct_object state loc;
+  ) info.moduleExportsObject;
+
+  (* assignments to the properties of module.exports *)
+  HashTable.iter (fun property loc ->
+    let object' = construct_object state loc in 
+    exportsObject := ExportedObject.add_property !exportsObject property object';
+  ) info.moduleExportsAssigns;
+
+  (* assignments to the properties of exports *)
+  HashTable.iter (fun property loc ->
+    let object' = construct_object state loc in 
+    exportsObject := ExportedObject.add_property !exportsObject property object';
+  ) info.exportsAssigns;
+
+  !exportsObject;
+
+and construct_object (state : State.t) (loc : LocationSet.t) : ExportedObject.t = 
+  let graph = state.graph in 
+  if LocationSet.cardinal loc = 1 then 
+    let loc = LocationSet.min_elt loc in 
+    let node = Graph.find_node state.graph loc in  
+    match node._type with 
+      | Object _ -> 
+        let object' = ref (ExportedObject.create 10) in  
+        let all_properties = Graph.get_static_properties graph loc in 
+        List.iter (fun property -> 
+          let _L = Graph.lookup graph loc property in 
+          let object'' = construct_object state _L in 
+          object' := ExportedObject.add_property !object' property object''
+        ) all_properties;
+        
+        (* return *)
+        !object'
+
+      | Function _ -> ExportedObject.Function loc
+      | _ -> ExportedObject.empty ()
+    
+  else if LocationSet.is_empty loc then 
+    ExportedObject.empty ()
+
+  else failwith "exported object has a property with multiple locations"
+  
+;;
+
+
+
+let rec program (is_verbose : bool) (config_path : string) ((_, program) : m Program.t) : Graph.t * ExportedObject.t = 
+  verbose := is_verbose;
+
+  let module Analysis = AbstractAnalysis.Combine 
+    (BuildExportsObject.Analysis) 
+    (SinkAliases.Analysis (struct let filename = config_path end))
+  in 
+  let module BuildMDG = GraphConstrunction (Analysis) in 
+
+  let init_state      = BuildMDG.init program.functions in 
+  let state, analysis = BuildMDG.run init_state program.body in
+
+  (* process auxiliary analysis outputs*)
+  let exportsObjectInfo, config = get_analysis_output (Analysis.finish analysis) in 
+
+  add_taint_sinks state config;
+  add_taint_sources state config;
+  let exportsObject = buildExportsObject state exportsObjectInfo in
+
+  state.graph, exportsObject;
+
+and get_analysis_output (result : AnalysisType.t) : buildExportsObject * sinkAliases = 
+  match result with 
+    | Combined 
+        (BuildExportsObject exportsObject, 
+         SinkAliases config               ) -> exportsObject, config
+    | _ -> failwith "unable to extract analysis output"

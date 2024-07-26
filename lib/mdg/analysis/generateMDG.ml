@@ -11,7 +11,7 @@ end
 module Analysis (Init : InitConfig) : AbstractAnalysis.T = struct
   type t = AnalysisType.generateMDG
 
-  let rec analyse (state : t) (statement : m Statement.t) : t =
+  let rec analyse (state : t) (_ : State.t) (statement : m Statement.t) : t =
     let graph = state.graph in 
     let store = state.store in 
     let contx = state.context in

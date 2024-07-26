@@ -10,7 +10,8 @@ end
 module Analysis (Init : InitConfig) : AbstractAnalysis.T = struct
 
   type t = AnalysisType.sinkAliases
-  let analyse (config : t) (statement : m Statement.t) : t = 
+  
+  let analyse (config : t) (_ : State.t) (statement : m Statement.t) : t = 
     match statement with
       | _, AssignSimple {left; right} -> 
         let right = Expression.get_id_opt right in

@@ -7,63 +7,62 @@ open Auxiliary.Functions
 module Analysis : AbstractAnalysis.T = struct
   type t = AnalysisType.buildExportsObject
 
-  let analyse (state : t) (statement : m Statement.t) : t = 
+  let analyse (exportsObjectInfo : t) (state : State.t) (statement : m Statement.t) : t = 
     match statement with
       | _, AssignSimple {left; right} -> 
         let right = Expression.get_id_opt right in 
         if right = Some "exports" then
           let alias = Identifier.get_name left in
-          let aliases = AliasSet.add alias state.exportsAliases in 
-          {state with exportsAliases = aliases}
-        else state
+          let aliases = AliasSet.add alias exportsObjectInfo.exportsAliases in 
+          {exportsObjectInfo with exportsAliases = aliases}
+        else exportsObjectInfo
 
       | _, StaticLookup {left; _object; property; _} -> 
         let _object = Expression.get_id_opt _object in 
         if _object = Some "module" && property = "exports" then
           let alias = Identifier.get_name left in 
-          let aliases = AliasSet.add alias state.moduleExportsAliases in 
-          {state with moduleExportsAliases = aliases}
-        else state
+          let aliases = AliasSet.add alias exportsObjectInfo.moduleExportsAliases in 
+          {exportsObjectInfo with moduleExportsAliases = aliases}
+        else exportsObjectInfo
 
       | _, StaticUpdate {_object; property; right; _} -> 
         let _object = Expression.get_id_opt _object in 
         map_default (fun _object ->
           (* update of a property of exports *)
-          if state.exportsIsModuleExports && (_object = "exports" || AliasSet.mem _object state.exportsAliases) then
-            (* TODO : maybe instead of name we stor the location of the associated object *)
-            let right = Expression.get_id_opt right in 
-            option_may (HashTable.replace state.exportsAssigns property) right;
-            state
+          if exportsObjectInfo.exportsIsModuleExports && (_object = "exports" || AliasSet.mem _object exportsObjectInfo.exportsAliases) then
+            let right = Store.eval_expr state.store state.this right in 
+            HashTable.replace exportsObjectInfo.exportsAssigns property right;
+            exportsObjectInfo
           (* update of the module.exports value *)
           
           else if _object = "module" && property = "exports" then 
-            (* TODO : maybe instead of name we stor the location of the associated object *)
-            let right = Expression.get_id_opt right in 
-            HashTable.clear state.moduleExportsAssigns;
-            HashTable.clear state.exportsAssigns;
-            { state with 
-               _moduleExportsObject = Option.get(right);
+            let right = Store.eval_expr state.store state.this right in 
+
+            HashTable.clear exportsObjectInfo.moduleExportsAssigns;
+            HashTable.clear exportsObjectInfo.exportsAssigns;
+            { exportsObjectInfo with 
+               moduleExportsObject = Some right;
                exportsIsModuleExports = false;
                moduleExportsAliases = AliasSet.empty;
                exportsAliases = AliasSet.empty;
             }
           
           (* update of a property of module.exports *)
-          else if AliasSet.mem _object state.moduleExportsAliases then
-            let right = Expression.get_id_opt right in 
-            option_may (HashTable.replace state.moduleExportsAssigns property) right;
-            state
+          else if AliasSet.mem _object exportsObjectInfo.moduleExportsAliases then
+            let right = Store.eval_expr state.store state.this right in 
+            HashTable.replace exportsObjectInfo.moduleExportsAssigns property right;
+            exportsObjectInfo
           
-          else state
+          else exportsObjectInfo
 
-        ) state _object
+        ) exportsObjectInfo _object
 
       (* dont do anything on other statements *)
-      | _ -> state
+      | _ -> exportsObjectInfo
 
   
   let init () : t = {
-    _moduleExportsObject = "";
+    moduleExportsObject = None;
     moduleExportsAssigns = HashTable.create 10;
     moduleExportsAliases = AliasSet.empty;
 
@@ -73,7 +72,7 @@ module Analysis : AbstractAnalysis.T = struct
     exportsIsModuleExports = true;
   }
 
-  let finish (state : t) : AnalysisType.t =
-    AnalysisType.BuildExportsObject state
+  let finish (exportsObjectInfo : t) : AnalysisType.t =
+    AnalysisType.BuildExportsObject exportsObjectInfo
 
 end

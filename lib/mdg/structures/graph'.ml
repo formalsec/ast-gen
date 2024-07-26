@@ -410,6 +410,21 @@ let lookup (graph : t) (loc : location) (property : property) : LocationSet.t =
   lookup' graph [loc] [] [] LocationSet.empty property
 
 
+let get_static_properties (graph : t) (loc : location) : property list = 
+  let rec get_static_properties' (graph : t) (to_process : location list) (visited : location list) (result : property list) : property list = 
+    match to_process with
+      | [] -> result
+      | location::ls -> 
+        let properties = get_properties graph location in 
+        let static = List.filter_map (identity << snd) properties in 
+
+        let parents = get_parent_version graph location in 
+        let parents = List.filter_map (fun (parent, _) -> if not (List.exists ((=) parent) visited) then Some parent else None) parents in
+        get_static_properties' graph (ls @ parents) visited (result @ static)
+  in
+
+  get_static_properties' graph [loc] [] []
+
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
 let add_node (graph : t) (loc : location) (node : Node.t) : unit =
   replace_node  graph loc node;

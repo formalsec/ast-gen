@@ -4,12 +4,12 @@ open Auxiliary.Structures
 
 type buildExportsObject = {
     (* module.exports *)
-    _moduleExportsObject  : location;
-    moduleExportsAssigns : string HashTable.t;
+    moduleExportsObject  : LocationSet.t option;
+    moduleExportsAssigns : LocationSet.t HashTable.t;
     moduleExportsAliases : AliasSet.t;
 
     (* export *)
-    exportsAssigns : string HashTable.t;
+    exportsAssigns : LocationSet.t HashTable.t;
     exportsAliases : AliasSet.t;
 
     exportsIsModuleExports : bool

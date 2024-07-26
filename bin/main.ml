@@ -2,6 +2,7 @@ open Cmdliner
 open Setup
 open Auxiliary.Structures
 module Graph = Mdg.Graph'
+module ExportedObject = Mdg.ExportedObject
 
 (* some useful structures *)
 type module_graphs = Graph.t HashTable.t
@@ -9,9 +10,9 @@ let empty_module_graphs () : module_graphs = HashTable.create 10
 let add_graph : module_graphs -> string -> Graph.t -> unit = HashTable.add
 let get_graph : module_graphs -> string -> Graph.t = HashTable.find
 
-type summaries = string HashTable.t
+type summaries = ExportedObject.t HashTable.t
 let empty_summaries () : summaries = HashTable.create 10
-let add_summary : summaries -> string -> string -> unit = HashTable.add
+let add_summary : summaries -> string -> ExportedObject.t -> unit = HashTable.add
 
 let setup_output (output_path : string) : (string * string * string) = 
   let code_dir = output_path  ^ "/code/" in 
@@ -46,7 +47,7 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
 
     (* STEP 2 : Generate MDG for the normalized code *)
     if generate_mdg then (
-      let graph = Mdg.Analyse.program verbose config_path norm_program in
+      let graph, exportedObject = Mdg.Analyse.program verbose config_path norm_program in
       (* 
       TODO : .
       Graph.iter_external_calls (
@@ -58,7 +59,9 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
       ) graph; *)
 
       add_graph module_graphs file_path graph;
-      add_summary summaries file_path "TODO" (* TODO *)
+      add_summary summaries file_path exportedObject; (* TODO *)
+      print_endline file_path;
+      ExportedObject.print exportedObject
     );
 
   ) (DependencyTree.bottom_up_visit dep_tree);
