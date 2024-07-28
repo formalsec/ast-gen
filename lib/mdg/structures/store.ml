@@ -18,6 +18,11 @@ let find_opt : t -> location -> LocationSet.t option = HashTable.find_opt
 let replace : t -> location -> LocationSet.t -> unit = HashTable.replace 
 let copy : t -> t = HashTable.copy
 
+let merge (store : t) (store' : t) : t = 
+  let store_copy = copy store in 
+  HashTable.iter (fun key value -> HashTable.replace store_copy key value) store';
+  store_copy
+
 let rec print (store : t) : unit =
   iter (print_locations) store;
   print_string "\n";

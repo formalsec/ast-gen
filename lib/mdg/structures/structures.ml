@@ -25,7 +25,9 @@ module LocationSet = struct
 
   let print (locations : LocationSet'.t) : unit = 
     apply (fun loc -> print_string (loc ^ ", ") ) locations;
-    print_newline ();
+    print_newline ()
+  
+  let hash = Hashtbl.hash
 end
 
 module AliasSet = Set.Make(String)

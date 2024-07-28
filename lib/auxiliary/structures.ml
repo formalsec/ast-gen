@@ -11,4 +11,5 @@ module HashTable = struct
             then Table.fold (fun key value acc -> acc && (Table.mem table' key) && (eq value (Table.find table' key))) table true
             else false
 end
+
     

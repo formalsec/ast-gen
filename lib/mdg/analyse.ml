@@ -149,7 +149,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
           
           (* setup new store with only the param and corresponding locations *)
           let param_locs = get_param_locs func_id in 
-          let new_state = {state with store = param_locs; context = visit func_id} in
+          let new_state = {state with store = Store.merge store param_locs; context = visit func_id} in
           analyse_sequence new_state analysis body
         );
         
@@ -469,12 +469,14 @@ and construct_object (state : State.t) (loc : LocationSet.t) : ExportedObject.t 
 
 
 
-let rec program (is_verbose : bool) (config_path : string) ((_, program) : m Program.t) : Graph.t * ExportedObject.t = 
+let rec program (is_verbose : bool) (config_path : string) ((_, program) : m Program.t) : Graph.t * ExportedObject.t * ExternalReferences.t = 
   verbose := is_verbose;
 
   let module Analysis = AbstractAnalysis.Combine 
     (BuildExportsObject.Analysis) 
-    (SinkAliases.Analysis (struct let filename = config_path end))
+    (AbstractAnalysis.Combine 
+      (CollectExternalCalls.Analysis) 
+      (SinkAliases.Analysis (struct let filename = config_path end)) )
   in 
   let module BuildMDG = GraphConstrunction (Analysis) in 
 
@@ -482,17 +484,18 @@ let rec program (is_verbose : bool) (config_path : string) ((_, program) : m Pro
   let state, analysis = BuildMDG.run init_state program.body in
 
   (* process auxiliary analysis outputs*)
-  let exportsObjectInfo, config = get_analysis_output (Analysis.finish analysis) in 
+  let exportsObjectInfo, config, external_calls = get_analysis_output (Analysis.finish analysis) in 
 
   add_taint_sinks state config;
   add_taint_sources state config;
   let exportsObject = buildExportsObject state exportsObjectInfo in
 
-  state.graph, exportsObject;
+  state.graph, exportsObject, external_calls;
 
-and get_analysis_output (result : AnalysisType.t) : buildExportsObject * sinkAliases = 
+and get_analysis_output (result : AnalysisType.t) : buildExportsObject * sinkAliases * collectExternalCalls = 
   match result with 
     | Combined 
         (BuildExportsObject exportsObject, 
-         SinkAliases config               ) -> exportsObject, config
+         Combined (CollectExternalCalls ext_calls, 
+                   SinkAliases config             )) -> exportsObject, config, ext_calls
     | _ -> failwith "unable to extract analysis output"

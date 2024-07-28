@@ -3,6 +3,7 @@ open Setup
 open Auxiliary.Structures
 module Graph = Mdg.Graph'
 module ExportedObject = Mdg.ExportedObject
+module ExternalReferences = Mdg.ExternalReferences
 
 let env_path = Filename.dirname (Filename.dirname Sys.executable_name) ^ "/lib/ast_gen/";;
 
@@ -74,7 +75,9 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
 
     (* STEP 2 : Generate MDG for the normalized code *)
     if generate_mdg then (
-      let graph, exportedObject = Mdg.Analyse.program verbose config_path norm_program in
+      let graph, exportedObject, external_calls = Mdg.Analyse.program verbose config_path norm_program in
+      
+      ExternalReferences.print external_calls;
       (* 
       TODO : .
       Graph.iter_external_calls (
@@ -86,11 +89,12 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
       ) graph; *)
 
       add_graph module_graphs file_path graph;
-      add_summary summaries file_path exportedObject; (* TODO *)
+      add_summary summaries file_path exportedObject; 
+      add_summary summaries (String.sub file_path 0 (String.length file_path - 3)) exportedObject;
       
-      print_endline file_path;
+      (* print_endline file_path;
       ExportedObject.print exportedObject;
-      print_newline ();
+      print_newline (); *)
     );
 
   ) (DependencyTree.bottom_up_visit dep_tree);

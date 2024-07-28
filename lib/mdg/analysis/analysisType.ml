@@ -15,11 +15,13 @@ type buildExportsObject = {
     exportsIsModuleExports : bool
 }
 
+type collectExternalCalls = ExternalReferences.t
 type generateMDG = State.t
 type sinkAliases = Config.t
 
 type t =
-  | BuildExportsObject of buildExportsObject
+  | BuildExportsObject   of buildExportsObject
+  | CollectExternalCalls of collectExternalCalls 
   | GenerateMDG of generateMDG
   | SinkAliases of sinkAliases
   | Combined of t * t
