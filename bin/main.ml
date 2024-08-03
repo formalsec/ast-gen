@@ -1,21 +1,12 @@
 open Cmdliner
 open Setup
-open Auxiliary.Structures
 module Graph = Mdg.Graph'
 module ExportedObject = Mdg.ExportedObject
 module ExternalReferences = Mdg.ExternalReferences
+module LocationSet = Mdg.Structures.LocationSet
+open Auxiliary.Functions
 
 let env_path = Filename.dirname (Filename.dirname Sys.executable_name) ^ "/lib/ast_gen/";;
-
-(* some useful structures *)
-type module_graphs = Graph.t HashTable.t
-let empty_module_graphs () : module_graphs = HashTable.create 10
-let add_graph : module_graphs -> string -> Graph.t -> unit = HashTable.add
-let get_graph : module_graphs -> string -> Graph.t = HashTable.find
-
-type summaries = ExportedObject.t HashTable.t
-let empty_summaries () : summaries = HashTable.create 10
-let add_summary : summaries -> string -> ExportedObject.t -> unit = HashTable.add
 
 let setup_output (output_path : string) : (string * string * string) = 
   let code_dir = output_path  ^ "/code/" in 
@@ -60,9 +51,10 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
   let code_dir, graph_dir, _ = setup_output output_path in 
 
   (* process dependencies first with the aid of the depedency tree *)
-  let summaries = empty_summaries () in 
-  let module_graphs = empty_module_graphs () in 
+  let summaries = Summaries.empty () in 
+  let module_graphs = ModuleGraphs.empty () in 
   List.iter (fun file_path -> 
+    let dir = Filename.dirname file_path ^ "/" in 
     let filename = File_system.file_name file_path in 
 
     (* STEP 0 : Generate AST using Flow library *)
@@ -76,25 +68,31 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
     (* STEP 2 : Generate MDG for the normalized code *)
     if generate_mdg then (
       let graph, exportedObject, external_calls = Mdg.Analyse.program verbose config_path norm_program in
-      
-      ExternalReferences.print external_calls;
-      (* 
-      TODO : .
-      Graph.iter_external_calls (
-        fun call -> 
-          let _module = call._module in 
-          let func = get_func (get_summary summaries _module) call.func in
-          let func_graph = Graph.get_func_graph (get_graph module_graphs _module) func in
-          Graph.add_external_func graph func_graph; 
-      ) graph; *)
+    
+      ExternalReferences.iter (fun locs info ->
+        let l_call = LocationSet.min_elt locs in
+        
+        (* module information *) 
+        let module_name = dir ^ info._module in 
+        let moduleEO = Summaries.get_opt summaries module_name in 
+        option_may (fun moduleEO ->
+          let moduleGraph = ModuleGraphs.get module_graphs module_name in 
+          
+          (* exported function information *)
+          let func_loc = ExportedObject.get_function moduleEO info.properties in 
+          if not (Graph.has_external_function graph func_loc) then (
+            let func_graph = Graph.get_function moduleGraph func_loc in 
+            Graph.add_external_func graph func_graph l_call func_loc
+          );
+          
+          Graph.add_call_edge graph l_call func_loc;
+        ) moduleEO;
 
-      add_graph module_graphs file_path graph;
-      add_summary summaries file_path exportedObject; 
-      add_summary summaries (String.sub file_path 0 (String.length file_path - 3)) exportedObject;
+      ) external_calls;
       
-      (* print_endline file_path;
-      ExportedObject.print exportedObject;
-      print_newline (); *)
+      ModuleGraphs.add module_graphs file_path graph;
+      Summaries.add summaries file_path exportedObject;
+      Summaries.add summaries (String.sub file_path 0 (String.length file_path - 3)) exportedObject;
     );
 
   ) (DependencyTree.bottom_up_visit dep_tree);
@@ -102,9 +100,9 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
   (* output *)
   if generate_mdg then (
     let main = DependencyTree.get_main dep_tree in 
-    let graph = get_graph module_graphs main in 
+    let graph = ModuleGraphs.get module_graphs main in 
     Mdg.Pp.Dot.output graph_dir graph;
-    Mdg.Pp.CSV.output graph_dir graph
+    Mdg.Pp.CSV.output graph_dir graph;
   );
 
   0

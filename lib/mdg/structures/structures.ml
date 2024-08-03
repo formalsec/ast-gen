@@ -1,3 +1,4 @@
+open Auxiliary.Functions
 
 type property = string
 
@@ -26,7 +27,13 @@ module LocationSet = struct
   let print (locations : LocationSet'.t) : unit = 
     apply (fun loc -> print_string (loc ^ ", ") ) locations;
     print_newline ()
-  
+
+  let pop (locations : LocationSet'.t) : LocationSet'.elt * LocationSet'.t =
+    let elm = LocationSet'.min_elt locations in 
+    elm, LocationSet'.remove elm locations
+      
+  let from_list (locations : location list) : LocationSet'.t = 
+    List.fold_left (flip LocationSet'.add) LocationSet'.empty locations
   let hash = Hashtbl.hash
 end
 

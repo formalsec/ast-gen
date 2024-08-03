@@ -28,7 +28,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       let add_param_edge = Graph.add_param_edge graph in 
 
       let l_f = alloc_fun func.uid in 
-      add_func_node l_f func (Location.empty ());
+      add_func_node l_f func info.params (Location.empty ());
 
       (* add param nodes and edges *)
       List.iteri (fun i param -> 
@@ -44,6 +44,8 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
   let init (function_info : Functions.Info.t) : t = 
     let state' = State.empty_state function_info in 
+    Graph.add_literal_node state'.graph;
+    Graph.add_taint_source state'.graph;
     initialize_functions state' function_info;
     
     { state = state';

@@ -69,7 +69,6 @@ end
 
 module CSV = struct
   let output (file_path : string) (graph : Graph.t) : unit =
-    Graph.add_literal_node graph;
     
     let nodes_file  = file_path ^ "nodes.csv" in 
     let edges_file  = file_path ^ "rels.csv" in 

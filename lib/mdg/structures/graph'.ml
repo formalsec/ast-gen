@@ -9,7 +9,7 @@ module Node = struct
   type _type = 
     | Object of string
     | Call of string
-    | Function of Functions.Id.t
+    | Function of Functions.Id.t * string list
     | Parameter of string 
     | Return 
     | TaintSource
@@ -39,7 +39,7 @@ module Node = struct
       | Call x, Call x'
       | TaintSink x, TaintSink x'
       | Parameter x, Parameter x' -> String.equal x x'
-      | Function x, Function x' -> Functions.Id.equal x x'
+      | Function (x, _), Function (x', _) -> Functions.Id.equal x x'
       | Return, Return
       | TaintSource, TaintSource
       | Literal, Literal -> true
@@ -50,7 +50,7 @@ module Node = struct
   let label (node : t) = match node._type with
     | Object obj -> obj 
     | Call func -> func ^ "()" 
-    | Function func -> func.name
+    | Function (func, _) -> func.name
     | Parameter param -> param
     | TaintSource -> "taint source"
     | TaintSink _ -> "taint sink"
@@ -78,7 +78,7 @@ module Node = struct
     match node._type with 
       | Object name -> name
       | Call func -> func ^ "()"
-      | Function id -> id.name
+      | Function (id, _) -> id.name
       | Parameter name -> name
       | TaintSource -> "TAINT_SOURCE"
       | TaintSink sink -> sink
@@ -93,8 +93,13 @@ module Node = struct
   (* other functions over nodes *)
   let get_func_id (node : t) : Functions.Id.t option =
     match node._type with 
-      | Function id -> Some id
+      | Function (id, _) -> Some id
       | _           -> None
+
+  let get_func_params (node : t) : string list = 
+    match node._type with 
+      | Function (_, params) -> params
+      | _ -> failwith "tryed to get params from a node that isnt a function definition one"
   
 end
 
@@ -217,6 +222,10 @@ module EdgeSet = struct
 
   let find_pred (f : Set'.elt -> bool) (set : Set'.t) : Set'.elt = 
     List.find f (Set'.elements set)
+
+  let get_to (set : Set'.t) : location list = 
+    map_list (fun edge -> edge._to) set
+
 end
 
 type t = {
@@ -438,8 +447,8 @@ let add_call_node (graph : t) (abs_loc : location) (func : string) (crt_loc : Lo
   let node : Node.t = Node.create (Call func) crt_loc in 
   add_node graph abs_loc node
 
-let add_func_node (graph : t) (abs_loc : location) (func_id : Functions.Id.t) (crt_loc : Location.t) : unit =
-  let node : Node.t = Node.create (Function func_id) crt_loc in 
+let add_func_node (graph : t) (abs_loc : location) (func_id : Functions.Id.t) (params : string list) (crt_loc : Location.t) : unit =
+  let node : Node.t = Node.create (Function (func_id, params)) crt_loc in 
   add_node graph abs_loc node
   
 let add_param_node (graph : t) (abs_loc : location) (param : string) (crt_loc : Location.t): unit =
@@ -464,8 +473,6 @@ let add_taint_sink (graph : t) (abs_loc : location) (sink : string) (crt_loc : L
 
 let empty (register : unit -> unit) : t = 
   let graph = {edges = HashTable.create 100; nodes = HashTable.create 50; register = register} in
-  add_literal_node graph;
-  add_taint_source graph;
   graph
 
 
@@ -547,6 +554,67 @@ let get_arg_locations (graph : t) (callee : location) : (string * location) list
   ) graph;
 
   !result
+
+
+let exists_node (graph : t) (location : location) : bool = 
+  Option.is_some (find_node_opt graph location)
+
+let has_external_function (graph : t) (func_node : location) : bool = 
+  exists_node graph func_node
+
+let get_function (graph : t) (func_node : location) : t = 
+  let rec get_function' (graph : t) (to_visit : LocationSet.t) (visited : LocationSet.t) (func_graph : t) : t =
+    if not (LocationSet.is_empty to_visit) 
+      then (
+        let visiting, to_visit' = LocationSet.pop to_visit in 
+        let node = find_node graph visiting in 
+        let edges = get_edges graph visiting in 
+        HashTable.replace func_graph.nodes visiting node;
+        HashTable.replace func_graph.edges visiting edges;
+
+        let tos = LocationSet.from_list (EdgeSet.get_to edges) in 
+        get_function' graph (LocationSet.diff (LocationSet.union to_visit' tos) visited) (LocationSet.add visiting visited) func_graph
+      )
+      else func_graph
+  in
+
+  let func_graph = empty (fun () -> ()) in 
+  if exists_node graph func_node 
+    then get_function' graph (LocationSet.singleton func_node) (LocationSet.empty) func_graph
+    else failwith ("graph does not encode function with location " ^ func_node)
+
+
+let update_arg_edges (graph : t) (call_node : location) (parameters : string list) : unit =
+  HashTable.filter_map_inplace (fun _ edges ->
+    let new_edges = EdgeSet.map (fun edge -> 
+      (* check if it is a argument edge pointing to the call_node*)
+      match edge._to = call_node, edge._type with
+        | true, Argument (index, _) -> 
+          let param_name = Option.value (List.nth_opt parameters (int_of_string index)) ~default:"undefined" in
+          {edge with _type = Argument (index, param_name)}
+
+        | _ -> edge
+    ) edges in
+    
+    Some new_edges
+  ) graph.edges
+
+let add_external_func (graph : t) (func_graph : t) (call_node : location) (function_node : location) : unit =
+  (* add nodes *)
+  iter_nodes (fun loc node ->
+    HashTable.replace graph.nodes loc node
+  ) func_graph;
+
+  (* add edges *)
+  iter (fun loc edges _ -> 
+    HashTable.replace graph.edges loc edges
+  ) func_graph;
+
+  (* update argument edges *)
+  let f_node = find_node graph function_node in 
+  let params = Node.get_func_params f_node in 
+  update_arg_edges graph call_node params
+
   
 
 let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property) (id : int) (add_node : location -> unit) : unit =

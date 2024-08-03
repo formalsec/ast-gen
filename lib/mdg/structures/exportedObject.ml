@@ -34,3 +34,19 @@ let print (exportedObject : t) : unit =
   in
 
   print' exportedObject 0
+
+let rec get_function (exportedObject : t) (properties : Structures.property list) : Structures.location =
+  match properties with
+    | [] -> get_location exportedObject
+    | property::properties' -> get_function (get_property exportedObject property) properties'
+
+and get_location (exportedObject : t) : Structures.location = 
+  match exportedObject with 
+    | Function loc -> loc
+    | _ -> failwith "unable to get function location from exported object"
+
+and get_property (exportedObject : t) (property : Structures.property) : t =
+  match exportedObject with
+    | Object obj -> HashTable.find obj property
+    | _ -> failwith ("unable to get property " ^ property ^  " from exported object")
+    
