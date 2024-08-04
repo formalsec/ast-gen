@@ -47,7 +47,6 @@ let setup_node (mode : string) : string =
 
 let main (filename : string) (output_path : string) (config_path : string) (mode : string) (generate_mdg : bool) (verbose : bool) : int =
   
-  print_endline mode;
   (* SETUP *)
   let script = setup_node mode in
   let dep_tree = DependencyTree.generate script filename mode in  
