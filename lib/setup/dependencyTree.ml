@@ -28,5 +28,10 @@ let bottom_up_visit (dep_tree : t) : string list =
                     ) acc list
     | _ -> failwith "error visiting dependency tree in bottom up approach"
   in
-  visit dep_tree.structure []
+
+  let visit_order = visit dep_tree.structure []  in
+  (* remove duplicated from visit *)
+  List.rev (List.fold_left (fun final_order curr -> if List.mem curr final_order then final_order else curr :: final_order)  [] visit_order)
+
+
   

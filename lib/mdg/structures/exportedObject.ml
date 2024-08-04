@@ -2,7 +2,7 @@ open Auxiliary.Structures
 
 type t = 
   | Object of t HashTable.t
-  | Function of Structures.location
+  | Value of Structures.location
 
 let empty () : t = Object (HashTable.create 0)
 
@@ -30,20 +30,24 @@ let print (exportedObject : t) : unit =
         print_endline (identation_str ^ "}")
 
 
-      | Function func -> print_endline func;
+      | Value loc -> print_endline loc;
   in
 
   print' exportedObject 0
 
-let rec get_function (exportedObject : t) (properties : Structures.property list) : Structures.location =
+let rec get_value_location (exportedObject : t) (properties : Structures.property list) : Structures.location =
   match properties with
     | [] -> get_location exportedObject
-    | property::properties' -> get_function (get_property exportedObject property) properties'
+    | property::properties' -> get_value_location (get_property exportedObject property) properties'
 
 and get_location (exportedObject : t) : Structures.location = 
   match exportedObject with 
-    | Function loc -> loc
-    | _ -> failwith "unable to get function location from exported object"
+    | Value loc -> loc
+    | Object obj -> 
+      (* module.exports = {f} and f = require(...) *)
+      if HashTable.length obj = 1 
+        then get_location (List.nth (List.of_seq (HashTable.to_seq_values obj)) 0)
+        else failwith "unable to get function location from exported object"
 
 and get_property (exportedObject : t) (property : Structures.property) : t =
   match exportedObject with

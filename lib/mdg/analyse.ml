@@ -9,6 +9,7 @@ open Auxiliary.Functions
 open Auxiliary.Structures
 open Structures
 open AnalysisType
+open ExternalReferences
 
 let verbose = ref false;;
 
@@ -359,37 +360,52 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     
 end
 
-let add_taint_sinks (state : State.t) (config : Config.t) : unit = 
+let rec add_taint_sinks (state : State.t) (config : Config.t) (ext_calls : ExternalReferences.t) : unit = 
   let graph = state.graph in 
+
+  Graph.iter_nodes (fun loc node -> 
+    match node._type with 
+      | Call callee -> 
+        (* function sink *)
+        let sink_info = Config.get_function_sink_info config callee in
+        option_may (fun (sink_info : functionSink) ->
+          add_taink_sink graph loc node sink_info.sink sink_info.args
+        ) sink_info;
+
+        (* package sink *)
+        let referece_info = ExternalReferences.get_opt ext_calls loc in 
+        option_may (fun ref ->
+          (* check if there is only one property *)
+          if List.length ref.properties = 1 then
+            let method_name = List.nth ref.properties 0 in 
+            let package_name = ref._module in 
+            let sink_info = Config.get_package_sink_info config package_name method_name in 
+            option_may (fun (sink_info : package) -> 
+              add_taink_sink graph loc node method_name sink_info.args
+            ) sink_info
+        ) referece_info
+
+      | _ -> ()
+  ) graph
+
+and add_taink_sink (graph : Graph.t) (loc : location) (node : Graph.Node.t) (sink_name : string) (sink_args : int list) : unit = 
   let salloc = Graph.alloc_tsink graph in
   let add_tsink = Graph.add_taint_sink graph in 
   let add_sink_edge = Graph.add_sink_edge graph in
   let add_dep_edge = Graph.add_dep_edge graph in
 
-  Graph.iter_nodes (fun loc node -> 
-    match node._type with 
-      | Call callee -> 
-        let sink_info = Config.get_function_sink_info config callee in
-        option_may (fun (sink_info : functionSink) ->
+  (* add taint sink *)
+  let l_tsink = salloc node.id in
+  add_tsink l_tsink sink_name node.loc;
+  add_sink_edge loc l_tsink sink_name;
 
-          (* add taint sink *)
-          let l_tsink = salloc node.id in
-          add_tsink l_tsink callee node.loc;
-          add_sink_edge loc l_tsink callee;
-        
-          (* add depedency edges from dangerous inputs (arguments) to taint sink *)
-          let args = Graph.get_arg_locations graph loc in 
-          let dangerous_inputs = sink_info.args in
-          List.iter (fun dangerous_index ->
-            let dangerous_index = string_of_int (dangerous_index - 1) in
-            let arg_locs = List.filter (((=) dangerous_index) << fst) args in 
-            List.iter (fun (_, l) -> add_dep_edge l l_tsink) arg_locs
-          ) dangerous_inputs
-          
-        ) sink_info
-
-      | _ -> ()
-  ) graph;;
+  (* add depedency edges from dangerous inputs (arguments) to taint sink *)
+  let args = Graph.get_arg_locations graph loc in 
+  List.iter (fun dangerous_index ->
+    let dangerous_index = string_of_int (dangerous_index - 1) in
+    let arg_locs = List.filter (((=) dangerous_index) << fst) args in 
+    List.iter (fun (_, l) -> add_dep_edge l l_tsink) arg_locs
+  ) sink_args
 
 
 let add_taint_sources (state : State.t) (_config : Config.t) : unit = 
@@ -459,7 +475,7 @@ and construct_object (state : State.t) (loc : LocationSet.t) : ExportedObject.t 
         (* return *)
         !object'
 
-      | Function _ -> ExportedObject.Function loc
+      | Function _ -> ExportedObject.Value loc
       | _ -> ExportedObject.empty ()
     
   else if LocationSet.is_empty loc then 
@@ -488,7 +504,7 @@ let rec program (is_verbose : bool) (config_path : string) ((_, program) : m Pro
   (* process auxiliary analysis outputs*)
   let exportsObjectInfo, config, external_calls = get_analysis_output (Analysis.finish analysis) in 
 
-  add_taint_sinks state config;
+  add_taint_sinks state config external_calls;
   add_taint_sources state config;
   let exportsObject = buildExportsObject state exportsObjectInfo in
 

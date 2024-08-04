@@ -79,7 +79,7 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
           let moduleGraph = ModuleGraphs.get module_graphs module_name in 
           
           (* exported function information *)
-          let func_loc = ExportedObject.get_function moduleEO info.properties in 
+          let func_loc = ExportedObject.get_value_location moduleEO info.properties in 
           if not (Graph.has_external_function graph func_loc) then (
             let func_graph = Graph.get_function moduleGraph func_loc in 
             Graph.add_external_func graph func_graph l_call func_loc
@@ -90,9 +90,12 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
 
       ) external_calls;
       
+      (* save current module info*)
+      let alter_name = String.sub file_path 0 (String.length file_path - 3) in 
       ModuleGraphs.add module_graphs file_path graph;
+      ModuleGraphs.add module_graphs alter_name graph;
       Summaries.add summaries file_path exportedObject;
-      Summaries.add summaries (String.sub file_path 0 (String.length file_path - 3)) exportedObject;
+      Summaries.add summaries alter_name exportedObject;
     );
 
   ) (DependencyTree.bottom_up_visit dep_tree);

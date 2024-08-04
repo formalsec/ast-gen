@@ -10,6 +10,11 @@ type t' = {
 
 type t = t' T.t
 
+
+let get_opt (ext_refs : t) (location : location) : t' option = 
+  let locs = LocationSet.singleton location in 
+  T.find_opt ext_refs locs
+
 let iter : (LocationSet.t -> t' -> unit) -> t -> unit = T.iter 
 let print (refs : t) : unit =
   print_endline "=======" ;

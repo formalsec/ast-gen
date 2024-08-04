@@ -590,7 +590,7 @@ let update_arg_edges (graph : t) (call_node : location) (parameters : string lis
       (* check if it is a argument edge pointing to the call_node*)
       match edge._to = call_node, edge._type with
         | true, Argument (index, _) -> 
-          let param_name = Option.value (List.nth_opt parameters (int_of_string index)) ~default:"undefined" in
+          let param_name = Option.value (if index = "this" then Some index else List.nth_opt parameters (int_of_string index)) ~default:"undefined" in
           {edge with _type = Argument (index, param_name)}
 
         | _ -> edge
