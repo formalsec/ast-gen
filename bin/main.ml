@@ -4,6 +4,8 @@ module Graph = Mdg.Graph'
 module ExportedObject = Mdg.ExportedObject
 module ExternalReferences = Mdg.ExternalReferences
 module LocationSet = Mdg.Structures.LocationSet
+module Mode = Auxiliary.Mode
+module Program = Ast.Grammar.Program
 open Auxiliary.Functions
 
 let env_path = Filename.dirname (Filename.dirname Sys.executable_name) ^ "/lib/ast_gen/";;
@@ -20,7 +22,7 @@ let setup_output (output_path : string) : (string * string * string) =
   
   code_dir, graph_dir, run_dir
 
-let setup_node (multifile : bool) : string = 
+let setup_node (mode : string) : string = 
   (* !REFACTOR : inbed this functionality into the dune build and install process *)
   let js_folder    = env_path ^ "js/" in 
   let node_modules = js_folder ^ "node_modules" in 
@@ -33,7 +35,7 @@ let setup_node (multifile : bool) : string =
   if not (Sys.file_exists package_info)
     then failwith "package.json not found";
 
-  if multifile && not (Sys.file_exists node_modules)
+  if Mode.is_multi_file mode && not (Sys.file_exists node_modules)
     then (
       print_endline "installing js dependencies";
       let result = Sys.command ("npm install --prefix " ^ js_folder) in 
@@ -43,11 +45,12 @@ let setup_node (multifile : bool) : string =
   script
 
 
-let main (filename : string) (output_path : string) (config_path : string) (multifile : bool) (generate_mdg : bool) (verbose : bool) : int =
+let main (filename : string) (output_path : string) (config_path : string) (mode : string) (generate_mdg : bool) (verbose : bool) : int =
   
+  print_endline mode;
   (* SETUP *)
-  let script = setup_node multifile in
-  let dep_tree = DependencyTree.generate script filename multifile in  
+  let script = setup_node mode in
+  let dep_tree = DependencyTree.generate script filename mode in  
   let code_dir, graph_dir, _ = setup_output output_path in 
 
   (* process dependencies first with the aid of the depedency tree *)
@@ -62,12 +65,13 @@ let main (filename : string) (output_path : string) (config_path : string) (mult
 
     (* STEP 1 : Normalize AST *)
     let norm_program = Ast.Normalize.program ast file_path in
+    let norm_program = if file_path = dep_tree.main then Program.set_main norm_program else norm_program in 
     let js_program = Ast.Pp.Js.print norm_program in
     File_system.write_to_file (code_dir ^ filename) js_program;
 
     (* STEP 2 : Generate MDG for the normalized code *)
     if generate_mdg then (
-      let graph, exportedObject, external_calls = Mdg.Analyse.program verbose config_path norm_program in
+      let graph, exportedObject, external_calls = Mdg.Analyse.program mode verbose config_path norm_program in
     
       ExternalReferences.iter (fun locs info ->
         let l_call = LocationSet.min_elt locs in
@@ -116,9 +120,9 @@ let input_file : string Term.t =
   let docv = "FILE" in
   Arg.(required & pos 0 (some non_dir_file) None & info [] ~doc ~docv)
 
-let multifile : bool Term.t =
-  let doc = "Analysis of a file and its dependencies instead of a single file." in
-  Arg.(value & flag & info ["m"; "multifile"] ~doc)
+let mode : string Term.t =
+  let doc = "Analysis mode.\n\t 1) basic: attacker controlls all parameters from all functions \n\t 2) single_file: the attacker controlls the functions that were exported by the input file \n\t 3) multi_file: the attacker controlls the functions that were exported in the \"main\" file" in
+  Term.(const Mode.is_valid $ Arg.(value & opt string Mode.default & info ["m"; "mode"] ~doc))
 
 let mdg : bool Term.t =
   let doc = "Generates Multiversion Dependency Graph." in
@@ -139,7 +143,7 @@ let verbose : bool Term.t =
   Arg.(value & flag & info ["v"; "verbose"] ~doc)
 
 let cli =
-  let cmd = Term.(const main $ input_file $ output_path $ config_path $ multifile $ mdg $ verbose) in
+  let cmd = Term.(const main $ input_file $ output_path $ config_path $ mode $ mdg $ verbose) in
   let info = Cmd.info "ast_gen" in
   Cmd.v info cmd
 

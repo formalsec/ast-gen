@@ -1366,16 +1366,22 @@ end
 and Program : sig
   type 'M t' = {
     body : 'M Statement.t list;
-    functions : Functions.Info.t
+    functions : Functions.Info.t;
+    is_main : bool
   }
 
   type 'M t = 'M * 'M t'
+  val set_main : 'M t -> 'M t
+  val is_main  : 'M t -> bool
+  val get_functions : 'M t -> Functions.Info.t
+  val get_body : 'M t -> 'M Statement.t list
   val build :  'M -> 'M Statement.t list -> 'M t
 
 end = struct
   type 'M t' = {
     body : 'M Statement.t list;
-    functions : Functions.Info.t
+    functions : Functions.Info.t;
+    is_main : bool
   }
 
   type 'M t = 'M * 'M t'
@@ -1425,7 +1431,15 @@ end = struct
     traverse_body info None body;
     info
 
+    let get_functions ((_, program) : 'M t) : Functions.Info.t = program.functions
+    let get_body ((_, program) : 'M t) : 'M Statement.t list = program.body
+
+  let set_main ((loc, prog) : 'M * 'M t') : 'M t = 
+    (loc, {prog with is_main = true})
+
+  let is_main ((_, program) : 'M t) : bool = program.is_main
+
   let build (metadata : 'M) (stmts : 'M Statement.t list) : 'M t = 
-    (metadata, { body = stmts; functions = build_function_info stmts});; 
+    (metadata, { body = stmts; functions = build_function_info stmts; is_main = false});; 
 
 end

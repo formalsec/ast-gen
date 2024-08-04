@@ -53,4 +53,12 @@ and get_property (exportedObject : t) (property : Structures.property) : t =
   match exportedObject with
     | Object obj -> HashTable.find obj property
     | _ -> failwith ("unable to get property " ^ property ^  " from exported object")
+
+let rec get_all_values (exportedObject : t) : Structures.location list = 
+  match exportedObject with 
+    | Object obj ->
+      let values = List.of_seq (HashTable.to_seq_values obj) in 
+      List.flatten (List.map get_all_values values)
+      
+    | Value loc -> [loc]
     

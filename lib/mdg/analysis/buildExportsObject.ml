@@ -2,6 +2,9 @@ open Ast.Grammar
 open Structures
 open Auxiliary.Structures
 open Auxiliary.Functions
+module Functions = Ast.Functions
+module Graph = Graph'
+
 
 
 module Analysis : AbstractAnalysis.T = struct
@@ -30,18 +33,18 @@ module Analysis : AbstractAnalysis.T = struct
         map_default (fun _object ->
           (* update of a property of exports *)
           if exportsObjectInfo.exportsIsModuleExports && (_object = "exports" || AliasSet.mem _object exportsObjectInfo.exportsAliases) then
-            let right = Store.eval_expr state.store state.this right in 
-            HashTable.replace exportsObjectInfo.exportsAssigns property right;
+            let l_right = Store.eval_expr state.store state.this right in
+            HashTable.replace exportsObjectInfo.exportsAssigns property l_right;
             exportsObjectInfo
+
           (* update of the module.exports value *)
-          
           else if _object = "module" && property = "exports" then 
-            let right = Store.eval_expr state.store state.this right in 
+            let l_right = Store.eval_expr state.store state.this right in 
 
             HashTable.clear exportsObjectInfo.moduleExportsAssigns;
             HashTable.clear exportsObjectInfo.exportsAssigns;
             { exportsObjectInfo with 
-               moduleExportsObject = Some right;
+               moduleExportsObject = Some l_right;
                exportsIsModuleExports = false;
                moduleExportsAliases = AliasSet.empty;
                exportsAliases = AliasSet.empty;
@@ -49,8 +52,8 @@ module Analysis : AbstractAnalysis.T = struct
           
           (* update of a property of module.exports *)
           else if AliasSet.mem _object exportsObjectInfo.moduleExportsAliases then
-            let right = Store.eval_expr state.store state.this right in 
-            HashTable.replace exportsObjectInfo.moduleExportsAssigns property right;
+            let l_right = Store.eval_expr state.store state.this right in 
+            HashTable.replace exportsObjectInfo.moduleExportsAssigns property l_right;
             exportsObjectInfo
           
           else exportsObjectInfo

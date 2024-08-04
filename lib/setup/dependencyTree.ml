@@ -1,3 +1,5 @@
+module Mode = Auxiliary.Mode
+
 type t = {
   main : string;
   structure : Yojson.Basic.t;
@@ -9,9 +11,9 @@ let generate_dt (script : string ) (filename : string) : string =
 let single_file_dt (filename : string) : string = 
   "{ \"" ^ filename ^ "\" : {} }"
 
-let generate (script : string) (filename : string) (multifile : bool) : t =
+let generate (script : string) (filename : string) (mode : string) : t =
   let filename = File_system.real_path filename in 
-  let output = if multifile 
+  let output = if Mode.is_multi_file mode 
     then File_system.run_command (generate_dt script filename) 
     else single_file_dt filename
   in

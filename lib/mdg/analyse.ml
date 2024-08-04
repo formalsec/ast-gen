@@ -3,6 +3,7 @@ module Functions = Ast.Functions
 module Config = Setup.Config
 module EdgeSet = Graph.EdgeSet
 module Edge = Graph.Edge
+module Mode = Auxiliary.Mode
 open Config
 open Ast.Grammar
 open Auxiliary.Functions
@@ -30,6 +31,8 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
       let l_f = alloc_fun func.uid in 
       add_func_node l_f func info.params (Location.empty ());
+      Store.update' state.store func.name (LocationSet.singleton l_f); 
+
 
       (* add param nodes and edges *)
       List.iteri (fun i param -> 
@@ -408,33 +411,55 @@ and add_taink_sink (graph : Graph.t) (loc : location) (node : Graph.Node.t) (sin
   ) sink_args
 
 
-let add_taint_sources (state : State.t) (_config : Config.t) : unit = 
+let add_taint_sources (state : State.t) (_config : Config.t) (mode : string) (is_main : bool) (exportsObject : ExportedObject.t): unit = 
   let graph = state.graph in 
   let l_tsource = loc_taint_source in 
   let add_taint_edge = Graph.add_taint_edge graph in
+  
   (* BASIC ATTACKER MODEL : 
     -> the attacker controlls all function parameters
   .*)
-  Graph.iter_nodes (fun location node ->
-    match node._type with
-      | Function _ -> 
-        let edges = Graph.get_edges graph location in 
-        EdgeSet.iter (fun (edge : Edge.t) -> 
-          match edge._type with
-            | Edge.Parameter _ -> add_taint_edge l_tsource edge._to
-            | _ -> ()
-        ) edges
+  if Mode.is_basic mode then (
+    Graph.iter_nodes (fun location node ->
+      match node._type with
+        | Function _ -> 
+          let edges = Graph.get_edges graph location in 
+          EdgeSet.iter (fun (edge : Edge.t) -> 
+            match edge._type with
+              | Edge.Parameter _ -> add_taint_edge l_tsource edge._to
+              | _ -> ()
+          ) edges
 
-      | _ -> ()
-  ) graph
+        | _ -> ()
+    ) graph 
 
-  (* TODO : SINGLE-FILE ATTACKER MODEL 
+
+  (* SINGLE-FILE ATTACKER MODEL 
     -> the attacker controlls all exported functions of the input file
-  .*)
 
-  (* TODO : MULTI-FILE ATTACKER MODEL
-    ->
+    MULTI-FILE ATTACKER MODEL
+    ->  the attacker controlls all exported functions of the main file
   .*)
+  ) else if Mode.is_single_file mode || (Mode.is_multi_file mode && is_main) then (
+    let exported_funcs = ExportedObject.get_all_values exportsObject in 
+    List.iter (fun l_func ->
+      let func_node = Graph.find_node graph l_func in 
+      match func_node._type with 
+        | Function _ -> 
+          let edges = Graph.get_edges graph l_func in 
+          EdgeSet.iter (fun (edge : Edge.t) -> 
+            match edge._type with
+              | Edge.Parameter _ -> add_taint_edge l_tsource edge._to
+              | _ -> ()
+          ) edges
+
+        | _ -> ()
+    ) exported_funcs
+  )
+
+
+
+
 
 let rec buildExportsObject (state : State.t) (info : buildExportsObject) : ExportedObject.t = 
   (* module.exports is assigned to a variable *)
@@ -487,7 +512,7 @@ and construct_object (state : State.t) (loc : LocationSet.t) : ExportedObject.t 
 
 
 
-let rec program (is_verbose : bool) (config_path : string) ((_, program) : m Program.t) : Graph.t * ExportedObject.t * ExternalReferences.t = 
+let rec program (mode : string) (is_verbose : bool) (config_path : string) (program : m Program.t) : Graph.t * ExportedObject.t * ExternalReferences.t = 
   verbose := is_verbose;
 
   let module Analysis = AbstractAnalysis.Combine 
@@ -498,15 +523,15 @@ let rec program (is_verbose : bool) (config_path : string) ((_, program) : m Pro
   in 
   let module BuildMDG = GraphConstrunction (Analysis) in 
 
-  let init_state      = BuildMDG.init program.functions in 
-  let state, analysis = BuildMDG.run init_state program.body in
+  let init_state      = BuildMDG.init (Program.get_functions program) in 
+  let state, analysis = BuildMDG.run init_state (Program.get_body program) in
 
   (* process auxiliary analysis outputs*)
   let exportsObjectInfo, config, external_calls = get_analysis_output (Analysis.finish analysis) in 
 
-  add_taint_sinks state config external_calls;
-  add_taint_sources state config;
   let exportsObject = buildExportsObject state exportsObjectInfo in
+  add_taint_sinks state config external_calls;
+  add_taint_sources state config mode (Program.is_main program) exportsObject;
 
   state.graph, exportsObject, external_calls;
 
