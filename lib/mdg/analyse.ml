@@ -277,9 +277,8 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       | loc, AssignMetCallStatic {left; _object; property; arguments; id_call; id_retn; _} -> 
         analyse_method_call state loc left _object property arguments id_call id_retn;
       
-      | loc, AssignMetCallDynmic {left; _object; property; arguments; id_call; id_retn; _} -> 
-        let property' = Expression.get_id property in 
-        analyse_method_call state loc left _object property' arguments id_call id_retn;
+      | loc, AssignMetCallDynmic {left; _object; arguments; id_call; id_retn; _} -> 
+        analyse_method_call state loc left _object "*" arguments id_call id_retn;
   
       (* -------- R E T U R N -------- *)
       | loc, Return {id; argument} -> 
@@ -312,15 +311,19 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
   and analyse_method_call (state : State.t) (loc : Location.t) (left : m Identifier.t) (_object : m Expression.t) (property : property) (arguments : m Expression.t list) (id_call : int) (id_retn : int) : unit =
     (* aliases *)
+    let graph = state.graph in 
     let eval_expr = Store.eval_expr state.store state.this in 
     let store_update = Store.update state.store in 
-    let alloc = Graph.alloc state.graph in 
-    let add_node = Graph.add_obj_node state.graph in
-    let add_cnode = Graph.add_call_node state.graph in
-    let add_ret_edge = Graph.add_ret_edge state.graph in 
-    let add_arg_edge = Graph.add_arg_edge state.graph in
-    let add_ref_call_edge = Graph.add_ref_call_edge state.graph in 
+    let alloc = Graph.alloc graph in 
+    let add_node = Graph.add_obj_node graph in
+    let add_cnode = Graph.add_call_node graph in
+    let add_ret_edge = Graph.add_ret_edge graph in 
+    let add_arg_edge = Graph.add_arg_edge graph in
+    let add_call_edge = Graph.add_call_edge graph in 
+    let add_ref_call_edge = Graph.add_ref_call_edge graph in 
     let get_curr_func = Functions.Context.get_current_function state.context in  
+    let lookup = Graph.lookup graph in  
+
   
     let _Lss = List.map eval_expr arguments in 
         
@@ -337,9 +340,31 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
   
     (* ! graphjs only adds edge for this property *)
     LocationSet.apply (fun l_this -> add_arg_edge  l_this l_call "this" "this") _Lthis;
-    List.iteri ( fun i _Ls -> 
-      LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) "undefined") _Ls
-    ) _Lss;
+
+    (* lookup function header node associated with the property *)
+    let found_func = ref false in 
+    if property != "*" then (
+      let _Lfunc = LocationSet.map_flat (flip lookup property) _Lthis in 
+      if LocationSet.cardinal _Lfunc = 1 then (
+        let l_func = LocationSet.min_elt _Lfunc in 
+        let func_node = Graph.find_node_opt graph l_func in 
+        match func_node with 
+          | Some {_type = Function (_, params); _} -> ();
+            List.iteri ( fun i _Ls -> 
+              let param_name = Option.value (List.nth_opt params i) ~default:"undefined" in 
+              LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) param_name) _Ls
+            ) _Lss;
+            add_call_edge l_call l_func;
+            found_func := true
+          | _ -> ();
+      );
+    );
+    
+    if not !found_func then (
+      List.iteri ( fun i _Ls -> 
+        LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) "undefined") _Ls
+      ) _Lss
+    );
   
     (* ! add ref call edge (shotcut) from function definition to this call 
        ! did this to be comaptible with graphjs queries *)
@@ -349,7 +374,8 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       add_ref_call_edge (Option.get l_f) l_call;
       ()
     ) f_orig;
-  
+
+
     (* return edge *)
     add_ret_edge l_call l_retn;
     store_update left (LocationSet.singleton l_retn)
