@@ -290,7 +290,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
 
     | loc, _ -> 
       let loc_info = Loc.debug_to_string loc in
-      failwith ("Unknown statement type to normalize (object on " ^ loc_info ^ ")")
+      failwith ("[ERROR] Unknown statement type to normalize (object on " ^ loc_info ^ ")")
     
 and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t) : norm_expr_t =
   let ne = normalize_expression empty_context in 
@@ -441,14 +441,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
       
       proto_decl @ [assign_proto] @ constr_decl @ [assign_constr], Some (Identifier.to_expression super_constr)
     else
-      failwith "super used ouside implemented scope"
-
-    (* let class_id = Option.get context.identifier in 
-    
-
-
-    let super = Expression.Super.build (loc_f loc) in
-    ([], Some super) *)
+      failwith "[ERROR] Super used ouside implemented scope"
 
   (* --------- S E Q U E N C E --------- *)
   | loc, Ast'.Expression.Sequence {expressions; _} -> 
@@ -459,16 +452,6 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let last_expr = Identifier.to_expression (List.hd (List.rev ids)) in 
    
     List.flatten stmts @ List.flatten decls, Some last_expr
-
-  (* --------- T A G G E D   T E M P L A T E --------- *)
-  (* | loc, Ast'.Expression.TaggedTemplate {tag; quasi=(qloc, quasi'); _} ->
-    let tag_stmts, tag_expr = ne tag in 
-    let qsi_stmts, qsi_expr = ne (qloc, Ast'.Expression.TemplateLiteral quasi') in 
-    (* convert quasi back to a template literal *)
-    let qsi_expr = match qsi_expr with Some (_, Expression.TemplateLiteral tl) -> tl | _ -> failwith "failed to convert quasi to template literal"in 
-
-    let tagged_template = Expression.TaggedTemplate.build (loc_f loc) (Option.get tag_expr) qsi_expr in 
-    tag_stmts @ qsi_stmts, Some tagged_template  *)
 
   (* --------- Y I E L D --------- *)
   | loc, Ast'.Expression.Yield {argument; delegate; _} -> 
@@ -627,7 +610,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
 
   | loc, _ -> 
     let loc_info = Loc.debug_to_string loc in
-    failwith ("Unknown expression type to normalize (object on " ^ loc_info ^ ")")
+    failwith ("[ERROR] Unknown expression type to normalize (object on " ^ loc_info ^ ")")
 
 and normalize_assignment (context : context) (left : ('M, 'T) Ast'.Pattern.t) (op : Operator.Assignment.t option) (right : ('M, 'T) Ast'.Expression.t) : norm_stmt_t * m Identifier.t list = 
   let ne = normalize_expression in
@@ -726,7 +709,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
             [assign], Option.to_list id
 
         (* TODO : restelement not implemented *)
-        | RestElement _ -> failwith "restelement not implemented"
+        | RestElement _ -> failwith "[ERROR] Rest element not implemented"
       ) properties) in 
       List.flatten assigns, List.flatten ids
     
@@ -752,7 +735,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
       in 
       obj_stmts @ prop_stmts @ stmts @ [assign], []
 
-    | _ -> failwith "pattern expression not implemented"
+    | _ -> failwith "[ERROR] Pattern expression not implemented"
 
 and is_identifier (pattern : ('M, 'T) Ast'.Pattern.t) : bool * m Identifier.t option =
   match pattern with
@@ -790,7 +773,7 @@ and to_object_key (key : ('M, 'T) Ast'.Pattern.Object.Property.key) : ('M, 'T) A
 and to_var_decl (stmt : m Statement.t) : m Statement.VarDecl.t =
   match stmt with
     | _, Statement.VarDecl decl -> decl
-    | _ -> failwith "tried to conver statement to variable declaration but it isn't possible"
+    | _ -> failwith "[ERROR] Tried to convert statement to variable declaration but it isn't possible"
 
 and normalize_alternate (_, {Ast'.Statement.If.Alternate.body; _}) : norm_stmt_t = 
   normalize_statement empty_context body
@@ -809,7 +792,7 @@ and normalize_default_declaration (declaration : ('M, 'T) Ast'.Statement.ExportD
             | _ -> None
       ) stmt' in 
       
-      let expr = if List.length export_exprs = 1 then List.hd export_exprs else failwith "more than one expression found to export" in 
+      let expr = if List.length export_exprs = 1 then List.hd export_exprs else failwith "[ERROR] More than one expression found to export" in 
       stmt', Some expr
     
     | Expression expr -> 
@@ -892,7 +875,7 @@ and normalize_case (loc, {Ast'.Statement.Switch.Case.test; consequent; _}) : m S
 and normalize_catch (loc, { Ast'.Statement.Try.CatchClause.param; body; _}) : m Statement.Try.Catch.t option = 
     let loc_f = Location.convert_flow_loc !file_path in
     let is_id, id = map_default is_identifier (false, None) param in
-    let param' = if is_id then id else failwith "param is not an identifier" in 
+    let param' = if is_id then id else failwith "[ERROR] Param is not an identifier" in 
     let body_stmts = normalize_statement empty_context (block_to_statement body) in 
 
     let catch = Statement.Try.Catch.build (loc_f loc) param' body_stmts in
@@ -906,7 +889,7 @@ and normalize_array_elem (array : m Identifier.t) (index : int) (element : ('M, 
       let update_stmt = Statement.StaticUpdate.build (loc_f loc) (Identifier.to_expression array) (string_of_int index) true (Option.get expr) in 
       stmts @ [update_stmt]
     | Hole _ -> []
-    | _ -> failwith "cannot process spread array element"
+    | _ -> failwith "[ERROR] Cannot process spread array element"
 
 and normalize_argument_list (_, {Ast'.Expression.ArgList.arguments; _}) : norm_expr_t list = 
   List.map normalize_argument arguments
@@ -915,7 +898,7 @@ and normalize_argument (arg : ('M, 'T) Ast'.Expression.expression_or_spread) : n
   (* TODO : other cases *)
   match arg with
     | Ast'.Expression.Expression expr -> normalize_expression empty_context expr 
-    | _ -> failwith "normalize argument case not defined"
+    | _ -> failwith "[ERROR] Normalize argument case not defined"
 
 
 and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {params; _}); body; _} : ('M, 'T) Ast'.Function.t) : norm_expr_t =
@@ -940,7 +923,7 @@ and normalize_param (loc, {Ast'.Function.Param.argument; default} : ('M, 'T) Ast
 let loc_f = Location.convert_flow_loc !file_path in
   (* TODO : param can be spread element or other patterns (maybe do like the normalize_for_left ) *)
   let is_id, id = is_identifier argument in 
-  let argument' = if is_id then Option.get id else failwith "argument is not an identifier" in 
+  let argument' = if is_id then Option.get id else failwith "[ERROR] Argument is not an identifier" in 
   
   let def_stmts, def_expr = map_default (normalize_expression empty_context) ([], None) default in
   let param = Statement.AssignFunction.Param.build (loc_f loc) argument' def_expr in
@@ -1021,7 +1004,7 @@ and get_key_identifier (key : ('M, 'T) Ast'.Expression.Object.Property.key) : m 
     | StringLiteral ((loc, _) as str) -> Identifier.build (loc_f loc) (get_string str) 
     | Identifier id -> normalize_identifier id
     | PrivateName (loc, {name; _}) -> Identifier.build (loc_f loc) name
-    | _ -> failwith "class method key cannot be translated"
+    | _ -> failwith "[ERROR] Class method key cannot be translated"
 
 
 and is_constructor (element : ('M, 'T) Ast'.Class.Body.element) : bool =
@@ -1070,7 +1053,7 @@ and normalize_member_property (property : ('M, 'T) Ast'.Expression.Member.proper
       stmts, Dynamic (Option.get expr)
     
     (* TODO : private name not implemented*)
-    | PropertyPrivateName _ -> failwith "property private name not implemented"
+    | PropertyPrivateName _ -> failwith "[ERROR] Property private name not implemented"
   
 
 and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast'.Expression.Object.property) : norm_stmt_t = 
@@ -1102,7 +1085,7 @@ and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast'.Expre
       key_stmts @ val_stmts @ [set_prop]
 
     (* TODO : spread property not implemented *)
-    | _ -> failwith "spread property not implemented"
+    | _ -> failwith "[ERROR] Spread property not implemented"
 
 and normalize_property_key (key : ('M, 'T) Ast'.Expression.Object.Property.key) : m Statement.t list * property = 
   match key with
@@ -1112,7 +1095,7 @@ and normalize_property_key (key : ('M, 'T) Ast'.Expression.Object.Property.key) 
     | Identifier    (_, id)      -> [], Static (id.name, false)
     
     (* TODO : private name and computed key not implemented *)
-    | _ -> failwith "private name and computed key not implemented"
+    | _ -> failwith "[ERROR] Private name and computed key not implemented"
 
 and normalize_init (init : ('M, 'T) Ast'.Statement.For.init) : norm_expr_t =
   let ne = normalize_expression empty_context in 
@@ -1184,7 +1167,7 @@ and change_kind (kind' : Statement.VarDecl.kind) ((loc, stmt) : m Statement.t) :
   match stmt with
     | VarDecl decl -> let decl' = Statement.VarDecl {decl with kind = kind'} in 
                       (loc, decl')
-    | _ -> failwith "tried to change the kind of non-declaration statement"
+    | _ -> failwith "[ERROR] Tried to change the kind of non-declaration statement"
   
 and is_declaration ((_, stmt) : m Statement.t) : bool = 
   match stmt with 

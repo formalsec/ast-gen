@@ -30,16 +30,16 @@ let setup_node (mode : string) : string =
   let script       = js_folder ^ "generate_cg.js" in 
 
   if not (Sys.file_exists script)
-    then failwith "dependency tree genetarion script not found";
+    then failwith "[ERROR] Dependency tree genetarion script not found";
 
   if not (Sys.file_exists package_info)
-    then failwith "package.json not found";
+    then failwith "[ERROR] Package.json not found";
 
   if Mode.is_multi_file mode && not (Sys.file_exists node_modules)
     then (
       print_endline "installing js dependencies";
       let result = Sys.command ("npm install --prefix " ^ js_folder) in 
-      if result != 0 then failwith "error installing js depedencies";
+      if result != 0 then failwith "[ERROR] Unable to install js depedencies";
       print_endline "DONE!");
 
   script
@@ -116,8 +116,15 @@ let main (filename : string) (output_path : string) (config_path : string) (mode
 (* setup comand line interface using CMDLiner library*)
 let input_file : string Term.t =
   let doc = "Path to JavaScript file (.js) or directory containing JavaScript files for analysis." in
-  let docv = "FILE" in
-  Arg.(required & pos 0 (some non_dir_file) None & info [] ~doc ~docv)
+  let docv = "FILE_OR_DIR" in
+  let is_dir_or_file (param : string) : string =  
+    if Sys.file_exists param 
+      then param
+      else failwith ("[ERROR] Invalid input file : " ^ param) 
+  in 
+
+  Term.(const is_dir_or_file $  Arg.(required & pos 0 (some string) None & info [] ~doc ~docv))
+
 
 let mode : string Term.t =
   let doc = "Analysis mode.\n\t 1) basic: attacker controlls all parameters from all functions \n\t 2) single_file: the attacker controlls the functions that were exported by the input file \n\t 3) multi_file: the attacker controlls the functions that were exported in the \"main\" file" in

@@ -148,7 +148,7 @@ end = struct
   let from_expression ((loc, expr) : 'M Expression.t) : 'M t =
     match expr with
       | Expression.Identifier {name; _} -> build loc name
-      | _ -> failwith "attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier."
+      | _ -> failwith "[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier."
 
   let get_name ((_, id) : 'M t) : string = id.name
   let is_generated ((_, id) : 'M t) : bool = id.is_generated
@@ -1345,7 +1345,7 @@ end = struct
     match expr with 
       | _, Identifier {name; _} -> name
       | _, This _ -> "this"
-      | _ -> failwith "expression cannot be converted into an id"
+      | _ -> failwith "[ERROR] Expression cannot be converted into an id"
   
   let get_id_opt (expr : 'M Expression.t) : string option = 
     match expr with 

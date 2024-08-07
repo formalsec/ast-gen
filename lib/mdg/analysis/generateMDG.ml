@@ -222,7 +222,7 @@ module Analysis (Init : InitConfig) : AbstractAnalysis.T = struct
     | _, Continue _ 
     | _, Debugger _ -> ()
         
-    | _ -> failwith "statement node analysis not defined");
+    | _ -> failwith "[ERROR] Statement node analysis not defined");
     state
     and analyse_method_call (state : State.t) (loc : Location.t) (left : m Identifier.t) (_object : m Expression.t) (property : property) (arguments : m Expression.t list) (id_call : int) (id_retn : int) : unit =
       (* ! is this a way to represent it? *)

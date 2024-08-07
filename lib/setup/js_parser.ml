@@ -10,5 +10,5 @@ let from_file (filename : string) : (Loc.t, Loc.t) Flow_ast.Program.t =
                 let err = Parse_error.PP.error err in
                 Format.printf "%a: error: %s" Loc.pp loc err
               ) errors; 
-              failwith ("flow failed to process file : " ^ filename)
+              failwith ("[ERROR] Flow failed to process file : " ^ filename)
     )

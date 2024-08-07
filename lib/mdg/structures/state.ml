@@ -13,7 +13,7 @@ let register, setup, was_changed =
    
   let pop = fun () -> match !bs with 
   	| b :: bs' -> bs := bs'; b
-  	| _ -> failwith "no element to pop" in 
+  	| _ -> failwith "[ERROR] No element to pop" in 
   
   reg, push, pop;;
 

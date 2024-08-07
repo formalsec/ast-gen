@@ -68,7 +68,7 @@ let rec read (config_path : string) : t =
             let package_sink : packageSink = {sink = sink_name; packages = packages} in 
             packageSinks' := package_sink :: !packageSinks'
 
-          | _    -> failwith ("sink type " ^ sink_type ^ " not allowed")
+          | _    -> failwith ("[ERROR] Sink type " ^ sink_type ^ " not allowed")
       ) sinks
     ) (sinks |> to_assoc)
   );
@@ -85,7 +85,7 @@ let rec read (config_path : string) : t =
           let package_source : packageSource = {source = source_name; packages = packages} in 
           packageSources' := package_source :: !packageSources'
 
-        | _    -> failwith ("source type " ^ source_type ^ " not allowed")
+        | _    -> failwith ("[ERROR] Source type " ^ source_type ^ " not allowed")
 
     ) (sources |> to_list)
   );

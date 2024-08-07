@@ -62,7 +62,7 @@ module Node = struct
   let get_name (node : t) : string = 
     match node._type with
       | Object name -> name
-      | _ -> failwith "node doesn't have a name"
+      | _ -> failwith "[ERROR] Node doesn't have a name"
 
   let get_type (node : t) : string =
     match node._type with
@@ -99,7 +99,7 @@ module Node = struct
   let get_func_params (node : t) : string list = 
     match node._type with 
       | Function (_, params) -> params
-      | _ -> failwith "tryed to get params from a node that isnt a function definition one"
+      | _ -> failwith "[ERROR] Tryed to get params from a node that isnt a function definition one"
   
 end
 
@@ -124,7 +124,7 @@ module Edge = struct
     let is_property (edge : t) = match edge._type with Property _ -> true | _ -> false
     let is_version  (edge : t) = match edge._type with Version _ -> true | _ -> false
     let is_param    (edge : t) = match edge._type with Parameter _ -> true | _ -> false
-    let get_property (edge : t) : property option = match edge._type with Property p | Version p -> p | _ -> failwith "edge is neither a property edge nor a version edge"
+    let get_property (edge : t) : property option = match edge._type with Property p | Version p -> p | _ -> failwith "[ERROR] Edge is neither a property edge nor a version edge"
 
     let _type_to_int (t : _type) : int =
       match t with
@@ -581,7 +581,7 @@ let get_function (graph : t) (func_node : location) : t =
   let func_graph = empty (fun () -> ()) in 
   if exists_node graph func_node 
     then get_function' graph (LocationSet.singleton func_node) (LocationSet.empty) func_graph
-    else failwith ("graph does not encode function with location " ^ func_node)
+    else failwith ("[ERROR] Graph does not encode function with location " ^ func_node)
 
 
 let update_arg_edges (graph : t) (call_node : location) (parameters : string list) : unit =

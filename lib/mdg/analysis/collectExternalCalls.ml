@@ -55,7 +55,7 @@ module Analysis : AbstractAnalysis.T = struct
                 then String.sub module_name 2 (String.length module_name - 2)
                 else module_name
 
-            | _ -> failwith "failed to obtain require module name"
+            | _ -> failwith "[ERROR] Failed to obtain require module name"
           in
           
           let loc = eval_expr (Identifier.to_expression left) in 

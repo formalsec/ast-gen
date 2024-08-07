@@ -301,7 +301,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       | _, Continue _ 
       | _, Debugger _ -> ()
           
-      | _ -> failwith "statement node analysis not defined");
+      | _ -> failwith "[ERROR] Statement node analysis not defined");
     analysis := Auxiliary.analyse !analysis state statement;
 
   
@@ -567,4 +567,4 @@ and get_analysis_output (result : AnalysisType.t) : buildExportsObject * sinkAli
         (BuildExportsObject exportsObject, 
          Combined (CollectExternalCalls ext_calls, 
                    SinkAliases config             )) -> exportsObject, config, ext_calls
-    | _ -> failwith "unable to extract analysis output"
+    | _ -> failwith "[ERROR] Unable to extract analysis output"

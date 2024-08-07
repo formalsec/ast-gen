@@ -1,12 +1,12 @@
-let basic = "basic"
-let single_file = "single_file"
-let multi_file = "multi_file"
-let default = single_file
+let basic : string = "basic"
+let single_file : string = "single_file"
+let multi_file : string = "multi_file"
+let default : string = single_file
 
 let is_valid (mode : string) : string =  
   if mode = basic || mode = single_file || mode = multi_file 
     then mode
-    else failwith "Invalid mode. Try using: basic, single_file or multi_file"
+    else failwith "[ERROR] Invalid mode. Try using: basic, single_file or multi_file"
 
 
 let is_basic (mode : string) : bool = mode = basic
