@@ -8,15 +8,18 @@ let rec create_dir (path : string) : unit =
     )
   | None -> ()
 
-let rec clean_dir (path : string) : unit = 
-  if (Sys.file_exists path) then (
-    if (Sys.is_directory path)
-      then (
-        Sys.readdir path |>
-        Array.iter (fun name -> clean_dir (Filename.concat path name));
-        Unix.rmdir path
-      )
-      else Sys.remove path)
+  let clean_dir (path : string) : unit = 
+    let rec clean_dir' (path : string) (parent : bool) : unit =
+      if (Sys.file_exists path) then (
+        if (Sys.is_directory path)
+          then (
+            Sys.readdir path |>
+            Array.iter (fun name -> clean_dir' (Filename.concat path name) false);
+            if not parent then (Unix.rmdir path)
+          )
+          else Sys.remove path)
+    in
+    clean_dir' path true
 
 
 

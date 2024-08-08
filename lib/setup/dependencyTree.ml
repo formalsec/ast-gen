@@ -13,8 +13,6 @@ let single_file_dt (filename : string) : string =
 
 let rec generate (script : string) (filename : string) (mode : string) : t =
   let main_file = get_main_file filename mode in
-  print_endline main_file;
-
   let output = if Mode.is_multi_file mode 
     then File_system.run_command (generate_dt script main_file) 
     else single_file_dt main_file
