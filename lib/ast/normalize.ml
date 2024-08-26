@@ -898,7 +898,7 @@ and normalize_argument (arg : ('M, 'T) Ast'.Expression.expression_or_spread) : n
   (* TODO : other cases *)
   match arg with
     | Ast'.Expression.Expression expr -> normalize_expression empty_context expr 
-    | _ -> failwith "[ERROR] Normalize argument case not defined"
+    | Ast'.Expression.Spread (_, {argument; _}) -> normalize_expression empty_context argument
 
 
 and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {params; _}); body; _} : ('M, 'T) Ast'.Function.t) : norm_expr_t =
