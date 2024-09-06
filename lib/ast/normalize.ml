@@ -909,9 +909,9 @@ and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {param
     then get_identifier loc (if Option.is_some id then Option.map normalize_identifier id else context.identifier)
     else Identifier.build_random loc in
   
-  let params_stmts, params_exprs = List.split (List.map normalize_param params) in
+  let norm_pattern_stmts, params_stmts, params_exprs = split3 (List.map normalize_param params) in
   let body_stmts = normalize_func_body body in 
-  let assign = Statement.AssignFunction.build loc id params_exprs body_stmts in 
+  let assign = Statement.AssignFunction.build loc id params_exprs (List.flatten norm_pattern_stmts @ body_stmts) in 
   
   if not context.is_assignment || context.has_op then 
     let _, decl = createVariableDeclaration None loc ~objId:(Id id) in 
@@ -919,15 +919,22 @@ and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {param
   else
     (List.flatten params_stmts @ [assign], Some (Identifier.to_expression id)) 
 
-and normalize_param (loc, {Ast'.Function.Param.argument; default} : ('M, 'T) Ast'.Function.Param.t) : m Statement.t list * m Statement.AssignFunction.Param.t  = 
-let loc_f = Location.convert_flow_loc !file_path in
-  (* TODO : param can be spread element or other patterns (maybe do like the normalize_for_left ) *)
-  let is_id, id = is_identifier argument in 
-  let argument' = if is_id then Option.get id else failwith "[ERROR] Argument is not an identifier" in 
-  
+and normalize_param (loc, {Ast'.Function.Param.argument; default} : ('M, 'T) Ast'.Function.Param.t) : m Statement.t list * m Statement.t list * m Statement.AssignFunction.Param.t  = 
+  let loc_f = Location.convert_flow_loc !file_path in
+
+  (* convert argument pattern into an identifier and if needed a   
+    set of statements that decompose the pattern into a identifier *)
+  let norm_pattern_stmts, argument' = 
+    match argument with
+      | _, Identifier {name; _} -> [], normalize_identifier name
+      | _                       -> let id = Identifier.build_random (Location.empty ()) in
+                                   let stmts, _ = normalize_pattern (Identifier.to_expression id) argument None false in 
+                                   stmts, id 
+    in 
+
   let def_stmts, def_expr = map_default (normalize_expression empty_context) ([], None) default in
   let param = Statement.AssignFunction.Param.build (loc_f loc) argument' def_expr in
-  (def_stmts, param)
+  (norm_pattern_stmts, def_stmts, param)
 
 and normalize_func_body (body : ('M, 'T) Ast'.Function.body) : norm_stmt_t =
   let loc_f = Location.convert_flow_loc !file_path in
