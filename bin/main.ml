@@ -45,7 +45,7 @@ let setup_node (mode : string) : string =
   script
 
 
-let main (filename : string) (output_path : string) (config_path : string) (mode : string) (generate_mdg : bool) (verbose : bool) : int =
+let main (filename : string) (output_path : string) (config_path : string) (mode : string) (generate_mdg : bool) (no_dot : bool) (verbose : bool) : int =
   
   (* SETUP *)
   let script = setup_node mode in
@@ -107,7 +107,8 @@ let main (filename : string) (output_path : string) (config_path : string) (mode
   if generate_mdg then (
     let main = DependencyTree.get_main dep_tree in 
     let graph = ModuleGraphs.get module_graphs main in 
-    Mdg.Pp.Dot.output graph_dir graph;
+    if not no_dot then 
+      Mdg.Pp.Dot.output graph_dir graph;
     Mdg.Pp.CSV.output graph_dir graph;
   );
 
@@ -134,6 +135,10 @@ let mdg : bool Term.t =
   let doc = "Generates Multiversion Dependency Graph." in
   Arg.(value & flag & info ["mdg"] ~doc)
 
+let no_dot : bool Term.t =
+  let doc = "Dont generate .dot and .svg graph representation." in
+  Arg.(value & flag & info ["noDot"] ~doc)
+
 let output_path : string Term.t =
   let doc = "Path to store all output files." in
   let default_path = "graphjs-results" in 
@@ -149,7 +154,7 @@ let verbose : bool Term.t =
   Arg.(value & flag & info ["v"; "verbose"] ~doc)
 
 let cli =
-  let cmd = Term.(const main $ input_file $ output_path $ config_path $ mode $ mdg $ verbose) in
+  let cmd = Term.(const main $ input_file $ output_path $ config_path $ mode $ mdg $ no_dot $ verbose) in
   let info = Cmd.info "ast_gen" in
   Cmd.v info cmd
 

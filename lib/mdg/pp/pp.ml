@@ -59,6 +59,7 @@ end
     let svg_file = file_path ^ "graph.svg" in 
     
     let file = open_out_bin dot_file in
+    
     Dot.set_info graph.nodes;
     Dot.output_graph file (convert_graph graph);
     Out_channel.close file;

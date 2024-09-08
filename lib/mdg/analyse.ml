@@ -208,7 +208,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
   
       (* -------- S T A T I C   P R O P E R T Y   U P D A T E -------- *)
       | loc, StaticUpdate {_object; property; right; id; _} ->
-        let add_node' : location -> unit = fun abs_loc -> add_node abs_loc (Expression.get_id _object) loc in 
+        let add_node' : location -> unit = fun abs_loc -> add_node abs_loc (Option.value (Expression.get_id_opt _object) ~default:"*") loc in 
         
         let _L1, _L2 = eval_expr _object, eval_expr right in
         let _L1' = new_version store _L1 property id add_node' in 
@@ -218,9 +218,9 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
             ) _L2
         ) _L1';
   
-      (* -------- D Y N A M I C   P R O P E R T Y   U P D A T E -------- *)
+      (* -------- D Y N A M I C   P R O P E§ R T Y   U P D A T E -------- *)
       | loc, DynmicUpdate {_object; property; right; id} -> 
-        let add_node' : location -> unit = fun abs_loc -> add_node abs_loc (Expression.get_id _object) loc in 
+        let add_node' : location -> unit = fun abs_loc -> add_node abs_loc (Option.value (Expression.get_id_opt _object) ~default:"*") loc in 
   
         let _L1, _L2, _L3 = eval_expr _object, 
                             eval_expr property, 
@@ -292,21 +292,27 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
   
         add_ret_node l_retn loc;
   
+      | _, AssignYield _ 
 
       (* -------- O T H E R   C O N S T R U C T S -------- *)
+      | _, ExportDefaultDecl _
+      | _, ExportNamedDecl   _
+      | _, ImportDecl        _ 
+
       | _, VarDecl  _
       | _, Throw    _ 
       | _, Break    _ 
-      | _, Yield    _ 
       | _, Continue _ 
       | _, Debugger _ -> ()
           
       | _ -> failwith "[ERROR] Statement node analysis not defined");
+
     analysis := Auxiliary.analyse !analysis state statement;
 
   
   and property_lookup_name (left : m Identifier.t) (_object : m Expression.t) (property : string) : string =
-    let obj_prop = Expression.get_id _object ^ "." ^ property in 
+    let obj_name = Option.value (Expression.get_id_opt _object) ~default:"*" in 
+    let obj_prop = obj_name ^ "." ^ property in 
     if Identifier.is_generated left then obj_prop else Identifier.get_name left ^ ", " ^ obj_prop
 
   and analyse_method_call (state : State.t) (loc : Location.t) (left : m Identifier.t) (_object : m Expression.t) (property : property) (arguments : m Expression.t list) (id_call : int) (id_retn : int) : unit =
@@ -332,7 +338,8 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     let l_retn = alloc id_retn in 
     
     (* get function definition information *)
-    let f = Expression.get_id _object ^ "." ^ property in 
+    let obj_name = Option.value (Expression.get_id_opt _object) ~default:"*" in 
+    let f        = obj_name ^ "." ^ property in 
   
     (* node information *)
     add_cnode l_call f loc;
@@ -532,7 +539,7 @@ and construct_object (state : State.t) (loc : LocationSet.t) : ExportedObject.t 
   else if LocationSet.is_empty loc then 
     ExportedObject.empty ()
 
-  else failwith "exported object has a property with multiple locations"
+  else failwith "[ERROR] exported object has a property with multiple locations"
   
 ;;
 

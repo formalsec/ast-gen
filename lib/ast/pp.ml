@@ -91,10 +91,6 @@ module Js = struct
         let label' = map_default ((^) " " << print_identifier) "" label in
         identation_str ^ "break" ^ label' ^ ";\n" 
 
-      | _, Yield {argument; _ } ->
-        let argument' = map_default ((^) " " << print_expr) "" argument in
-        identation_str ^ "yield" ^ argument' ^ ";\n" 
-
       | _, Continue {label} -> 
         let label' = map_default ((^) " " << print_identifier) "" label in
         identation_str ^ "continue" ^ label' ^ ";\n" 
@@ -161,6 +157,11 @@ module Js = struct
         in
         let argument' = print_expr argument in
         identation_str ^ left' ^ " = " ^ operator' ^ argument' ^ ";\n"
+
+      | _, AssignYield {left; argument; _ } ->
+        let left' = print_identifier left in
+        let argument' = map_default ((^) " " << print_expr) "" argument in
+        identation_str ^ left' ^ " = yield" ^ argument' ^ ";\n" 
 
       | _, AssignArray {left; _} ->
         let left' = print_identifier left in

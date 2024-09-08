@@ -58,7 +58,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
   let loc_f = Location.convert_flow_loc !file_path in
 
   let nec = normalize_expression in 
-
+  
   match stmt with
     (* --------- B L O C K --------- *)
     | _, Ast'.Statement.Block {body; _} -> 
@@ -196,9 +196,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
 
     (* --------- V A R I A B L E   D E C L A R A T I O N --------- *)
     | loc, Ast'.Statement.VariableDeclaration {kind; declarations; _} ->
-      let kind' : Statement.VarDecl.kind = match kind with 
-        | Var -> _var  | Let -> _let  | Const -> _const 
-      in
+      let kind' = translate_kind kind in 
 
       let new_context = {context with is_declaration = true} in 
       let assign_stmts, ids = List.split (List.map 
@@ -455,10 +453,19 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
 
   (* --------- Y I E L D --------- *)
   | loc, Ast'.Expression.Yield {argument; delegate; _} -> 
+    let loc = loc_f loc in 
+    let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
+
     let arg_stmts, arg_expr = map_default ne ([], None) argument in 
-    let yield = Statement.Yield.build (loc_f loc) arg_expr delegate in 
+    let yield = Statement.AssignYield.build loc id arg_expr delegate in 
     
-    arg_stmts @ [yield], None
+    (* check if yield is done as a statement or an expression *)
+    if not context.is_assignment || context.has_op then 
+      let _, decl = createVariableDeclaration None loc ~objId:(Id id) in 
+      (decl @ arg_stmts @ [yield] , Some (Identifier.to_expression id))
+    else
+      arg_stmts @ [yield], Some (Identifier.to_expression id)
+    
 
   (* --------- C O N D I T I O N A L --------- *)
   | loc, Ast'.Expression.Conditional {test; consequent; alternate; _} ->
@@ -486,17 +493,15 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   
   (* --------- A S S I G N   S I M P L E --------- *)
   | _, Ast'.Expression.Assignment {operator; left; right; _} ->
-
     let operator' = Option.map Operator.Assignment.translate operator in
-    let assign_stmts, _ = normalize_assignment context left operator' right  in 
+    let assign_stmts, _ = normalize_assignment {context with is_statement = false} left operator' right  in 
 
     (* check if the assignment is done as a statement or an expression *)
-    let stmts, expr = if not context.is_statement
-      then get_pattern_expr left
-      else [], None 
-    in 
-
-    assign_stmts @ stmts, expr 
+    if context.is_statement
+      then assign_stmts, None
+      else 
+        let norm_stmts, norm_expr = get_pattern_expr left in 
+        assign_stmts @ norm_stmts, norm_expr
 
   (* --------- A S S I G N   A R R A Y ---------*)
   | loc, Ast'.Expression.Array {elements; _} -> 
@@ -748,7 +753,7 @@ and get_pattern_expr (pattern : ('M, 'T) Ast'.Pattern.t) : norm_expr_t =
     | _, Identifier {name; _} -> 
       [], Some ((Identifier.to_expression << normalize_identifier) name)
     
-    | _, Expression (loc, Member {_object; property; _}) -> 
+    | _, Expression (loc, Member {_object; property; _}) ->
       let loc = loc_f loc in 
       let id, decl = createVariableDeclaration None loc in
       
@@ -850,12 +855,17 @@ and normalize_imp_specifiers (loc : m) (source : string) (specifier : ('M, 'T) A
       [import]
 
 and normalize_for_left (left : ('M, 'T) generic_left) : norm_stmt_t * m Statement.VarDecl.t = 
-  let ns = normalize_statement empty_context in 
   match left with
-    | LeftDeclaration (loc, decl) -> 
-      let decl_stmts = ns (loc, Ast'.Statement.VariableDeclaration decl) in 
-      [], to_var_decl (List.hd decl_stmts)
-    
+    | LeftDeclaration (_, { Ast'.Statement.VariableDeclaration.kind; declarations; _}) ->
+      let kind' = translate_kind kind in 
+      let declaration = List.hd declarations in 
+      let pattern = match declaration with _, {id; _} -> id in 
+      
+      let id, decl_stmts = createVariableDeclaration None (Location.empty ()) ~kind:kind' in
+      let stmts, _ = normalize_pattern (Identifier.to_expression id) pattern None false in 
+      stmts, to_var_decl (List.hd decl_stmts)
+
+      
     | LeftPattern pattern -> 
       let id, decl_stmts = createVariableDeclaration None (Location.empty ()) in
       let stmts, _ = normalize_pattern (Identifier.to_expression id) pattern None false in 
@@ -1141,6 +1151,8 @@ and is_special_assignment ((_, expr) : ('M, 'T) Ast'.Expression.t) : bool =
     | Ast'.Expression.Logical _ 
     | Ast'.Expression.Update _
     | Ast'.Expression.Unary _
+    (* -- ASSIGN YIELD -- *)
+    | Ast'.Expression.Yield _
     (* -- ASSIGN NEW -- *)
     | Ast'.Expression.New _ 
     (* -- ASSIGN CALL -- *)
@@ -1175,6 +1187,12 @@ and change_kind (kind' : Statement.VarDecl.kind) ((loc, stmt) : m Statement.t) :
     | VarDecl decl -> let decl' = Statement.VarDecl {decl with kind = kind'} in 
                       (loc, decl')
     | _ -> failwith "[ERROR] Tried to change the kind of non-declaration statement"
+
+and translate_kind (kind : Ast'.Variable.kind): Statement.VarDecl.kind = 
+  match kind with 
+    | Var -> _var  
+    | Let -> _let  
+    | Const -> _const 
   
 and is_declaration ((_, stmt) : m Statement.t) : bool = 
   match stmt with 

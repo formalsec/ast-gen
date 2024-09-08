@@ -49,20 +49,21 @@ module Analysis : AbstractAnalysis.T = struct
         if Identifier.get_name callee = "require" then (
           (* get module name *)
           let module_arg = List.nth_opt arguments 0 in
-          let module_name = match module_arg with
+          match module_arg with
             | Some (_, Literal {value = String module_name; _}) -> 
-              if String.starts_with ~prefix:"./" module_name 
+              let module_name = if String.starts_with ~prefix:"./" module_name 
                 then String.sub module_name 2 (String.length module_name - 2)
-                else module_name
+                else module_name 
+              in
 
-            | _ -> failwith "[ERROR] Failed to obtain require module name"
-          in
-          
-          let loc = eval_expr (Identifier.to_expression left) in 
-          let external_reference = create_ext_ref module_name [] in 
-          add_ext_ref info loc external_reference)
-
-        else (
+              let loc = eval_expr (Identifier.to_expression left) in 
+              let external_reference = create_ext_ref module_name [] in
+              add_ext_ref info loc external_reference
+            
+            (* do nothing the fist argument is dynamic *)
+            | _ -> info
+        
+        ) else (
           (* check if callee is an external call *)
           let l_call = LocationSet.singleton (alloc id_call) in 
           let callee = eval_expr (Identifier.to_expression callee) in 

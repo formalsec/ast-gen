@@ -291,15 +291,6 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t option -> 'M Statement.t
   end
 
-  module Yield : sig
-    type 'M t = {
-      argument : 'M Expression.t option;
-      delegate : bool
-    } 
-
-    val build : 'M -> 'M Expression.t option -> bool -> 'M Statement.t
-  end
-
   module Continue : sig
     type 'M t = { label : 'M Identifier.t option }
     val build : 'M -> 'M Identifier.t option -> 'M Statement.t
@@ -377,6 +368,18 @@ and Statement : sig
     }
 
     val build : 'M -> 'M Identifier.t -> Operator.Unary.t -> 'M Expression.t -> 'M Statement.t
+  end
+
+  module AssignYield : sig
+    type 'M t = {
+      id : int;
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      argument : 'M Expression.t option;
+      delegate : bool
+    } 
+
+    val build : 'M -> 'M Identifier.t -> 'M Expression.t option -> bool -> 'M Statement.t
   end
 
   module AssignArray : sig
@@ -542,7 +545,6 @@ and Statement : sig
     | Return   of 'M Return.t
     | Throw    of 'M Throw.t
     | Break    of 'M Break.t
-    | Yield    of 'M Yield.t
     | Continue of 'M Continue.t
     | Debugger of    Debugger.t
     
@@ -555,6 +557,7 @@ and Statement : sig
     | AssignSimple        of 'M AssignSimple.t
     | AssignBinary        of 'M AssignBinary.t
     | AssignUnary         of 'M AssignUnary.t
+    | AssignYield         of 'M AssignYield.t
     | AssignArray         of 'M AssignArray.t
     | AssignObject        of 'M AssignObject.t
     | StaticUpdate        of 'M StaticUpdate.t
@@ -567,8 +570,7 @@ and Statement : sig
     | AssignMetCallDynmic of 'M AssignMetCallDynmic.t
     | AssignFunction      of 'M AssignFunction.t
   
-  type 'M t = 'M * 'M t'
-  
+  type 'M t = 'M * 'M t'  
 
 end = struct
 
@@ -790,20 +792,6 @@ end = struct
       (metadata, break_info)
   end
 
-  module Yield = struct
-    type 'M t = {
-      argument : 'M Expression.t option;
-      delegate : bool
-    } 
-
-    let build (metadata : 'M) (argument' : 'M Expression.t option) (delegate': bool) : 'M Statement.t =
-      let yield_info = Statement.Yield {
-        argument = argument';
-        delegate = delegate'
-      } in 
-      (metadata, yield_info)
-  end
-
   module Continue = struct
     type 'M t = {  label : 'M Identifier.t option }
 
@@ -947,6 +935,25 @@ end = struct
       } 
       in
       (metadata, assign_info)
+  end
+
+  module AssignYield = struct
+    type 'M t = {
+      id : int;
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      argument : 'M Expression.t option;
+      delegate : bool
+    } 
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (argument' : 'M Expression.t option) (delegate': bool) : 'M Statement.t =
+      let yield_info = Statement.AssignYield {
+        id = get_id ();
+        left = left';
+        argument = argument';
+        delegate = delegate'
+      } in 
+      (metadata, yield_info)
   end
 
   module AssignObject = struct
@@ -1188,7 +1195,6 @@ end = struct
     | Return   of 'M Return.t
     | Throw    of 'M Throw.t
     | Break    of 'M Break.t
-    | Yield    of 'M Yield.t
     | Continue of 'M Continue.t
     | Debugger of    Debugger.t
 
@@ -1201,6 +1207,7 @@ end = struct
     | AssignSimple        of 'M AssignSimple.t
     | AssignBinary        of 'M AssignBinary.t
     | AssignUnary         of 'M AssignUnary.t
+    | AssignYield         of 'M AssignYield.t
     | AssignArray         of 'M AssignArray.t
     | AssignObject        of 'M AssignObject.t
     | StaticUpdate        of 'M StaticUpdate.t
@@ -1266,7 +1273,6 @@ and Expression : sig
     val build : 'M -> 'M Expression.t
   end
 
-  val get_id : 'M Expression.t -> string
   val get_id_opt : 'M Expression.t -> string option
 
   type 'M t' = 
@@ -1340,12 +1346,6 @@ end = struct
     let build (metadata: 'M) : 'M Expression.t =
       (metadata, Expression.This ())
   end
-
-  let get_id (expr : 'M Expression.t) : string =
-    match expr with 
-      | _, Identifier {name; _} -> name
-      | _, This _ -> "this"
-      | _ -> failwith "[ERROR] Expression cannot be converted into an id"
   
   let get_id_opt (expr : 'M Expression.t) : string option = 
     match expr with 
