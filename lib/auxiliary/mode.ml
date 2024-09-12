@@ -1,14 +1,22 @@
-let basic : string = "basic"
-let single_file : string = "single_file"
-let multi_file : string = "multi_file"
-let default : string = single_file
+type t = Basic | Single_file | Multi_file
 
-let is_valid (mode : string) : string =  
-  if mode = basic || mode = single_file || mode = multi_file 
-    then mode
-    else failwith "[ERROR] Invalid mode. Try using: basic, single_file or multi_file"
+let basic = Basic
+let single_file = Single_file
+let multi_file = Multi_file
+let is_basic = function Basic -> true | _ -> false
+let is_single_file = function Single_file -> true | _ -> false
+let is_multi_file = function Multi_file -> true | _ -> false
 
+let of_string = function
+  | "basic" -> Ok Basic
+  | "single_file" -> Ok Single_file
+  | "multi_file" -> Ok Multi_file
+  | _ ->
+      Error "[ERROR] Invalid mode. Try using: basic, single_file or multi_file"
 
-let is_basic (mode : string) : bool = mode = basic
-let is_single_file (mode : string) : bool = mode = single_file
-let is_multi_file (mode : string) : bool = mode = multi_file
+let pp fmt = function
+  | Basic -> Format.pp_print_string fmt "basic"
+  | Single_file -> Format.pp_print_string fmt "single_file"
+  | Multi_file -> Format.pp_print_string fmt "multi_file"
+
+let to_string mode = Format.asprintf "%a" pp mode
