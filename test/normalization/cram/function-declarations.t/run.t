@@ -7,7 +7,7 @@
   
   $ ast_gen input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let f;
-  f = function (x, y, z) {
+  f = function (z, y, x) {
      let v1;
      v1 = x;
      x = x + 1;
