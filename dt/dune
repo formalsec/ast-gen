@@ -1,0 +1,14 @@
+(executable
+ (name script)
+ (modules script)
+ (libraries unix))
+
+(rule
+ (target dt)
+ (deps package.json index.js)
+ (action
+  (run ./script.exe ./index.js)))
+
+(install
+ (section bin)
+ (files dt))
