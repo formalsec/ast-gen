@@ -48,7 +48,7 @@ end
     let result = ref G.empty in
     Graph.iter_edges (fun from edge ->
         result := G.add_vertex !result from;
-        let edge = G.E.create from (Graph.Edge.label edge) (Graph.Edge.get_to edge) in
+        let edge = G.E.create from (Graph.Edge.label edge) (Graph.Edge.get_to_ edge) in
         result := G.add_edge_e !result edge;
     ) graph;
 
@@ -82,7 +82,7 @@ module CSV = struct
     Graph.iter_nodes (fun _ node_info  ->
       let info = [
         Node.get_id        node_info;  (* node id *)
-        Node.get_type      node_info;  (* node type *)
+        Node.get_type_     node_info;  (* node type *)
         Node.get_subtype   node_info;  (* node subtype *)
         Node.get_id_name   node_info;  (* node identifier name *)
         Node.get_raw       node_info;  (* node raw *)
@@ -101,13 +101,13 @@ module CSV = struct
     output_string out_channel "FromId:START_ID¿ToId:END_ID¿RelationLabel:TYPE¿RelationType¿IdentifierName¿ArgumentIndex¿ParamIndex¿StmtIndex¿ElementIndex¿ExpressionIndex¿MethodIndex¿SourceObjName¿IsProp\n";
     Graph.iter_edges (fun loc edge ->
       let from_id = Graph.get_node_id graph loc in
-      let to_id = Graph.get_node_id graph (Edge.get_to edge) in
+      let to_id = Graph.get_node_id graph (Edge.get_to_ edge) in
 
       let info = [
         from_id                  ;  (* edge from *)
         to_id                    ;  (* edge to *)
         Edge.get_rel_label   edge;  (* edge relation label *)
-        Edge.get_rel_type    edge;  (* edge relation type *)
+        Edge.get_rel_type_   edge;  (* edge relation type *)
         Edge.get_id_name     edge;  (* edge identifier name *)
         Edge.get_arg_i       edge;  (* edge argument index *)
         Edge.get_par_i       edge;  (* edge param index *)

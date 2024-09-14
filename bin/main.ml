@@ -31,6 +31,7 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
   (* process dependencies first with the aid of the depedency tree *)
   let summaries = Summaries.empty () in
   let module_graphs = ModuleGraphs.empty () in
+  (* TODO: Use an immutable map of graphs *)
   List.iter
     (fun file_path ->
       let dir = Fpath.parent @@ Fpath.v file_name in
