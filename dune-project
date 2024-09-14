@@ -2,25 +2,25 @@
 
 (using dune_site 0.1)
 
-(name ast_gen)
+(name graphjs2)
 
 (generate_opam_files true)
 
 (source
  (github formalsec/ast-gen))
 
-(authors "Author Name")
+(authors "Tomás Tavares")
 
-(maintainers "Maintainer Name")
+(maintainers "Tomás Tavares")
 
-(license "GPL-3.0-only")
+(license "MIT")
 
 (documentation https://url/to/documentation)
 
 (package
- (name ast_gen)
- (synopsis "A short synopsis")
- (description "A longer description")
+ (name graphjs2)
+ (synopsis "Graph.js new and improved")
+ (description "MDG-based static vulnerability scanner specialized in analyzing npm packages and detecting taint-style and prototype pollution vulnerabilities.")
  (depends
   bos
   conf-npm

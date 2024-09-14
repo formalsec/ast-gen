@@ -1,5 +1,5 @@
 (install
  (section
   (site
-   (ast_gen config)))
+   (graphjs2 config)))
  (files config.json))

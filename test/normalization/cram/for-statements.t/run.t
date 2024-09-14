@@ -1,4 +1,4 @@
-  $ ast_gen input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
+  $ graphjs2 input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
   let src;
   src = [];
   src["0"] = 1;
@@ -12,14 +12,14 @@
      y = dest[p];
   }
   
-  $ ast_gen input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
+  $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   for (let v1 in src) {
      p = v1;
      x = src[p];
      y = dest[p];
   }
   
-  $ ast_gen input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
+  $ graphjs2 input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let extend;
   extend = function (src, dest) {
      for (var v1 in src) {
@@ -29,7 +29,7 @@
      }
   }
   
-  $ ast_gen input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
+  $ graphjs2 input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
   let iterable;
   iterable = [];
   iterable["0"] = 10;
@@ -41,7 +41,7 @@
      v2 = console.log(value);
   }
   
-  $ ast_gen input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
+  $ graphjs2 input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
   for (let v1 of iterable) {
      key = v1[0];
      value = v1[1];
