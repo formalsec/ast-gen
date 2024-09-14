@@ -152,7 +152,7 @@ let cli =
       const main $ input_file $ output_path $ config_path $ mode $ mdg $ no_dot
       $ verbose)
   in
-  let info = Cmd.info "ast_gen" in
+  let info = Cmd.info "graphjs2" in
   Cmd.v info cmd
 
 let () =

@@ -6,4 +6,4 @@
 
 (generate_sites_module
  (module site)
- (sites ast_gen))
+ (sites graphjs2))

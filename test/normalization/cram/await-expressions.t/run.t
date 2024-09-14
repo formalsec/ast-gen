@@ -1,11 +1,11 @@
-  $ ast_gen input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
+  $ graphjs2 input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
   let f1;
   f1 = function () {
      let x;
      x = await 10;
   }
   
-  $ ast_gen input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
+  $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let f1;
   f1 = function () {
      let x;
@@ -16,7 +16,7 @@
      x = await v2;
   }
   
-  $ ast_gen input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
+  $ graphjs2 input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let f;
   f = function (x) {
      let a;

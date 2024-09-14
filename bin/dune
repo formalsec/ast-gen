@@ -1,4 +1,4 @@
 (executable
- (public_name ast_gen)
+ (public_name graphjs2)
  (name main)
  (libraries auxiliary ast bos cmdliner fpath mdg setup))
