@@ -1,0 +1,5 @@
+(install
+ (section
+  (site
+   (ast_gen config)))
+ (files config.json))
