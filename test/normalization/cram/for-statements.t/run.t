@@ -6,7 +6,8 @@
   src["2"] = 3;
   let dest;
   dest = [];
-  for (var p in src) {
+  for (var v1 in src) {
+     p = v1;
      x = src[p];
      y = dest[p];
   }
@@ -20,8 +21,9 @@
   
   $ ast_gen input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let extend;
-  extend = function (dest, src) {
-     for (var p in src) {
+  extend = function (src, dest) {
+     for (var v1 in src) {
+        p = v1;
         x = src[p];
         y = dest[p];
      }
@@ -33,14 +35,17 @@
   iterable["0"] = 10;
   iterable["1"] = 20;
   iterable["2"] = 30;
-  for (let value of iterable) {
-     let v1;
-     v1 = console.log(value);
+  for (let v1 of iterable) {
+     value = v1;
+     let v2;
+     v2 = console.log(value);
   }
   
   $ ast_gen input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
-  ast_gen: internal error, uncaught exception:
-           Failure("hd")
-           
-  cat: out/code/input-code-5.js: No such file or directory
+  for (let v1 of iterable) {
+     key = v1[0];
+     value = v1[1];
+     let v2;
+     v2 = console.log(value);
+  }
   
