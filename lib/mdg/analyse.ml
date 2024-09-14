@@ -1,13 +1,13 @@
 module Graph = Graph'
 module Functions = Ast.Functions
-module Config = Setup.Config
+module Config = Graphjs_parse.Config
 module EdgeSet = Graph.EdgeSet
 module Edge = Graph.Edge
-module Mode = Auxiliary.Mode
+module Mode = Graphjs_parse.Analysis_mode
 open Config
 open Ast.Grammar
-open Auxiliary.Functions
-open Auxiliary.Structures
+open Graphjs_std.Functions
+open Graphjs_std.Structures
 open Structures
 open AnalysisType
 open ExternalReferences

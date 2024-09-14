@@ -1,6 +1,6 @@
-open Auxiliary.Structures
+open Graphjs_std.Structures
 
-type t = 
+type t =
   | Object of t HashTable.t
   | Value of Structures.location
 
@@ -8,22 +8,22 @@ let empty () : t = Object (HashTable.create 0)
 
 let create (dim : int) : t = Object (HashTable.create dim)
 
-let add_property (exportedObject : t) (property : string) (value : t) : t = 
-  match exportedObject with 
-    | Object exportedObject -> 
+let add_property (exportedObject : t) (property : string) (value : t) : t =
+  match exportedObject with
+    | Object exportedObject ->
       HashTable.replace exportedObject property value;
-      Object exportedObject 
-    
+      Object exportedObject
+
       | _ -> exportedObject
 
-let print (exportedObject : t) : unit = 
+let print (exportedObject : t) : unit =
   let identation_spacing = 3 in
   let rec print' (exportedObject : t) (identation : int) : unit =
     let identation_str = String.make identation ' ' in
     match exportedObject with
-      | Object exportedObject -> 
+      | Object exportedObject ->
         print_endline (identation_str ^ "{");
-        HashTable.iter (fun prop value -> 
+        HashTable.iter (fun prop value ->
           print_string (identation_str ^ "\"" ^ prop ^ "\" : ");
           print' value (identation + identation_spacing);
         ) exportedObject;
@@ -40,12 +40,12 @@ let rec get_value_location (exportedObject : t) (properties : Structures.propert
     | [] -> get_location exportedObject
     | property::properties' -> get_value_location (get_property exportedObject property) properties'
 
-and get_location (exportedObject : t) : Structures.location = 
-  match exportedObject with 
+and get_location (exportedObject : t) : Structures.location =
+  match exportedObject with
     | Value loc -> loc
-    | Object obj -> 
+    | Object obj ->
       (* module.exports = {f} and f = require(...) *)
-      if HashTable.length obj = 1 
+      if HashTable.length obj = 1
         then get_location (List.nth (List.of_seq (HashTable.to_seq_values obj)) 0)
         else failwith "[ERROR] Unable to get function location from exported object"
 
@@ -54,11 +54,11 @@ and get_property (exportedObject : t) (property : Structures.property) : t =
     | Object obj -> HashTable.find obj property
     | _ -> failwith ("[ERROR] Unable to get property " ^ property ^  " from exported object")
 
-let rec get_all_values (exportedObject : t) : Structures.location list = 
-  match exportedObject with 
+let rec get_all_values (exportedObject : t) : Structures.location list =
+  match exportedObject with
     | Object obj ->
-      let values = List.of_seq (HashTable.to_seq_values obj) in 
+      let values = List.of_seq (HashTable.to_seq_values obj) in
       List.flatten (List.map get_all_values values)
-      
+
     | Value loc -> [loc]
-    
+

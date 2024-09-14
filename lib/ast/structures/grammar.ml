@@ -1,4 +1,4 @@
-open Auxiliary.Functions
+open Graphjs_std.Functions
 module Ast' = Flow_ast
 
 module Location = struct
@@ -11,18 +11,18 @@ module Location = struct
     (* maybe add file source*)
     _start : position;
     _end   : position;
-    _file  : string; 
-  } 
+    _file  : string;
+  }
 
-  let empty () : t = 
+  let empty () : t =
     let empty_position () : position = {line = 0; column = 0} in
-    { _start = empty_position (); _end = empty_position (); _file = ""};; 
+    { _start = empty_position (); _end = empty_position (); _file = ""};;
 
-  let rec convert_flow_loc (file' : string) ({start; _end; _} : Loc.t) : t = 
+  let rec convert_flow_loc (file' : string) ({start; _end; _} : Loc.t) : t =
     let start' = convert_flow_pos start in
     let end'   = convert_flow_pos _end  in
     { _start = start'; _end = end' ; _file = file'}
-  and convert_flow_pos ({line; column} : Loc.position) : position = 
+  and convert_flow_pos ({line; column} : Loc.position) : position =
     { line = line; column = column };;
 
   let rec to_string (loc : t) : string =
@@ -40,9 +40,9 @@ module Operator = struct
     type t = PlusAssign | MinusAssign | MultAssign | ExpAssign | DivAssign |
              ModAssign | LShiftAssign | RShiftAssign | RShift3Assign | BitOrAssign |
              BitXorAssign | BitAndAssign | NullishAssign | AndAssign | OrAssign
-    
-    let translate (op : Ast'.Expression.Assignment.operator) : t = 
-      match op with 
+
+    let translate (op : Ast'.Expression.Assignment.operator) : t =
+      match op with
         | PlusAssign -> PlusAssign       | MinusAssign -> MinusAssign
         | MultAssign -> MultAssign       | ExpAssign -> ExpAssign
         | DivAssign -> DivAssign         | ModAssign -> ModAssign
@@ -74,16 +74,16 @@ module Operator = struct
         | Mod -> Mod                 | BitOr -> BitOr
         | Xor -> Xor                 | BitAnd -> BitAnd
         | In -> In                   | Instanceof -> Instanceof
-    
+
     let translate_logical (op : Ast'.Expression.Logical.operator) : t =
       match op with
         | Or -> Or | And -> And | NullishCoalesce -> NullishCoalesce
 
     let translate_update (op : Ast'.Expression.Update.operator) : t =
-      match op with 
-        | Increment -> Plus  | Decrement -> Minus 
+      match op with
+        | Increment -> Plus  | Decrement -> Minus
 
-   end 
+   end
 
   module Unary = struct
     type t = Minus | Plus | Not | BitNot | Typeof | Void | Delete | Await
@@ -95,7 +95,7 @@ module Operator = struct
         | Typeof -> Typeof | Void -> Void
         | Delete -> Delete
         | Await -> Await
-        
+
   end
 end
 
@@ -112,7 +112,7 @@ module rec Identifier : sig
   val build_random : 'M -> 'M t
   val to_expression: 'M t -> 'M Expression.t
   val from_expression : 'M Expression.t -> 'M t
-  val get_name : 'M t -> string 
+  val get_name : 'M t -> string
   val is_generated : 'M t -> bool
 
 end = struct
@@ -131,7 +131,7 @@ end = struct
       is_generated = false
     } in
     (metadata, identifier_info)
-  
+
   let build_random (metadata : 'M) : 'M t =
     let name' = "v" ^ string_of_int !count in
     count := !count + 1;
@@ -144,7 +144,7 @@ end = struct
 
   let to_expression (metadata, id : 'M t) : 'M Expression.t =
     (metadata, Expression.Identifier id)
-  
+
   let from_expression ((loc, expr) : 'M Expression.t) : 'M t =
     match expr with
       | Expression.Identifier {name; _} -> build loc name
@@ -196,10 +196,10 @@ and Statement : sig
       discriminant: 'M Expression.t;
       cases: 'M Case.t list;
     }
-    
-    val build : 'M -> 'M Expression.t -> 'M Case.t list -> 'M Statement.t 
+
+    val build : 'M -> 'M Expression.t -> 'M Case.t list -> 'M Statement.t
   end
-  
+
   module While : sig
     type 'M t = {
       test : 'M Expression.t;
@@ -237,7 +237,7 @@ and Statement : sig
         param : 'M Identifier.t option;
         body : 'M Statement.t list;
       }
-  
+
       type 'M t = 'M * 'M t'
       val build : 'M -> 'M Identifier.t option -> 'M Statement.t list -> 'M t
     end
@@ -251,7 +251,7 @@ and Statement : sig
     val build : 'M -> 'M Statement.t list -> 'M Catch.t option -> 'M Statement.t list option -> 'M Statement.t
   end
 
-  module With : sig 
+  module With : sig
     type 'M t = {
       _object : 'M Expression.t;
       body : 'M Statement.t list;
@@ -302,7 +302,7 @@ and Statement : sig
   end
 
   (* ---------- imports // exports ----------  *)
-  module ExportDefaultDecl : sig 
+  module ExportDefaultDecl : sig
     type 'M t = {
       declaration : 'M Expression.t
     }
@@ -310,7 +310,7 @@ and Statement : sig
     val build : 'M -> 'M Expression.t -> 'M Statement.t
   end
 
-  module ExportNamedDecl : sig 
+  module ExportNamedDecl : sig
     type 'M t = {
       local : 'M Identifier.t option;
       exported : 'M Identifier.t option;
@@ -322,7 +322,7 @@ and Statement : sig
   end
 
   module ImportDecl : sig
-    type 'M t = 
+    type 'M t =
       | Default   of { source : string;
                        identifier : 'M Identifier.t }
 
@@ -355,7 +355,7 @@ and Statement : sig
       opRght : 'M Expression.t;
     }
 
-    val build : 'M -> 'M Identifier.t -> Operator.Binary.t -> 'M Expression.t -> 'M Expression.t -> 'M Statement.t 
+    val build : 'M -> 'M Identifier.t -> Operator.Binary.t -> 'M Expression.t -> 'M Expression.t -> 'M Statement.t
   end
 
   module AssignUnary : sig
@@ -377,7 +377,7 @@ and Statement : sig
       (* -- right -- *)
       argument : 'M Expression.t option;
       delegate : bool
-    } 
+    }
 
     val build : 'M -> 'M Identifier.t -> 'M Expression.t option -> bool -> 'M Statement.t
   end
@@ -510,7 +510,7 @@ and Statement : sig
   end
 
   module AssignFunction : sig
-    module Param : sig 
+    module Param : sig
       type 'M t' = {
         argument : 'M Identifier.t;
         default : 'M Expression.t option;
@@ -520,25 +520,25 @@ and Statement : sig
 
       val build : 'M -> 'M Identifier.t -> 'M Expression.t option -> 'M t
     end
-    
+
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
       (* -- right -- *)
       params : 'M Param.t list;
       body : 'M Statement.t list;
-    } 
+    }
 
     val build : 'M -> 'M Identifier.t -> 'M Param.t list -> 'M Statement.t list -> 'M Statement.t
   end
 
-  type 'M t' = 
+  type 'M t' =
     | If       of 'M If.t
     | Switch   of 'M Switch.t
     | While    of 'M While.t
     | ForIn    of 'M ForIn.t
     | ForOf    of 'M ForOf.t
-    | Try      of 'M Try.t 
+    | Try      of 'M Try.t
     | With     of 'M With.t
     | Labeled  of 'M Labeled.t
     | VarDecl  of 'M VarDecl.t
@@ -547,12 +547,12 @@ and Statement : sig
     | Break    of 'M Break.t
     | Continue of 'M Continue.t
     | Debugger of    Debugger.t
-    
+
     (* ----- imports // exports ------ *)
     | ExportDefaultDecl of 'M ExportDefaultDecl.t
     | ExportNamedDecl   of 'M ExportNamedDecl.t
     | ImportDecl        of 'M ImportDecl.t
-    
+
     (* ---- assignment statements ---- *)
     | AssignSimple        of 'M AssignSimple.t
     | AssignBinary        of 'M AssignBinary.t
@@ -569,13 +569,13 @@ and Statement : sig
     | AssignMetCallStatic of 'M AssignMetCallStatic.t
     | AssignMetCallDynmic of 'M AssignMetCallDynmic.t
     | AssignFunction      of 'M AssignFunction.t
-  
-  type 'M t = 'M * 'M t'  
+
+  type 'M t = 'M * 'M t'
 
 end = struct
 
   let id_count : int ref = ref (-1)
-  let get_id () : int = 
+  let get_id () : int =
     id_count := !id_count + 1;
     !id_count
 
@@ -597,11 +597,11 @@ end = struct
         id = id';
       } in
       (metadata, variabledecl_info)
-    
+
   end
 
   module If = struct
-    
+
     type 'M t = {
       test : 'M Expression.t;
       consequent : 'M Statement.t list;
@@ -617,7 +617,7 @@ end = struct
       (metadata, if_info)
 
   end
-  
+
 
   module Switch = struct
     module Case = struct
@@ -628,7 +628,7 @@ end = struct
         consequent: 'M Statement.t list;
       }
 
-      let build (metadata : 'M) (test' : 'M Expression.t option) (consequent': 'M Statement.t list) : 'M Statement.Switch.Case.t = 
+      let build (metadata : 'M) (test' : 'M Expression.t option) (consequent': 'M Statement.t list) : 'M Statement.Switch.Case.t =
         let case_info = {
           test = test';
           consequent = consequent';
@@ -650,7 +650,7 @@ end = struct
       (metadata, switch_info)
 
   end
-  
+
   module While = struct
     type 'M t = {
       test : 'M Expression.t;
@@ -662,7 +662,7 @@ end = struct
       let while_info = Statement.While {
         test = test';
         body = body';
-      } in 
+      } in
       (metadata, while_info)
   end
 
@@ -708,9 +708,9 @@ end = struct
         param : 'M Identifier.t option;
         body : 'M Statement.t list;
       }
-  
+
       type 'M t = 'M * 'M t'
-  
+
       let build (metadata : 'M) (param' : 'M Identifier.t option) (body' : 'M Statement.t list) : 'M t =
         let build_info = {
           param = param';
@@ -759,7 +759,7 @@ end = struct
       let labeled_info = Statement.Labeled {
         label = label';
         body = body'
-      } in 
+      } in
       (metadata, labeled_info)
   end
 
@@ -802,21 +802,21 @@ end = struct
 
   module Debugger = struct
     type t = unit
-    
+
     let build (metadata : 'M) : 'M Statement.t =
       (metadata, Statement.Debugger ())
   end
 
   (* ---------- imports // exports ----------  *)
-  module ExportDefaultDecl = struct 
+  module ExportDefaultDecl = struct
     type 'M t = {
       declaration : 'M Expression.t
     }
 
     let build (metadata : 'M) (declaration' : 'M Expression.t) : 'M Statement.t =
       let export_info = Statement.ExportDefaultDecl {
-        declaration = declaration'; 
-      } in 
+        declaration = declaration';
+      } in
       (metadata, export_info)
   end
 
@@ -828,19 +828,19 @@ end = struct
       source : string option
     }
 
-    let build (metadata : 'M) (local' : 'M Identifier.t option) (exported' : 'M Identifier.t option) (all' : bool) (source' : string option) : 'M Statement.t = 
+    let build (metadata : 'M) (local' : 'M Identifier.t option) (exported' : 'M Identifier.t option) (all' : bool) (source' : string option) : 'M Statement.t =
       let export_info = Statement.ExportNamedDecl {
         local = local';
         exported = exported';
         all = all';
         source = source';
-      } in 
+      } in
       (metadata, export_info)
 
   end
 
   module ImportDecl = struct
-    type 'M t = 
+    type 'M t =
       | Default   of { source : string;
                        identifier : 'M Identifier.t }
 
@@ -853,7 +853,7 @@ end = struct
       let import_info = Statement.ImportDecl.Default {
         source = source';
         identifier = identifier'
-      } in 
+      } in
       (metadata, Statement.ImportDecl import_info)
 
     let build_specifier (metadata : 'M) (source' : string) (local' : 'M Identifier.t option) (remote' : 'M Identifier.t option) (namespace' : bool) : 'M Statement.t =
@@ -862,7 +862,7 @@ end = struct
         local = local';
         remote = remote';
         namespace = namespace'
-      } in 
+      } in
       (metadata, Statement.ImportDecl import_info)
   end
 
@@ -877,7 +877,7 @@ end = struct
       let assign_info = Statement.AssignSimple {
         left = left';
         right = right';
-      } 
+      }
       in
       (metadata, assign_info)
   end
@@ -894,12 +894,12 @@ end = struct
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (operator' : Operator.Binary.t) (opLeft' : 'M Expression.t) (opRght' : 'M Expression.t) : 'M Statement.t =
       let assign_info = Statement.AssignBinary {
-        id = get_id (); 
+        id = get_id ();
         left = left';
         operator = operator';
         opLeft = opLeft';
         opRght = opRght';
-      } in 
+      } in
       (metadata, assign_info)
   end
 
@@ -912,7 +912,7 @@ end = struct
       argument : 'M Expression.t;
     }
 
-    let build (metadata : 'M) (left' : 'M Identifier.t) (operator' : Operator.Unary.t) (argument' : 'M Expression.t) : 'M Statement.t = 
+    let build (metadata : 'M) (left' : 'M Identifier.t) (operator' : Operator.Unary.t) (argument' : 'M Expression.t) : 'M Statement.t =
       let unary_info = Statement.AssignUnary {
         id = get_id ();
         left = left';
@@ -932,7 +932,7 @@ end = struct
       let assign_info = Statement.AssignArray {
         id = get_id ();
         left = left';
-      } 
+      }
       in
       (metadata, assign_info)
   end
@@ -944,7 +944,7 @@ end = struct
       (* -- right -- *)
       argument : 'M Expression.t option;
       delegate : bool
-    } 
+    }
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (argument' : 'M Expression.t option) (delegate': bool) : 'M Statement.t =
       let yield_info = Statement.AssignYield {
@@ -952,7 +952,7 @@ end = struct
         left = left';
         argument = argument';
         delegate = delegate'
-      } in 
+      } in
       (metadata, yield_info)
   end
 
@@ -963,11 +963,11 @@ end = struct
       left : 'M Identifier.t;
     }
 
-    let build (metadata : 'M) (left' : 'M Identifier.t) : 'M Statement.t = 
+    let build (metadata : 'M) (left' : 'M Identifier.t) : 'M Statement.t =
       let assign_info = Statement.AssignObject {
         id = get_id ();
         left = left';
-      } in 
+      } in
       (metadata, assign_info)
   end
 
@@ -988,7 +988,7 @@ end = struct
         left = left';
         callee = callee';
         arguments = arguments';
-      } in 
+      } in
       (metadata, assign_info)
   end
 
@@ -1011,7 +1011,7 @@ end = struct
         property = property';
         is_literal = is_literal';
         right = right';
-      } in 
+      } in
       (metadata, assign_info)
   end
 
@@ -1031,7 +1031,7 @@ end = struct
         _object = _object';
         property = property';
         right = right';
-      } in 
+      } in
       (metadata, assign_info)
   end
 
@@ -1093,7 +1093,7 @@ end = struct
         left = left';
         callee = callee';
         arguments = arguments';
-      } in 
+      } in
       (metadata, assign_info)
   end
 
@@ -1120,7 +1120,7 @@ end = struct
         is_literal = is_literal';
 
         arguments = arguments';
-      } in 
+      } in
       (metadata, assign_info)
   end
 
@@ -1143,7 +1143,7 @@ end = struct
         _object = _object';
         property = property';
         arguments = arguments';
-      } in 
+      } in
       (metadata, assign_info)
   end
 
@@ -1170,7 +1170,7 @@ end = struct
       (* -- right -- *)
       params : 'M Param.t list;
       body : 'M Statement.t list;
-    } 
+    }
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (params' : 'M Param.t list) (body' : 'M Statement.t list) : 'M Statement.t =
       let assign_info = Statement.AssignFunction {
@@ -1178,17 +1178,17 @@ end = struct
         left = left';
         params = params';
         body = body';
-      } in 
+      } in
       (metadata, assign_info)
   end
 
-  type 'M t' = 
+  type 'M t' =
     | If       of 'M If.t
     | Switch   of 'M Switch.t
     | While    of 'M While.t
     | ForIn    of 'M ForIn.t
     | ForOf    of 'M ForOf.t
-    | Try      of 'M Try.t 
+    | Try      of 'M Try.t
     | With     of 'M With.t
     | Labeled  of 'M Labeled.t
     | VarDecl  of 'M VarDecl.t
@@ -1219,14 +1219,14 @@ end = struct
     | AssignMetCallStatic of 'M AssignMetCallStatic.t
     | AssignMetCallDynmic of 'M AssignMetCallDynmic.t
     | AssignFunction      of 'M AssignFunction.t
-  
+
   type 'M t = 'M * 'M t'
 end
 
 and Expression : sig
 
   module Literal : sig
-    type value = 
+    type value =
       | String  of string
       | Number  of float
       | BigInt  of int64 option
@@ -1236,7 +1236,7 @@ and Expression : sig
 
 
     type t = {
-      value : value; 
+      value : value;
       raw : string
     }
 
@@ -1275,10 +1275,10 @@ and Expression : sig
 
   val get_id_opt : 'M Expression.t -> string option
 
-  type 'M t' = 
-    | Literal         of    Literal.t 
+  type 'M t' =
+    | Literal         of    Literal.t
     | TemplateLiteral of 'M TemplateLiteral.t
-    | Identifier      of    Identifier.t' 
+    | Identifier      of    Identifier.t'
     | This            of    This.t
 
 
@@ -1286,7 +1286,7 @@ and Expression : sig
 
 end = struct
   module Literal = struct
-    type value = 
+    type value =
       | String  of string
       | Number  of float
       | BigInt  of int64 option
@@ -1295,7 +1295,7 @@ end = struct
       | Null    of unit
 
     type t = {
-      value : value; 
+      value : value;
       raw : string
     }
 
@@ -1336,7 +1336,7 @@ end = struct
       let literal_info = Expression.TemplateLiteral {
         quasis = quasis';
         expressions = expressions';
-      } in 
+      } in
       (metadata, literal_info)
   end
 
@@ -1346,21 +1346,21 @@ end = struct
     let build (metadata: 'M) : 'M Expression.t =
       (metadata, Expression.This ())
   end
-  
-  let get_id_opt (expr : 'M Expression.t) : string option = 
-    match expr with 
+
+  let get_id_opt (expr : 'M Expression.t) : string option =
+    match expr with
     | _, Identifier {name; _} -> Some name
     | _, This _ -> Some "this"
     | _ -> None
 
-  type 'M t' = 
-    | Literal         of    Literal.t 
+  type 'M t' =
+    | Literal         of    Literal.t
     | TemplateLiteral of 'M TemplateLiteral.t
-    | Identifier      of    Identifier.t' 
+    | Identifier      of    Identifier.t'
     | This            of    This.t
 
   type 'M t = 'M * 'M t'
-     
+
 end
 
 and Program : sig
@@ -1389,25 +1389,25 @@ end = struct
   let build_function_info (body : 'M Statement.t list) : Functions.Info.t =
     let rec traverse_body found_funcs parent_id body : unit =
       List.iter (search_functions found_funcs parent_id) body
-    
+
     and search_functions found_funcs parent_id statement : unit =
       match statement with
-        | _, Statement.AssignFunction {id; left; params; body; _} -> 
+        | _, Statement.AssignFunction {id; left; params; body; _} ->
           (* add function information *)
           let func_id = Functions.Id.create id (Identifier.get_name left) in
           let params' = List.map (fun (_, {Statement.AssignFunction.Param.argument; _}) -> Identifier.get_name argument) params in
-          
 
-          Functions.Info.add found_funcs func_id parent_id params'; 
-          traverse_body found_funcs (Some func_id) body;         
-          
+
+          Functions.Info.add found_funcs func_id parent_id params';
+          traverse_body found_funcs (Some func_id) body;
+
         (* --------- traverse ast --------- *)
-        | _, Statement.If {consequent; alternate; _} -> 
+        | _, Statement.If {consequent; alternate; _} ->
           traverse_body found_funcs parent_id consequent;
           option_may (traverse_body found_funcs parent_id) alternate;
 
-        | _, Statement.Switch {cases; _} -> 
-          List.iter (fun (_, {Statement.Switch.Case.consequent; _}) -> 
+        | _, Statement.Switch {cases; _} ->
+          List.iter (fun (_, {Statement.Switch.Case.consequent; _}) ->
             traverse_body found_funcs parent_id consequent;
           ) cases
 
@@ -1416,30 +1416,30 @@ end = struct
         | _, Statement.ForOf   {body; _} -> traverse_body found_funcs parent_id body
         | _, Statement.With    {body;_ } -> traverse_body found_funcs parent_id body
         | _, Statement.Labeled {body; _} -> traverse_body found_funcs parent_id body
-        
-        | _, Statement.Try {body; handler; finalizer} -> 
+
+        | _, Statement.Try {body; handler; finalizer} ->
           traverse_body found_funcs parent_id body;
           option_may (fun (_, {Statement.Try.Catch.body; _}) -> traverse_body found_funcs parent_id body) handler;
           option_may (traverse_body found_funcs parent_id) finalizer;
 
         (* ------- ignore all other statements ------- *)
         | _ -> ()
-      
+
     in
 
-    let info = Functions.Info.create 20 in 
+    let info = Functions.Info.create 20 in
     traverse_body info None body;
     info
 
     let get_functions ((_, program) : 'M t) : Functions.Info.t = program.functions
     let get_body ((_, program) : 'M t) : 'M Statement.t list = program.body
 
-  let set_main ((loc, prog) : 'M * 'M t') : 'M t = 
+  let set_main ((loc, prog) : 'M * 'M t') : 'M t =
     (loc, {prog with is_main = true})
 
   let is_main ((_, program) : 'M t) : bool = program.is_main
 
-  let build (metadata : 'M) (stmts : 'M Statement.t list) : 'M t = 
-    (metadata, { body = stmts; functions = build_function_info stmts; is_main = false});; 
+  let build (metadata : 'M) (stmts : 'M Statement.t list) : 'M t =
+    (metadata, { body = stmts; functions = build_function_info stmts; is_main = false});;
 
 end

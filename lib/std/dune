@@ -1,2 +1,7 @@
 (library
- (name graphjs_std))
+ (name graphjs_std)
+ (libraries bos dune-site fpath unix))
+
+(generate_sites_module
+ (module site)
+ (sites graphjs2))

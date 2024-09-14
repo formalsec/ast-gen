@@ -1,6 +1,5 @@
-open Setup
 open Structures
-open Auxiliary.Structures
+open Graphjs_std.Structures
 
 type buildExportsObject = {
     (* module.exports *)
@@ -17,12 +16,12 @@ type buildExportsObject = {
 
 type collectExternalCalls = ExternalReferences.t
 type generateMDG = State.t
-type sinkAliases = Config.t
+type sinkAliases = Graphjs_parse.Config.t
 
 type t =
   | BuildExportsObject   of buildExportsObject
-  | CollectExternalCalls of collectExternalCalls 
+  | CollectExternalCalls of collectExternalCalls
   | GenerateMDG of generateMDG
   | SinkAliases of sinkAliases
   | Combined of t * t
-  | None 
+  | None

@@ -2,5 +2,4 @@
 
 (library
  (name ast)
- (libraries flow_parser auxiliary))
-
+ (libraries flow_parser graphjs_std))

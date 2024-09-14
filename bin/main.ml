@@ -1,12 +1,11 @@
 open Cmdliner
-open Setup
 module Graph = Mdg.Graph'
 module ExportedObject = Mdg.ExportedObject
 module ExternalReferences = Mdg.ExternalReferences
 module LocationSet = Mdg.Structures.LocationSet
-module Mode = Auxiliary.Mode
+module Mode = Graphjs_parse.Analysis_mode
 module Program = Ast.Grammar.Program
-open Auxiliary.Functions
+open Graphjs_std.Functions
 
 (* Monadic let binding for result *)
 let ( let* ) = Result.bind
@@ -27,7 +26,7 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
   (* DANGEROUS: We create "run" but don't pass it to any function?
      Is there any global behaviour that will write to "run"? *)
   let* code_dir, graph_dir, _ = setup_output output_path in
-  let* dep_tree = DependencyTree.generate file_name mode in
+  let* dep_tree = Graphjs_parse.Dependency_tree.generate file_name mode in
 
   (* process dependencies first with the aid of the depedency tree *)
   let summaries = Summaries.empty () in
@@ -38,7 +37,7 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
       let file_name = Fpath.base @@ Fpath.v file_path in
 
       (* STEP 0 : Generate AST using Flow library *)
-      let ast = Js_parser.from_file file_path in
+      let ast = Graphjs_parse.Js_parser.from_file file_path in
 
       (* STEP 1 : Normalize AST *)
       let norm_program = Ast.Normalize.program ast file_path in
@@ -47,7 +46,7 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
         else norm_program
       in
       let js_program = Ast.Pp.Js.print norm_program in
-      File_system.write_to_file
+      Graphjs_std.File_system.write_to_file
         Fpath.(to_string @@ (code_dir // file_name))
         js_program;
 
@@ -71,27 +70,27 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
                 let func_loc =
                   ExportedObject.get_value_location moduleEO info.properties
                 in
-                (if not (Graph.has_external_function graph func_loc) then
-                   let func_graph = Graph.get_function moduleGraph func_loc in
-                   Graph.add_external_func graph func_graph l_call func_loc);
+                ( if not (Graph.has_external_function graph func_loc) then
+                    let func_graph = Graph.get_function moduleGraph func_loc in
+                    Graph.add_external_func graph func_graph l_call func_loc );
 
-                Graph.add_call_edge graph l_call func_loc)
-              moduleEO)
+                Graph.add_call_edge graph l_call func_loc )
+              moduleEO )
           external_calls;
         (* save current module info*)
         let alter_name = String.sub file_path 0 (String.length file_path - 3) in
         ModuleGraphs.add module_graphs file_path graph;
         ModuleGraphs.add module_graphs alter_name graph;
         Summaries.add summaries file_path exportedObject;
-        Summaries.add summaries alter_name exportedObject))
-    (DependencyTree.bottom_up_visit dep_tree);
+        Summaries.add summaries alter_name exportedObject ) )
+    (Graphjs_parse.Dependency_tree.bottom_up_visit dep_tree);
 
   (* output *)
   if generate_mdg then (
-    let main = DependencyTree.get_main dep_tree in
+    let main = Graphjs_parse.Dependency_tree.get_main dep_tree in
     let graph = ModuleGraphs.get module_graphs main in
     if not no_dot then Mdg.Pp.Dot.output (Fpath.to_string graph_dir) graph;
-    Mdg.Pp.CSV.output (Fpath.to_string graph_dir) graph);
+    Mdg.Pp.CSV.output (Fpath.to_string graph_dir) graph );
   Ok 0
 
 (* setup comand line interface using CMDLiner library*)
@@ -106,10 +105,9 @@ let input_file : string Term.t =
 let mode : Mode.t Term.t =
   let mode_enum =
     Arg.enum
-      [
-        ("basic", Mode.Basic);
-        ("single_file", Mode.Single_file);
-        ("multi_file", Mode.Multi_file);
+      [ ("basic", Mode.Basic)
+      ; ("single_file", Mode.Single_file)
+      ; ("multi_file", Mode.Multi_file)
       ]
   in
   let doc =
@@ -139,7 +137,7 @@ let output_path : Fpath.t Term.t =
 
 let config_path : string Term.t =
   let doc = "Path to configuration file." in
-  let default_path = Fpath.to_string @@ Auxiliary.Share.Config.default () in
+  let default_path = Fpath.to_string @@ Graphjs_std.Share.Config.default () in
   Arg.(value & opt non_dir_file default_path & info [ "c"; "config" ] ~doc)
 
 let verbose : bool Term.t =
@@ -150,7 +148,7 @@ let cli =
   let cmd =
     Term.(
       const main $ input_file $ output_path $ config_path $ mode $ mdg $ no_dot
-      $ verbose)
+      $ verbose )
   in
   let info = Cmd.info "graphjs2" in
   Cmd.v info cmd
@@ -159,6 +157,6 @@ let () =
   match Cmd.eval_value' cli with
   | `Exit code -> exit code
   | `Ok return -> (
-      match return with
-      | Error (`Msg err) -> Fmt.failwith "%s" err
-      | Ok code -> exit code)
+    match return with
+    | Error (`Msg err) -> Fmt.failwith "%s" err
+    | Ok code -> exit code )
