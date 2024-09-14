@@ -1,6 +1,6 @@
 (lang dune 3.12)
 
-(cram enable)
+(using dune_site 0.1)
 
 (name ast_gen)
 
@@ -22,14 +22,18 @@
  (synopsis "A short synopsis")
  (description "A longer description")
  (depends
-  ocaml
-  dune
-  (flow_parser (>= "0.229.1"))
+  bos
+  conf-npm
   cmdliner
-  yojson
+  dune
+  dune-site
+  (flow_parser
+   (>= "0.229.1"))
+  ocaml
   ocamlgraph
-  ppx_import)
+  ppx_import
+  yojson)
+ (sites
+  (share config))
  (tags
   (topics "to describe" your project)))
-
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
