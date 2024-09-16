@@ -1,4 +1,4 @@
-(94/2551) [NOK] language/statements/with/12.10-0-7.js	 norm [pass]	semantics [fail]
+(94/2561) [NOK] language/statements/with/12.10-0-7.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -7,7 +7,7 @@
 	
 	Node.js v21.6.2
 	
-(247/2551) [NOK] language/statements/async-function/syntax-declaration-no-line-terminator.js	 norm [pass]	semantics [fail]
+(247/2561) [NOK] language/statements/async-function/syntax-declaration-no-line-terminator.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -18,15 +18,15 @@
 	
 	Node.js v21.6.2
 	
-(257/2551) [NOK] language/statements/if/if-stmt-else-fun-strict.js	 norm [pass]	semantics [pass]
-(258/2551) [NOK] language/statements/if/if-fun-no-else-strict.js	 norm [pass]	semantics [pass]
-(259/2551) [NOK] language/statements/if/if-stmt-else-decl-strict.js	 norm [pass]	semantics [pass]
-(261/2551) [NOK] language/statements/if/if-fun-else-fun-strict.js	 norm [pass]	semantics [pass]
-(264/2551) [NOK] language/statements/if/if-decl-else-stmt-strict.js	 norm [pass]	semantics [pass]
-(274/2551) [NOK] language/statements/if/if-fun-else-stmt-strict.js	 norm [pass]	semantics [pass]
-(279/2551) [NOK] language/statements/if/if-decl-no-else-strict.js	 norm [pass]	semantics [pass]
-(280/2551) [NOK] language/statements/if/if-decl-else-decl-strict.js	 norm [pass]	semantics [pass]
-(297/2551) [NOK] language/statements/function/S13.2.1_A6_T3.js	 norm [pass]	semantics [fail]
+(257/2561) [NOK] language/statements/if/if-stmt-else-fun-strict.js	 norm [pass]	semantics [pass]
+(258/2561) [NOK] language/statements/if/if-fun-no-else-strict.js	 norm [pass]	semantics [pass]
+(259/2561) [NOK] language/statements/if/if-stmt-else-decl-strict.js	 norm [pass]	semantics [pass]
+(261/2561) [NOK] language/statements/if/if-fun-else-fun-strict.js	 norm [pass]	semantics [pass]
+(264/2561) [NOK] language/statements/if/if-decl-else-stmt-strict.js	 norm [pass]	semantics [pass]
+(274/2561) [NOK] language/statements/if/if-fun-else-stmt-strict.js	 norm [pass]	semantics [pass]
+(279/2561) [NOK] language/statements/if/if-decl-no-else-strict.js	 norm [pass]	semantics [pass]
+(280/2561) [NOK] language/statements/if/if-decl-else-decl-strict.js	 norm [pass]	semantics [pass]
+(297/2561) [NOK] language/statements/function/S13.2.1_A6_T3.js	 norm [pass]	semantics [fail]
 	[eval]:391
 	let __func;
 	    ^
@@ -41,7 +41,7 @@
 	
 	Node.js v21.6.2
 	
-(318/2551) [NOK] language/statements/function/S14_A2.js	 norm [pass]	semantics [fail]
+(318/2561) [NOK] language/statements/function/S14_A2.js	 norm [pass]	semantics [fail]
 	[eval]:389
 	v1 = typeof f;
 	^
@@ -57,7 +57,7 @@
 	
 	Node.js v21.6.2
 	
-(329/2551) [NOK] language/statements/function/S14_A3.js	 norm [pass]	semantics [fail]
+(329/2561) [NOK] language/statements/function/S14_A3.js	 norm [pass]	semantics [fail]
 	[eval]:389
 	v1 = typeof __func;
 	^
@@ -73,7 +73,7 @@
 	
 	Node.js v21.6.2
 	
-(336/2551) [NOK] language/statements/function/S13_A18.js	 norm [pass]	semantics [fail]
+(336/2561) [NOK] language/statements/function/S13_A18.js	 norm [pass]	semantics [fail]
 	[eval]:389
 	v1 = typeof sinx;
 	^
@@ -89,7 +89,7 @@
 	
 	Node.js v21.6.2
 	
-(342/2551) [NOK] language/statements/function/S13.2.2_A16_T1.js	 norm [pass]	semantics [fail]
+(342/2561) [NOK] language/statements/function/S13.2.2_A16_T1.js	 norm [pass]	semantics [fail]
 	[eval]:389
 	v1 = typeof __func;
 	^
@@ -105,7 +105,7 @@
 	
 	Node.js v21.6.2
 	
-(357/2551) [NOK] language/statements/function/S13_A19_T1.js	 norm [pass]	semantics [fail]
+(357/2561) [NOK] language/statements/function/S13_A19_T1.js	 norm [pass]	semantics [fail]
 	[eval]:410
 	let __decl;
 	    ^
@@ -120,7 +120,7 @@
 	
 	Node.js v21.6.2
 	
-(369/2551) [NOK] language/statements/function/S13_A6_T1.js	 norm [pass]	semantics [fail]
+(369/2561) [NOK] language/statements/function/S13_A6_T1.js	 norm [pass]	semantics [fail]
 	[eval]:396
 	let __func;
 	    ^
@@ -135,7 +135,7 @@
 	
 	Node.js v21.6.2
 	
-(395/2551) [NOK] language/statements/function/S13_A2_T1.js	 norm [pass]	semantics [fail]
+(395/2561) [NOK] language/statements/function/S13_A2_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -146,7 +146,7 @@
 	
 	Node.js v21.6.2
 	
-(406/2551) [NOK] language/statements/function/S13.2.2_A15_T1.js	 norm [pass]	semantics [fail]
+(406/2561) [NOK] language/statements/function/S13.2.2_A15_T1.js	 norm [pass]	semantics [fail]
 	[eval]:389
 	__obj = new __FACTORY();
 	^
@@ -162,7 +162,7 @@
 	
 	Node.js v21.6.2
 	
-(409/2551) [NOK] language/statements/function/S14_A5_T1.js	 norm [pass]	semantics [fail]
+(409/2561) [NOK] language/statements/function/S14_A5_T1.js	 norm [pass]	semantics [fail]
 	[eval]:404
 	let __func;
 	    ^
@@ -177,7 +177,7 @@
 	
 	Node.js v21.6.2
 	
-(416/2551) [NOK] language/statements/function/S13.2.2_A8_T1.js	 norm [pass]	semantics [fail]
+(416/2561) [NOK] language/statements/function/S13.2.2_A8_T1.js	 norm [pass]	semantics [fail]
 	[eval]:395
 	   __gunc.prop = arg2;
 	   ^
@@ -194,7 +194,7 @@
 	
 	Node.js v21.6.2
 	
-(428/2551) [NOK] language/statements/function/S13_A2_T2.js	 norm [pass]	semantics [fail]
+(428/2561) [NOK] language/statements/function/S13_A2_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -205,7 +205,7 @@
 	
 	Node.js v21.6.2
 	
-(430/2551) [NOK] language/statements/function/S13_A1.js	 norm [pass]	semantics [fail]
+(430/2561) [NOK] language/statements/function/S13_A1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -216,7 +216,7 @@
 	
 	Node.js v21.6.2
 	
-(437/2551) [NOK] language/statements/function/S13.2.2_A15_T2.js	 norm [pass]	semantics [fail]
+(437/2561) [NOK] language/statements/function/S13.2.2_A15_T2.js	 norm [pass]	semantics [fail]
 	[eval]:390
 	__obj = new __FACTORY();
 	^
@@ -232,7 +232,7 @@
 	
 	Node.js v21.6.2
 	
-(438/2551) [NOK] language/statements/function/S14_A5_T2.js	 norm [pass]	semantics [fail]
+(438/2561) [NOK] language/statements/function/S14_A5_T2.js	 norm [pass]	semantics [fail]
 	[eval]:404
 	let __func;
 	    ^
@@ -247,7 +247,7 @@
 	
 	Node.js v21.6.2
 	
-(451/2551) [NOK] language/statements/function/S13_A19_T2.js	 norm [pass]	semantics [fail]
+(451/2561) [NOK] language/statements/function/S13_A19_T2.js	 norm [pass]	semantics [fail]
 	[eval]:412
 	   let __decl;
 	       ^
@@ -262,7 +262,7 @@
 	
 	Node.js v21.6.2
 	
-(468/2551) [NOK] language/statements/function/S13_A6_T2.js	 norm [pass]	semantics [fail]
+(468/2561) [NOK] language/statements/function/S13_A6_T2.js	 norm [pass]	semantics [fail]
 	[eval]:416
 	let __func;
 	    ^
@@ -277,7 +277,7 @@
 	
 	Node.js v21.6.2
 	
-(472/2551) [NOK] language/statements/function/S13_A2_T3.js	 norm [pass]	semantics [fail]
+(472/2561) [NOK] language/statements/function/S13_A2_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -288,7 +288,7 @@
 	
 	Node.js v21.6.2
 	
-(496/2551) [NOK] language/statements/function/S13.2.2_A16_T2.js	 norm [pass]	semantics [fail]
+(496/2561) [NOK] language/statements/function/S13.2.2_A16_T2.js	 norm [pass]	semantics [fail]
 	[eval]:389
 	v1 = typeof __func;
 	^
@@ -304,7 +304,7 @@
 	
 	Node.js v21.6.2
 	
-(508/2551) [NOK] language/statements/function/S13.2.2_A16_T3.js	 norm [pass]	semantics [fail]
+(508/2561) [NOK] language/statements/function/S13.2.2_A16_T3.js	 norm [pass]	semantics [fail]
 	[eval]:389
 	v1 = typeof __func;
 	^
@@ -320,7 +320,7 @@
 	
 	Node.js v21.6.2
 	
-(516/2551) [NOK] language/statements/function/S13.2.2_A12.js	 norm [pass]	semantics [fail]
+(516/2561) [NOK] language/statements/function/S13.2.2_A12.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -331,8 +331,8 @@
 	
 	Node.js v21.6.2
 	
-(533/2551) [NOK] language/statements/labeled/decl-fun-strict.js	 norm [pass]	semantics [pass]
-(562/2551) [NOK] language/statements/do-while/S12.6.1_A9.js	 norm [pass]	semantics [fail]
+(533/2561) [NOK] language/statements/labeled/decl-fun-strict.js	 norm [pass]	semantics [pass]
+(562/2561) [NOK] language/statements/do-while/S12.6.1_A9.js	 norm [pass]	semantics [fail]
 	[eval]:402
 	      throw e;
 	      ^
@@ -343,9 +343,9 @@
 	
 	Node.js v21.6.2
 	
-(575/2551) [NOK] language/statements/for/S12.6.3_A11.1_T1.js	 norm [pass]	semantics [tout]
-(601/2551) [NOK] language/statements/for/S12.6.3_A11_T1.js	 norm [pass]	semantics [tout]
-(605/2551) [NOK] language/statements/for/S12.6.3_A11_T2.js	 norm [pass]	semantics [fail]
+(575/2561) [NOK] language/statements/for/S12.6.3_A11.1_T1.js	 norm [pass]	semantics [tout]
+(601/2561) [NOK] language/statements/for/S12.6.3_A11_T1.js	 norm [pass]	semantics [tout]
+(605/2561) [NOK] language/statements/for/S12.6.3_A11_T2.js	 norm [pass]	semantics [fail]
 	[eval]:407
 	               continue nested;
 	                        ^^^^^^
@@ -360,7 +360,7 @@
 	
 	Node.js v21.6.2
 	
-(630/2551) [NOK] language/statements/for/S12.6.3_A11.1_T2.js	 norm [pass]	semantics [fail]
+(630/2561) [NOK] language/statements/for/S12.6.3_A11.1_T2.js	 norm [pass]	semantics [fail]
 	[eval]:407
 	               continue nested;
 	                        ^^^^^^
@@ -375,12 +375,12 @@
 	
 	Node.js v21.6.2
 	
-(647/2551) [NOK] language/statements/switch/scope-lex-let.js	 norm [pass]	semantics [pass]
-(663/2551) [NOK] language/statements/try/S12.14_A9_T4.js	 norm [pass]	semantics [tout]
-(666/2551) [NOK] language/statements/try/S12.14_A11_T2.js	 norm [pass]	semantics [tout]
-(669/2551) [NOK] language/statements/try/S12.14_A9_T5.js	 norm [pass]	semantics [tout]
-(684/2551) [NOK] language/statements/try/S12.14_A10_T2.js	 norm [pass]	semantics [tout]
-(685/2551) [NOK] language/statements/try/S12.14_A6.js	 norm [pass]	semantics [fail]
+(647/2561) [NOK] language/statements/switch/scope-lex-let.js	 norm [pass]	semantics [pass]
+(663/2561) [NOK] language/statements/try/S12.14_A9_T4.js	 norm [pass]	semantics [tout]
+(666/2561) [NOK] language/statements/try/S12.14_A11_T2.js	 norm [pass]	semantics [tout]
+(669/2561) [NOK] language/statements/try/S12.14_A9_T5.js	 norm [pass]	semantics [tout]
+(684/2561) [NOK] language/statements/try/S12.14_A10_T2.js	 norm [pass]	semantics [tout]
+(685/2561) [NOK] language/statements/try/S12.14_A6.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -391,8 +391,8 @@
 	
 	Node.js v21.6.2
 	
-(702/2551) [NOK] language/statements/try/S12.14_A10_T4.js	 norm [pass]	semantics [tout]
-(715/2551) [NOK] language/statements/try/12.14-7.js	 norm [pass]	semantics [fail]
+(702/2561) [NOK] language/statements/try/S12.14_A10_T4.js	 norm [pass]	semantics [tout]
+(715/2561) [NOK] language/statements/try/12.14-7.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -401,10 +401,10 @@
 	
 	Node.js v21.6.2
 	
-(718/2551) [NOK] language/statements/try/S12.14_A10_T5.js	 norm [pass]	semantics [tout]
-(723/2551) [NOK] language/statements/try/S12.14_A9_T2.js	 norm [pass]	semantics [tout]
-(730/2551) [NOK] language/statements/try/S12.14_A11_T4.js	 norm [pass]	semantics [tout]
-(765/2551) [NOK] language/statements/for-in/S12.6.4_A7_T2.js	 norm [pass]	semantics [fail]
+(718/2561) [NOK] language/statements/try/S12.14_A10_T5.js	 norm [pass]	semantics [tout]
+(723/2561) [NOK] language/statements/try/S12.14_A9_T2.js	 norm [pass]	semantics [tout]
+(730/2561) [NOK] language/statements/try/S12.14_A11_T4.js	 norm [pass]	semantics [tout]
+(765/2561) [NOK] language/statements/for-in/S12.6.4_A7_T2.js	 norm [pass]	semantics [fail]
 	[eval]:398
 	   v2 = erasator_T_1000(__obj, "b");
 	   ^
@@ -420,7 +420,7 @@
 	
 	Node.js v21.6.2
 	
-(796/2551) [NOK] language/statements/for-in/S12.6.4_A7_T1.js	 norm [pass]	semantics [fail]
+(796/2561) [NOK] language/statements/for-in/S12.6.4_A7_T1.js	 norm [pass]	semantics [fail]
 	[eval]:399
 	   v2 = erasator_T_1000(__obj, "b");
 	   ^
@@ -436,8 +436,8 @@
 	
 	Node.js v21.6.2
 	
-(799/2551) [NOK] language/statements/continue/line-terminators.js	 norm [pass]	semantics [tout]
-(808/2551) [NOK] language/statements/continue/S12.7_A9_T1.js	 norm [pass]	semantics [fail]
+(799/2561) [NOK] language/statements/continue/line-terminators.js	 norm [pass]	semantics [tout]
+(808/2561) [NOK] language/statements/continue/S12.7_A9_T1.js	 norm [pass]	semantics [fail]
 	[eval]:407
 	            continue FOR;
 	                     ^^^
@@ -452,8 +452,8 @@
 	
 	Node.js v21.6.2
 	
-(813/2551) [NOK] language/statements/continue/12.7-1.js	 norm [pass]	semantics [tout]
-(822/2551) [NOK] language/statements/while/S12.6.2_A10.js	 norm [pass]	semantics [fail]
+(813/2561) [NOK] language/statements/continue/12.7-1.js	 norm [pass]	semantics [tout]
+(822/2561) [NOK] language/statements/while/S12.6.2_A10.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -464,7 +464,7 @@
 	
 	Node.js v21.6.2
 	
-(833/2551) [NOK] language/statements/while/S12.6.2_A9.js	 norm [pass]	semantics [fail]
+(833/2561) [NOK] language/statements/while/S12.6.2_A9.js	 norm [pass]	semantics [fail]
 	[eval]:402
 	      throw e;
 	      ^
@@ -475,7 +475,7 @@
 	
 	Node.js v21.6.2
 	
-(909/2551) [NOK] language/expressions/dynamic-import/catch/script-code_FIXTURE.js	 norm [pass]	semantics [fail]
+(909/2561) [NOK] language/expressions/dynamic-import/catch/script-code_FIXTURE.js	 norm [pass]	semantics [fail]
 	[eval]:389
 	let smoosh;
 	    ^
@@ -490,7 +490,7 @@
 	
 	Node.js v21.6.2
 	
-(965/2551) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T3.js	 norm [pass]	semantics [fail]
+(965/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -499,7 +499,7 @@
 	
 	Node.js v21.6.2
 	
-(971/2551) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T2.js	 norm [pass]	semantics [fail]
+(971/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -508,7 +508,7 @@
 	
 	Node.js v21.6.2
 	
-(972/2551) [NOK] language/expressions/postfix-increment/11.3.1-2-3-s.js	 norm [pass]	semantics [fail]
+(972/2561) [NOK] language/expressions/postfix-increment/11.3.1-2-3-s.js	 norm [pass]	semantics [fail]
 	[eval]:16
 	    throw new Test262Error(message);
 	    ^
@@ -519,7 +519,7 @@
 	
 	Node.js v21.6.2
 	
-(975/2551) [NOK] language/expressions/postfix-increment/11.3.1-2-3.js	 norm [pass]	semantics [fail]
+(975/2561) [NOK] language/expressions/postfix-increment/11.3.1-2-3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -530,7 +530,7 @@
 	
 	Node.js v21.6.2
 	
-(994/2551) [NOK] language/expressions/postfix-increment/S11.3.1_A2.1_T1.js	 norm [pass]	semantics [fail]
+(994/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A2.1_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -541,7 +541,7 @@
 	
 	Node.js v21.6.2
 	
-(996/2551) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T5.js	 norm [pass]	semantics [fail]
+(996/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T5.js	 norm [pass]	semantics [fail]
 	[eval]:405
 	   x = v6 + 1;
 	     ^
@@ -558,7 +558,7 @@
 	
 	Node.js v21.6.2
 	
-(997/2551) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T1.js	 norm [pass]	semantics [fail]
+(997/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -567,7 +567,7 @@
 	
 	Node.js v21.6.2
 	
-(1141/2551) [NOK] language/expressions/delete/11.4.1-2-2.js	 norm [pass]	semantics [fail]
+(1141/2561) [NOK] language/expressions/delete/11.4.1-2-2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -578,7 +578,7 @@
 	
 	Node.js v21.6.2
 	
-(1158/2551) [NOK] language/expressions/delete/11.4.1-0-1.js	 norm [pass]	semantics [fail]
+(1158/2561) [NOK] language/expressions/delete/11.4.1-0-1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -587,7 +587,7 @@
 	
 	Node.js v21.6.2
 	
-(1169/2551) [NOK] language/expressions/delete/non-reference-return-true.js	 norm [pass]	semantics [fail]
+(1169/2561) [NOK] language/expressions/delete/non-reference-return-true.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -598,7 +598,7 @@
 	
 	Node.js v21.6.2
 	
-(1179/2551) [NOK] language/expressions/delete/S11.4.1_A2.1.js	 norm [pass]	semantics [fail]
+(1179/2561) [NOK] language/expressions/delete/S11.4.1_A2.1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -607,7 +607,7 @@
 	
 	Node.js v21.6.2
 	
-(1189/2551) [NOK] language/expressions/delete/S11.4.1_A3.3_T1.js	 norm [pass]	semantics [fail]
+(1189/2561) [NOK] language/expressions/delete/S11.4.1_A3.3_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -616,7 +616,7 @@
 	
 	Node.js v21.6.2
 	
-(1214/2551) [NOK] language/expressions/delete/11.4.1-2-5.js	 norm [pass]	semantics [fail]
+(1214/2561) [NOK] language/expressions/delete/11.4.1-2-5.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -627,7 +627,7 @@
 	
 	Node.js v21.6.2
 	
-(1236/2551) [NOK] language/expressions/postfix-decrement/S11.3.2_A2.1_T1.js	 norm [pass]	semantics [fail]
+(1236/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A2.1_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -638,7 +638,7 @@
 	
 	Node.js v21.6.2
 	
-(1239/2551) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T1.js	 norm [pass]	semantics [fail]
+(1239/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -647,7 +647,7 @@
 	
 	Node.js v21.6.2
 	
-(1242/2551) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T5.js	 norm [pass]	semantics [fail]
+(1242/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T5.js	 norm [pass]	semantics [fail]
 	[eval]:405
 	   x = v6 - 1;
 	     ^
@@ -664,7 +664,7 @@
 	
 	Node.js v21.6.2
 	
-(1243/2551) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T2.js	 norm [pass]	semantics [fail]
+(1243/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -673,7 +673,7 @@
 	
 	Node.js v21.6.2
 	
-(1249/2551) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T3.js	 norm [pass]	semantics [fail]
+(1249/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -682,7 +682,7 @@
 	
 	Node.js v21.6.2
 	
-(1259/2551) [NOK] language/expressions/postfix-decrement/11.3.2-2-3-s.js	 norm [pass]	semantics [fail]
+(1259/2561) [NOK] language/expressions/postfix-decrement/11.3.2-2-3-s.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -693,7 +693,7 @@
 	
 	Node.js v21.6.2
 	
-(1330/2551) [NOK] language/expressions/array/11.1.4-0.js	 norm [pass]	semantics [fail]
+(1330/2561) [NOK] language/expressions/array/11.1.4-0.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -704,7 +704,7 @@
 	
 	Node.js v21.6.2
 	
-(1333/2551) [NOK] language/expressions/array/S11.1.4_A1.6.js	 norm [pass]	semantics [fail]
+(1333/2561) [NOK] language/expressions/array/S11.1.4_A1.6.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -715,7 +715,7 @@
 	
 	Node.js v21.6.2
 	
-(1334/2551) [NOK] language/expressions/array/S11.1.4_A1.2.js	 norm [pass]	semantics [fail]
+(1334/2561) [NOK] language/expressions/array/S11.1.4_A1.2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -726,7 +726,7 @@
 	
 	Node.js v21.6.2
 	
-(1335/2551) [NOK] language/expressions/array/S11.1.4_A1.5.js	 norm [pass]	semantics [fail]
+(1335/2561) [NOK] language/expressions/array/S11.1.4_A1.5.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -737,7 +737,7 @@
 	
 	Node.js v21.6.2
 	
-(1337/2551) [NOK] language/expressions/array/11.1.4_5-6-1.js	 norm [pass]	semantics [fail]
+(1337/2561) [NOK] language/expressions/array/11.1.4_5-6-1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -746,13 +746,13 @@
 	
 	Node.js v21.6.2
 	
-(1340/2551) [NOK] language/expressions/array/11.1.4_4-5-1.js	 norm [pass]	semantics [fail]
+(1340/2561) [NOK] language/expressions/array/11.1.4_4-5-1.js	 norm [pass]	semantics [fail]
 	Test262Error: arr.hasOwnProperty("0") !== true
 	(Use `node --trace-uncaught ...` to show where the exception was thrown)
 	
 	Node.js v21.6.2
 	
-(1352/2551) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T5.js	 norm [pass]	semantics [fail]
+(1352/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T5.js	 norm [pass]	semantics [fail]
 	[eval]:405
 	   x = v6 + 1;
 	     ^
@@ -769,7 +769,7 @@
 	
 	Node.js v21.6.2
 	
-(1354/2551) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T1.js	 norm [pass]	semantics [fail]
+(1354/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -778,7 +778,7 @@
 	
 	Node.js v21.6.2
 	
-(1355/2551) [NOK] language/expressions/prefix-increment/S11.4.4_A2.1_T1.js	 norm [pass]	semantics [fail]
+(1355/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A2.1_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -789,7 +789,7 @@
 	
 	Node.js v21.6.2
 	
-(1358/2551) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T2.js	 norm [pass]	semantics [fail]
+(1358/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -798,7 +798,7 @@
 	
 	Node.js v21.6.2
 	
-(1360/2551) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T3.js	 norm [pass]	semantics [fail]
+(1360/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -807,7 +807,7 @@
 	
 	Node.js v21.6.2
 	
-(1370/2551) [NOK] language/expressions/prefix-increment/11.4.4-2-3-s.js	 norm [pass]	semantics [fail]
+(1370/2561) [NOK] language/expressions/prefix-increment/11.4.4-2-3-s.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -818,7 +818,7 @@
 	
 	Node.js v21.6.2
 	
-(1431/2551) [NOK] language/expressions/prefix-decrement/S11.4.5_A2.1_T1.js	 norm [pass]	semantics [fail]
+(1431/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A2.1_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -829,7 +829,7 @@
 	
 	Node.js v21.6.2
 	
-(1438/2551) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T5.js	 norm [pass]	semantics [fail]
+(1438/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T5.js	 norm [pass]	semantics [fail]
 	[eval]:405
 	   x = v6 - 1;
 	     ^
@@ -846,7 +846,7 @@
 	
 	Node.js v21.6.2
 	
-(1441/2551) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T1.js	 norm [pass]	semantics [fail]
+(1441/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -855,7 +855,7 @@
 	
 	Node.js v21.6.2
 	
-(1445/2551) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T2.js	 norm [pass]	semantics [fail]
+(1445/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -864,7 +864,7 @@
 	
 	Node.js v21.6.2
 	
-(1447/2551) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T3.js	 norm [pass]	semantics [fail]
+(1447/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -873,7 +873,7 @@
 	
 	Node.js v21.6.2
 	
-(1456/2551) [NOK] language/expressions/prefix-decrement/11.4.5-2-3-s.js	 norm [pass]	semantics [fail]
+(1456/2561) [NOK] language/expressions/prefix-decrement/11.4.5-2-3-s.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -884,7 +884,7 @@
 	
 	Node.js v21.6.2
 	
-(1459/2551) [NOK] language/expressions/assignment/11.13.1-1-4.js	 norm [pass]	semantics [fail]
+(1459/2561) [NOK] language/expressions/assignment/11.13.1-1-4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -895,7 +895,7 @@
 	
 	Node.js v21.6.2
 	
-(1460/2551) [NOK] language/expressions/assignment/S11.13.1_A6_T3.js	 norm [pass]	semantics [fail]
+(1460/2561) [NOK] language/expressions/assignment/S11.13.1_A6_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -904,7 +904,7 @@
 	
 	Node.js v21.6.2
 	
-(1462/2551) [NOK] language/expressions/assignment/S11.13.1_A6_T2.js	 norm [pass]	semantics [fail]
+(1462/2561) [NOK] language/expressions/assignment/S11.13.1_A6_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -913,7 +913,7 @@
 	
 	Node.js v21.6.2
 	
-(1467/2551) [NOK] language/expressions/assignment/11.13.1-1-1.js	 norm [pass]	semantics [fail]
+(1467/2561) [NOK] language/expressions/assignment/11.13.1-1-1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -924,7 +924,7 @@
 	
 	Node.js v21.6.2
 	
-(1472/2551) [NOK] language/expressions/assignment/S11.13.1_A7_T3.js	 norm [pass]	semantics [fail]
+(1472/2561) [NOK] language/expressions/assignment/S11.13.1_A7_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -935,7 +935,7 @@
 	
 	Node.js v21.6.2
 	
-(1476/2551) [NOK] language/expressions/assignment/S11.13.1_A5_T3.js	 norm [pass]	semantics [fail]
+(1476/2561) [NOK] language/expressions/assignment/S11.13.1_A5_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -944,7 +944,7 @@
 	
 	Node.js v21.6.2
 	
-(1481/2551) [NOK] language/expressions/assignment/S11.13.1_A5_T2.js	 norm [pass]	semantics [fail]
+(1481/2561) [NOK] language/expressions/assignment/S11.13.1_A5_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -953,7 +953,7 @@
 	
 	Node.js v21.6.2
 	
-(1484/2551) [NOK] language/expressions/assignment/S11.13.1_A7_T2.js	 norm [pass]	semantics [fail]
+(1484/2561) [NOK] language/expressions/assignment/S11.13.1_A7_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -964,7 +964,7 @@
 	
 	Node.js v21.6.2
 	
-(1494/2551) [NOK] language/expressions/assignment/S11.13.1_A5_T1.js	 norm [pass]	semantics [fail]
+(1494/2561) [NOK] language/expressions/assignment/S11.13.1_A5_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -973,7 +973,7 @@
 	
 	Node.js v21.6.2
 	
-(1497/2551) [NOK] language/expressions/assignment/S11.13.1_A7_T1.js	 norm [pass]	semantics [fail]
+(1497/2561) [NOK] language/expressions/assignment/S11.13.1_A7_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -984,7 +984,7 @@
 	
 	Node.js v21.6.2
 	
-(1500/2551) [NOK] language/expressions/assignment/S11.13.1_A5_T5.js	 norm [pass]	semantics [fail]
+(1500/2561) [NOK] language/expressions/assignment/S11.13.1_A5_T5.js	 norm [pass]	semantics [fail]
 	[eval]:405
 	   x = v6;
 	     ^
@@ -1001,7 +1001,7 @@
 	
 	Node.js v21.6.2
 	
-(1510/2551) [NOK] language/expressions/assignment/S11.13.1_A6_T1.js	 norm [pass]	semantics [fail]
+(1510/2561) [NOK] language/expressions/assignment/S11.13.1_A6_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1010,7 +1010,7 @@
 	
 	Node.js v21.6.2
 	
-(1513/2551) [NOK] language/expressions/assignment/11.13.1-1-2.js	 norm [pass]	semantics [fail]
+(1513/2561) [NOK] language/expressions/assignment/11.13.1-1-2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1021,7 +1021,7 @@
 	
 	Node.js v21.6.2
 	
-(1515/2551) [NOK] language/expressions/assignment/11.13.1-1-3.js	 norm [pass]	semantics [fail]
+(1515/2561) [NOK] language/expressions/assignment/11.13.1-1-3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1032,7 +1032,7 @@
 	
 	Node.js v21.6.2
 	
-(1525/2551) [NOK] language/expressions/function/scope-name-var-close.js	 norm [pass]	semantics [fail]
+(1525/2561) [NOK] language/expressions/function/scope-name-var-close.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1047,7 +1047,25 @@
 	
 	Node.js v21.6.2
 	
-(1681/2551) [NOK] language/expressions/call/11.2.3-3_3.js	 norm [pass]	semantics [fail]
+(1676/2561) [NOK] language/expressions/call/S11.2.3_A3_T2.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 627, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1682/2561) [NOK] language/expressions/call/11.2.3-3_3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1058,7 +1076,25 @@
 	
 	Node.js v21.6.2
 	
-(1689/2551) [NOK] language/expressions/call/S11.2.4_A1.4_T2.js	 norm [pass]	semantics [fail]
+(1686/2561) [NOK] language/expressions/call/S11.2.3_A3_T3.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 627, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1691/2561) [NOK] language/expressions/call/S11.2.4_A1.4_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1069,7 +1105,25 @@
 	
 	Node.js v21.6.2
 	
-(1698/2551) [NOK] language/expressions/call/scope-lex-open.js	 norm [pass]	semantics [fail]
+(1700/2561) [NOK] language/expressions/call/S11.2.3_A4_T4.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 627, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1701/2561) [NOK] language/expressions/call/scope-lex-open.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1086,7 +1140,7 @@
 	
 	Node.js v21.6.2
 	
-(1699/2551) [NOK] language/expressions/call/scope-var-open.js	 norm [pass]	semantics [fail]
+(1702/2561) [NOK] language/expressions/call/scope-var-open.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1102,7 +1156,43 @@
 	
 	Node.js v21.6.2
 	
-(1765/2551) [NOK] language/expressions/object/11.1.5_3-3-1.js	 norm [pass]	semantics [fail]
+(1708/2561) [NOK] language/expressions/call/S11.2.3_A3_T1.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 627, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1711/2561) [NOK] language/expressions/call/S11.2.3_A3_T5.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 627, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1770/2561) [NOK] language/expressions/object/11.1.5_3-3-1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1111,7 +1201,7 @@
 	
 	Node.js v21.6.2
 	
-(1799/2551) [NOK] language/expressions/object/11.1.5_4-5-1.js	 norm [pass]	semantics [fail]
+(1804/2561) [NOK] language/expressions/object/11.1.5_4-5-1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1120,7 +1210,25 @@
 	
 	Node.js v21.6.2
 	
-(1900/2551) [NOK] language/expressions/new/ctorExpr-fn-ref-before-args-eval.js	 norm [pass]	semantics [fail]
+(1904/2561) [NOK] language/expressions/new/S11.2.2_A3_T2.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 554, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1906/2561) [NOK] language/expressions/new/ctorExpr-fn-ref-before-args-eval.js	 norm [pass]	semantics [fail]
 	[eval]:394
 	result = new x(x);
 	         ^
@@ -1136,7 +1244,25 @@
 	
 	Node.js v21.6.2
 	
-(1902/2551) [NOK] language/expressions/new/ctorExpr-isCtor-after-args-eval.js	 norm [pass]	semantics [fail]
+(1907/2561) [NOK] language/expressions/new/S11.2.2_A3_T3.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 554, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1909/2561) [NOK] language/expressions/new/ctorExpr-isCtor-after-args-eval.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1147,7 +1273,7 @@
 	
 	Node.js v21.6.2
 	
-(1903/2551) [NOK] language/expressions/new/ctorExpr-fn-ref-before-args-eval-fn-wrapup.js	 norm [pass]	semantics [fail]
+(1910/2561) [NOK] language/expressions/new/ctorExpr-fn-ref-before-args-eval-fn-wrapup.js	 norm [pass]	semantics [fail]
 	[eval]:396
 	   result = new x(x);
 	            ^
@@ -1164,7 +1290,7 @@
 	
 	Node.js v21.6.2
 	
-(1907/2551) [NOK] language/expressions/new/ctorExpr-isCtor-after-args-eval-fn-wrapup.js	 norm [pass]	semantics [fail]
+(1914/2561) [NOK] language/expressions/new/ctorExpr-isCtor-after-args-eval-fn-wrapup.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1175,7 +1301,61 @@
 	
 	Node.js v21.6.2
 	
-(1912/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T5.js	 norm [pass]	semantics [fail]
+(1915/2561) [NOK] language/expressions/new/S11.2.2_A4_T4.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 554, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1918/2561) [NOK] language/expressions/new/S11.2.2_A3_T1.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 554, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1920/2561) [NOK] language/expressions/new/S11.2.2_A3_T5.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 554, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1922/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x * 3;
 	     ^
@@ -1192,7 +1372,7 @@
 	
 	Node.js v21.6.2
 	
-(1915/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T2.js	 norm [pass]	semantics [fail]
+(1925/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1201,7 +1381,7 @@
 	
 	Node.js v21.6.2
 	
-(1918/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T1.js	 norm [pass]	semantics [fail]
+(1928/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1212,7 +1392,7 @@
 	
 	Node.js v21.6.2
 	
-(1920/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.10_T1.js	 norm [pass]	semantics [fail]
+(1930/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.10_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1221,7 +1401,7 @@
 	
 	Node.js v21.6.2
 	
-(1924/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T3.js	 norm [pass]	semantics [fail]
+(1934/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1230,7 +1410,7 @@
 	
 	Node.js v21.6.2
 	
-(1926/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T2.js	 norm [pass]	semantics [fail]
+(1936/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1241,7 +1421,7 @@
 	
 	Node.js v21.6.2
 	
-(1927/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T1.js	 norm [pass]	semantics [fail]
+(1937/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1252,7 +1432,7 @@
 	
 	Node.js v21.6.2
 	
-(1940/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T1.js	 norm [pass]	semantics [fail]
+(1950/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1261,7 +1441,7 @@
 	
 	Node.js v21.6.2
 	
-(1941/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.2_T1.js	 norm [pass]	semantics [fail]
+(1951/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.2_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1272,7 +1452,7 @@
 	
 	Node.js v21.6.2
 	
-(1947/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T1.js	 norm [pass]	semantics [fail]
+(1957/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1281,7 +1461,7 @@
 	
 	Node.js v21.6.2
 	
-(1963/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T1.js	 norm [pass]	semantics [fail]
+(1973/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1292,7 +1472,7 @@
 	
 	Node.js v21.6.2
 	
-(1966/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T5.js	 norm [pass]	semantics [fail]
+(1976/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x % 3;
 	     ^
@@ -1309,7 +1489,7 @@
 	
 	Node.js v21.6.2
 	
-(1967/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T4.js	 norm [pass]	semantics [fail]
+(1977/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1318,7 +1498,7 @@
 	
 	Node.js v21.6.2
 	
-(1971/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T4.js	 norm [pass]	semantics [fail]
+(1981/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1327,7 +1507,7 @@
 	
 	Node.js v21.6.2
 	
-(1973/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T4.js	 norm [pass]	semantics [fail]
+(1983/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1336,7 +1516,7 @@
 	
 	Node.js v21.6.2
 	
-(1976/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T5.js	 norm [pass]	semantics [fail]
+(1986/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x >> 3;
 	     ^
@@ -1353,7 +1533,7 @@
 	
 	Node.js v21.6.2
 	
-(1980/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T1.js	 norm [pass]	semantics [fail]
+(1990/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1362,7 +1542,7 @@
 	
 	Node.js v21.6.2
 	
-(1985/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.4_T1.js	 norm [pass]	semantics [fail]
+(1995/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.4_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1371,7 +1551,7 @@
 	
 	Node.js v21.6.2
 	
-(1997/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T3.js	 norm [pass]	semantics [fail]
+(2007/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1380,7 +1560,7 @@
 	
 	Node.js v21.6.2
 	
-(1998/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.6_T1.js	 norm [pass]	semantics [fail]
+(2008/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.6_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1389,7 +1569,7 @@
 	
 	Node.js v21.6.2
 	
-(2002/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T1.js	 norm [pass]	semantics [fail]
+(2012/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1398,7 +1578,7 @@
 	
 	Node.js v21.6.2
 	
-(2004/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T2.js	 norm [pass]	semantics [fail]
+(2014/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1407,7 +1587,7 @@
 	
 	Node.js v21.6.2
 	
-(2005/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T3.js	 norm [pass]	semantics [fail]
+(2015/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1418,7 +1598,7 @@
 	
 	Node.js v21.6.2
 	
-(2012/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T4.js	 norm [pass]	semantics [fail]
+(2022/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1427,7 +1607,7 @@
 	
 	Node.js v21.6.2
 	
-(2015/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T5.js	 norm [pass]	semantics [fail]
+(2025/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x - 1;
 	     ^
@@ -1444,7 +1624,7 @@
 	
 	Node.js v21.6.2
 	
-(2023/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T1.js	 norm [pass]	semantics [fail]
+(2033/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1455,7 +1635,7 @@
 	
 	Node.js v21.6.2
 	
-(2031/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.1_T1.js	 norm [pass]	semantics [fail]
+(2041/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.1_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1464,7 +1644,7 @@
 	
 	Node.js v21.6.2
 	
-(2038/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T4.js	 norm [pass]	semantics [fail]
+(2048/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1473,7 +1653,7 @@
 	
 	Node.js v21.6.2
 	
-(2040/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T5.js	 norm [pass]	semantics [fail]
+(2050/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x / 3;
 	     ^
@@ -1490,7 +1670,7 @@
 	
 	Node.js v21.6.2
 	
-(2044/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T1.js	 norm [pass]	semantics [fail]
+(2054/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1501,7 +1681,7 @@
 	
 	Node.js v21.6.2
 	
-(2049/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T2.js	 norm [pass]	semantics [fail]
+(2059/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1512,7 +1692,7 @@
 	
 	Node.js v21.6.2
 	
-(2050/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T1.js	 norm [pass]	semantics [fail]
+(2060/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1523,7 +1703,7 @@
 	
 	Node.js v21.6.2
 	
-(2051/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T1.js	 norm [pass]	semantics [fail]
+(2061/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1534,7 +1714,7 @@
 	
 	Node.js v21.6.2
 	
-(2052/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.11_T1.js	 norm [pass]	semantics [fail]
+(2062/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.11_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1543,7 +1723,7 @@
 	
 	Node.js v21.6.2
 	
-(2056/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T3.js	 norm [pass]	semantics [fail]
+(2066/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1552,7 +1732,7 @@
 	
 	Node.js v21.6.2
 	
-(2058/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T4.js	 norm [pass]	semantics [fail]
+(2068/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1561,7 +1741,7 @@
 	
 	Node.js v21.6.2
 	
-(2059/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T2.js	 norm [pass]	semantics [fail]
+(2069/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1570,7 +1750,7 @@
 	
 	Node.js v21.6.2
 	
-(2063/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T1.js	 norm [pass]	semantics [fail]
+(2073/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1579,7 +1759,7 @@
 	
 	Node.js v21.6.2
 	
-(2064/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.3_T1.js	 norm [pass]	semantics [fail]
+(2074/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.3_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1588,7 +1768,7 @@
 	
 	Node.js v21.6.2
 	
-(2075/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T3.js	 norm [pass]	semantics [fail]
+(2085/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1599,7 +1779,7 @@
 	
 	Node.js v21.6.2
 	
-(2077/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.7_T1.js	 norm [pass]	semantics [fail]
+(2087/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.7_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1608,7 +1788,7 @@
 	
 	Node.js v21.6.2
 	
-(2079/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T1.js	 norm [pass]	semantics [fail]
+(2089/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1617,7 +1797,7 @@
 	
 	Node.js v21.6.2
 	
-(2080/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T2.js	 norm [pass]	semantics [fail]
+(2090/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1626,7 +1806,7 @@
 	
 	Node.js v21.6.2
 	
-(2083/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T3.js	 norm [pass]	semantics [fail]
+(2093/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1635,7 +1815,7 @@
 	
 	Node.js v21.6.2
 	
-(2087/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T1.js	 norm [pass]	semantics [fail]
+(2097/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1646,7 +1826,7 @@
 	
 	Node.js v21.6.2
 	
-(2090/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T5.js	 norm [pass]	semantics [fail]
+(2100/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x + 1;
 	     ^
@@ -1663,7 +1843,7 @@
 	
 	Node.js v21.6.2
 	
-(2098/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T4.js	 norm [pass]	semantics [fail]
+(2108/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1672,7 +1852,7 @@
 	
 	Node.js v21.6.2
 	
-(2099/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T4.js	 norm [pass]	semantics [fail]
+(2109/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1681,7 +1861,7 @@
 	
 	Node.js v21.6.2
 	
-(2100/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T5.js	 norm [pass]	semantics [fail]
+(2110/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x << 3;
 	     ^
@@ -1698,7 +1878,7 @@
 	
 	Node.js v21.6.2
 	
-(2101/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T4.js	 norm [pass]	semantics [fail]
+(2111/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1707,7 +1887,7 @@
 	
 	Node.js v21.6.2
 	
-(2109/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T1.js	 norm [pass]	semantics [fail]
+(2119/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1718,7 +1898,7 @@
 	
 	Node.js v21.6.2
 	
-(2121/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T1.js	 norm [pass]	semantics [fail]
+(2131/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1727,7 +1907,7 @@
 	
 	Node.js v21.6.2
 	
-(2124/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.5_T1.js	 norm [pass]	semantics [fail]
+(2134/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.5_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1736,7 +1916,7 @@
 	
 	Node.js v21.6.2
 	
-(2126/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T3.js	 norm [pass]	semantics [fail]
+(2136/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1747,7 +1927,7 @@
 	
 	Node.js v21.6.2
 	
-(2128/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T1.js	 norm [pass]	semantics [fail]
+(2138/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1756,7 +1936,7 @@
 	
 	Node.js v21.6.2
 	
-(2129/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T2.js	 norm [pass]	semantics [fail]
+(2139/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1765,7 +1945,7 @@
 	
 	Node.js v21.6.2
 	
-(2131/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.9_T1.js	 norm [pass]	semantics [fail]
+(2141/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.9_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1774,7 +1954,7 @@
 	
 	Node.js v21.6.2
 	
-(2133/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T3.js	 norm [pass]	semantics [fail]
+(2143/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1785,7 +1965,7 @@
 	
 	Node.js v21.6.2
 	
-(2139/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T3.js	 norm [pass]	semantics [fail]
+(2149/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1794,7 +1974,7 @@
 	
 	Node.js v21.6.2
 	
-(2141/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T2.js	 norm [pass]	semantics [fail]
+(2151/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1805,7 +1985,7 @@
 	
 	Node.js v21.6.2
 	
-(2150/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T5.js	 norm [pass]	semantics [fail]
+(2160/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x >>> 3;
 	     ^
@@ -1822,7 +2002,7 @@
 	
 	Node.js v21.6.2
 	
-(2152/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T4.js	 norm [pass]	semantics [fail]
+(2162/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1831,7 +2011,7 @@
 	
 	Node.js v21.6.2
 	
-(2160/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T2.js	 norm [pass]	semantics [fail]
+(2170/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1842,7 +2022,7 @@
 	
 	Node.js v21.6.2
 	
-(2161/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T3.js	 norm [pass]	semantics [fail]
+(2171/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1853,7 +2033,7 @@
 	
 	Node.js v21.6.2
 	
-(2168/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T2.js	 norm [pass]	semantics [fail]
+(2178/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1862,7 +2042,7 @@
 	
 	Node.js v21.6.2
 	
-(2176/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T3.js	 norm [pass]	semantics [fail]
+(2186/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1873,7 +2053,7 @@
 	
 	Node.js v21.6.2
 	
-(2177/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T5.js	 norm [pass]	semantics [fail]
+(2187/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x ^ 3;
 	     ^
@@ -1890,7 +2070,7 @@
 	
 	Node.js v21.6.2
 	
-(2182/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T2.js	 norm [pass]	semantics [fail]
+(2192/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1901,7 +2081,7 @@
 	
 	Node.js v21.6.2
 	
-(2189/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T3.js	 norm [pass]	semantics [fail]
+(2199/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1910,7 +2090,7 @@
 	
 	Node.js v21.6.2
 	
-(2192/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T2.js	 norm [pass]	semantics [fail]
+(2202/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1921,7 +2101,7 @@
 	
 	Node.js v21.6.2
 	
-(2194/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T1.js	 norm [pass]	semantics [fail]
+(2204/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1932,7 +2112,7 @@
 	
 	Node.js v21.6.2
 	
-(2195/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T3.js	 norm [pass]	semantics [fail]
+(2205/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1941,7 +2121,7 @@
 	
 	Node.js v21.6.2
 	
-(2199/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T2.js	 norm [pass]	semantics [fail]
+(2209/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1952,7 +2132,7 @@
 	
 	Node.js v21.6.2
 	
-(2201/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T1.js	 norm [pass]	semantics [fail]
+(2211/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1961,7 +2141,7 @@
 	
 	Node.js v21.6.2
 	
-(2206/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T2.js	 norm [pass]	semantics [fail]
+(2216/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1970,7 +2150,7 @@
 	
 	Node.js v21.6.2
 	
-(2207/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T3.js	 norm [pass]	semantics [fail]
+(2217/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1981,7 +2161,7 @@
 	
 	Node.js v21.6.2
 	
-(2221/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T3.js	 norm [pass]	semantics [fail]
+(2231/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1990,7 +2170,7 @@
 	
 	Node.js v21.6.2
 	
-(2229/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T4.js	 norm [pass]	semantics [fail]
+(2239/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T4.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -1999,7 +2179,7 @@
 	
 	Node.js v21.6.2
 	
-(2232/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T5.js	 norm [pass]	semantics [fail]
+(2242/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x & 3;
 	     ^
@@ -2016,7 +2196,7 @@
 	
 	Node.js v21.6.2
 	
-(2236/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T2.js	 norm [pass]	semantics [fail]
+(2246/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2025,7 +2205,7 @@
 	
 	Node.js v21.6.2
 	
-(2241/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T3.js	 norm [pass]	semantics [fail]
+(2251/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2036,7 +2216,7 @@
 	
 	Node.js v21.6.2
 	
-(2251/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T1.js	 norm [pass]	semantics [fail]
+(2261/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2045,7 +2225,7 @@
 	
 	Node.js v21.6.2
 	
-(2253/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T2.js	 norm [pass]	semantics [fail]
+(2263/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2054,7 +2234,7 @@
 	
 	Node.js v21.6.2
 	
-(2255/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A6.8_T1.js	 norm [pass]	semantics [fail]
+(2265/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.8_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2063,7 +2243,7 @@
 	
 	Node.js v21.6.2
 	
-(2257/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T3.js	 norm [pass]	semantics [fail]
+(2267/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2074,7 +2254,7 @@
 	
 	Node.js v21.6.2
 	
-(2260/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T3.js	 norm [pass]	semantics [fail]
+(2270/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2085,7 +2265,7 @@
 	
 	Node.js v21.6.2
 	
-(2275/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T2.js	 norm [pass]	semantics [fail]
+(2285/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2096,7 +2276,7 @@
 	
 	Node.js v21.6.2
 	
-(2280/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T3.js	 norm [pass]	semantics [fail]
+(2290/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2105,7 +2285,7 @@
 	
 	Node.js v21.6.2
 	
-(2286/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T1.js	 norm [pass]	semantics [fail]
+(2296/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2114,7 +2294,7 @@
 	
 	Node.js v21.6.2
 	
-(2290/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T3.js	 norm [pass]	semantics [fail]
+(2300/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2123,7 +2303,7 @@
 	
 	Node.js v21.6.2
 	
-(2292/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T2.js	 norm [pass]	semantics [fail]
+(2302/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2134,7 +2314,7 @@
 	
 	Node.js v21.6.2
 	
-(2297/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T2.js	 norm [pass]	semantics [fail]
+(2307/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2145,7 +2325,7 @@
 	
 	Node.js v21.6.2
 	
-(2299/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T1.js	 norm [pass]	semantics [fail]
+(2309/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T1.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2156,7 +2336,7 @@
 	
 	Node.js v21.6.2
 	
-(2310/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T3.js	 norm [pass]	semantics [fail]
+(2320/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2167,7 +2347,7 @@
 	
 	Node.js v21.6.2
 	
-(2312/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T2.js	 norm [pass]	semantics [fail]
+(2322/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2176,7 +2356,7 @@
 	
 	Node.js v21.6.2
 	
-(2316/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T5.js	 norm [pass]	semantics [fail]
+(2326/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T5.js	 norm [pass]	semantics [fail]
 	[eval]:403
 	   x = x | 4;
 	     ^
@@ -2193,7 +2373,7 @@
 	
 	Node.js v21.6.2
 	
-(2318/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T2.js	 norm [pass]	semantics [fail]
+(2328/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2202,7 +2382,7 @@
 	
 	Node.js v21.6.2
 	
-(2331/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T3.js	 norm [pass]	semantics [fail]
+(2341/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2211,7 +2391,7 @@
 	
 	Node.js v21.6.2
 	
-(2335/2551) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T2.js	 norm [pass]	semantics [fail]
+(2345/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T2.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
@@ -2277,7 +2457,7 @@
 (PASSED 100.0%)	language/expressions/equals	 failed : 0/0   timeout : 0
 (PASSED 100.0%)	language/expressions/logical-not	 failed : 0/0   timeout : 0
 (PASSED 100.0%)	language/expressions/bitwise-xor	 failed : 0/0   timeout : 0
-(PASSED 87.9%)	language/expressions/call	 failed : 0/4   timeout : 0
+(PASSED 76.3%)	language/expressions/call	 failed : 5/4   timeout : 0
 (PASSED 100.0%)	language/expressions/greater-than	 failed : 0/0   timeout : 0
 (PASSED 96.2%)	language/expressions/object	 failed : 0/2   timeout : 0
 (PASSED 100.0%)	language/expressions/bitwise-or	 failed : 0/0   timeout : 0
@@ -2285,7 +2465,7 @@
 (PASSED 100.0%)	language/expressions/less-than-or-equal	 failed : 0/0   timeout : 0
 (PASSED 100.0%)	language/expressions/strict-equals	 failed : 0/0   timeout : 0
 (PASSED 100.0%)	language/expressions/import.meta/syntax	 failed : 0/0   timeout : 0
-(PASSED 66.7%)	language/expressions/new	 failed : 0/4   timeout : 0
+(PASSED 47.1%)	language/expressions/new	 failed : 5/4   timeout : 0
 (PASSED 77.0%)	language/expressions/compound-assignment	 failed : 0/99   timeout : 0
 (PASSED 100.0%)	language/expressions/this	 failed : 0/0   timeout : 0
 (PASSED 100.0%)	language/expressions/bitwise-not	 failed : 0/0   timeout : 0
@@ -2299,9 +2479,9 @@
 (PASSED 100.0%)	language/expressions/addition	 failed : 0/0   timeout : 0
 
     ==============================
-    total : 2551
+    total : 2561
     ok    : 2334
-    error : 10 + 205 (normalization + semantics)
+    error : 20 + 205 (normalization + semantics)
     timeout : 12
     ==============================
     

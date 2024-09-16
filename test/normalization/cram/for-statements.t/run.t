@@ -41,7 +41,7 @@
      v2 = console.log(value);
   }
   
-  $ ast_gen input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
+  $ graphjs2 input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
   for (let v1 of iterable) {
      key = v1[0];
      value = v1[1];

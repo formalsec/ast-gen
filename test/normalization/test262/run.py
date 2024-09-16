@@ -35,7 +35,7 @@ def graphjs_command(path):
     return ["python3", "../../graphjs/graphjs_old.py", "-f", path, "-o", OUTPUT_PATH, "--norm_only"]
 
 def graphjs2_command(path):
-    return ["ast_gen", path, "-o", OUTPUT_PATH]
+    return ["graphjs2", path, "-o", OUTPUT_PATH]
 
 def normalize(path, command, output_folder):
     try:

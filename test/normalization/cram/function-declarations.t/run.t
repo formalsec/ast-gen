@@ -7,7 +7,7 @@
   
   $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let f;
-  f = function (z, y, x) {
+  f = function (x, y, z) {
      let v1;
      v1 = Number(x);
      x = v1 + 1;
