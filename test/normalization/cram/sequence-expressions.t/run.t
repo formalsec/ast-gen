@@ -1,4 +1,4 @@
-  $ ast_gen input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
+  $ graphjs2 input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
   let v1;
   v1 = 1;
   let v2;
@@ -8,7 +8,7 @@
   let v4;
   v4 = 4;
   
-  $ ast_gen input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
+  $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let v1;
   v1 = 1 + 2;
   let v2;
@@ -20,7 +20,7 @@
   let v5;
   v5 = v3;
   
-  $ ast_gen input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
+  $ graphjs2 input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   x = 0;
   y = {};
   let v1;

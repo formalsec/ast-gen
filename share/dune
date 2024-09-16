@@ -1,0 +1,5 @@
+(install
+ (section
+  (site
+   (graphjs2 config)))
+ (files config.json))

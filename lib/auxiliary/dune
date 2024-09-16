@@ -1,5 +1,9 @@
 (include_subdirs unqualified)
 
 (library
- (name auxiliary))
+ (name auxiliary)
+ (libraries dune-site fpath))
 
+(generate_sites_module
+ (module site)
+ (sites graphjs2))

@@ -1,15 +1,4 @@
 (executable
- (public_name ast_gen)
+ (public_name graphjs2)
  (name main)
- (libraries auxiliary ast mdg setup cmdliner)
-)
-
-(install
- (section lib)
- (files 
-  (../resources/config.json as config.json)
-  (../resources/js/generate_cg.js as js/generate_cg.js)
-  (../resources/js/package.json as js/package.json)
- )
-)
-
+ (libraries auxiliary ast bos cmdliner fpath mdg setup))
