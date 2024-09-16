@@ -5,6 +5,7 @@
   let v2;
   v2 = new Bar();
   Foo.prototype = v2;
+  v = Foo;
   
   $ ast_gen input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let v;
@@ -17,6 +18,7 @@
   v3 = function () {
   }
   v2.foo = v3;
+  v = Foo;
   
   $ ast_gen input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let v;
@@ -37,4 +39,5 @@
      v7 = 1 + 2;
   }
   v2.foo = v6;
+  v = Foo;
   

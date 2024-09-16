@@ -6,8 +6,8 @@
   const x;
   x = 0;
   let v1;
-  v1 = x;
-  x = x + 1;
+  v1 = Number(x);
+  x = v1 + 1;
   
   $ ast_gen input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let f;
@@ -15,8 +15,8 @@
      let v1;
      v1 = x.y;
      let v2;
-     v2 = v1;
-     v1 = v1 + 1;
+     v2 = Number(v1);
+     v1 = v2 + 1;
      let v3;
      v3 = x.y;
      let v4;

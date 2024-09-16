@@ -68,7 +68,7 @@ module Js = struct
         let label' = print_identifier label in
         let new_identation = identation + spaces_per_identation in
         let body' = print_stmts body new_identation in 
-        identation_str ^ label' ^ ":\n" ^ body' ^ "\n"
+        identation_str ^ label' ^ ": {\n" ^ body' ^ identation_str ^ "}\n"
 
       | _, VarDecl {kind; id} -> 
         let kind' = match kind with 
@@ -158,7 +158,7 @@ module Js = struct
         let argument' = print_expr argument in
         identation_str ^ left' ^ " = " ^ operator' ^ argument' ^ ";\n"
 
-      | _, AssignYield {left; argument; _ } ->
+      | _, Yield {left; argument; _ } ->
         let left' = print_identifier left in
         let argument' = map_default ((^) " " << print_expr) "" argument in
         identation_str ^ left' ^ " = yield" ^ argument' ^ ";\n" 
@@ -211,6 +211,19 @@ module Js = struct
           let right' = print_expr right in  
           identation_str ^ _object' ^ "[" ^ property' ^ "] = " ^ right' ^ ";\n"
 
+      | _, StaticDelete {left; _object; property; is_literal; _} -> 
+          let left' = print_identifier left in 
+          let _object' = print_expr _object in
+          if is_literal
+            then identation_str ^ left' ^ " = delete " ^ _object' ^ "[\"" ^ property ^ "\"];\n"
+            else identation_str ^ left' ^ " = delete " ^ _object' ^ "." ^ property ^ ";\n"
+    
+      | _, DynamicDelete {left; _object; property; _} -> 
+            let left' = print_identifier left in 
+            let _object' = print_expr _object in
+            let property' = print_expr property in 
+            identation_str ^ left' ^ " = delete " ^ _object' ^ "[" ^ property' ^ "];\n"
+
       | _, StaticLookup {left; _object; property; is_literal; _} ->
         let left' = print_identifier left in 
         let _object' = print_expr _object in 
@@ -224,6 +237,9 @@ module Js = struct
         let property' = print_expr property in
         
         identation_str ^ left' ^ " = " ^ _object' ^ "[" ^ property' ^ "];\n"
+      
+      | _,  UseStrict _ ->
+        identation_str ^ "\"use strict\";\n"
 
       | _, AssignFunction {left; params; body; _} ->
         let left' = print_identifier left in 

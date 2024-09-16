@@ -3,6 +3,7 @@
   f1 = function () {
      let x;
      x = await 10;
+     x = x;
   }
   
   $ ast_gen input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
@@ -14,6 +15,7 @@
      let v2;
      v2 = f2(v1);
      x = await v2;
+     x = x;
   }
   
   $ ast_gen input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
@@ -23,6 +25,7 @@
      let v1;
      v1 = x.f();
      a = await v1;
+     a = a;
      let v2;
      v2 = eval(a);
   }

@@ -38,10 +38,14 @@ type context = {
   is_assignment : bool;
   has_op : bool;
   is_declaration : bool;
-  is_statement : bool;
+  is_expr_stmt : bool;
+  is_expression : bool;
+
+  high_order_expr : bool;
+  has_side_effects : bool;
 }
 
-let empty_context : context = {parent_type = ""; identifier = None; is_assignment = false; is_declaration = false; has_op = false; is_statement = false; } 
+let empty_context : context = {parent_type = ""; identifier = None; is_assignment = false; is_declaration = false; has_op = false; is_expr_stmt = false; is_expression = false; high_order_expr = true; has_side_effects = false} 
 
 let rec program (loc , { Ast'.Program.statements; _ }) (file : string): m Program.t = 
   file_path := file;
@@ -55,9 +59,11 @@ let rec program (loc , { Ast'.Program.statements; _ }) (file : string): m Progra
 and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) : norm_stmt_t =
   let ns  = normalize_statement empty_context in
   let ne  = normalize_expression empty_context in
+  let nec = normalize_expression in 
   let loc_f = Location.convert_flow_loc !file_path in
 
-  let nec = normalize_expression in 
+  (* reset context *)
+  let context = {context with is_expression = false} in 
   
   match stmt with
     (* --------- B L O C K --------- *)
@@ -280,9 +286,13 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
 
     (* --------- S T A T E M E N T   E X P R E S S I O N ---------*)
     | _, Ast'.Statement.Expression {expression; _} -> 
-      let new_context = {context with is_statement = true} in 
-      let stmts, _ = nec new_context expression in 
-      stmts
+      let new_context = {context with is_expr_stmt = true} in 
+      let stmts, expr = nec new_context expression in 
+      (match expr with 
+        | Some (_, Expression.Literal {value=Expression.Literal.String lit; _}) -> 
+          if lit = "use strict" then [Statement.UseStrict.build (Location.empty ())] else stmts
+        | _ -> stmts
+      )
     
     | _, Ast'.Statement.Empty _ -> []
 
@@ -291,9 +301,13 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
       failwith ("[ERROR] Unknown statement type to normalize (object on " ^ loc_info ^ ")")
     
 and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t) : norm_expr_t =
-  let ne = normalize_expression empty_context in 
   let nec = normalize_expression in 
   let loc_f = Location.convert_flow_loc !file_path in
+  
+  (* reset context *)
+  let is_expr_stmt   = context.is_expr_stmt in 
+  let context        = {(check_side_effects expr context) with is_expr_stmt = false; is_expression = true;} in
+  let empty_context' = {empty_context with has_side_effects = context.has_side_effects; high_order_expr = context.high_order_expr} in 
 
   match expr with
   (* --------- L I T E R A L --------- *)
@@ -331,7 +345,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   (* --------- T E M P L A T E    L I T E R A L --------- *)
   | loc, Ast'.Expression.TemplateLiteral {quasis; expressions; _} -> 
     let quasis' = List.map build_template_element quasis in 
-    let stmts, exprs = List.split (List.map ne expressions) in
+    let stmts, exprs = List.split (List.map (nec empty_context') expressions) in
     let exprs = List.map Option.get exprs in 
 
     (* TODO : some applications based on the parent *)
@@ -341,14 +355,21 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   (* --------- I D E N T I F I E R --------- *)
   | _, Ast'.Expression.Identifier (loc, { name; _ }) -> 
     let location = loc_f loc in
-    let identifier = Identifier.to_expression (Identifier.build location name) in 
-    ([], Some identifier)
+    if context.has_side_effects then 
+      (* if expression has side effects (assignments) wrap variables around new random identifiers*)
+      let identifier = Identifier.to_expression (Identifier.build location name) in 
+      let wraper_id, decl = createVariableDeclaration (Some identifier ) location in 
+      
+      (decl, Some (Identifier.to_expression wraper_id))
+    else 
+      let identifier = Identifier.to_expression (Identifier.build location name) in 
+      ([], Some identifier)
 
   (* --------- L O G I C A L --------- *)
   | loc, Ast'.Expression.Logical {operator; left; right; _} -> 
     let operator' = Operator.Binary.translate_logical operator in
-    let left_stmt, left_expr = ne left in  
-    let right_stmt, right_expr = ne right in  
+    let left_stmt, left_expr = nec empty_context' left in  
+    let right_stmt, right_expr = nec empty_context' right in  
 
     let loc = loc_f loc in
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
@@ -364,8 +385,8 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   (* --------- B I N A R Y --------- *)
   | loc, Ast'.Expression.Binary {operator; left; right; _} -> 
     let operator' = Operator.Binary.translate_binary operator in
-    let left_stmt, left_expr = ne left in  
-    let right_stmt, right_expr = ne right in
+    let left_stmt, left_expr = nec empty_context' left in  
+    let right_stmt, right_expr = nec empty_context' right in
 
     let loc = loc_f loc in
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
@@ -378,10 +399,27 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     else 
       (left_stmt @ right_stmt @ [assign], Some (Identifier.to_expression id))
   
+  (* --------- D E L E T E --------- *)
+  | loc, Ast'.Expression.Unary {operator=Ast'.Expression.Unary.Delete; argument=(_, Member {_object; property; _}); _} -> 
+    let obj_stmts, obj_expr = nec empty_context' _object in 
+    let prop_stmts, prop_expr = normalize_member_property property in 
+
+    let loc = loc_f loc in
+    let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
+    let assign = match prop_expr with 
+      | Static  (prop, lit) -> Statement.StaticDelete.build  loc id (Option.get obj_expr) prop lit
+      | Dynamic  prop       -> Statement.DynamicDelete.build loc id (Option.get obj_expr) prop     in
+
+    if not context.is_assignment || context.has_op then
+      let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
+      (obj_stmts @ prop_stmts @ decl @ [assign] , Some (Identifier.to_expression id))
+    else 
+      (obj_stmts @ prop_stmts @ [assign], Some (Identifier.to_expression id))
+    
   (* --------- U N A R Y --------- *)
   | loc, Ast'.Expression.Unary {operator; argument; _} -> 
     let operator' = Operator.Unary.translate operator in 
-    let arg_stmts, arg_expr = ne argument in
+    let arg_stmts, arg_expr = nec empty_context' argument in
 
     let loc = loc_f loc in
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
@@ -397,27 +435,24 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   (* --------- U P D A T E --------- *)
   | loc, Ast'.Expression.Update {operator; argument; prefix; _} -> 
     let operator' = Operator.Binary.translate_update operator in
-    let arg_stmts, arg_expr = ne argument in 
+    let arg_stmts, arg_expr = nec empty_context' argument in 
 
     let loc = loc_f loc in
-    let arg_id = Identifier.from_expression (Option.get arg_expr) in
-    let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
     let one = Expression.Literal.build loc (Expression.Literal.Number (Int.to_float 1)) "1" in 
 
-    let update = Statement.AssignBinary.build loc arg_id operator' (Option.get arg_expr) one in 
-    let assign = Statement.AssignSimple.build loc id (Option.get arg_expr) in
-    let update_stmts = if prefix 
-      (* ++x *)
-      then [update; assign]
-      (* x++ *)
-      else [assign; update]   
+    (* let v1 = Number(x) *)
+    let old_value_id, decl = createVariableDeclaration None loc in
+    let number_wrap = Statement.AssignFunCall.build loc old_value_id (Identifier.build loc "Number") [Option.get arg_expr] in 
+    (* x = v1 + 1 *)
+    let arg_id = Identifier.from_expression (Option.get arg_expr) in
+    let update = Statement.AssignBinary.build loc arg_id operator' (Identifier.to_expression old_value_id) one in 
+    
+    let id = if prefix 
+      then arg_id        (* ++x *)
+      else old_value_id  (* x++ *)
     in
-
-    if not context.is_assignment || context.has_op then
-      let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
-      (arg_stmts @ decl @ update_stmts , Some (Identifier.to_expression id))
-    else
-      (arg_stmts @ update_stmts, Some (Identifier.to_expression id))
+    (arg_stmts @ decl @ [number_wrap; update] , Some (Identifier.to_expression id))
+   
 
   (* --------- T H I S --------- *)
   | loc, Ast'.Expression.This _ -> 
@@ -445,7 +480,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   | loc, Ast'.Expression.Sequence {expressions; _} -> 
     let loc = loc_f loc in 
 
-    let stmts, exprs = List.split (List.map ne expressions) in 
+    let stmts, exprs = List.split (List.map (nec empty_context') expressions) in 
     let ids, decls = List.split (List.map (fun expr -> createVariableDeclaration expr loc) exprs) in 
     let last_expr = Identifier.to_expression (List.hd (List.rev ids)) in 
    
@@ -456,8 +491,8 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let loc = loc_f loc in 
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
 
-    let arg_stmts, arg_expr = map_default ne ([], None) argument in 
-    let yield = Statement.AssignYield.build loc id arg_expr delegate in 
+    let arg_stmts, arg_expr = map_default (nec empty_context') ([], None) argument in 
+    let yield = Statement.Yield.build loc id arg_expr delegate in 
     
     (* check if yield is done as a statement or an expression *)
     if not context.is_assignment || context.has_op then 
@@ -472,32 +507,23 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let loc = loc_f loc in 
     let id, decl = createVariableDeclaration None loc in
 
-    let test_stmts, test_expr = ne test in
-    let cnsq_stmts, cnsq_expr = ne consequent in 
+    let test_stmts, test_expr = nec empty_context' test in
+    let cnsq_stmts, cnsq_expr = nec empty_context' consequent in 
     let cnsq_assign = Statement.AssignSimple.build loc id (Option.get cnsq_expr) in 
     
-    let altr_stmts, altr_expr = ne alternate in 
+    let altr_stmts, altr_expr = nec empty_context' alternate in 
     let altr_assign = Statement.AssignSimple.build loc id (Option.get altr_expr) in 
     
     let conditional = Statement.If.build loc (Option.get test_expr) (cnsq_stmts @ [cnsq_assign]) (Some (altr_stmts @ [altr_assign])) in
     decl @ test_stmts @ [conditional], Some (Identifier.to_expression id)
-
-  (* --------- M E T A   P R O P E R T Y --------- *)
-  (* | loc, Ast'.Expression.MetaProperty {meta; property; _} -> 
-    let meta' = normalize_identifier meta in 
-    let property' = normalize_identifier property in 
-    
-    let meta_property = Expression.MetaProperty.build (loc_f loc) meta' property' in 
-    [], Some meta_property *)
-  
   
   (* --------- A S S I G N   S I M P L E --------- *)
   | _, Ast'.Expression.Assignment {operator; left; right; _} ->
     let operator' = Option.map Operator.Assignment.translate operator in
-    let assign_stmts, _ = normalize_assignment {context with is_statement = false} left operator' right  in 
+    let assign_stmts, _ = normalize_assignment {context with is_expr_stmt = false} left operator' right  in 
 
     (* check if the assignment is done as a statement or an expression *)
-    if context.is_statement
+    if is_expr_stmt
       then assign_stmts, None
       else 
         let norm_stmts, norm_expr = get_pattern_expr left in 
@@ -509,7 +535,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
     let assign = Statement.AssignArray.build loc id in
 
-    let elems_stmts = List.mapi (normalize_array_elem id) elements in 
+    let elems_stmts = List.mapi (normalize_array_elem empty_context' id) elements in 
     
     if not context.is_assignment || context.has_op then 
       let _, decl = createVariableDeclaration None loc ~objId:(Id id) in 
@@ -519,8 +545,8 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   
   (* --------- A S S I G N   N E W ---------*)
   | loc, Ast'.Expression.New {callee; arguments; _} -> 
-    let callee_stmts, callee_expr = ne callee in
-    let args_stmts, args_exprs = List.split (map_default normalize_argument_list [] arguments) in 
+    let callee_stmts, callee_expr = nec empty_context' callee in
+    let args_stmts, args_exprs = List.split (map_default (normalize_argument_list empty_context') [] arguments) in 
     let args_exprs = List.flatten (List.map Option.to_list args_exprs) in
 
     let loc = loc_f loc in
@@ -535,7 +561,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
 
   (* --------- A S S I G N   M E M B E R ---------*)
   | loc, Ast'.Expression.Member {_object; property; _} -> 
-    let obj_stmts, obj_expr = ne _object in 
+    let obj_stmts, obj_expr = nec empty_context' _object in 
     let prop_stmts, prop_expr = normalize_member_property property in 
 
     let loc = loc_f loc in
@@ -560,7 +586,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
 
       let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
       let empty_obj = Statement.AssignObject.build loc id in
-      let props_stmts = List.flatten (List.map (normalize_property id) properties) in 
+      let props_stmts = List.flatten (List.map (normalize_property empty_context' id) properties) in 
       
       if not context.is_assignment || context.has_op then
         let _, decl = createVariableDeclaration None loc ~objId:(Id id) in
@@ -571,10 +597,10 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   (* --------- A S S I G N   F U N C   C A L L ---------*)
   | loc, Ast'.Expression.Call {callee = (_, Member {_object; property; _}); arguments; _} -> 
     (* callee representation*)
-    let obj_stmts, obj_expr = normalize_expression empty_context _object in 
+    let obj_stmts, obj_expr = nec empty_context' _object in 
     let prop_stmts, prop_expr = normalize_member_property property in 
     (* arguments *)
-    let args_stmts, args_exprs = List.split (normalize_argument_list arguments) in 
+    let args_stmts, args_exprs = List.split (normalize_argument_list empty_context' arguments) in 
     let args_exprs = List.flatten (List.map Option.to_list args_exprs) in
 
     let loc = loc_f loc in
@@ -590,10 +616,10 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
       (obj_stmts @ prop_stmts @ (List.flatten args_stmts) @ [assign], Some (Identifier.to_expression id))
 
   | loc, Ast'.Expression.Call {callee; arguments; _} -> 
-    let new_context = {empty_context with parent_type = func_call} in 
+    let new_context = {empty_context' with parent_type = func_call} in 
     
     let callee_stmts, callee_expr = nec new_context callee in
-    let args_stmts, args_exprs = List.split (normalize_argument_list arguments) in 
+    let args_stmts, args_exprs = List.split (normalize_argument_list new_context arguments) in 
     let args_exprs = List.flatten (List.map Option.to_list args_exprs) in
 
     let loc = loc_f loc in
@@ -620,18 +646,13 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
 and normalize_assignment (context : context) (left : ('M, 'T) Ast'.Pattern.t) (op : Operator.Assignment.t option) (right : ('M, 'T) Ast'.Expression.t) : norm_stmt_t * m Identifier.t list = 
   let ne = normalize_expression in
   let is_id, id = is_identifier left in  
-  let new_context = if is_id then {context with identifier = id; is_assignment = true; has_op = Option.is_some op; is_statement = false} else context in
+  let new_context = if is_id then {context with identifier = id; is_assignment = true; has_op = Option.is_some op; is_expr_stmt = false} else context in
   
   let init_stmts, init_expr = ne new_context right in
   let pat_stmts, ids = normalize_pattern (Option.get init_expr) left op (is_special_assignment right) in 
-  
-  (* let pat_stmts, ids = if not (is_id && is_special_assignment right) || (is_operation right && Option.is_some op)
-    then normalize_pattern (Option.get init_expr) left op
-    else [], [Option.get id] 
-  in  *)
 
   init_stmts @ pat_stmts, ids
-
+  
   
 and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pattern.t) (op : Operator.Assignment.t option) (is_special_assignment : bool): norm_stmt_t * m Identifier.t list =
   let loc_f = Location.convert_flow_loc !file_path in
@@ -640,7 +661,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
       let id = normalize_identifier name in 
       let assign = if Option.is_some op 
         then Some (build_operation id expression (Option.get op))
-        else if is_special_assignment then None
+        else if is_special_assignment && is_redundant_assignment id expression then None
         else Some (Statement.AssignSimple.build (loc_f loc) id expression) in 
 
       Option.to_list assign, [id]
@@ -741,6 +762,12 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
       obj_stmts @ prop_stmts @ stmts @ [assign], []
 
     | _ -> failwith "[ERROR] Pattern expression not implemented"
+
+and is_redundant_assignment ((_, {name; _}) : m Identifier.t) (expr : m Expression.t) : bool =
+    let left_name = name in 
+    match expr with 
+      | _, Identifier {name; _} -> left_name = name 
+      | _ -> false 
 
 and is_identifier (pattern : ('M, 'T) Ast'.Pattern.t) : bool * m Identifier.t option =
   match pattern with
@@ -891,27 +918,27 @@ and normalize_catch (loc, { Ast'.Statement.Try.CatchClause.param; body; _}) : m 
     let catch = Statement.Try.Catch.build (loc_f loc) param' body_stmts in
     Some catch
 
-and normalize_array_elem (array : m Identifier.t) (index : int) (element : ('M, 'T) Ast'.Expression.Array.element) : norm_stmt_t = 
+and normalize_array_elem (context : context) (array : m Identifier.t) (index : int) (element : ('M, 'T) Ast'.Expression.Array.element): norm_stmt_t = 
   let loc_f = Location.convert_flow_loc !file_path in
   match element with
     | Expression ((loc, _) as expr) -> 
-      let stmts, expr = normalize_expression empty_context expr in 
+      let stmts, expr = normalize_expression context expr in 
       let update_stmt = Statement.StaticUpdate.build (loc_f loc) (Identifier.to_expression array) (string_of_int index) true (Option.get expr) in 
       stmts @ [update_stmt]
     | Hole _ -> []
     | _ -> failwith "[ERROR] Cannot process spread array element"
 
-and normalize_argument_list (_, {Ast'.Expression.ArgList.arguments; _}) : norm_expr_t list = 
-  List.map normalize_argument arguments
+and normalize_argument_list (context : context) (_, {Ast'.Expression.ArgList.arguments; _}) : norm_expr_t list = 
+  List.map (normalize_argument context) arguments
 
-and normalize_argument (arg : ('M, 'T) Ast'.Expression.expression_or_spread) : norm_expr_t = 
+and normalize_argument (context : context) (arg : ('M, 'T) Ast'.Expression.expression_or_spread) : norm_expr_t = 
   (* TODO : other cases *)
   match arg with
-    | Ast'.Expression.Expression expr -> normalize_expression empty_context expr 
-    | Ast'.Expression.Spread (_, {argument; _}) -> normalize_expression empty_context argument
+    | Ast'.Expression.Expression expr -> normalize_expression context expr 
+    | Ast'.Expression.Spread (_, {argument; _}) -> normalize_expression context argument
 
 
-and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {params; _}); body; _} : ('M, 'T) Ast'.Function.t) : norm_expr_t =
+and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {params; _}); body; _} : ('M, 'T) Ast'.Function.t): norm_expr_t =
   let loc_f = Location.convert_flow_loc !file_path in
 
   let loc = loc_f loc in 
@@ -1073,16 +1100,26 @@ and normalize_member_property (property : ('M, 'T) Ast'.Expression.Member.proper
     | PropertyPrivateName _ -> failwith "[ERROR] Property private name not implemented"
   
 
-and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast'.Expression.Object.property) : norm_stmt_t = 
+and normalize_property (context : context) (obj_id : m Identifier.t) (property : ('M, 'T) Ast'.Expression.Object.property) : norm_stmt_t = 
   let nk = normalize_property_key in
-  let ne = normalize_expression empty_context in 
+  let nec = normalize_expression in 
   let loc_f = Location.convert_flow_loc !file_path in
   let obj_id = Identifier.to_expression obj_id in 
+
+  let object_define_property (obj : m Expression.t) (property : m Expression.t) (value : m Expression.t) : m Statement.t list = 
+    let loc = Location.empty () in
+    let id, decl = createVariableDeclaration None loc in 
+    let object_class = Identifier.to_expression (Identifier.build loc "Object") in 
+    let arguments = [obj; property; value] in 
+
+    let object_define_property = Statement.AssignMetCallStatic.build loc id object_class "defineProperty" false arguments in 
+    decl @ [object_define_property]
+  in
 
   match property with
     | Property (loc, Init {key; value; _}) ->
       let key_stmts, key_expr = nk key in 
-      let val_stmts, val_expr = ne value in 
+      let val_stmts, val_expr = nec context value in 
       
       let set_prop = match key_expr with
         | Static  (prop, lit) -> Statement.StaticUpdate.build (loc_f loc) obj_id prop lit (Option.get val_expr)
@@ -1090,16 +1127,49 @@ and normalize_property (obj_id : m Identifier.t) (property : ('M, 'T) Ast'.Expre
       in
       key_stmts @ val_stmts @ [set_prop]
 
-    | Property (_, Method {key; value=(loc, func); _}) 
-    | Property (_, Get {key; value=(loc, func); _}) 
-    | Property (_, Set {key; value=(loc, func); _}) -> 
+    | Property (_, Method {key; value=(loc, func); _}) -> 
       let key_stmts, key_expr = nk key in 
-      let val_stmts, val_expr = ne (loc, Ast'.Expression.Function func) in 
+      let val_stmts, val_expr = nec context (loc, Ast'.Expression.Function func) in 
       let set_prop = match key_expr with
         | Static  (prop, lit) -> Statement.StaticUpdate.build (loc_f loc) obj_id prop lit (Option.get val_expr)
         | Dynamic  prop       -> Statement.DynmicUpdate.build (loc_f loc) obj_id prop     (Option.get val_expr)
       in
       key_stmts @ val_stmts @ [set_prop]
+
+    | Property (_, Get {key; value=(loc, func); _}) -> 
+      let key_stmts, key_expr = nk key in 
+      let val_stmts, val_expr = nec context (loc, Ast'.Expression.Function func) in 
+
+      (* create get object *)
+      let id, decl = createVariableDeclaration None (loc_f loc) in 
+      let new_obj  = Statement.AssignObject.build (loc_f loc) id in 
+      let set_get  = Statement.StaticUpdate.build (loc_f loc) (Identifier.to_expression id) "get" false (Option.get val_expr) in 
+
+      let property = match key_expr with
+        | Static  (prop, _) -> Expression.Literal.build (loc_f loc) (Expression.Literal.String prop) ("\"" ^ prop ^ "\"")
+        | Dynamic  prop     -> prop
+      in
+
+      let set_prop = object_define_property obj_id property (Identifier.to_expression id) in 
+      key_stmts @ val_stmts @ decl @ [new_obj; set_get] @ set_prop
+
+
+    | Property (_, Set {key; value=(loc, func); _}) -> 
+      let key_stmts, key_expr = nk key in 
+      let val_stmts, val_expr = nec context (loc, Ast'.Expression.Function func) in 
+
+      (* create get object *)
+      let id, decl = createVariableDeclaration None (loc_f loc) in 
+      let new_obj  = Statement.AssignObject.build (loc_f loc) id in 
+      let set_get  = Statement.StaticUpdate.build (loc_f loc) (Identifier.to_expression id) "set" false (Option.get val_expr) in 
+
+      let property = match key_expr with
+        | Static  (prop, _) -> Expression.Literal.build (loc_f loc) (Expression.Literal.String prop) prop
+        | Dynamic  prop     -> prop
+      in
+
+      let set_prop = object_define_property obj_id property (Identifier.to_expression id) in 
+      key_stmts @ val_stmts @ decl @ [new_obj; set_get] @ set_prop
 
     (* TODO : spread property not implemented *)
     | _ -> failwith "[ERROR] Spread property not implemented"
@@ -1133,6 +1203,50 @@ and get_identifier (loc : m) (id : m Identifier.t option) : m Identifier.t =
 
 and get_string ((_, {Ast'.StringLiteral.value; _})) : string = value
 
+and check_side_effects (expr : ('M, 'T) Ast'.Expression.t) (context : context) : context = 
+  let rec traverse_exprs (expr : ('M, 'T) Ast'.Expression.t) (context : context) (iteration : int) : context = 
+    (* get expressions to visit next *)
+    let to_process = match expr with 
+      | _, Ast'.Expression.Logical {left; right; _}
+      | _, Ast'.Expression.Binary {left; right; _}                      -> [left; right]
+      | _, Ast'.Expression.Unary {argument; _}   
+      | _, Ast'.Expression.Update {argument; _}                         -> [argument]
+      | _, Ast'.Expression.Sequence {expressions; _}                    -> expressions
+      | _, Ast'.Expression.Yield {argument; _}                          -> Option.to_list argument 
+      | _, Ast'.Expression.Conditional {test; consequent; alternate; _} -> [test; consequent; alternate] 
+      | _, Ast'.Expression.Member {_object; property=PropertyExpression expr; _} ->  [_object; expr]
+      | _, Ast'.Expression.Array {elements; _} ->  
+        List.filter_map (fun element -> match element with 
+          | Ast'.Expression.Array.Expression expr -> Some expr
+          | _ -> None
+        ) elements
+
+      | _, Ast'.Expression.Object {properties; _} ->  
+        List.filter_map (function 
+          | Ast'.Expression.Object.Property (_, Init {value; _}) -> Some value
+          | _ -> None
+        ) properties 
+        
+      
+      | _ -> []
+    in 
+
+    (* update context *)
+    let context = match expr with 
+      | _, Ast'.Expression.Assignment _ -> if iteration > 0 then {context with has_side_effects = true} else context
+      | _ -> context
+    in
+    List.fold_left (fun acc expr -> traverse_exprs expr acc (iteration+1)) context to_process
+  in
+  
+  (* only check for side effects for the most high 
+  order expression this is done to avoid repetition*)
+  if context.high_order_expr then 
+    let context = traverse_exprs expr context 0 in 
+    {context with high_order_expr = false} 
+  else
+    context 
+
 and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Statement.VarDecl.kind = _let) (obj : m Expression.t option) (loc : m) : m Identifier.t * norm_stmt_t =
   let id = match objId with 
     | Name objId -> map_default_lazy (Identifier.build loc) (lazy (Identifier.build_random loc)) objId
@@ -1150,7 +1264,6 @@ and is_special_assignment ((_, expr) : ('M, 'T) Ast'.Expression.t) : bool =
     | Ast'.Expression.Binary _
     | Ast'.Expression.Logical _ 
     | Ast'.Expression.Update _
-    | Ast'.Expression.Unary _
     (* -- ASSIGN YIELD -- *)
     | Ast'.Expression.Yield _
     (* -- ASSIGN NEW -- *)

@@ -9,8 +9,8 @@
   let f;
   f = function (x, y, z) {
      let v1;
-     v1 = x;
-     x = x + 1;
+     v1 = Number(x);
+     x = v1 + 1;
   }
   
   $ ast_gen input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;

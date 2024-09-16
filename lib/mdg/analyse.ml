@@ -292,13 +292,16 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
   
         add_ret_node l_retn loc;
   
-      | _, AssignYield _ 
+      | _, Yield _ 
 
       (* -------- O T H E R   C O N S T R U C T S -------- *)
       | _, ExportDefaultDecl _
       | _, ExportNamedDecl   _
       | _, ImportDecl        _ 
 
+      | _, UseStrict _ 
+      | _, StaticDelete _
+      | _, DynamicDelete _ 
       | _, VarDecl  _
       | _, Throw    _ 
       | _, Break    _ 

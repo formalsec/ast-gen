@@ -26,11 +26,19 @@
      v3 = this.x;
      return v3;
   }
-  v1.y = v2;
   let v4;
-  v4 = function (v) {
+  v4 = {};
+  v4.get = v2;
+  let v5;
+  v5 = Object.defineProperty(v1, "y", v4);
+  let v6;
+  v6 = function (v) {
   }
-  v1.y = v4;
+  let v7;
+  v7 = {};
+  v7.set = v6;
+  let v8;
+  v8 = Object.defineProperty(v1, y, v7);
   
   $ ast_gen input-code-6.js -o out; cat out/code/input-code-6.js; echo; rm -fr out;
   let v1;

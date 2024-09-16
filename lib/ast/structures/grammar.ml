@@ -370,7 +370,7 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t -> Operator.Unary.t -> 'M Expression.t -> 'M Statement.t
   end
 
-  module AssignYield : sig
+  module Yield : sig
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
@@ -450,6 +450,31 @@ and Statement : sig
     }
 
     val build : 'M  -> 'M Identifier.t ->'M Expression.t ->'M Expression.t ->'M Statement.t
+  end
+
+  module StaticDelete : sig
+    type 'M t = {
+      id : int;
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      _object : 'M Expression.t;
+      property : string;
+      is_literal : bool;
+    }
+
+    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> string -> bool -> 'M Statement.t
+  end
+
+  module DynamicDelete : sig
+    type 'M t = {
+      id : int;
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      _object : 'M Expression.t;
+      property : 'M Expression.t;
+    }
+
+    val build : 'M -> 'M Identifier.t -> 'M Expression.t -> 'M Expression.t -> 'M Statement.t
   end
 
   module AssignNewCall : sig
@@ -532,6 +557,11 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t -> 'M Param.t list -> 'M Statement.t list -> 'M Statement.t
   end
 
+  module UseStrict : sig
+    type t = unit
+    val build : 'M -> 'M Statement.t
+  end
+
   type 'M t' = 
     | If       of 'M If.t
     | Switch   of 'M Switch.t
@@ -547,6 +577,7 @@ and Statement : sig
     | Break    of 'M Break.t
     | Continue of 'M Continue.t
     | Debugger of    Debugger.t
+    | Yield    of 'M Yield.t
     
     (* ----- imports // exports ------ *)
     | ExportDefaultDecl of 'M ExportDefaultDecl.t
@@ -557,18 +588,21 @@ and Statement : sig
     | AssignSimple        of 'M AssignSimple.t
     | AssignBinary        of 'M AssignBinary.t
     | AssignUnary         of 'M AssignUnary.t
-    | AssignYield         of 'M AssignYield.t
     | AssignArray         of 'M AssignArray.t
     | AssignObject        of 'M AssignObject.t
     | StaticUpdate        of 'M StaticUpdate.t
     | DynmicUpdate        of 'M DynmicUpdate.t
     | StaticLookup        of 'M StaticLookup.t
     | DynmicLookup        of 'M DynmicLookup.t
+    | StaticDelete        of 'M StaticDelete.t
+    | DynamicDelete       of 'M DynamicDelete.t
     | AssignNewCall       of 'M AssignNewCall.t
     | AssignFunCall       of 'M AssignFunCall.t
     | AssignMetCallStatic of 'M AssignMetCallStatic.t
     | AssignMetCallDynmic of 'M AssignMetCallDynmic.t
     | AssignFunction      of 'M AssignFunction.t
+
+    | UseStrict of UseStrict.t
   
   type 'M t = 'M * 'M t'  
 
@@ -937,7 +971,7 @@ end = struct
       (metadata, assign_info)
   end
 
-  module AssignYield = struct
+  module Yield = struct
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
@@ -947,7 +981,7 @@ end = struct
     } 
 
     let build (metadata : 'M) (left' : 'M Identifier.t) (argument' : 'M Expression.t option) (delegate': bool) : 'M Statement.t =
-      let yield_info = Statement.AssignYield {
+      let yield_info = Statement.Yield {
         id = get_id ();
         left = left';
         argument = argument';
@@ -1076,6 +1110,46 @@ end = struct
       (metadata, assign_info)
   end
 
+  module StaticDelete = struct
+    type 'M t = {
+      id : int;
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      _object : 'M Expression.t;
+      property : string;
+      is_literal : bool;
+    }
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (_object' : 'M Expression.t) (property' : string) (is_literal' : bool) : 'M Statement.t =
+      let assign_info = Statement.StaticDelete {
+        id = get_id ();
+        left = left';
+        _object = _object';
+        property = property';
+        is_literal = is_literal';
+      } in 
+      (metadata, assign_info)
+  end
+
+  module DynamicDelete = struct
+    type 'M t = {
+      id : int;
+      left : 'M Identifier.t;
+      (* -- right -- *)
+      _object : 'M Expression.t;
+      property : 'M Expression.t;
+    }
+
+    let build (metadata : 'M) (left' : 'M Identifier.t) (_object' : 'M Expression.t) (property' : 'M Expression.t) : 'M Statement.t =
+      let assign_info = Statement.DynamicDelete {
+        id = get_id ();
+        left = left';
+        _object = _object';
+        property = property';
+      } in 
+      (metadata, assign_info)
+  end
+
   module AssignFunCall = struct
     type 'M t = {
       id_call : int;
@@ -1182,6 +1256,13 @@ end = struct
       (metadata, assign_info)
   end
 
+  module UseStrict = struct
+    type t = unit
+    
+    let build (metadata : 'M) : 'M Statement.t =
+      (metadata, Statement.UseStrict ())
+  end
+
   type 'M t' = 
     | If       of 'M If.t
     | Switch   of 'M Switch.t
@@ -1197,6 +1278,8 @@ end = struct
     | Break    of 'M Break.t
     | Continue of 'M Continue.t
     | Debugger of    Debugger.t
+    | Yield    of 'M Yield.t
+
 
     (* ----- imports // exports ------ *)
     | ExportDefaultDecl of 'M ExportDefaultDecl.t
@@ -1207,18 +1290,21 @@ end = struct
     | AssignSimple        of 'M AssignSimple.t
     | AssignBinary        of 'M AssignBinary.t
     | AssignUnary         of 'M AssignUnary.t
-    | AssignYield         of 'M AssignYield.t
     | AssignArray         of 'M AssignArray.t
     | AssignObject        of 'M AssignObject.t
     | StaticUpdate        of 'M StaticUpdate.t
     | DynmicUpdate        of 'M DynmicUpdate.t
     | StaticLookup        of 'M StaticLookup.t
     | DynmicLookup        of 'M DynmicLookup.t
+    | StaticDelete        of 'M StaticDelete.t
+    | DynamicDelete       of 'M DynamicDelete.t
     | AssignNewCall       of 'M AssignNewCall.t
     | AssignFunCall       of 'M AssignFunCall.t
     | AssignMetCallStatic of 'M AssignMetCallStatic.t
     | AssignMetCallDynmic of 'M AssignMetCallDynmic.t
     | AssignFunction      of 'M AssignFunction.t
+    | UseStrict of UseStrict.t
+
   
   type 'M t = 'M * 'M t'
 end
