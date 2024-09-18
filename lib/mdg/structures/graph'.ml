@@ -19,6 +19,7 @@ module Node = struct
   type t = {
     id    : int;
     loc   : Location.t;
+    currFunc : t option;
     _type : _type
   }
 
@@ -27,9 +28,10 @@ module Node = struct
     id_count := !id_count + 1;
     !id_count
 
-  let create (_type : _type) (loc : Location.t) : t = {
+  let create (_type : _type) (loc : Location.t) (currFunc : t option) : t = {
     id    = gen_id ();
     loc   = loc;
+    currFunc = currFunc;
     _type = _type
   }
 
@@ -231,6 +233,8 @@ end
 type t = {
   edges : EdgeSet.t HashTable.t;
   nodes : Node.t HashTable.t;
+  call_nodes : (string, Node.t) Hashtbl.t;
+  callers : (string, Node.t list) Hashtbl.t;
   register : unit -> unit;
 }
 
@@ -285,7 +289,6 @@ let copy (graph : t) : t = {graph with edges = HashTable.copy graph.edges; nodes
 
 let iter (f : location -> EdgeSet.t -> Node.t option -> unit) (graph : t) = HashTable.iter (fun loc edges -> let node = find_node_opt graph loc in f loc edges node) graph.edges
 
-
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
 let get_edges (graph : t) (origin : location) : EdgeSet.t = 
   Option.value (find_edges_opt graph origin) ~default:EdgeSet.empty
@@ -318,6 +321,12 @@ let get_params (graph : t) (location : location) : EdgeSet.t  =
   let edges = get_edges graph location in 
   let params = EdgeSet.filter (Edge.is_param) edges in 
   params
+
+(* ------- C A L L   N O D E S ------- *)
+let register_call_node (graph : t) (func_name : string) (node : Node.t) : unit = 
+  let callers = Option.value (Hashtbl.find_opt graph.callers func_name) ~default:[] in 
+  Hashtbl.replace graph.call_nodes func_name node;
+  Hashtbl.replace graph.callers func_name (node :: callers)
 
 (* ------- M A I N   F U N C T I O N S -------*)
 let lub (graph : t) (graph' : t) : unit = 
@@ -439,40 +448,41 @@ let add_node (graph : t) (loc : location) (node : Node.t) : unit =
   replace_node  graph loc node;
   replace_edges graph loc (get_edges graph loc)
 
-let add_obj_node (graph : t) (abs_loc : location) (name : string) (crt_loc : Location.t) : unit =
-  let node : Node.t = Node.create (Object name) crt_loc in 
+let add_obj_node (graph : t) (curr_func : Node.t option) (abs_loc : location) (name : string) (crt_loc : Location.t): unit =
+  let node : Node.t = Node.create (Object name) crt_loc curr_func in 
   add_node graph abs_loc node
 
-let add_call_node (graph : t) (abs_loc : location) (func : string) (crt_loc : Location.t) : unit =
-  let node : Node.t = Node.create (Call func) crt_loc in 
-  add_node graph abs_loc node
+let add_call_node (graph : t) (curr_func : Node.t option) (abs_loc : location) (func : string) (crt_loc : Location.t) : Node.t =
+  let node : Node.t = Node.create (Call func) crt_loc curr_func in 
+  add_node graph abs_loc node;
+  node
 
-let add_func_node (graph : t) (abs_loc : location) (func_id : Functions.Id.t) (params : string list) (crt_loc : Location.t) : unit =
-  let node : Node.t = Node.create (Function (func_id, params)) crt_loc in 
+let add_func_node (graph : t) (curr_func : Node.t option) (abs_loc : location) (func_id : Functions.Id.t) (params : string list) (crt_loc : Location.t): unit =
+  let node : Node.t = Node.create (Function (func_id, params)) crt_loc curr_func in 
   add_node graph abs_loc node
   
-let add_param_node (graph : t) (abs_loc : location) (param : string) (crt_loc : Location.t): unit =
-  let node : Node.t = Node.create (Parameter param) crt_loc in 
+let add_param_node (graph : t) (curr_func : Node.t option) (abs_loc : location) (param : string) (crt_loc : Location.t) : unit =
+  let node : Node.t = Node.create (Parameter param) crt_loc curr_func in 
   add_node graph abs_loc node
 
-let add_return_node (graph : t) (abs_loc : location) (crt_loc : Location.t) : unit =
-  let node : Node.t = Node.create Return crt_loc in 
+let add_return_node (graph : t) (curr_func : Node.t option) (abs_loc : location) (crt_loc : Location.t) : unit =
+  let node : Node.t = Node.create Return crt_loc curr_func in 
   add_node graph abs_loc node
 
-let add_literal_node (graph : t) : unit =
-  let node : Node.t = Node.create Literal (Location.empty()) in 
+let add_literal_node (graph : t) (curr_func : Node.t option): unit =
+  let node : Node.t = Node.create Literal (Location.empty()) curr_func in 
   add_node graph loc_literal node 
 
-let add_taint_source (graph : t) : unit = 
-  let node : Node.t = Node.create TaintSource (Location.empty()) in
+let add_taint_source (graph : t) (curr_func : Node.t option): unit = 
+  let node : Node.t = Node.create TaintSource (Location.empty()) curr_func in
   add_node graph loc_taint_source node
 
-let add_taint_sink (graph : t) (abs_loc : location) (sink : string) (crt_loc : Location.t) : unit = 
-  let node : Node.t = Node.create (TaintSink sink) crt_loc in
+let add_taint_sink (graph : t) (curr_func : Node.t option) (abs_loc : location) (sink : string) (crt_loc : Location.t): unit = 
+  let node : Node.t = Node.create (TaintSink sink) crt_loc curr_func in
   add_node graph abs_loc node
 
 let empty (register : unit -> unit) : t = 
-  let graph = {edges = HashTable.create 100; nodes = HashTable.create 50; register = register} in
+  let graph = {edges = HashTable.create 100; nodes = HashTable.create 50; call_nodes = Hashtbl.create 50; callers = Hashtbl.create 50; register = register} in
   graph
 
 

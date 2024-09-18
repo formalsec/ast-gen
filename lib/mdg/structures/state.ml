@@ -23,6 +23,7 @@ type t = {
   this   : LocationSet.t;
   (* function information *)
   context   : Functions.Context.t;
+  currFuncNode : Graph.Node.t option;
 }
 
 let empty_state (info : Functions.Info.t) = { 
@@ -31,6 +32,7 @@ let empty_state (info : Functions.Info.t) = {
   this   = Store.loc_this;
   (* function information *)
   context   = Functions.Context.create info;
+  currFuncNode = None;
 }
 
 let copy ({graph; store; _} as state : t) : t = 

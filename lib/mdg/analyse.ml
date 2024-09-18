@@ -24,9 +24,10 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
   let initialize_functions (state : State.t) (funcs_info : Functions.Info.t) : unit =
     let init_func_header (state : State.t) (func : Functions.Id.t) (info : Functions.Info.info) : unit =
       let graph = state.graph in
+      let curr_func = state.currFuncNode in 
       let alloc_fun      = Graph.alloc_function graph in
-      let add_func_node  = Graph.add_func_node  graph in
-      let add_param_node = Graph.add_param_node graph in
+      let add_func_node  = Graph.add_func_node  graph curr_func in
+      let add_param_node = Graph.add_param_node graph curr_func in
       let add_param_edge = Graph.add_param_edge graph in
 
       let l_f = alloc_fun func.uid in
@@ -48,8 +49,8 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
   let init (function_info : Functions.Info.t) : t =
     let state' = State.empty_state function_info in
-    Graph.add_literal_node state'.graph;
-    Graph.add_taint_source state'.graph;
+    Graph.add_literal_node state'.graph None;
+    Graph.add_taint_source state'.graph None;
     initialize_functions state' function_info;
 
     { state = state';
@@ -110,6 +111,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     let graph = state.graph in
     let store = state.store in
     let contx = state.context in
+    let curr_func = state.currFuncNode in 
 
     (* aliases *)
     let eval_expr = Store.eval_expr store state.this in
@@ -121,9 +123,9 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     let store_update = Store.update store in
     let alloc = Graph.alloc graph in
     let falloc = Graph.alloc_function graph in
-    let add_node = Graph.add_obj_node graph in
-    let add_cnode = Graph.add_call_node graph in
-    let add_ret_node = Graph.add_return_node graph in
+    let add_node = Graph.add_obj_node graph curr_func in
+    let add_cnode = Graph.add_call_node graph curr_func in
+    let add_ret_node = Graph.add_return_node graph curr_func in
     let add_property = Graph.staticAddProperty graph in
     let add_property' = Graph.dynamicAddProperty graph in
     let lookup = Graph.lookup graph in
@@ -151,11 +153,12 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
           (* add function definition dependency *)
           let f_i = falloc id in
           store_update left (LocationSet.singleton f_i);
-
+          let l_func_node = Graph.get_func_node graph func_id in 
+          let func_node = Option.map (Graph.find_node graph) l_func_node in 
 
           (* setup new store with only the param and corresponding locations *)
           let param_locs = get_param_locs func_id in
-          let new_state = {state with store = Store.merge store param_locs; context = visit func_id} in
+          let new_state = {state with store = Store.merge store param_locs; context = visit func_id; currFuncNode = func_node} in
           analyse_sequence new_state analysis body
         );
 
@@ -168,7 +171,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
         store_update left (LocationSet.singleton l_i);
 
         (* ! add node info*)
-        add_node l_i (Identifier.get_name left) loc
+        add_node l_i (Identifier.get_name left) loc;
 
       | loc, AssignUnary {left; argument; id; _} ->
         let _L1 = eval_expr argument in
@@ -177,7 +180,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
         store_update left (LocationSet.singleton l_i);
 
         (* ! add node info*)
-        add_node l_i (Identifier.get_name left) loc
+        add_node l_i (Identifier.get_name left) loc;
 
 
       (* -------- N E W   O B J E C T -------- *)
@@ -246,7 +249,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
         let f_id = get_func_id f in
 
         (* node information *)
-        add_cnode l_call f loc;
+        let call_node = add_cnode l_call f loc in 
         add_node l_retn (Identifier.get_name left) loc;
 
         (* argument edges *)
@@ -255,6 +258,9 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
           let param_name = Option.value (List.nth_opt params i) ~default:"undefined" in
           LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) param_name) _Ls
         ) _Lss;
+        
+        (* add call node *)
+        Graph.register_call_node graph f call_node;
 
         (* ! add ref call edge (shotcut) from function definition to this call *)
         let f_orig = get_curr_func () in
@@ -321,11 +327,12 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
   and analyse_method_call (state : State.t) (loc : Location.t) (left : m Identifier.t) (_object : m Expression.t) (property : property) (arguments : m Expression.t list) (id_call : int) (id_retn : int) : unit =
     (* aliases *)
     let graph = state.graph in
+    let curr_func = state.currFuncNode in 
     let eval_expr = Store.eval_expr state.store state.this in
     let store_update = Store.update state.store in
     let alloc = Graph.alloc graph in
-    let add_node = Graph.add_obj_node graph in
-    let add_cnode = Graph.add_call_node graph in
+    let add_node = Graph.add_obj_node graph curr_func in
+    let add_cnode = Graph.add_call_node graph curr_func in
     let add_ret_edge = Graph.add_ret_edge graph in
     let add_arg_edge = Graph.add_arg_edge graph in
     let add_call_edge = Graph.add_call_edge graph in
@@ -345,7 +352,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     let f        = obj_name ^ "." ^ property in
 
     (* node information *)
-    add_cnode l_call f loc;
+    let _ = add_cnode l_call f loc in
     add_node l_retn (Identifier.get_name left) loc;
 
     (* ! graphjs only adds edge for this property *)
@@ -429,7 +436,7 @@ let rec add_taint_sinks (state : State.t) (config : Config.t) (ext_calls : Exter
 
 and add_taink_sink (graph : Graph.t) (loc : location) (node : Graph.Node.t) (sink_name : string) (sink_args : int list) : unit =
   let salloc = Graph.alloc_tsink graph in
-  let add_tsink = Graph.add_taint_sink graph in
+  let add_tsink = Graph.add_taint_sink graph None in
   let add_sink_edge = Graph.add_sink_edge graph in
   let add_dep_edge = Graph.add_dep_edge graph in
 

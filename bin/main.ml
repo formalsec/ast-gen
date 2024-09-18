@@ -23,7 +23,7 @@ let setup_output output_path =
   Ok (code_dir, graph_dir, run_dir)
 
 (* TODO: Use Fpath everywhere *)
-let main file_name output_path config_path mode generate_mdg no_dot verbose =
+let main file_name output_path config_path mode generate_mdg run_queries no_dot verbose =
   (* DANGEROUS: We create "run" but don't pass it to any function?
      Is there any global behaviour that will write to "run"? *)
   let* code_dir, graph_dir, _ = setup_output output_path in
@@ -92,6 +92,11 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
     let graph = ModuleGraphs.get module_graphs main in
     if not no_dot then Mdg.Pp.Dot.output (Fpath.to_string graph_dir) graph;
     Mdg.Pp.CSV.output (Fpath.to_string graph_dir) graph);
+
+  if run_queries then (
+    print_endline "run"
+  );
+  
   Ok 0
 
 (* setup comand line interface using CMDLiner library*)
@@ -126,6 +131,10 @@ let mdg : bool Term.t =
   let doc = "Generates Multiversion Dependency Graph." in
   Arg.(value & flag & info [ "mdg" ] ~doc)
 
+let run_queries : bool Term.t =
+  let doc = "..." in
+  Arg.(value & flag & info [ "q"; "queries" ] ~doc)
+
 let no_dot : bool Term.t =
   let doc = "Dont generate .dot and .svg graph representation." in
   Arg.(value & flag & info [ "noDot" ] ~doc)
@@ -149,7 +158,7 @@ let verbose : bool Term.t =
 let cli =
   let cmd =
     Term.(
-      const main $ input_file $ output_path $ config_path $ mode $ mdg $ no_dot
+      const main $ input_file $ output_path $ config_path $ mode $ mdg $ run_queries $ no_dot
       $ verbose)
   in
   let info = Cmd.info "graphjs2" in
