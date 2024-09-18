@@ -52,6 +52,7 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
         js_program;
 
       (* STEP 2 : Generate MDG for the normalized code *)
+      
       if generate_mdg then (
         let graph, exportedObject, external_calls =
           Mdg.Analyse.program mode verbose config_path norm_program
@@ -93,8 +94,13 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
     if not no_dot then Mdg.Pp.Dot.output (Fpath.to_string graph_dir) graph;
     Mdg.Pp.CSV.output (Fpath.to_string graph_dir) graph);
 
+  let config = Config.read config_path in
+  let main = (DependencyTree.get_main dep_tree) in
+  let graph = ModuleGraphs.get module_graphs main in
+  let exportedObject = Summaries.get summaries main in
+
   if run_queries then (
-    print_endline "run"
+    ignore (Queries.run_queries graph exportedObject config)
   );
   
   Ok 0

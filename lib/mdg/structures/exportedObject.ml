@@ -59,6 +59,6 @@ let rec get_all_values (exportedObject : t) : Structures.location list =
     | Object obj ->
       let values = List.of_seq (HashTable.to_seq_values obj) in 
       List.flatten (List.map get_all_values values)
-      
+
     | Value loc -> [loc]
-    
+  

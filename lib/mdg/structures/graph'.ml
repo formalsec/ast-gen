@@ -262,6 +262,11 @@ let rec print (graph : t) : unit =
 and print_edge (from : location) (edge : Edge.t) : unit = 
   print_string (from ^ (Edge.to_string edge) ^ "\n")
 
+let get_callers (graph: t) (name: string) = 
+  match Hashtbl.find graph.callers name with 
+  | exception Not_found -> [] 
+  | vs -> vs
+
 (* > NODE FUNCTIONS : *)
 let iter_nodes (f : location -> Node.t -> unit) (graph : t) = HashTable.iter f graph.nodes
 
