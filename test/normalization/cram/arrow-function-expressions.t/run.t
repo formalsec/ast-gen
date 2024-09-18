@@ -35,7 +35,7 @@
   $ graphjs2 input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
   const a;
   let v1;
-  v1 = [];
+  v1 = new Array(4);
   v1["0"] = 0;
   v1["1"] = 1;
   v1["2"] = 2;
@@ -52,7 +52,7 @@
   $ graphjs2 input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
   const a;
   let v1;
-  v1 = [];
+  v1 = new Array(4);
   v1["0"] = 0;
   v1["1"] = 1;
   v1["2"] = 2;

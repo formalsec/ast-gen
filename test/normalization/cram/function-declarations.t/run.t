@@ -11,6 +11,7 @@
      let v1;
      v1 = Number(x);
      x = v1 + 1;
+     v1;
   }
   
   $ graphjs2 input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
@@ -23,6 +24,7 @@
      while (v1) {
         let v2;
         v2 = alert(i);
+        v2;
         v1 = i < 10;
      }
   }
@@ -37,6 +39,7 @@
         v2 = n * 2;
         let v3;
         v3 = alert(v2);
+        v3;
      }
   }
   

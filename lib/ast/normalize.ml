@@ -288,11 +288,18 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
     | _, Ast'.Statement.Expression {expression; _} -> 
       let new_context = {context with is_expr_stmt = true} in 
       let stmts, expr = nec new_context expression in 
-      (match expr with 
+
+      let expr' = match expr with 
+        | Some (loc, expr) -> let expr' : m Statement.t = loc, Statement.Expression (loc, expr) in [expr']
+        | _ -> []
+      in 
+ 
+      stmts @ expr'
+      (* (match expr with 
         | Some (_, Expression.Literal {value=Expression.Literal.String lit; _}) -> 
           if lit = "use strict" then [Statement.UseStrict.build (Location.empty ())] else stmts
         | _ -> stmts
-      )
+      ) *)
     
     | _, Ast'.Statement.Empty _ -> []
 
@@ -433,6 +440,35 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
 
   
   (* --------- U P D A T E --------- *)
+  | loc, Ast'.Expression.Update {operator; argument = ((_, Member {_object; property; _}) as argument); prefix; _} -> 
+    (* special update of object proprerty *)
+    let operator' = Operator.Binary.translate_update operator in
+    let arg_stmts, arg_expr = nec empty_context' argument in 
+    let obj_stmts, obj_expr = nec empty_context' _object in 
+    let prop_stmts, prop_expr = normalize_member_property property in
+    
+    let loc = loc_f loc in
+    let one = Expression.Literal.build loc (Expression.Literal.Number (Int.to_float 1)) "1" in 
+
+    (* let v1 = Number(x.p) *)
+    let old_value_id, v1_decl = createVariableDeclaration None loc in
+    let number_wrap = Statement.AssignFunCall.build loc old_value_id (Identifier.build loc "Number") [Option.get arg_expr] in 
+    (* v2 = v1 + 1 *)
+    let arg_id, v2_decl = createVariableDeclaration None loc in 
+    let update = Statement.AssignBinary.build loc arg_id operator' (Identifier.to_expression old_value_id) one in 
+    
+    (* x.p = v2 *)
+    let assign = match prop_expr with 
+      | Static  (prop, lit) -> Statement.StaticUpdate.build loc (Option.get obj_expr) prop lit (Identifier.to_expression arg_id)
+      | Dynamic  prop       -> Statement.DynmicUpdate.build loc (Option.get obj_expr) prop     (Identifier.to_expression arg_id)
+    in
+
+    let id = if prefix 
+      then arg_id        (* ++x *)
+      else old_value_id  (* x++ *)
+    in
+    (arg_stmts @ obj_stmts @ prop_stmts @ v1_decl @ [number_wrap] @ v2_decl @ [update; assign] , Some (Identifier.to_expression id))
+
   | loc, Ast'.Expression.Update {operator; argument; prefix; _} -> 
     let operator' = Operator.Binary.translate_update operator in
     let arg_stmts, arg_expr = nec empty_context' argument in 
@@ -527,13 +563,13 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
       then assign_stmts, None
       else 
         let norm_stmts, norm_expr = get_pattern_expr left in 
-        assign_stmts @ norm_stmts, norm_expr
+        norm_stmts @ assign_stmts, norm_expr
 
   (* --------- A S S I G N   A R R A Y ---------*)
   | loc, Ast'.Expression.Array {elements; _} -> 
     let loc = loc_f loc in
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
-    let assign = Statement.AssignArray.build loc id in
+    let assign = Statement.AssignArray.build loc id (List.length elements) in
 
     let elems_stmts = List.mapi (normalize_array_elem empty_context' id) elements in 
     

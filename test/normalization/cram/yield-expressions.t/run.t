@@ -3,6 +3,7 @@
   foo = function (index) {
      let v1;
      v1 = yield index;
+     v1;
   }
   
   $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
@@ -13,5 +14,6 @@
      v2 = Number(index);
      index = v2 + 1;
      v1 = yield v2;
+     v1;
   }
   

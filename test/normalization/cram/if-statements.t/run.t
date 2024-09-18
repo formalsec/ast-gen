@@ -2,6 +2,7 @@
   if (true) {
      let v1;
      v1 = 1 + 2;
+     v1;
   }
   
   $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
@@ -27,6 +28,7 @@
   if (v1) {
      let v2;
      v2 = alert("They are the same!");
+     v2;
   }
   
   $ graphjs2 input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;

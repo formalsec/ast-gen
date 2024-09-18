@@ -3,6 +3,7 @@
   v1 = 2 + 1;
   let v2;
   v2 = 1 && v1;
+  v2;
   
   $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let v1;
@@ -17,12 +18,14 @@
   v1 = 1 && 2;
   let v2;
   v2 = v1 && 3;
+  v2;
   
   $ graphjs2 input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
   let v1;
   v1 = 1 + 2;
   let v2;
   v2 = v1 && 1;
+  v2;
   
   $ graphjs2 input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
   let v1;
@@ -31,4 +34,5 @@
   v2 = x.g;
   let v3;
   v3 = v1 && v2;
+  v3;
   

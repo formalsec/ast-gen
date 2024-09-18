@@ -28,5 +28,6 @@
      a = a;
      let v2;
      v2 = eval(a);
+     v2;
   }
   

@@ -386,9 +386,10 @@ and Statement : sig
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
+      size : int;
     }
 
-    val build : 'M -> 'M Identifier.t -> 'M Statement.t
+    val build : 'M -> 'M Identifier.t -> int -> 'M Statement.t
   end
 
   module AssignObject : sig
@@ -557,11 +558,6 @@ and Statement : sig
     val build : 'M -> 'M Identifier.t -> 'M Param.t list -> 'M Statement.t list -> 'M Statement.t
   end
 
-  module UseStrict : sig
-    type t = unit
-    val build : 'M -> 'M Statement.t
-  end
-
   type 'M t' = 
     | If       of 'M If.t
     | Switch   of 'M Switch.t
@@ -602,7 +598,7 @@ and Statement : sig
     | AssignMetCallDynmic of 'M AssignMetCallDynmic.t
     | AssignFunction      of 'M AssignFunction.t
 
-    | UseStrict of UseStrict.t
+    | Expression of 'M Expression.t
   
   type 'M t = 'M * 'M t'  
 
@@ -960,12 +956,14 @@ end = struct
     type 'M t = {
       id : int;
       left : 'M Identifier.t;
+      size : int;
     }
 
-    let build (metadata : 'M) (left' : 'M Identifier.t) : 'M Statement.t =
+    let build (metadata : 'M) (left' : 'M Identifier.t) (size' : int): 'M Statement.t =
       let assign_info = Statement.AssignArray {
         id = get_id ();
         left = left';
+        size = size';
       } 
       in
       (metadata, assign_info)
@@ -1256,13 +1254,6 @@ end = struct
       (metadata, assign_info)
   end
 
-  module UseStrict = struct
-    type t = unit
-    
-    let build (metadata : 'M) : 'M Statement.t =
-      (metadata, Statement.UseStrict ())
-  end
-
   type 'M t' = 
     | If       of 'M If.t
     | Switch   of 'M Switch.t
@@ -1303,8 +1294,8 @@ end = struct
     | AssignMetCallStatic of 'M AssignMetCallStatic.t
     | AssignMetCallDynmic of 'M AssignMetCallDynmic.t
     | AssignFunction      of 'M AssignFunction.t
-    | UseStrict of UseStrict.t
 
+    | Expression of 'M Expression.t
   
   type 'M t = 'M * 'M t'
 end
