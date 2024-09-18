@@ -22,7 +22,7 @@ type t = {
   store  : Store.t;
   this   : LocationSet.t;
   (* function information *)
-  context   : Functions.Context.t;
+  context      : Functions.Context.t;
   currFuncNode : Graph.Node.t option;
 }
 

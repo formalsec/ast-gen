@@ -442,7 +442,7 @@ and add_taink_sink (graph : Graph.t) (loc : location) (node : Graph.Node.t) (sin
 
   (* add taint sink *)
   let l_tsink = salloc node.id in
-  add_tsink l_tsink sink_name node.loc;
+  add_tsink l_tsink sink_name node.code_loc;
   add_sink_edge loc l_tsink sink_name;
 
   (* add depedency edges from dangerous inputs (arguments) to taint sink *)
