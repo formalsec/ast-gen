@@ -1,23 +1,3 @@
-(94/2561) [NOK] language/statements/with/12.10-0-7.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error { message: 'Expected true but got false' }
-	
-	Node.js v21.6.2
-	
-(247/2561) [NOK] language/statements/async-function/syntax-declaration-no-line-terminator.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: 'Expected a ReferenceError to be thrown but no exception was thrown at all'
-	}
-	
-	Node.js v21.6.2
-	
 (257/2561) [NOK] language/statements/if/if-stmt-else-fun-strict.js	 norm [pass]	semantics [pass]
 (258/2561) [NOK] language/statements/if/if-fun-no-else-strict.js	 norm [pass]	semantics [pass]
 (259/2561) [NOK] language/statements/if/if-stmt-else-decl-strict.js	 norm [pass]	semantics [pass]
@@ -106,7 +86,7 @@
 	Node.js v21.6.2
 	
 (357/2561) [NOK] language/statements/function/S13_A19_T1.js	 norm [pass]	semantics [fail]
-	[eval]:410
+	[eval]:412
 	let __decl;
 	    ^
 	
@@ -163,7 +143,7 @@
 	Node.js v21.6.2
 	
 (409/2561) [NOK] language/statements/function/S14_A5_T1.js	 norm [pass]	semantics [fail]
-	[eval]:404
+	[eval]:405
 	let __func;
 	    ^
 	
@@ -233,7 +213,7 @@
 	Node.js v21.6.2
 	
 (438/2561) [NOK] language/statements/function/S14_A5_T2.js	 norm [pass]	semantics [fail]
-	[eval]:404
+	[eval]:405
 	let __func;
 	    ^
 	
@@ -248,7 +228,7 @@
 	Node.js v21.6.2
 	
 (451/2561) [NOK] language/statements/function/S13_A19_T2.js	 norm [pass]	semantics [fail]
-	[eval]:412
+	[eval]:414
 	   let __decl;
 	       ^
 	
@@ -263,7 +243,7 @@
 	Node.js v21.6.2
 	
 (468/2561) [NOK] language/statements/function/S13_A6_T2.js	 norm [pass]	semantics [fail]
-	[eval]:416
+	[eval]:419
 	let __func;
 	    ^
 	
@@ -332,17 +312,6 @@
 	Node.js v21.6.2
 	
 (533/2561) [NOK] language/statements/labeled/decl-fun-strict.js	 norm [pass]	semantics [pass]
-(562/2561) [NOK] language/statements/do-while/S12.6.1_A9.js	 norm [pass]	semantics [fail]
-	[eval]:402
-	      throw e;
-	      ^
-	
-	Test262Error {
-	  message: '#1: "abbracadabra" lead to throwing exception'
-	}
-	
-	Node.js v21.6.2
-	
 (575/2561) [NOK] language/statements/for/S12.6.3_A11.1_T1.js	 norm [pass]	semantics [tout]
 (601/2561) [NOK] language/statements/for/S12.6.3_A11_T1.js	 norm [pass]	semantics [tout]
 (605/2561) [NOK] language/statements/for/S12.6.3_A11_T2.js	 norm [pass]	semantics [fail]
@@ -375,32 +344,11 @@
 	
 	Node.js v21.6.2
 	
-(647/2561) [NOK] language/statements/switch/scope-lex-let.js	 norm [pass]	semantics [pass]
 (663/2561) [NOK] language/statements/try/S12.14_A9_T4.js	 norm [pass]	semantics [tout]
 (666/2561) [NOK] language/statements/try/S12.14_A11_T2.js	 norm [pass]	semantics [tout]
 (669/2561) [NOK] language/statements/try/S12.14_A9_T5.js	 norm [pass]	semantics [tout]
 (684/2561) [NOK] language/statements/try/S12.14_A10_T2.js	 norm [pass]	semantics [tout]
-(685/2561) [NOK] language/statements/try/S12.14_A6.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: '#3: Sequence evaluation of commands try/catch/finally(with exception) is 1. try, 2. catch, 3. finally'
-	}
-	
-	Node.js v21.6.2
-	
 (702/2561) [NOK] language/statements/try/S12.14_A10_T4.js	 norm [pass]	semantics [tout]
-(715/2561) [NOK] language/statements/try/12.14-7.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error { message: 'e instanceof ReferenceError' }
-	
-	Node.js v21.6.2
-	
 (718/2561) [NOK] language/statements/try/S12.14_A10_T5.js	 norm [pass]	semantics [tout]
 (723/2561) [NOK] language/statements/try/S12.14_A9_T2.js	 norm [pass]	semantics [tout]
 (730/2561) [NOK] language/statements/try/S12.14_A11_T4.js	 norm [pass]	semantics [tout]
@@ -438,7 +386,7 @@
 	
 (799/2561) [NOK] language/statements/continue/line-terminators.js	 norm [pass]	semantics [tout]
 (808/2561) [NOK] language/statements/continue/S12.7_A9_T1.js	 norm [pass]	semantics [fail]
-	[eval]:407
+	[eval]:408
 	            continue FOR;
 	                     ^^^
 	
@@ -460,17 +408,6 @@
 	
 	Test262Error {
 	  message: '#1: FunctionExpression inside while construction expression allowed but function not declare'
-	}
-	
-	Node.js v21.6.2
-	
-(833/2561) [NOK] language/statements/while/S12.6.2_A9.js	 norm [pass]	semantics [fail]
-	[eval]:402
-	      throw e;
-	      ^
-	
-	Test262Error {
-	  message: '#1: "abbracadabra" lead to throwing exception'
 	}
 	
 	Node.js v21.6.2
@@ -508,47 +445,23 @@
 	
 	Node.js v21.6.2
 	
-(972/2561) [NOK] language/expressions/postfix-increment/11.3.1-2-3-s.js	 norm [pass]	semantics [fail]
-	[eval]:16
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: 'arguments[1] Expected SameValue(<<7>>, <<8>>) to be true'
-	}
-	
-	Node.js v21.6.2
-	
-(975/2561) [NOK] language/expressions/postfix-increment/11.3.1-2-3.js	 norm [pass]	semantics [fail]
+(974/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A6_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
 	
-	Test262Error {
-	  message: 'arguments[1] Expected SameValue(<<7>>, <<8>>) to be true'
-	}
-	
-	Node.js v21.6.2
-	
-(994/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A2.1_T1.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: '#2: this.x = 1; var y = this.x++; this.x === 1 + 1. Actual: 1'
-	}
+	Test262Error { message: 'Expected true but got false' }
 	
 	Node.js v21.6.2
 	
 (996/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T5.js	 norm [pass]	semantics [fail]
-	[eval]:405
+	[eval]:407
 	   x = v6 + 1;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:405:6)
-	    at [eval]:408:6
+	    at v5 ([eval]:407:6)
+	    at [eval]:411:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -607,15 +520,6 @@
 	
 	Node.js v21.6.2
 	
-(1189/2561) [NOK] language/expressions/delete/S11.4.1_A3.3_T1.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error { message: '#1: x = 1; delete x; x is not exist' }
-	
-	Node.js v21.6.2
-	
 (1214/2561) [NOK] language/expressions/delete/11.4.1-2-5.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
@@ -623,17 +527,6 @@
 	
 	Test262Error {
 	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
-	}
-	
-	Node.js v21.6.2
-	
-(1236/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A2.1_T1.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: '#2: this.x = 1; this.x--; this.x === 1 - 1. Actual: 1'
 	}
 	
 	Node.js v21.6.2
@@ -648,13 +541,13 @@
 	Node.js v21.6.2
 	
 (1242/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T5.js	 norm [pass]	semantics [fail]
-	[eval]:405
+	[eval]:407
 	   x = v6 - 1;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:405:6)
-	    at [eval]:408:6
+	    at v5 ([eval]:407:6)
+	    at [eval]:411:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -682,58 +575,12 @@
 	
 	Node.js v21.6.2
 	
-(1259/2561) [NOK] language/expressions/postfix-decrement/11.3.2-2-3-s.js	 norm [pass]	semantics [fail]
+(1260/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A6_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
 	
-	Test262Error {
-	  message: 'arguments[1] Expected SameValue(<<7>>, <<6>>) to be true'
-	}
-	
-	Node.js v21.6.2
-	
-(1330/2561) [NOK] language/expressions/array/11.1.4-0.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: 'a.length Expected SameValue(<<0>>, <<1>>) to be true'
-	}
-	
-	Node.js v21.6.2
-	
-(1333/2561) [NOK] language/expressions/array/S11.1.4_A1.6.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: '#4: var array = [,,3,,,]; array.length === 5. Actual: 3'
-	}
-	
-	Node.js v21.6.2
-	
-(1334/2561) [NOK] language/expressions/array/S11.1.4_A1.2.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: '#4: var array = [,,,,,]; array.length === 5. Actual: 0'
-	}
-	
-	Node.js v21.6.2
-	
-(1335/2561) [NOK] language/expressions/array/S11.1.4_A1.5.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: '#4: var array = [4,5,,,,]; array.length === 5. Actual: 2'
-	}
+	Test262Error { message: 'Expected true but got false' }
 	
 	Node.js v21.6.2
 	
@@ -753,13 +600,13 @@
 	Node.js v21.6.2
 	
 (1352/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T5.js	 norm [pass]	semantics [fail]
-	[eval]:405
+	[eval]:407
 	   x = v6 + 1;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:405:6)
-	    at [eval]:408:6
+	    at v5 ([eval]:407:6)
+	    at [eval]:411:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -775,17 +622,6 @@
 	    ^
 	
 	Test262Error { message: '#1: scope.x === 3. Actual: 2' }
-	
-	Node.js v21.6.2
-	
-(1355/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A2.1_T1.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: '#2: this.x = 1; ++this.x; this.x === 1 + 1. Actual: 1'
-	}
 	
 	Node.js v21.6.2
 	
@@ -807,36 +643,23 @@
 	
 	Node.js v21.6.2
 	
-(1370/2561) [NOK] language/expressions/prefix-increment/11.4.4-2-3-s.js	 norm [pass]	semantics [fail]
+(1369/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A6_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
 	
-	Test262Error {
-	  message: 'arguments[1] Expected SameValue(<<7>>, <<8>>) to be true'
-	}
-	
-	Node.js v21.6.2
-	
-(1431/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A2.1_T1.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: '#2: this.x = 1; --this.x; this.x === 1 - 1. Actual: 1'
-	}
+	Test262Error { message: 'Expected true but got false' }
 	
 	Node.js v21.6.2
 	
 (1438/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T5.js	 norm [pass]	semantics [fail]
-	[eval]:405
+	[eval]:407
 	   x = v6 - 1;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:405:6)
-	    at [eval]:408:6
+	    at v5 ([eval]:407:6)
+	    at [eval]:411:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -873,14 +696,12 @@
 	
 	Node.js v21.6.2
 	
-(1456/2561) [NOK] language/expressions/prefix-decrement/11.4.5-2-3-s.js	 norm [pass]	semantics [fail]
+(1455/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A6_T3.js	 norm [pass]	semantics [fail]
 	[eval]:15
 	    throw new Test262Error(message);
 	    ^
 	
-	Test262Error {
-	  message: 'arguments[1] Expected SameValue(<<7>>, <<6>>) to be true'
-	}
+	Test262Error { message: 'Expected true but got false' }
 	
 	Node.js v21.6.2
 	
@@ -985,13 +806,13 @@
 	Node.js v21.6.2
 	
 (1500/2561) [NOK] language/expressions/assignment/S11.13.1_A5_T5.js	 norm [pass]	semantics [fail]
-	[eval]:405
+	[eval]:406
 	   x = v6;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v3 ([eval]:405:6)
-	    at [eval]:408:6
+	    at v3 ([eval]:406:6)
+	    at [eval]:409:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -1051,7 +872,7 @@
 	graphjs2: internal error, uncaught exception:
 	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
 	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 627, characters 54-107
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 663, characters 54-107
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
 	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
@@ -1080,7 +901,7 @@
 	graphjs2: internal error, uncaught exception:
 	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
 	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 627, characters 54-107
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 663, characters 54-107
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
 	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
@@ -1109,7 +930,7 @@
 	graphjs2: internal error, uncaught exception:
 	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
 	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 627, characters 54-107
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 663, characters 54-107
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
 	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
@@ -1160,7 +981,7 @@
 	graphjs2: internal error, uncaught exception:
 	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
 	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 627, characters 54-107
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 663, characters 54-107
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
 	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
@@ -1178,7 +999,7 @@
 	graphjs2: internal error, uncaught exception:
 	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
 	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 627, characters 54-107
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 663, characters 54-107
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
 	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
@@ -1214,7 +1035,7 @@
 	graphjs2: internal error, uncaught exception:
 	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
 	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 554, characters 54-107
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 590, characters 54-107
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
 	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
@@ -1248,7 +1069,7 @@
 	graphjs2: internal error, uncaught exception:
 	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
 	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 554, characters 54-107
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 590, characters 54-107
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
 	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
@@ -1280,7 +1101,7 @@
 	
 	TypeError: x is not a constructor
 	    at fn ([eval]:396:13)
-	    at [eval]:405:6
+	    at [eval]:407:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -1305,7 +1126,7 @@
 	graphjs2: internal error, uncaught exception:
 	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
 	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 554, characters 54-107
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 590, characters 54-107
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
 	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
@@ -1323,7 +1144,7 @@
 	graphjs2: internal error, uncaught exception:
 	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
 	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 554, characters 54-107
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 590, characters 54-107
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
 	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
@@ -1341,7 +1162,7 @@
 	graphjs2: internal error, uncaught exception:
 	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
 	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
-	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 554, characters 54-107
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 590, characters 54-107
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
 	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
 	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
@@ -1356,13 +1177,13 @@
 	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
 	
 (1922/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x * 3;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -1473,13 +1294,13 @@
 	Node.js v21.6.2
 	
 (1976/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x % 3;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -1517,13 +1338,13 @@
 	Node.js v21.6.2
 	
 (1986/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x >> 3;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -1608,13 +1429,13 @@
 	Node.js v21.6.2
 	
 (2025/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x - 1;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -1654,13 +1475,13 @@
 	Node.js v21.6.2
 	
 (2050/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x / 3;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -1827,13 +1648,13 @@
 	Node.js v21.6.2
 	
 (2100/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x + 1;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -1862,13 +1683,13 @@
 	Node.js v21.6.2
 	
 (2110/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x << 3;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -1986,13 +1807,13 @@
 	Node.js v21.6.2
 	
 (2160/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x >>> 3;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -2054,13 +1875,13 @@
 	Node.js v21.6.2
 	
 (2187/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x ^ 3;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -2180,13 +2001,13 @@
 	Node.js v21.6.2
 	
 (2242/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x & 3;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -2357,13 +2178,13 @@
 	Node.js v21.6.2
 	
 (2326/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T5.js	 norm [pass]	semantics [fail]
-	[eval]:403
+	[eval]:405
 	   x = x | 4;
 	     ^
 	
 	ReferenceError: x is not defined
-	    at v5 ([eval]:403:6)
-	    at [eval]:406:6
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
 	    at runScriptInThisContext (node:internal/vm:144:10)
 	    at node:internal/process/execution:109:14
 	    at [eval]-wrapper:6:24
@@ -2402,86 +2223,17 @@
 	
 	Node.js v21.6.2
 	
-(PASSED 99.3%)	language/statements/with	 failed : 0/1   timeout : 0
-(PASSED 100.0%)	language/statements/empty	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/statements/variable	 failed : 0/0   timeout : 0
-(PASSED 0.0%)	language/statements/async-function	 failed : 0/1   timeout : 0
-(PASSED 75.8%)	language/statements/if	 failed : 8/8   timeout : 0
-(PASSED 100.0%)	language/statements/return	 failed : 0/0   timeout : 0
-(PASSED 91.0%)	language/statements/function	 failed : 0/21   timeout : 0
-(PASSED 83.3%)	language/statements/labeled	 failed : 1/1   timeout : 0
-(PASSED 100.0%)	language/statements/throw	 failed : 0/0   timeout : 0
-(PASSED 95.8%)	language/statements/do-while	 failed : 0/1   timeout : 0
-(PASSED 94.0%)	language/statements/for	 failed : 0/2   timeout : 2
-(PASSED 92.9%)	language/statements/switch	 failed : 1/1   timeout : 0
-(PASSED 100.0%)	language/statements/switch/syntax/redeclaration	 failed : 0/0   timeout : 0
-(PASSED 88.1%)	language/statements/try	 failed : 0/2   timeout : 8
-(PASSED 100.0%)	language/statements/expression	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/statements/break	 failed : 0/0   timeout : 0
-(PASSED 94.1%)	language/statements/for-in	 failed : 0/2   timeout : 0
-(PASSED 81.2%)	language/statements/continue	 failed : 0/1   timeout : 2
-(PASSED 92.0%)	language/statements/while	 failed : 0/2   timeout : 0
-(PASSED 100.0%)	language/statements/block	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/modulus	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/bitwise-and	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/dynamic-import	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/dynamic-import/namespace	 failed : 0/0   timeout : 0
-(PASSED 0.0%)	language/expressions/dynamic-import/catch	 failed : 0/1   timeout : 0
-(PASSED 100.0%)	language/expressions/dynamic-import/syntax/valid	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/relational	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/less-than	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/concatenation	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/unary-plus	 failed : 0/0   timeout : 0
-(PASSED 82.9%)	language/expressions/postfix-increment	 failed : 0/7   timeout : 0
-(PASSED 100.0%)	language/expressions/property-accessors	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/logical-and	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/division	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/conditional	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/instanceof	 failed : 0/0   timeout : 0
-(PASSED 93.3%)	language/expressions/delete	 failed : 0/6   timeout : 0
-(PASSED 84.6%)	language/expressions/postfix-decrement	 failed : 0/6   timeout : 0
-(PASSED 100.0%)	language/expressions/greater-than-or-equal	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/subtraction	 failed : 0/0   timeout : 0
-(PASSED 45.5%)	language/expressions/array	 failed : 0/6   timeout : 0
-(PASSED 80.6%)	language/expressions/prefix-increment	 failed : 0/6   timeout : 0
-(PASSED 100.0%)	language/expressions/does-not-equals	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/in	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/grouping	 failed : 0/0   timeout : 0
-(PASSED 81.2%)	language/expressions/prefix-decrement	 failed : 0/6   timeout : 0
-(PASSED 76.3%)	language/expressions/assignment	 failed : 0/14   timeout : 0
-(PASSED 100.0%)	language/expressions/comma	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/exponentiation	 failed : 0/0   timeout : 0
-(PASSED 95.2%)	language/expressions/function	 failed : 0/1   timeout : 0
-(PASSED 100.0%)	language/expressions/strict-does-not-equals	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/unsigned-right-shift	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/equals	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/logical-not	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/bitwise-xor	 failed : 0/0   timeout : 0
-(PASSED 76.3%)	language/expressions/call	 failed : 5/4   timeout : 0
-(PASSED 100.0%)	language/expressions/greater-than	 failed : 0/0   timeout : 0
-(PASSED 96.2%)	language/expressions/object	 failed : 0/2   timeout : 0
-(PASSED 100.0%)	language/expressions/bitwise-or	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/void	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/less-than-or-equal	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/strict-equals	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/import.meta/syntax	 failed : 0/0   timeout : 0
-(PASSED 47.1%)	language/expressions/new	 failed : 5/4   timeout : 0
-(PASSED 77.0%)	language/expressions/compound-assignment	 failed : 0/99   timeout : 0
-(PASSED 100.0%)	language/expressions/this	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/bitwise-not	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/logical-or	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/right-shift	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/multiplication	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/unary-minus	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/assignmenttargettype	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/left-shift	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/typeof	 failed : 0/0   timeout : 0
-(PASSED 100.0%)	language/expressions/addition	 failed : 0/0   timeout : 0
+(PASSED 99.3%) (PASSED 100.0%)	language/statements/with	 failed : 0/0   timeout : 0
+(PASSED 95.8%) (PASSED 100.0%)	language/statements/do-while	 failed : 0/0   timeout : 0
+(PASSED 92.9%) (PASSED 100.0%)	language/statements/switch	 failed : 0/0   timeout : 0
+(PASSED 88.1%) (PASSED 90.5%)	language/statements/try	 failed : 0/0   timeout : 8
+(PASSED 92.0%) (PASSED 96.0%)	language/statements/while	 failed : 0/1   timeout : 0
+(PASSED 93.3%) (PASSED 94.4%)	language/expressions/delete	 failed : 0/5   timeout : 0
 
     ==============================
     total : 2561
-    ok    : 2334
-    error : 20 + 205 (normalization + semantics)
+    ok    : 2351
+    error : 19 + 188 (normalization + semantics)
     timeout : 12
     ==============================
     
