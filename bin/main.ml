@@ -91,15 +91,16 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
     (* mdg output *)
     let main = DependencyTree.get_main dep_tree in
     let graph = ModuleGraphs.get module_graphs main in
-    if not no_dot then Mdg.Pp.Dot.output (Fpath.to_string graph_dir) graph;
-    Mdg.Pp.CSV.output (Fpath.to_string graph_dir) graph;
+    if not no_dot then Mdg.Pp.Dot.output graph_dir graph;
+    Mdg.Pp.CSV.output graph_dir graph;
 
     (* run queries *)
     if run_queries then (
       let exportedObject = Summaries.get summaries main in
       let config = Config.read config_path in
 
-      ignore (Queries.run_queries graph exportedObject config)
+      let res = (Queries.run_queries graph exportedObject config) in 
+      print_endline (Bool.to_string res);
     );
   );
   

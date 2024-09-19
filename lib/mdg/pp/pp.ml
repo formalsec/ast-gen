@@ -54,9 +54,10 @@ end
   
     !result
   
-  let output (file_path : string) (graph : Graph.t) : unit = 
-    let dot_file = file_path ^ "graph.dot" in
-    let svg_file = file_path ^ "graph.svg" in 
+  let output (file_path : Fpath.t) (graph : Graph.t) : unit = 
+    
+    let dot_file = Fpath.(to_string @@ (file_path // Fpath.v "graph.dot")) in
+    let svg_file = Fpath.(to_string @@ (file_path // Fpath.v "graph.svg")) in 
     
     let file = open_out_bin dot_file in
     
@@ -69,19 +70,20 @@ end
 end
 
 module CSV = struct
-  let output (file_path : string) (graph : Graph.t) : unit =
+  let output (file_path : Fpath.t) (graph : Graph.t) : unit =
     
-    let nodes_file  = file_path ^ "nodes.csv" in 
-    let edges_file  = file_path ^ "rels.csv" in 
-    let graph_stats = file_path ^ "graph_stats.json" in
+    let nodes_file  = Fpath.(to_string @@ (file_path // Fpath.v "nodes.csv"))  in 
+    let edges_file  = Fpath.(to_string @@ (file_path // Fpath.v "rels.csv"))  in 
+    let graph_stats = Fpath.(to_string @@ (file_path // Fpath.v "graph_stats.json"))  in
 
     (* process node information *)
     let out_channel = open_out nodes_file in
     output_string out_channel "Id:ID¿Type¿SubType¿IdentifierName¿Raw¿InternalStructure¿Location¿Code¿Label:LABEL\n";
 
     Graph.iter_nodes (fun _ node_info  -> 
+      let node_id = string_of_int (Node.get_id node_info) in 
       let info = [
-        Node.get_id        node_info;  (* node id *)
+        node_id;  (* node id *)
         Node.get_type      node_info;  (* node type *)
         Node.get_subtype   node_info;  (* node subtype *)
         Node.get_id_name   node_info;  (* node identifier name *)

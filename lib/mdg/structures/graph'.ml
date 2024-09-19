@@ -61,8 +61,9 @@ module Node = struct
     | Literal -> "literal value"
     | Return -> "RET_OBJ"
 
+  let get_abs_loc (node : t) : string = node.abs_loc
   (* get node information *)
-  let get_id (node : t) : string = string_of_int node.id
+  let get_id (node : t) : int = node.id
   let get_name (node : t) : string = 
     match node._type with
       | Object name -> name
@@ -234,7 +235,6 @@ module EdgeSet = struct
 
   let get_to (set : Set'.t) : location list = 
     map_list (fun edge -> edge._to) set
-
 end
 
 type t = {
@@ -753,3 +753,56 @@ let dynamicNewVersion (graph : t) (store : Store.t) (_L_obj : LocationSet.t) (_L
     then dNVStrongUpdate graph store (LocationSet.min_elt _L_obj) _L_prop id add_node
     else dNVWeakUpdate graph store _L_obj _L_prop id add_node
   
+
+(* ------- T R A V E R S E ------- *)
+let get_neighbors (graph : t) (node : Node.t) (is_neighbor : Node.t -> Edge.t -> bool) : Node.t list = 
+  fold_edges (fun from edges acc -> 
+    if EdgeSet.exists (is_neighbor node) edges 
+      then find_node graph from :: acc
+      else acc
+  ) graph []
+
+let is_neighbor (node : Node.t) (edge : Edge.t) : bool = 
+  let allowed_edge_type = match edge._type with 
+    | Property _  
+    | Dependency 
+    | Argument _
+    | Version _  
+    | Parameter _ -> true 
+    | _ -> false 
+  in 
+  node.abs_loc = edge._to && allowed_edge_type
+
+
+let reaches graph src target : Node.t list list = 
+  let rec reaches' graph visited ret_paths cur_paths target : Node.t list list = 
+    match cur_paths with 
+      | [] -> ret_paths
+      | (cur::_ as curr_path)::tail_paths -> 
+        if cur = target 
+          then reaches' graph visited (curr_path::ret_paths) tail_paths target
+          else (
+            let nghbrs = get_neighbors graph cur is_neighbor in
+            let nghbrs = List.filter (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited)) nghbrs in 
+            let visited' = List.fold_left (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc) visited nghbrs in 
+            
+            let fst_paths = List.map (fun cur' -> cur'::curr_path) nghbrs in 
+            reaches' graph visited' ret_paths (fst_paths @ tail_paths) target
+          )
+          
+      | _ -> failwith "current path is empty"
+  in 
+
+  let visited  = IntSet.empty in
+  reaches' graph visited [] [ [ src ] ] target 
+
+let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) : Node.t list = 
+    let paths = reaches graph node f_node in 
+    List.filter_map (fun path -> 
+      let argument_index = List.length path - 2 in 
+      if argument_index > 0 
+        then Some (List.nth path argument_index)
+        else None
+    ) paths 
+     
+

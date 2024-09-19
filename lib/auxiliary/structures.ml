@@ -12,4 +12,6 @@ module HashTable = struct
             else false
 end
 
+module IntSet = Set.Make(Int)
+
     
