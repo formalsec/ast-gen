@@ -1,6 +1,5 @@
 open Ast.Grammar
 open Structures
-open Auxiliary.Structures
 module Functions = Ast.Functions
 module Graph = Graph'
 
@@ -33,15 +32,15 @@ module Analysis : AbstractAnalysis.T = struct
           (* update of a property of exports *)
           if exportsObjectInfo.exportsIsModuleExports && (_object = "exports" || AliasSet.mem _object exportsObjectInfo.exportsAliases) then
             let l_right = Store.eval_expr state.store state.this right in
-            HashTable.replace exportsObjectInfo.exportsAssigns property l_right;
+            Hashtbl.replace exportsObjectInfo.exportsAssigns property l_right;
             exportsObjectInfo
 
           (* update of the module.exports value *)
           else if _object = "module" && property = "exports" then 
             let l_right = Store.eval_expr state.store state.this right in 
 
-            HashTable.clear exportsObjectInfo.moduleExportsAssigns;
-            HashTable.clear exportsObjectInfo.exportsAssigns;
+            Hashtbl.clear exportsObjectInfo.moduleExportsAssigns;
+            Hashtbl.clear exportsObjectInfo.exportsAssigns;
             { exportsObjectInfo with 
                moduleExportsObject = Some l_right;
                exportsIsModuleExports = false;
@@ -52,7 +51,7 @@ module Analysis : AbstractAnalysis.T = struct
           (* update of a property of module.exports *)
           else if AliasSet.mem _object exportsObjectInfo.moduleExportsAliases then
             let l_right = Store.eval_expr state.store state.this right in 
-            HashTable.replace exportsObjectInfo.moduleExportsAssigns property l_right;
+            Hashtbl.replace exportsObjectInfo.moduleExportsAssigns property l_right;
             exportsObjectInfo
           
           else exportsObjectInfo
@@ -65,10 +64,10 @@ module Analysis : AbstractAnalysis.T = struct
   
   let init () : t = {
     moduleExportsObject = None;
-    moduleExportsAssigns = HashTable.create 10;
+    moduleExportsAssigns = Hashtbl.create 10;
     moduleExportsAliases = AliasSet.empty;
 
-    exportsAssigns = HashTable.create 10;
+    exportsAssigns = Hashtbl.create 10;
     exportsAliases = AliasSet.empty;
 
     exportsIsModuleExports = true;

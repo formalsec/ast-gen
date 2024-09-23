@@ -1,11 +1,15 @@
-open Auxiliary.Structures
-module ExportedObject = Mdg.ExportedObject 
+module ExportedObject = Mdg.ExportedObject
 
 type key = string
-type value = ExportedObject.t 
-type t = value HashTable.t
 
-let empty () : t = HashTable.create 10
-let add : t -> key -> value -> unit = HashTable.replace
-let get : t -> key -> value = HashTable.find 
-let get_opt : t -> key -> value option = HashTable.find_opt
+type value = ExportedObject.t
+
+type t = (string, value) Hashtbl.t
+
+let empty () : t = Hashtbl.create 10
+
+let add : t -> key -> value -> unit = Hashtbl.replace
+
+let get : t -> key -> value = Hashtbl.find
+
+let get_opt : t -> key -> value option = Hashtbl.find_opt

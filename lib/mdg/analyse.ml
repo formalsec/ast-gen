@@ -6,7 +6,6 @@ module Edge = Graph.Edge
 module Mode = Auxiliary.Mode
 open Config
 open Ast.Grammar
-open Auxiliary.Structures
 open Structures
 open AnalysisType
 open ExternalReferences
@@ -511,13 +510,13 @@ let rec buildExportsObject (state : State.t) (info : buildExportsObject) : Expor
   ) info.moduleExportsObject;
 
   (* assignments to the properties of module.exports *)
-  HashTable.iter (fun property loc ->
+  Hashtbl.iter (fun property loc ->
     let object' = construct_object state loc in
     exportsObject := ExportedObject.add_property !exportsObject property object';
   ) info.moduleExportsAssigns;
 
   (* assignments to the properties of exports *)
-  HashTable.iter (fun property loc ->
+  Hashtbl.iter (fun property loc ->
     let object' = construct_object state loc in
     exportsObject := ExportedObject.add_property !exportsObject property object';
   ) info.exportsAssigns;

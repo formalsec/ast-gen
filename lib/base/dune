@@ -3,4 +3,4 @@
 (library
  (name graphjs_base)
  (wrapped false)
- (modules list option result fun))
+ (modules list hashtbl option result fun))

@@ -2,7 +2,6 @@ module OcamlGraph = Graph
 module Graph = Graph'
 open Graph
 open Structures
-open Auxiliary.Structures
 
 module Dot = struct
   module DotNode = struct
@@ -22,8 +21,8 @@ module Dot = struct
   module G = OcamlGraph.Persistent.Digraph.ConcreteBidirectionalLabeled(DotNode)(DotEdge)
   
   module Dot = struct 
-    let node_info : (Node.t HashTable.t) option ref = ref None 
-    let set_info (info : Node.t HashTable.t) : unit =  node_info := Some info 
+    let node_info : ((string, Node.t) Hashtbl.t) option ref = ref None 
+    let set_info (info :( string, Node.t) Hashtbl.t) : unit =  node_info := Some info 
 
     module Dot' = OcamlGraph.Graphviz.Dot(struct
      include G (* use the graph module from above *)
