@@ -25,7 +25,7 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
   (* DANGEROUS: We create "run" but don't pass it to any function?
      Is there any global behaviour that will write to "run"? *)
   let* (code_dir, graph_dir, _) = setup_output output_path in
-  let* dep_tree = DependencyTree.generate file_name mode in
+  let* dep_tree = Dependency_tree.generate mode file_name in
 
   (* process dependencies first with the aid of the depedency tree *)
   let summaries = Summaries.empty () in
@@ -41,7 +41,7 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
       (* STEP 1 : Normalize AST *)
       let norm_program = Ast.Normalize.program ast file_path in
       let norm_program =
-        if file_path = dep_tree.main then Program.set_main norm_program
+        if file_path = dep_tree.main_file then Program.set_main norm_program
         else norm_program in
       let js_program = Ast.Pp.Js.print norm_program in
       File_system.write_to_file
@@ -80,11 +80,11 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
         ModuleGraphs.add module_graphs alter_name graph;
         Summaries.add summaries file_path exportedObject;
         Summaries.add summaries alter_name exportedObject ) )
-    (DependencyTree.bottom_up_visit dep_tree);
+    (Dependency_tree.bottom_up_visit dep_tree);
 
   if generate_mdg then (
     (* mdg output *)
-    let main = DependencyTree.get_main dep_tree in
+    let main = dep_tree.main_file in
     let graph = ModuleGraphs.get module_graphs main in
     if not no_dot then Mdg.Pp.Dot.output graph_dir graph;
     Mdg.Pp.CSV.output graph_dir graph;

@@ -3,5 +3,5 @@
 (library
  (name graphjs_setup)
  (wrapped false)
- (modules mode config dependencyTree file_system js_parser)
- (libraries graphjs_base yojson bos flow_parser unix))
+ (modules mode config dependency_tree file_system js_parser)
+ (libraries graphjs_base unix yojson bos flow_parser))
