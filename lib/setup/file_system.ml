@@ -35,7 +35,7 @@ let run_command (command : string) : string =
   Buffer.contents buf
 
 let run_command' (command : Bos.Cmd.t) =
-  let open Graphjs_std.Result in
+  let open Result in
   let run_out = Bos.OS.Cmd.run_out command in
   let* out_string, (_, status) = Bos.OS.Cmd.out_string run_out in
   (* FIXME: is the error in the out_string or `stderr`? I forget *)

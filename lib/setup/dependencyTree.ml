@@ -48,7 +48,7 @@ let get_main_file (filename : string) (mode : Mode.t) : string =
         mode
 
 let generate (filename : string) (mode : Mode.t) =
-  let open Graphjs_std.Result in
+  let open Result in
   let main_file = get_main_file filename mode in
   let* output =
     match mode with
