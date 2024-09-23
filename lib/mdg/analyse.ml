@@ -409,8 +409,8 @@ let rec add_taint_sinks (state : State.t) (config : Config.t) (ext_calls : Exter
     match node._type with
       | Call callee ->
         (* function sink *)
-        let sink_info = Config.get_function_sink_info config callee in
-        Option.apply ~default:() (fun (sink_info : functionSink) ->
+        let sink_info = Config.get_function_sink config callee in
+        Option.apply ~default:() (fun (sink_info : function_sink) ->
           add_taink_sink graph loc node sink_info.sink sink_info.args
         ) sink_info;
 
@@ -421,7 +421,7 @@ let rec add_taint_sinks (state : State.t) (config : Config.t) (ext_calls : Exter
           if List.length ref.properties = 1 then
             let method_name = List.nth ref.properties 0 in
             let package_name = ref._module in
-            let sink_info = Config.get_package_sink_info config package_name method_name in
+            let sink_info = Config.get_package_sink config package_name method_name in
             Option.apply ~default:() (fun (sink_info : package) ->
               add_taink_sink graph loc node method_name sink_info.args
             ) sink_info

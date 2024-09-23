@@ -11,7 +11,7 @@ let of_string : string -> (t, string) Result.t = function
   | "basic" -> Ok Basic
   | "single_file" -> Ok SingleFile
   | "multi_file" -> Ok MultiFile
-  | _ -> Error "Invalid mode! Try using: basic, single_file or multi_file"
+  | _ -> Error "[ERROR] Invalid mode (try basic, single_file or multi_file)"
 
 let pp (fmt : Format.formatter) : t -> unit = function
   | Basic -> Format.pp_print_string fmt "basic"

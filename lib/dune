@@ -3,7 +3,7 @@
 (library
  (name graphjs2)
  (modules site share)
- (libraries dune-site graphjs_base graphjs_setup ast mdg queries))
+ (libraries graphjs_base graphjs_setup ast mdg queries dune-site))
 
 (generate_sites_module
  (module site)

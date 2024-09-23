@@ -14,9 +14,9 @@ module Analysis (Init : InitConfig) : AbstractAnalysis.T = struct
       let right = Expression.get_id_opt right in
       Option.apply ~default:config
         (fun right ->
-          let sink = Config.get_function_sink_info config right in
+          let sink = Config.get_function_sink config right in
           Option.apply ~default:config
-            (fun (sink : functionSink) ->
+            (fun (sink : function_sink) ->
               let alias = Identifier.get_name left in
               Config.add_function_sink config { sink = alias; args = sink.args }
               )
@@ -26,7 +26,7 @@ module Analysis (Init : InitConfig) : AbstractAnalysis.T = struct
       let _object = Expression.get_id_opt _object in
       Option.apply ~default:config
         (fun obj ->
-          let package = Config.get_package_sink_info config obj property in
+          let package = Config.get_package_sink config obj property in
           Option.apply ~default:config
             (fun (package : package) ->
               let alias = Identifier.get_name left in
