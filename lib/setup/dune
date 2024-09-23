@@ -1,6 +1,7 @@
 (include_subdirs unqualified)
 
 (library
- (name setup)
+ (name graphjs_setup)
+ (wrapped false)
+ (modules mode config dependencyTree file_system js_parser)
  (libraries graphjs_base bos flow_parser yojson unix))
-

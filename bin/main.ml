@@ -1,10 +1,8 @@
 open Cmdliner
-open Setup
 module Graph = Mdg.Graph'
 module ExportedObject = Mdg.ExportedObject
 module ExternalReferences = Mdg.ExternalReferences
 module LocationSet = Mdg.Structures.LocationSet
-module Mode = Setup.Mode
 module Program = Ast.Grammar.Program
 
 (* Monadic let binding for result *)
@@ -23,10 +21,10 @@ let setup_output output_path =
 
 (* TODO: Use Fpath everywhere *)
 let main file_name output_path config_path mode generate_mdg run_queries no_dot
-  verbose =
+    verbose =
   (* DANGEROUS: We create "run" but don't pass it to any function?
      Is there any global behaviour that will write to "run"? *)
-  let* code_dir, graph_dir, _ = setup_output output_path in
+  let* (code_dir, graph_dir, _) = setup_output output_path in
   let* dep_tree = DependencyTree.generate file_name mode in
 
   (* process dependencies first with the aid of the depedency tree *)
@@ -44,8 +42,7 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
       let norm_program = Ast.Normalize.program ast file_path in
       let norm_program =
         if file_path = dep_tree.main then Program.set_main norm_program
-        else norm_program
-      in
+        else norm_program in
       let js_program = Ast.Pp.Js.print norm_program in
       File_system.write_to_file
         Fpath.(to_string @@ (code_dir // file_name))
@@ -53,9 +50,8 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
 
       (* STEP 2 : Generate MDG for the normalized code *)
       if generate_mdg then (
-        let graph, exportedObject, external_calls =
-          Mdg.Analyse.program mode verbose config_path norm_program
-        in
+        let (graph, exportedObject, external_calls) =
+          Mdg.Analyse.program mode verbose config_path norm_program in
         ExternalReferences.iter
           (fun locs info ->
             let l_call = LocationSet.min_elt locs in
@@ -107,28 +103,23 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
 let input_file : string Term.t =
   let doc =
     "Path to JavaScript file (.js) or directory containing JavaScript files \
-     for analysis."
-  in
+     for analysis." in
   let docv = "FILE_OR_DIR" in
   Arg.(required & pos 0 (some file) None & info [] ~doc ~docv)
 
 let mode : Mode.t Term.t =
   let mode_enum =
     Arg.enum
-      [ ("basic", Mode.Basic)
-      ; ("single_file", Mode.Single_file)
-      ; ("multi_file", Mode.Multi_file)
-      ]
-  in
+      [ ("basic", Mode.Basic); ("single_file", Mode.SingleFile)
+      ; ("multi_file", Mode.MultiFile) ] in
   let doc =
     "Analysis mode.\n\
      \t 1) basic: attacker controlls all parameters from all functions \n\
      \t 2) single_file: the attacker controlls the functions that were \
      exported by the input file \n\
      \t 3) multi_file: the attacker controlls the functions that were exported \
-     in the \"main\" file"
-  in
-  Arg.(value & opt mode_enum Mode.single_file & info [ "m"; "mode" ] ~doc)
+     in the \"main\" file" in
+  Arg.(value & opt mode_enum SingleFile & info [ "m"; "mode" ] ~doc)
 
 let mdg : bool Term.t =
   let doc = "Generates Multiversion Dependency Graph." in
@@ -161,9 +152,15 @@ let verbose : bool Term.t =
 let cli =
   let cmd =
     Term.(
-      const main $ input_file $ output_path $ config_path $ mode $ mdg
-      $ run_queries $ no_dot $ verbose )
-  in
+      const main
+      $ input_file
+      $ output_path
+      $ config_path
+      $ mode
+      $ mdg
+      $ run_queries
+      $ no_dot
+      $ verbose ) in
   let info = Cmd.info "graphjs2" in
   Cmd.v info cmd
 

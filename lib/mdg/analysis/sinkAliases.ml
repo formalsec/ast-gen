@@ -1,5 +1,4 @@
 open Ast.Grammar
-open Setup
 open Config
 
 module type InitConfig = sig
@@ -11,7 +10,7 @@ module Analysis (Init : InitConfig) : AbstractAnalysis.T = struct
 
   let analyse (config : t) (_ : State.t) (statement : m Statement.t) : t =
     match statement with
-    | _, AssignSimple { left; right } ->
+    | (_, AssignSimple { left; right }) ->
       let right = Expression.get_id_opt right in
       Option.apply ~default:config
         (fun right ->
@@ -23,7 +22,7 @@ module Analysis (Init : InitConfig) : AbstractAnalysis.T = struct
               )
             sink )
         right
-    | _, StaticLookup { left; _object; property; _ } ->
+    | (_, StaticLookup { left; _object; property; _ }) ->
       let _object = Expression.get_id_opt _object in
       Option.apply ~default:config
         (fun obj ->
@@ -39,6 +38,5 @@ module Analysis (Init : InitConfig) : AbstractAnalysis.T = struct
     | _ -> config
 
   let init () : t = Config.read Init.filename
-
   let finish (state : t) : AnalysisType.t = AnalysisType.SinkAliases state
 end

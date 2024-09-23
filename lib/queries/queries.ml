@@ -1,7 +1,6 @@
 module Graph = Mdg.Graph'
 module Node = Graph.Node
 module ExportedObject= Mdg.ExportedObject
-module Config = Setup.Config
 type location = Mdg.Structures.location
 
 let rec is_reachable (graph: Graph.t) (node: Node.t) (exported_locs : location list): bool = 

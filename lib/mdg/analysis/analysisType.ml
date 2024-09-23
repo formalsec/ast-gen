@@ -1,4 +1,3 @@
-open Setup
 open Structures
 
 type buildExportsObject =
@@ -13,9 +12,7 @@ type buildExportsObject =
   }
 
 type collectExternalCalls = ExternalReferences.t
-
 type generateMDG = State.t
-
 type sinkAliases = Config.t
 
 type t =

@@ -53,7 +53,7 @@ let generate (filename : string) (mode : Mode.t) =
   let main_file = get_main_file filename mode in
   let* output =
     match mode with
-    | Multi_file -> File_system.run_command' (generate_dt main_file)
+    | MultiFile -> File_system.run_command' (generate_dt main_file)
     | _ -> Ok (single_file_dt main_file) in
   Ok { main = main_file; structure = Yojson.Basic.from_string output }
 
