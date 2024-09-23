@@ -1,5 +1,4 @@
 open Grammar 
-open Auxiliary.Functions
 
 
 module Js = struct
@@ -17,14 +16,14 @@ module Js = struct
 
         let new_identation = identation + spaces_per_identation in
         let consequent' = print_stmts consequent new_identation in 
-        let alternate' = map_default (fun alternate -> " else {\n" ^ (print_stmts alternate new_identation) ^ identation_str ^ "}\n") "\n" alternate  in
+        let alternate' = Option.apply ~default:"\n" (fun alternate -> " else {\n" ^ (print_stmts alternate new_identation) ^ identation_str ^ "}\n") alternate  in
 
         identation_str ^ "if (" ^ test' ^ ") {\n" ^ consequent' ^ identation_str ^ "}" ^ alternate'
 
       | _, Switch {discriminant; cases;} -> 
         let discriminant' = print_expr discriminant in
         let new_identation = identation + spaces_per_identation in 
-        let cases' = List.map (flip print_case new_identation) cases in 
+        let cases' = List.map (Fun.flip print_case new_identation) cases in 
         identation_str ^ "switch (" ^ discriminant' ^ ") {\n" ^ (String.concat "" cases') ^ identation_str ^ "}\n"
     
       | _, While {test; body} -> 
@@ -52,8 +51,8 @@ module Js = struct
       | _, Try {body; finalizer; handler} -> 
         let new_identation = identation + spaces_per_identation in
         let body' = print_stmts body new_identation in
-        let handler' = map_default (print_handler identation identation_str) ("") handler  in 
-        let finalizer' = map_default (fun fin -> identation_str ^ "finally {\n" ^ (print_stmts fin new_identation)  ^ identation_str ^ "}\n" ) "\n" finalizer in 
+        let handler' = Option.apply ~default:"" (print_handler identation identation_str) handler  in 
+        let finalizer' = Option.apply ~default:"\n" (fun fin -> identation_str ^ "finally {\n" ^ (print_stmts fin new_identation)  ^ identation_str ^ "}\n" ) finalizer in 
 
         identation_str ^ "try {\n" ^ body' ^ identation_str ^ "} " ^ handler' ^ finalizer'
       
@@ -80,19 +79,19 @@ module Js = struct
         identation_str ^ kind' ^ id' ^ ";\n"
 
       | _, Return {argument; _} -> 
-        let argument' = map_default print_expr "" argument in
+        let argument' = Option.apply ~default:"" print_expr argument in
         identation_str ^ "return " ^ argument' ^ ";\n" 
 
       | _, Throw {argument} -> 
-        let argument' = map_default print_expr "" argument in
+        let argument' = Option.apply ~default:"" print_expr argument in
         identation_str ^ "throw " ^ argument' ^ ";\n" 
 
       | _, Break {label} ->
-        let label' = map_default ((^) " " << print_identifier) "" label in
+        let label' = Option.apply ~default:"" Fun.((^) " " << print_identifier) label in
         identation_str ^ "break" ^ label' ^ ";\n" 
 
       | _, Continue {label} -> 
-        let label' = map_default ((^) " " << print_identifier) "" label in
+        let label' = Option.apply ~default:"" Fun.((^) " " << print_identifier) label in
         identation_str ^ "continue" ^ label' ^ ";\n" 
 
       | _, Debugger _ -> identation_str ^ "debugger;\n"
@@ -102,8 +101,8 @@ module Js = struct
         identation_str ^ "export default " ^ declaration' ^ ";\n" 
       
       | _, ExportNamedDecl {local; exported; all; source} ->
-        let exported' = map_default ((^) " as " << print_identifier) "" exported in
-        let source' = map_default (fun source -> " from \"" ^ source ^ "\"") "" source in 
+        let exported' = Option.apply ~default:"" Fun.((^) " as " << print_identifier) exported in
+        let source' = Option.apply ~default:"" (fun source -> " from \"" ^ source ^ "\"") source in 
 
         let local' = if all then "*" else print_identifier (Option.get local) in 
         identation_str ^ "export " ^ local' ^ exported' ^ source' ^ ";\n" 
@@ -113,7 +112,7 @@ module Js = struct
         identation_str ^ "import " ^ identifier' ^ " from \"" ^ source ^ "\";\n"
 
       | _, ImportDecl (Specifier {source; local; remote; namespace}) -> 
-        let local' = map_default ((^ ) " as " << print_identifier) "" local in
+        let local' = Option.apply ~default:"" Fun.((^ ) " as " << print_identifier) local in
         let remote' = if namespace then "*" else print_identifier (Option.get remote) in
 
         let open_bracket = if namespace then "" else "{ " in 
@@ -160,7 +159,7 @@ module Js = struct
 
       | _, Yield {left; argument; _ } ->
         let left' = print_identifier left in
-        let argument' = map_default ((^) " " << print_expr) "" argument in
+        let argument' = Option.apply ~default:"" Fun.((^) " " << print_expr) argument in
         identation_str ^ left' ^ " = yield" ^ argument' ^ ";\n" 
 
       | _, AssignArray {left; _} ->
@@ -275,13 +274,13 @@ module Js = struct
       
 
   and print_stmts (stmts : m Statement.t list) (identation : int): string =
-    String.concat "" (List.map (flip print_stmt identation) stmts)
+    String.concat "" (List.map (Fun.flip print_stmt identation) stmts)
 
-  and print_identifier (identifier : m Identifier.t) = (print_expr << Identifier.to_expression) identifier
+  and print_identifier (identifier : m Identifier.t) = Fun.(print_expr << Identifier.to_expression) identifier
 
   and print_case (_, {Statement.Switch.Case.test; consequent}) (identation : int) : string =
     let identation_str = String.make identation ' ' in
-    let test' = map_default (fun test -> "case " ^ print_expr test ^ ": \n") "default: \n" test in 
+    let test' = Option.apply ~default:"default: \n" (fun test -> "case " ^ print_expr test ^ ": \n")  test in 
     let new_identation = identation + spaces_per_identation in 
     let consequent' = print_stmts consequent new_identation in 
 
@@ -289,7 +288,7 @@ module Js = struct
 
   and print_param (_, {Statement.AssignFunction.Param.argument; default}) : string =
     let argument' = print_identifier argument in 
-    let default' = map_default (fun def -> " = " ^ print_expr def) "" default in  
+    let default' = Option.apply ~default:"" (fun def -> " = " ^ print_expr def) default in  
     argument' ^ default'
 
   and print_decl {kind; id} = 
@@ -302,7 +301,7 @@ module Js = struct
         kind' ^ id'
 
   and print_handler (identation : int) (identation_str : string) ((_, {param; body}) : 'M Statement.Try.Catch.t) : string  = 
-    let param' = map_default (fun param -> "(" ^ print_identifier param ^ ")") "" param in 
+    let param' = Option.apply ~default:"" (fun param -> "(" ^ print_identifier param ^ ")") param in 
     let new_identation = identation + spaces_per_identation in
     let body' = print_stmts body new_identation in 
 

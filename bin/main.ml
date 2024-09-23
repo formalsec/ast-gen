@@ -6,7 +6,6 @@ module ExternalReferences = Mdg.ExternalReferences
 module LocationSet = Mdg.Structures.LocationSet
 module Mode = Auxiliary.Mode
 module Program = Ast.Grammar.Program
-open Auxiliary.Functions
 
 (* Monadic let binding for result *)
 let ( let* ) = Result.bind
@@ -64,7 +63,7 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
             (* module information *)
             let module_name = Fpath.(to_string @@ (dir / info._module)) in
             let moduleEO = Summaries.get_opt summaries module_name in
-            option_may
+            Option.apply ~default:()
               (fun moduleEO ->
                 let moduleGraph = ModuleGraphs.get module_graphs module_name in
 

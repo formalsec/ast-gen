@@ -1,5 +1,3 @@
-open Auxiliary.Functions
-
 type property = string
 
 type location = string
@@ -33,7 +31,7 @@ module LocationSet = struct
     elm, LocationSet'.remove elm locations
       
   let from_list (locations : location list) : LocationSet'.t = 
-    List.fold_left (flip LocationSet'.add) LocationSet'.empty locations
+    List.fold_left (Fun.flip LocationSet'.add) LocationSet'.empty locations
   let hash = Hashtbl.hash
 end
 

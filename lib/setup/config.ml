@@ -1,5 +1,4 @@
 open Yojson.Basic.Util
-open Auxiliary.Functions
 
 (* -------- T Y P E S -------- *)
 type package = {
@@ -110,15 +109,16 @@ let add_function_sink (config : t) (sink_info : functionSink) : t =
 let get_function_sink_name (sink_info : functionSink) : string = sink_info.sink
 
 let get_function_sink_info (config : t) (func_name : string) : functionSink option = 
-  let sink_infos = (List.filter (((=) func_name) << get_function_sink_name) config.functions) in 
+  let sink_infos = (List.filter Fun.(((=) func_name) << get_function_sink_name) config.functions) in 
   List.nth_opt sink_infos 0
 
+
 let get_package_sink_info (config : t) (package_name : string) (method_name : string) : package option = 
-  let method_sink = List.filter ( fun package_sink -> package_sink.sink = method_name ) config.packageSinks |> (flip List.nth_opt 0) in 
-  map_default (fun (method_sink : packageSink) ->
-    let package = List.filter (fun package -> package.package = package_name) method_sink.packages |> (flip List.nth_opt 0) in
+  let method_sink = List.filter ( fun package_sink -> package_sink.sink = method_name ) config.packageSinks |> (Fun.flip List.nth_opt 0) in 
+  Option.apply ~default:None (fun (method_sink : packageSink) ->
+    let package = List.filter (fun package -> package.package = package_name) method_sink.packages |> (Fun.flip List.nth_opt 0) in
     package
-  ) None method_sink
+  ) method_sink
 
 
 

@@ -1,7 +1,6 @@
 open Ast.Grammar
 open Structures
 open Auxiliary.Structures
-open Auxiliary.Functions
 module Functions = Ast.Functions
 module Graph = Graph'
 
@@ -30,7 +29,7 @@ module Analysis : AbstractAnalysis.T = struct
 
       | _, StaticUpdate {_object; property; right; _} -> 
         let _object = Expression.get_id_opt _object in 
-        map_default (fun _object ->
+        Option.apply ~default:exportsObjectInfo (fun _object ->
           (* update of a property of exports *)
           if exportsObjectInfo.exportsIsModuleExports && (_object = "exports" || AliasSet.mem _object exportsObjectInfo.exportsAliases) then
             let l_right = Store.eval_expr state.store state.this right in
@@ -58,7 +57,7 @@ module Analysis : AbstractAnalysis.T = struct
           
           else exportsObjectInfo
 
-        ) exportsObjectInfo _object
+        ) _object
 
       (* dont do anything on other statements *)
       | _ -> exportsObjectInfo

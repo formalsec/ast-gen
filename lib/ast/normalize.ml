@@ -1,5 +1,4 @@
 module Ast' = Flow_ast
-open Auxiliary.Functions
 open Grammar
 
 (* --------- A L I A S E S --------- *)
@@ -86,7 +85,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
       let body_stmts = ns body in
       
       (* update test condition inside loop body *)
-      let update_stmts = List.filter (not << is_declaration) test_stmts in 
+      let update_stmts = List.filter Fun.(not << is_declaration) test_stmts in 
       let while_stmt = Statement.While.build (loc_f loc) (Option.get test_expr) (body_stmts @ update_stmts) in
 
       (test_stmts @ [while_stmt])
@@ -120,14 +119,14 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
       let loc = loc_f loc in 
       let true_val = Expression.Literal.build loc (Expression.Literal.Boolean true) "true" in 
 
-      let init_stmts, _ = map_default normalize_init ([], None) init in
+      let init_stmts, _ = Option.apply ~default:([], None) normalize_init init in
       
-      let test_stmts, test_expr = map_default ne ([], Some true_val) test in 
-      let updt_stmts, _         = map_default ne ([], None) update in 
+      let test_stmts, test_expr = Option.apply ~default:([], Some true_val) ne test in 
+      let updt_stmts, _         = Option.apply ~default:([], None) ne update in 
       let body_stmts = ns body in 
 
       (* update test condition inside loop body *)
-      let updt_stmts = updt_stmts @ List.filter (not << is_declaration) test_stmts in 
+      let updt_stmts = updt_stmts @ List.filter Fun.(not << is_declaration) test_stmts in 
       let for_stmt = Statement.While.build loc (Option.get test_expr) (body_stmts @ updt_stmts) in 
       
       init_stmts @ test_stmts @ [for_stmt]
@@ -174,10 +173,10 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
     (* --------- T R Y - C A T C H --------- *)
     | loc, Ast'.Statement.Try {block; handler; finalizer; _} -> 
       let block_stmts = ns (block_to_statement block) in
-      let fnlzr_stmts = Option.map (ns << block_to_statement) finalizer in
+      let fnlzr_stmts = Option.map Fun.(ns << block_to_statement) finalizer in
 
       (* process catch clause *)
-      let handler' = map_default normalize_catch (None) handler in
+      let handler' = Option.apply ~default:(None) normalize_catch handler in
     
       (* build try statement*)
       let try_stmt = Statement.Try.build (loc_f loc) block_stmts handler' fnlzr_stmts in
@@ -212,7 +211,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
           let is_id, _id  = is_identifier id in 
           let ids = if is_id then Option.to_list _id else [] in 
 
-          map_default (normalize_assignment new_context id None) ([], ids) init
+          Option.apply ~default:([], ids) (normalize_assignment new_context id None) init
         ) declarations) 
       in 
 
@@ -221,7 +220,7 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
     
     (* --------- R E T U R N --------- *)
     | loc, Ast'.Statement.Return {argument; _} -> 
-      let arg_stmts, arg_expr = map_default ne ([], None) argument in
+      let arg_stmts, arg_expr = Option.apply ~default:([], None) ne argument in
       let return_stmt = Statement.Return.build (loc_f loc) arg_expr in 
 
       arg_stmts @ [return_stmt]
@@ -263,8 +262,8 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
       let loc = loc_f loc in 
       let source' = Option.map get_string source in 
 
-      let decl_stmts = map_default (normalize_named_declaration loc source') [] declaration in 
-      let spcf_stmts = map_default (normalize_exp_specifiers loc source') [] specifiers in 
+      let decl_stmts = Option.apply ~default:[] (normalize_named_declaration loc source') declaration in 
+      let spcf_stmts = Option.apply ~default:[] (normalize_exp_specifiers loc source') specifiers in 
 
       decl_stmts @ spcf_stmts
 
@@ -272,8 +271,8 @@ and normalize_statement (context : context) (stmt : ('M, 'T) Ast'.Statement.t) :
     | loc, Ast'.Statement.ImportDeclaration {source; default; specifiers; _} -> 
       let loc = loc_f loc in 
       let source' = get_string source in 
-      let def_stmts = map_default (normalize_default loc source') [] default in 
-      let spf_stmts = map_default (normalize_imp_specifiers loc source') [] specifiers in 
+      let def_stmts = Option.apply ~default:[] (normalize_default loc source') default in 
+      let spf_stmts = Option.apply ~default:[] (normalize_imp_specifiers loc source') specifiers in 
       
       def_stmts @ spf_stmts
       
@@ -491,7 +490,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
     let loc = loc_f loc in 
     let id = if not context.has_op then get_identifier loc context.identifier else Identifier.build_random loc in
 
-    let arg_stmts, arg_expr = map_default (nec empty_context') ([], None) argument in 
+    let arg_stmts, arg_expr = Option.apply ~default:([], None) (nec empty_context') argument in 
     let yield = Statement.Yield.build loc id arg_expr delegate in 
     
     (* check if yield is done as a statement or an expression *)
@@ -546,7 +545,7 @@ and normalize_expression (context : context) (expr : ('M, 'T) Ast'.Expression.t)
   (* --------- A S S I G N   N E W ---------*)
   | loc, Ast'.Expression.New {callee; arguments; _} -> 
     let callee_stmts, callee_expr = nec empty_context' callee in
-    let args_stmts, args_exprs = List.split (map_default (normalize_argument_list empty_context') [] arguments) in 
+    let args_stmts, args_exprs = List.split (Option.apply ~default:[] (normalize_argument_list empty_context') arguments) in 
     let args_exprs = List.flatten (List.map Option.to_list args_exprs) in
 
     let loc = loc_f loc in
@@ -744,7 +743,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
       let obj_stmts, obj_expr = normalize_expression empty_context _object in 
       let prop_stmts, prop_expr = normalize_member_property property in 
       
-      let stmts, expr = map_default 
+      let stmts, expr = Option.apply ~default:([], expression)
         (fun op -> 
           let mem_id, mem_decl = createVariableDeclaration None loc in 
           let mem_assign = match prop_expr with 
@@ -753,7 +752,7 @@ and normalize_pattern (expression : m Expression.t) (pattern : ('M, 'T) Ast'.Pat
           in
           let assign_op = build_operation mem_id expression op in 
           mem_decl @ [mem_assign; assign_op], Identifier.to_expression mem_id
-        ) ([], expression) op in 
+        ) op in 
       
       let assign = match prop_expr with 
         | Static  (prop, lit) -> Statement.StaticUpdate.build loc (Option.get obj_expr) prop lit expr
@@ -778,7 +777,7 @@ and get_pattern_expr (pattern : ('M, 'T) Ast'.Pattern.t) : norm_expr_t =
   let loc_f = Location.convert_flow_loc !file_path in
   match pattern with 
     | _, Identifier {name; _} -> 
-      [], Some ((Identifier.to_expression << normalize_identifier) name)
+      [], Some (Fun.(Identifier.to_expression << normalize_identifier) name)
     
     | _, Expression (loc, Member {_object; property; _}) ->
       let loc = loc_f loc in 
@@ -903,7 +902,7 @@ and normalize_case (loc, {Ast'.Statement.Switch.Case.test; consequent; _}) : m S
   let ne = normalize_expression empty_context in
   let loc_f = Location.convert_flow_loc !file_path in
 
-  let test_stmts, test_expr = map_default ne ([], None) test in
+  let test_stmts, test_expr = Option.apply ~default:([], None) ne test in
   let cnsq_stmts = List.flatten (List.map ns consequent) in 
 
   let case = Statement.Switch.Case.build (loc_f loc) test_expr cnsq_stmts in
@@ -911,7 +910,7 @@ and normalize_case (loc, {Ast'.Statement.Switch.Case.test; consequent; _}) : m S
 
 and normalize_catch (loc, { Ast'.Statement.Try.CatchClause.param; body; _}) : m Statement.Try.Catch.t option = 
     let loc_f = Location.convert_flow_loc !file_path in
-    let is_id, id = map_default is_identifier (false, None) param in
+    let is_id, id = Option.apply ~default:(false, None) is_identifier param in
     let param' = if is_id then id else failwith "[ERROR] Param is not an identifier" in 
     let body_stmts = normalize_statement empty_context (block_to_statement body) in 
 
@@ -946,7 +945,7 @@ and normalize_function (context : context) (loc : Loc.t) ({id; params=(_, {param
     then get_identifier loc (if Option.is_some id then Option.map normalize_identifier id else context.identifier)
     else Identifier.build_random loc in
   
-  let norm_pattern_stmts, params_stmts, params_exprs = split3 (List.map normalize_param params) in
+  let norm_pattern_stmts, params_stmts, params_exprs = List.split3 (List.map normalize_param params) in
   let body_stmts = normalize_func_body body in 
   let assign = Statement.AssignFunction.build loc id params_exprs (List.flatten norm_pattern_stmts @ body_stmts) in 
   
@@ -969,7 +968,7 @@ and normalize_param (loc, {Ast'.Function.Param.argument; default} : ('M, 'T) Ast
                                    stmts, id 
     in 
 
-  let def_stmts, def_expr = map_default (normalize_expression empty_context) ([], None) default in
+  let def_stmts, def_expr = Option.apply ~default:([], None) (normalize_expression empty_context) default in
   let param = Statement.AssignFunction.Param.build (loc_f loc) argument' def_expr in
   (norm_pattern_stmts, def_stmts, param)
 
@@ -994,12 +993,12 @@ and normalize_class (context : context) (loc : Loc.t) ({id; body=(_, {body; _});
 
   let is_decl = context.is_declaration in 
 
-  let exts_stmts, exts_expr = map_default (normalize_extend id) (no_extend id loc) extends in
+  let exts_stmts, exts_expr = Option.apply ~default: (no_extend id loc) (normalize_extend id) extends in
   
   let constructor, body' = List.partition is_constructor body in 
   let constructor = if constructor != [] then Some (List.hd constructor) else None in 
 
-  let cnstr_stmts = map_default (normalize_body_element is_decl id (Option.get exts_expr)) (empty_constructor is_decl id loc) constructor in 
+  let cnstr_stmts = Option.apply ~default:(empty_constructor is_decl id loc) (normalize_body_element is_decl id (Option.get exts_expr)) constructor in 
   let body_stmts  = List.map (normalize_body_element is_decl id (Option.get exts_expr)) body' in  
 
   cnstr_stmts @ exts_stmts @ List.flatten body_stmts, Some (Identifier.to_expression id)
@@ -1199,7 +1198,7 @@ and build_template_element (loc, {Ast'.Expression.TemplateLiteral.Element.value=
 
 and get_identifier (loc : m) (id : m Identifier.t option) : m Identifier.t = 
   let random_id = lazy (Identifier.build_random loc) in
-  map_default_lazy identity random_id id
+  Option.apply_lazy ~default:random_id Fun.id id
 
 and get_string ((_, {Ast'.StringLiteral.value; _})) : string = value
 
@@ -1249,7 +1248,7 @@ and check_side_effects (expr : ('M, 'T) Ast'.Expression.t) (context : context) :
 
 and createVariableDeclaration ?(objId : name_or_id = Name None) ?(kind : Statement.VarDecl.kind = _let) (obj : m Expression.t option) (loc : m) : m Identifier.t * norm_stmt_t =
   let id = match objId with 
-    | Name objId -> map_default_lazy (Identifier.build loc) (lazy (Identifier.build_random loc)) objId
+    | Name objId -> Option.apply_lazy ~default:(lazy (Identifier.build_random loc)) (Identifier.build loc) objId
     | Id objId   -> objId 
   in 
 

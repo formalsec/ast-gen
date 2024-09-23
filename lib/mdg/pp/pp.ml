@@ -3,7 +3,6 @@ module Graph = Graph'
 open Graph
 open Structures
 open Auxiliary.Structures
-open Auxiliary.Functions
 
 module Dot = struct
   module DotNode = struct
@@ -36,7 +35,7 @@ module Dot = struct
      let vertex_name v = 
       let node_info = Option.get !node_info in 
       let node = Graph.find_node_opt' node_info v in 
-      "\"" ^ map_default ((^) (v ^ " : ") << Node.label) v node ^ "\""
+      "\"" ^ Option.apply ~default:v Fun.((^) (v ^ " : ") << Node.label) node ^ "\""
 
      let default_vertex_attributes _ = []
     let graph_attributes _ = []
