@@ -1,6 +1,6 @@
 open Ast.Grammar
 open Structures
-module Functions = Ast.Functions
+module Function = Ast.Function
 module Graph = Graph'
 
 

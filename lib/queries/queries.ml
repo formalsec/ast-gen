@@ -39,20 +39,3 @@ let run_queries (graph : Graph.t) (exportedObject : ExportedObject.t)
         (fun call_sink -> is_reachable graph call_sink exported_locs)
         (Graph.get_callers graph sink.sink) )
     config.function_sinks
-
-(* foreach sink in sinks {
-     foreach call_sink.name in call_nodes[sink] {
-       is_reachable graph call_sink
-     }
-   }
-
-   is_reachable graph node : bool =
-     let f_node = node.function in
-     if is_exported f_node
-     	then true
-     	else (
-     	  let f_callers = Hashtbl.find f_node.name in
-     	  List.exists (fun caller ->
-     	  	is_reachable graph caller
-     	  ) f_callers
-     	) *)

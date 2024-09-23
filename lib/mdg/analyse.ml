@@ -1,5 +1,5 @@
 module Graph = Graph'
-module Functions = Ast.Functions
+module Function = Ast.Function
 module EdgeSet = Graph.EdgeSet
 module Edge = Graph.Edge
 open Config
@@ -17,8 +17,8 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
   }
 
   (* ------- I N I T I A L I Z E ------- *)
-  let initialize_functions (state : State.t) (funcs_info : Functions.Info.t) : unit =
-    let init_func_header (state : State.t) (func : Functions.Id.t) (info : Functions.Info.info) : unit =
+  let initialize_functions (state : State.t) (funcs_info : Function.Info.t) : unit =
+    let init_func_header (state : State.t) (func : Function.Id.t) (info : Function.Info.func) : unit =
       let graph = state.graph in
       let curr_func = state.currFuncNode in 
       let alloc_fun      = Graph.alloc_function graph in
@@ -41,9 +41,9 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       ) ("this" :: info.params);
     in
 
-    Functions.Info.iter (init_func_header state) funcs_info
+    Function.Info.iter (init_func_header state) funcs_info
 
-  let init (function_info : Functions.Info.t) : t =
+  let init (function_info : Function.Info.t) : t =
     let state' = State.empty_state function_info in
     Graph.add_literal_node state'.graph None;
     Graph.add_taint_source state'.graph None;
@@ -128,11 +128,11 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     let new_version = Graph.staticNewVersion graph in
     let new_version' = Graph.dynamicNewVersion graph in
     let get_param_locs = Graph.get_param_locations graph in
-    let get_param_names = Functions.Context.get_param_names' contx in
-    let get_func_id = Functions.Context.get_func_id contx in
-    let is_last_definition = Functions.Context.is_last_definition contx in
-    let visit = Functions.Context.visit contx in
-    let get_curr_func = Functions.Context.get_current_function contx in
+    let get_param_names = Function.Context.get_param_names' contx in
+    let get_func_id = Function.Context.get_func_id contx in
+    let is_last_definition = Function.Context.is_last_def contx in
+    let visit = Function.Context.visit contx in
+    let get_curr_func = fun () -> Function.Context.curr_func contx in
 
     (match statement with
       (* -------- A S S I G N - E X P R -------- *)
@@ -142,7 +142,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
       | _, AssignFunction {left; id; body; _} ->
 
-        let func_id : Functions.Id.t = {uid = id; name = Identifier.get_name left} in
+        let func_id : Function.Id.t = {uid = id; name = Identifier.get_name left} in
         (* functions with the same name can be nested inside the same context
             (only consider the last definition with such name) *)
         if is_last_definition func_id then (
@@ -333,7 +333,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     let add_arg_edge = Graph.add_arg_edge graph in
     let add_call_edge = Graph.add_call_edge graph in
     let add_ref_call_edge = Graph.add_ref_call_edge graph in
-    let get_curr_func = Functions.Context.get_current_function state.context in
+    let get_curr_func = fun () -> Function.Context.curr_func state.context in
     let lookup = Graph.lookup graph in
 
 

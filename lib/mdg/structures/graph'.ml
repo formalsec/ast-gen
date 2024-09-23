@@ -1,4 +1,4 @@
-module Functions = Ast.Functions
+module Function = Ast.Function
 open Structures
 open Ast.Grammar
 
@@ -7,7 +7,7 @@ module Node = struct
   type _type =
     | Object of string
     | Call of string
-    | Function of Functions.Id.t * string list
+    | Function of Function.Id.t * string list
     | Parameter of string
     | Return
     | TaintSource
@@ -40,7 +40,7 @@ module Node = struct
       | TaintSink x, TaintSink x'
       | Parameter x, Parameter x' ->
         String.equal x x'
-      | Function (x, _), Function (x', _) -> Functions.Id.equal x x'
+      | Function (x, _), Function (x', _) -> Function.Id.equal x x'
       | Return, Return | TaintSource, TaintSource | Literal, Literal -> true
       | _ -> false
     in
@@ -99,8 +99,8 @@ module Node = struct
 
   let get_label : t -> string = get_type
 
-  (* other functions over nodes *)
-  let get_func_id (node : t) : Functions.Id.t option =
+  (* other function over nodes *)
+  let get_func_id (node : t) : Function.Id.t option =
     match node._type with Function (id, _) -> Some id | _ -> None
 
   let get_func_name (node : t) : string option =
@@ -269,7 +269,7 @@ type t =
 
 (* ------- S T R U C T U R E   F U N C T I O N S ------- *)
 
-(* > EDGES FUNCTIONS : *)
+(* > EDGES FUNCTION : *)
 let iter_edges (f : location -> Edge.t -> unit) (graph : t) =
   Hashtbl.iter (fun loc edges -> EdgeSet.iter (f loc) edges) graph.edges
 
@@ -308,7 +308,7 @@ let get_callers (graph : t) (name : string) =
   | exception Not_found -> []
   | vs -> vs
 
-(* > NODE FUNCTIONS : *)
+(* > NODE FUNCTION : *)
 let iter_nodes (f : location -> Node.t -> unit) (graph : t) =
   Hashtbl.iter f graph.nodes
 
@@ -338,7 +338,7 @@ let get_node_name (graph : t) (loc : location) : string =
   let node = find_node graph loc in
   Node.get_name node
 
-(* > GRAPH FUNCTIONS : *)
+(* > GRAPH FUNCTION : *)
 let copy (graph : t) : t =
   { graph with
     edges = Hashtbl.copy graph.edges
@@ -549,7 +549,7 @@ let add_call_node (graph : t) (curr_func : Node.t option) (abs_loc : location)
   node
 
 let add_func_node (graph : t) (curr_func : Node.t option) (abs_loc : location)
-  (func_id : Functions.Id.t) (params : string list) (code_loc : Location.t) :
+  (func_id : Function.Id.t) (params : string list) (code_loc : Location.t) :
   unit =
   let node : Node.t =
     Node.create (Function (func_id, params)) abs_loc code_loc curr_func
@@ -648,19 +648,19 @@ let add_sink_edge (graph : t) (from : location) (_to : location) (sink : string)
   let edge = { Edge._to; _type = Sink sink } in
   add_edge graph edge _to from
 
-let get_func_node (graph : t) (func_id : Functions.Id.t) : location option =
+let get_func_node (graph : t) (func_id : Function.Id.t) : location option =
   let res : location option ref = ref None in
   iter_nodes
     (fun location node ->
       let func_id' = Node.get_func_id node in
       let is_curr_func =
-        Option.apply ~default:false (Functions.Id.equal func_id) func_id'
+        Option.apply ~default:false (Function.Id.equal func_id) func_id'
       in
       if is_curr_func then res := Some location )
     graph;
   !res
 
-let get_param_locations (graph : t) (func_id : Functions.Id.t) : Store.t =
+let get_param_locations (graph : t) (func_id : Function.Id.t) : Store.t =
   let func_loc = get_func_node graph func_id in
   let params = get_params graph (Option.get func_loc) in
 
