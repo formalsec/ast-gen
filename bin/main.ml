@@ -22,7 +22,8 @@ let setup_output output_path =
   Ok (code_dir, graph_dir, run_dir)
 
 (* TODO: Use Fpath everywhere *)
-let main file_name output_path config_path mode generate_mdg run_queries no_dot verbose =
+let main file_name output_path config_path mode generate_mdg run_queries no_dot
+  verbose =
   (* DANGEROUS: We create "run" but don't pass it to any function?
      Is there any global behaviour that will write to "run"? *)
   let* code_dir, graph_dir, _ = setup_output output_path in
@@ -51,7 +52,6 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
         js_program;
 
       (* STEP 2 : Generate MDG for the normalized code *)
-      
       if generate_mdg then (
         let graph, exportedObject, external_calls =
           Mdg.Analyse.program mode verbose config_path norm_program
@@ -71,19 +71,19 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
                 let func_loc =
                   ExportedObject.get_value_location moduleEO info.properties
                 in
-                (if not (Graph.has_external_function graph func_loc) then
-                   let func_graph = Graph.get_function moduleGraph func_loc in
-                   Graph.add_external_func graph func_graph l_call func_loc);
+                ( if not (Graph.has_external_function graph func_loc) then
+                    let func_graph = Graph.get_function moduleGraph func_loc in
+                    Graph.add_external_func graph func_graph l_call func_loc );
 
-                Graph.add_call_edge graph l_call func_loc)
-              moduleEO)
+                Graph.add_call_edge graph l_call func_loc )
+              moduleEO )
           external_calls;
         (* save current module info*)
         let alter_name = String.sub file_path 0 (String.length file_path - 3) in
         ModuleGraphs.add module_graphs file_path graph;
         ModuleGraphs.add module_graphs alter_name graph;
         Summaries.add summaries file_path exportedObject;
-        Summaries.add summaries alter_name exportedObject))
+        Summaries.add summaries alter_name exportedObject ) )
     (DependencyTree.bottom_up_visit dep_tree);
 
   if generate_mdg then (
@@ -94,15 +94,13 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
     Mdg.Pp.CSV.output graph_dir graph;
 
     (* run queries *)
-    if run_queries then (
+    if run_queries then
       let exportedObject = Summaries.get summaries main in
       let config = Config.read config_path in
 
-      let res = (Queries.run_queries graph exportedObject config) in 
-      print_endline (Bool.to_string res);
-    );
-  );
-  
+      let res = Queries.run_queries graph exportedObject config in
+      print_endline (Bool.to_string res) );
+
   Ok 0
 
 (* setup comand line interface using CMDLiner library*)
@@ -117,10 +115,9 @@ let input_file : string Term.t =
 let mode : Mode.t Term.t =
   let mode_enum =
     Arg.enum
-      [
-        ("basic", Mode.Basic);
-        ("single_file", Mode.Single_file);
-        ("multi_file", Mode.Multi_file);
+      [ ("basic", Mode.Basic)
+      ; ("single_file", Mode.Single_file)
+      ; ("multi_file", Mode.Multi_file)
       ]
   in
   let doc =
@@ -154,7 +151,7 @@ let output_path : Fpath.t Term.t =
 
 let config_path : string Term.t =
   let doc = "Path to configuration file." in
-  let default_path = Fpath.to_string @@ Auxiliary.Share.Config.default () in
+  let default_path = Fpath.to_string @@ Graphjs2.Share.config () in
   Arg.(value & opt non_dir_file default_path & info [ "c"; "config" ] ~doc)
 
 let verbose : bool Term.t =
@@ -164,8 +161,8 @@ let verbose : bool Term.t =
 let cli =
   let cmd =
     Term.(
-      const main $ input_file $ output_path $ config_path $ mode $ mdg $ run_queries $ no_dot
-      $ verbose)
+      const main $ input_file $ output_path $ config_path $ mode $ mdg
+      $ run_queries $ no_dot $ verbose )
   in
   let info = Cmd.info "graphjs2" in
   Cmd.v info cmd
@@ -174,6 +171,6 @@ let () =
   match Cmd.eval_value' cli with
   | `Exit code -> exit code
   | `Ok return -> (
-      match return with
-      | Error (`Msg err) -> Fmt.failwith "%s" err
-      | Ok code -> exit code)
+    match return with
+    | Error (`Msg err) -> Fmt.failwith "%s" err
+    | Ok code -> exit code )

@@ -1,0 +1,10 @@
+(include_subdirs unqualified)
+
+(library
+ (name graphjs2)
+ (modules site share)
+ (libraries graphjs_base auxiliary ast mdg queries setup))
+
+(generate_sites_module
+ (module site)
+ (sites graphjs2))
