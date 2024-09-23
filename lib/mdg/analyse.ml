@@ -3,7 +3,7 @@ module Functions = Ast.Functions
 module Config = Setup.Config
 module EdgeSet = Graph.EdgeSet
 module Edge = Graph.Edge
-module Mode = Auxiliary.Mode
+module Mode = Setup.Mode
 open Config
 open Ast.Grammar
 open Structures

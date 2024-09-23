@@ -4,7 +4,7 @@ module Graph = Mdg.Graph'
 module ExportedObject = Mdg.ExportedObject
 module ExternalReferences = Mdg.ExternalReferences
 module LocationSet = Mdg.Structures.LocationSet
-module Mode = Auxiliary.Mode
+module Mode = Setup.Mode
 module Program = Ast.Grammar.Program
 
 (* Monadic let binding for result *)
