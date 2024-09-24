@@ -13,9 +13,9 @@ let of_string : string -> (t, string) Result.t = function
   | "multi_file" -> Ok MultiFile
   | _ -> Error "[ERROR] Invalid mode (try basic, single_file or multi_file)"
 
-let pp (fmt : Format.formatter) : t -> unit = function
-  | Basic -> Format.pp_print_string fmt "basic"
-  | SingleFile -> Format.pp_print_string fmt "single_file"
-  | MultiFile -> Format.pp_print_string fmt "multi_file"
+let pp (ppf : Format.formatter) : t -> unit = function
+  | Basic -> Format.pp_print_string ppf "basic"
+  | SingleFile -> Format.pp_print_string ppf "single_file"
+  | MultiFile -> Format.pp_print_string ppf "multi_file"
 
 let str (mode : t) : string = Format.asprintf "%a" pp mode

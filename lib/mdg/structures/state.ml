@@ -1,5 +1,5 @@
 open Structures
-module Function = Ast.Function
+module Function = Function
 module Graph = Graph'
 
 let (register, setup, was_changed) =

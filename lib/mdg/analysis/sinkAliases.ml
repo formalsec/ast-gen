@@ -1,4 +1,4 @@
-open Ast.Grammar
+open Grammar
 open Config
 
 module type InitConfig = sig
@@ -11,29 +11,29 @@ module Analysis (Init : InitConfig) : AbstractAnalysis.T = struct
   let analyse (config : t) (_ : State.t) (statement : m Statement.t) : t =
     match statement with
     | (_, AssignSimple { left; right }) ->
-      let right = Expression.get_id_opt right in
+      let right = Expression.id_opt right in
       Option.apply ~default:config
         (fun right ->
           let sink = Config.get_function_sink config right in
           Option.apply ~default:config
             (fun (sink : function_sink) ->
-              let alias = Identifier.get_name left in
+              let alias = Identifier.name left in
               Config.add_function_sink config { sink = alias; args = sink.args }
               )
             sink )
         right
-    | (_, StaticLookup { left; _object; property; _ }) ->
-      let _object = Expression.get_id_opt _object in
+    | (_, StaticLookup { left; obj; property; _ }) ->
+      let obj = Expression.id_opt obj in
       Option.apply ~default:config
         (fun obj ->
           let package = Config.get_package_sink config obj property in
           Option.apply ~default:config
             (fun (package : package) ->
-              let alias = Identifier.get_name left in
+              let alias = Identifier.name left in
               Config.add_function_sink config
                 { sink = alias; args = package.args } )
             package )
-        _object
+        obj
     (* dont do anything on other statements *)
     | _ -> config
 

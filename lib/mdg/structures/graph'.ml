@@ -1,6 +1,6 @@
-module Function = Ast.Function
+module Function = Function
 open Structures
-open Ast.Grammar
+open Grammar
 
 (* =============== S T R U C T U R E S =============== *)
 module Node = struct
@@ -29,21 +29,21 @@ module Node = struct
     !id_count
 
   let create (_type : _type) (abs_loc : location) (code_loc : Location.t)
-    (func : t option) : t =
+      (func : t option) : t =
     { id = gen_id (); abs_loc; code_loc; func; _type }
 
   let equal (node : t) (node' : t) =
     let same_type =
       match (node._type, node'._type) with
-      | Object x, Object x'
-      | Call x, Call x'
-      | TaintSink x, TaintSink x'
-      | Parameter x, Parameter x' ->
+      | (Object x, Object x')
+      | (Call x, Call x')
+      | (TaintSink x, TaintSink x')
+      | (Parameter x, Parameter x') ->
         String.equal x x'
-      | Function (x, _), Function (x', _) -> Function.Id.equal x x'
-      | Return, Return | TaintSource, TaintSource | Literal, Literal -> true
-      | _ -> false
-    in
+      | (Function (x, _), Function (x', _)) -> Function.Id.equal x x'
+      | (Return, Return) | (TaintSource, TaintSource) | (Literal, Literal) ->
+        true
+      | _ -> false in
 
     node.id = node'.id && same_type
 
@@ -90,13 +90,9 @@ module Node = struct
     | _ -> ""
 
   let get_raw (_ : t) : string = ""
-
   let get_structure (_ : t) : string = ""
-
-  let get_location (node : t) : string = Location.to_string node.code_loc
-
+  let get_location (node : t) : string = Location.str node.code_loc
   let get_code (_ : t) : string = ""
-
   let get_label : t -> string = get_type
 
   (* other function over nodes *)
@@ -162,13 +158,13 @@ module Edge = struct
 
   let compare_type (t : _type) (t' : _type) : int =
     match (Int.compare (_type_to_int t) (_type_to_int t'), t, t') with
-    | 0, Property x, Property x' | 0, Version x, Version x' ->
+    | (0, Property x, Property x') | (0, Version x, Version x') ->
       Option.compare String.compare x x'
-    | 0, Argument (_, x), Argument (_, x')
-    | 0, Parameter x, Parameter x'
-    | 0, Sink x, Sink x' ->
+    | (0, Argument (_, x), Argument (_, x'))
+    | (0, Parameter x, Parameter x')
+    | (0, Sink x, Sink x') ->
       String.compare x x'
-    | c, _, _ -> c
+    | (c, _, _) -> c
 
   let compare (edge : t) (edge' : t) : int =
     match String.compare edge._to edge'._to with
@@ -231,15 +227,10 @@ module Edge = struct
     match edge._type with Parameter i -> i | _ -> ""
 
   let get_stm_i (_ : t) : string = ""
-
   let get_elm_i (_ : t) : string = ""
-
   let get_exp_i (_ : t) : string = ""
-
   let get_met_i (_ : t) : string = ""
-
   let get_src_obj (_ : t) : string = ""
-
   let get_dep_of_prop (_ : t) : string = "false"
 end
 
@@ -274,14 +265,13 @@ let iter_edges (f : location -> Edge.t -> unit) (graph : t) =
   Hashtbl.iter (fun loc edges -> EdgeSet.iter (f loc) edges) graph.edges
 
 let fold_edges (f : location -> EdgeSet.t -> 'acc -> 'acc) (graph : t) :
-  'acc -> 'acc =
+    'acc -> 'acc =
   Hashtbl.fold f graph.edges
 
 let find_edges_opt (graph : t) : location -> EdgeSet.t option =
   Hashtbl.find_opt graph.edges
 
 let find_edges (graph : t) : location -> EdgeSet.t = Hashtbl.find graph.edges
-
 let mem_edges (graph : t) : location -> bool = Hashtbl.mem graph.edges
 
 let num_edges (graph : t) : int =
@@ -319,7 +309,6 @@ let find_node_opt (graph : t) : location -> Node.t option =
   find_node_opt' graph.nodes
 
 let find_node (graph : t) : location -> Node.t = Hashtbl.find graph.nodes
-
 let num_nodes (graph : t) : int = Hashtbl.length graph.nodes
 
 let replace_node (graph : t) (location : location) (node : Node.t) =
@@ -360,15 +349,14 @@ let is_version_edge (_to : location) (edge : Edge.t) : bool =
   Edge.is_version edge && Edge.get_to edge = _to
 
 let get_parent_version (graph : t) (location : location) :
-  (location * property option) list =
+    (location * property option) list =
   fold_edges
     (fun from edges acc ->
       let version_edges = EdgeSet.filter (is_version_edge location) edges in
       let result =
         EdgeSet.map_list
           (fun edge -> (from, Edge.get_property edge))
-          version_edges
-      in
+          version_edges in
       acc @ result )
     graph []
 
@@ -376,12 +364,12 @@ let is_property_edge (property : property option) (edge : Edge.t) : bool =
   Edge.is_property edge && Edge.get_property edge = property
 
 let has_property (graph : t) (location : location) (property : property option)
-  : bool =
+    : bool =
   let edges = get_edges graph location in
   EdgeSet.exists (is_property_edge property) edges
 
 let get_properties (graph : t) (location : location) :
-  (location * property option) list =
+    (location * property option) list =
   let edges = get_edges graph location in
   let prop_edges = EdgeSet.filter Edge.is_property edges in
   EdgeSet.map_list
@@ -389,7 +377,7 @@ let get_properties (graph : t) (location : location) :
     prop_edges
 
 let get_property (graph : t) (location : location) (property : property option)
-  : location =
+    : location =
   let edges = get_edges graph location in
   Edge.get_to (EdgeSet.find_pred (is_property_edge property) edges)
 
@@ -401,8 +389,7 @@ let get_params (graph : t) (location : location) : EdgeSet.t =
 (* ------- C A L L   N O D E S ------- *)
 let register_call_node (graph : t) (func_name : string) (node : Node.t) : unit =
   let callers =
-    Option.value (Hashtbl.find_opt graph.callers func_name) ~default:[]
-  in
+    Option.value (Hashtbl.find_opt graph.callers func_name) ~default:[] in
   Hashtbl.replace graph.call_nodes func_name node;
   Hashtbl.replace graph.callers func_name (node :: callers)
 
@@ -429,8 +416,7 @@ let alloc_param : t -> location =
   let id : int ref = ref 0 in
   let alloc (_ : t) : location =
     id := !id + 1;
-    loc_par_prefix ^ string_of_int !id
-  in
+    loc_par_prefix ^ string_of_int !id in
   alloc
 
 let alloc_function (_ : t) (id : int) : location =
@@ -438,23 +424,22 @@ let alloc_function (_ : t) (id : int) : location =
 
 let orig (graph : t) (l : location) : LocationSet.t =
   let rec orig' (to_process : location list) (visited : location list)
-    (acc : LocationSet.t) =
+      (acc : LocationSet.t) =
     match to_process with
     | [] -> acc
     | l :: rest ->
       if not (List.mem l visited) then
-        let parents, _ = List.split (get_parent_version graph l) in
+        let (parents, _) = List.split (get_parent_version graph l) in
         let visited' = l :: visited in
         if parents = [] then orig' rest visited' (LocationSet.add l acc)
         else orig' (parents @ rest) visited' acc
-      else orig' rest visited acc
-  in
+      else orig' rest visited acc in
   orig' [ l ] [] LocationSet.empty
 
 let lookup (graph : t) (loc : location) (property : property) : LocationSet.t =
   let rec lookup' (graph : t) (to_process : location list)
-    (visited : location list) (properties : property list)
-    (result : LocationSet.t) (property : property option) : LocationSet.t =
+      (visited : location list) (properties : property list)
+      (result : LocationSet.t) (property : property option) : LocationSet.t =
     match to_process with
     | [] -> result
     | location :: ls ->
@@ -464,12 +449,11 @@ let lookup (graph : t) (loc : location) (property : property) : LocationSet.t =
       let seen_properties = ref properties in
 
       let properties = get_properties graph location in
-      let known, unknown =
-        List.partition Fun.(Option.is_some << snd) properties
-      in
+      let (known, unknown) =
+        List.partition Fun.(Option.is_some << snd) properties in
 
       (* Direct Lookup - Unknown Property *)
-      let unknown, _ = List.split unknown in
+      let (unknown, _) = List.split unknown in
       result := LocationSet.union !result (LocationSet.of_list unknown);
 
       (* Direct Lookup - Known Property *)
@@ -483,9 +467,8 @@ let lookup (graph : t) (loc : location) (property : property) : LocationSet.t =
             List.filter
               Fun.(
                 not << Fun.flip List.mem !seen_properties << Option.get << snd )
-              known
-          in
-          let locations, properties = List.split known in
+              known in
+          let (locations, properties) = List.split known in
           result := LocationSet.union !result (LocationSet.of_list locations);
           seen_properties := !seen_properties @ List.map Option.get properties );
 
@@ -494,25 +477,24 @@ let lookup (graph : t) (loc : location) (property : property) : LocationSet.t =
         List.iter
           (fun origin ->
             match origin with
-            | l_p, (Some _ as vproperty) ->
+            | (l_p, (Some _ as vproperty)) ->
               if (not (List.mem l_p !visited)) && vproperty != property then
                 to_process := l_p :: !to_process;
               visited := l_p :: !visited
-            | l_p, None ->
+            | (l_p, None) ->
               if not (List.mem l_p !visited) then
                 to_process := l_p :: !to_process;
               visited := l_p :: !visited )
           origins );
 
-      lookup' graph !to_process !visited !seen_properties !result property
-  in
+      lookup' graph !to_process !visited !seen_properties !result property in
 
   let property = if property = "*" then None else Some property in
   lookup' graph [ loc ] [] [] LocationSet.empty property
 
 let get_static_properties (graph : t) (loc : location) : property list =
   let rec get_static_properties' (graph : t) (to_process : location list)
-    (visited : location list) (result : property list) : property list =
+      (visited : location list) (result : property list) : property list =
     match to_process with
     | [] -> result
     | location :: ls ->
@@ -525,8 +507,7 @@ let get_static_properties (graph : t) (loc : location) : property list =
           (fun (parent, _) ->
             if not (List.exists (( = ) parent) visited) then Some parent
             else None )
-          parents
-      in
+          parents in
       get_static_properties' graph (ls @ parents) visited (result @ static)
   in
 
@@ -538,33 +519,30 @@ let add_node (graph : t) (loc : location) (node : Node.t) : unit =
   replace_edges graph loc (get_edges graph loc)
 
 let add_obj_node (graph : t) (curr_func : Node.t option) (abs_loc : location)
-  (name : string) (code_loc : Location.t) : unit =
+    (name : string) (code_loc : Location.t) : unit =
   let node : Node.t = Node.create (Object name) abs_loc code_loc curr_func in
   add_node graph abs_loc node
 
 let add_call_node (graph : t) (curr_func : Node.t option) (abs_loc : location)
-  (func : string) (code_loc : Location.t) : Node.t =
+    (func : string) (code_loc : Location.t) : Node.t =
   let node : Node.t = Node.create (Call func) abs_loc code_loc curr_func in
   add_node graph abs_loc node;
   node
 
 let add_func_node (graph : t) (curr_func : Node.t option) (abs_loc : location)
-  (func_id : Function.Id.t) (params : string list) (code_loc : Location.t) :
-  unit =
+    (func_id : Function.Id.t) (params : string list) (code_loc : Location.t) :
+    unit =
   let node : Node.t =
-    Node.create (Function (func_id, params)) abs_loc code_loc curr_func
-  in
+    Node.create (Function (func_id, params)) abs_loc code_loc curr_func in
   add_node graph abs_loc node
 
 let add_param_node (graph : t) (curr_func : Node.t option) (abs_loc : location)
-  (param : string) (code_loc : Location.t) : unit =
-  let node : Node.t =
-    Node.create (Parameter param) abs_loc code_loc curr_func
-  in
+    (param : string) (code_loc : Location.t) : unit =
+  let node : Node.t = Node.create (Parameter param) abs_loc code_loc curr_func in
   add_node graph abs_loc node
 
 let add_return_node (graph : t) (curr_func : Node.t option) (abs_loc : location)
-  (code_loc : Location.t) : unit =
+    (code_loc : Location.t) : unit =
   let node : Node.t = Node.create Return abs_loc code_loc curr_func in
   add_node graph abs_loc node
 
@@ -583,7 +561,7 @@ let add_taint_source (graph : t) (curr_func : Node.t option) : unit =
   add_node graph abs_loc node
 
 let add_taint_sink (graph : t) (curr_func : Node.t option) (abs_loc : location)
-  (sink : string) (code_loc : Location.t) : unit =
+    (sink : string) (code_loc : Location.t) : unit =
   let node : Node.t = Node.create (TaintSink sink) abs_loc code_loc curr_func in
   add_node graph abs_loc node
 
@@ -594,12 +572,11 @@ let empty (register : unit -> unit) : t =
     ; call_nodes = Hashtbl.create 50
     ; callers = Hashtbl.create 50
     ; register
-    }
-  in
+    } in
   graph
 
 let add_edge (graph : t) (edge : Edge.t) (_to : location) (from : location) :
-  unit =
+    unit =
   let edges = get_edges graph from in
   replace_edges graph from (EdgeSet.add edge edges)
 
@@ -608,22 +585,22 @@ let add_dep_edge (graph : t) (from : location) (_to : location) : unit =
   add_edge graph edge _to from
 
 let add_prop_edge (graph : t) (from : location) (_to : location)
-  (property : property option) : unit =
+    (property : property option) : unit =
   let edge = { Edge._to; _type = Property property } in
   add_edge graph edge _to from
 
 let add_version_edge (graph : t) (from : location) (_to : location)
-  (property : property option) : unit =
+    (property : property option) : unit =
   let edge = { Edge._to; _type = Version property } in
   add_edge graph edge _to from
 
 let add_arg_edge (graph : t) (from : location) (_to : location) (index : string)
-  (identifier : string) : unit =
+    (identifier : string) : unit =
   let edge = { Edge._to; _type = Argument (index, identifier) } in
   add_edge graph edge _to from
 
 let add_param_edge (graph : t) (from : location) (_to : location)
-  (index : string) : unit =
+    (index : string) : unit =
   let edge = { Edge._to; _type = Parameter index } in
   add_edge graph edge _to from
 
@@ -644,7 +621,7 @@ let add_taint_edge (graph : t) (from : location) (_to : location) : unit =
   add_edge graph edge _to from
 
 let add_sink_edge (graph : t) (from : location) (_to : location) (sink : string)
-  : unit =
+    : unit =
   let edge = { Edge._to; _type = Sink sink } in
   add_edge graph edge _to from
 
@@ -654,8 +631,7 @@ let get_func_node (graph : t) (func_id : Function.Id.t) : location option =
     (fun location node ->
       let func_id' = Node.get_func_id node in
       let is_curr_func =
-        Option.apply ~default:false (Function.Id.equal func_id) func_id'
-      in
+        Option.apply ~default:false (Function.Id.equal func_id) func_id' in
       if is_curr_func then res := Some location )
     graph;
   !res
@@ -695,9 +671,9 @@ let has_external_function (graph : t) (func_node : location) : bool =
 
 let get_function (graph : t) (func_node : location) : t =
   let rec get_function' (graph : t) (to_visit : LocationSet.t)
-    (visited : LocationSet.t) (func_graph : t) : t =
+      (visited : LocationSet.t) (func_graph : t) : t =
     if not (LocationSet.is_empty to_visit) then (
-      let visiting, to_visit' = LocationSet.pop to_visit in
+      let (visiting, to_visit') = LocationSet.pop to_visit in
       let node = find_node graph visiting in
       let edges = get_edges graph visiting in
       Hashtbl.replace func_graph.nodes visiting node;
@@ -708,8 +684,7 @@ let get_function (graph : t) (func_node : location) : t =
         (LocationSet.diff (LocationSet.union to_visit' tos) visited)
         (LocationSet.add visiting visited)
         func_graph )
-    else func_graph
-  in
+    else func_graph in
 
   let func_graph = empty (fun () -> ()) in
   if exists_node graph func_node then
@@ -721,7 +696,7 @@ let get_function (graph : t) (func_node : location) : t =
       ("[ERROR] Graph does not encode function with location " ^ func_node)
 
 let update_arg_edges (graph : t) (call_node : location)
-  (parameters : string list) : unit =
+    (parameters : string list) : unit =
   Hashtbl.filter_map_inplace
     (fun _ edges ->
       let new_edges =
@@ -729,23 +704,21 @@ let update_arg_edges (graph : t) (call_node : location)
           (fun edge ->
             (* check if it is a argument edge pointing to the call_node*)
             match (edge._to = call_node, edge._type) with
-            | true, Argument (index, _) ->
+            | (true, Argument (index, _)) ->
               let param_name =
                 Option.value
                   ( if index = "this" then Some index
                     else List.nth_opt parameters (int_of_string index) )
-                  ~default:"undefined"
-              in
+                  ~default:"undefined" in
               { edge with _type = Argument (index, param_name) }
             | _ -> edge )
-          edges
-      in
+          edges in
 
       Some new_edges )
     graph.edges
 
 let add_external_func (graph : t) (func_graph : t) (call_node : location)
-  (function_node : location) : unit =
+    (function_node : location) : unit =
   (* add nodes *)
   iter_nodes (fun loc node -> Hashtbl.replace graph.nodes loc node) func_graph;
 
@@ -758,7 +731,7 @@ let add_external_func (graph : t) (func_graph : t) (call_node : location)
   update_arg_edges graph call_node params
 
 let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property)
-  (id : int) (add_node : location -> unit) : unit =
+    (id : int) (add_node : location -> unit) : unit =
   LocationSet.apply
     (fun l ->
       let l_Os = orig graph l in
@@ -776,7 +749,7 @@ let staticAddProperty (graph : t) (_L : LocationSet.t) (property : property)
     _L
 
 let dynamicAddProperty (graph : t) (_L_obj : LocationSet.t)
-  (_L_prop : LocationSet.t) (id : int) (add_node : location -> unit) : unit =
+    (_L_prop : LocationSet.t) (id : int) (add_node : location -> unit) : unit =
   LocationSet.apply
     (fun l ->
       let l_Os = orig graph l in
@@ -797,8 +770,8 @@ let dynamicAddProperty (graph : t) (_L_obj : LocationSet.t)
     _L_obj
 
 let sNVStrongUpdate (graph : t) (store : Store.t) (l : location)
-  (property : property) (id : int) (add_node : location -> unit) : LocationSet.t
-    =
+    (property : property) (id : int) (add_node : location -> unit) :
+    LocationSet.t =
   let l_i = alloc graph id in
   add_version_edge graph l l_i (Some property);
   Store.strong_update store l l_i;
@@ -808,8 +781,8 @@ let sNVStrongUpdate (graph : t) (store : Store.t) (l : location)
   LocationSet.singleton l_i
 
 let sNVWeakUpdate (graph : t) (store : Store.t) (_L : LocationSet.t)
-  (property : property) (id : int) (add_node : location -> unit) : LocationSet.t
-    =
+    (property : property) (id : int) (add_node : location -> unit) :
+    LocationSet.t =
   let l_i = alloc graph id in
   add_node l_i;
 
@@ -828,15 +801,15 @@ let sNVWeakUpdate (graph : t) (store : Store.t) (_L : LocationSet.t)
   LocationSet.singleton l_i
 
 let staticNewVersion (graph : t) (store : Store.t) (_L : LocationSet.t)
-  (property : property) (id : int) (add_node : location -> unit) : LocationSet.t
-    =
+    (property : property) (id : int) (add_node : location -> unit) :
+    LocationSet.t =
   if LocationSet.cardinal _L = 1 then
     sNVStrongUpdate graph store (LocationSet.min_elt _L) property id add_node
   else sNVWeakUpdate graph store _L property id add_node
 
 let dNVStrongUpdate (graph : t) (store : Store.t) (l_obj : location)
-  (_L_prop : LocationSet.t) (id : int) (add_node : location -> unit) :
-  LocationSet.t =
+    (_L_prop : LocationSet.t) (id : int) (add_node : location -> unit) :
+    LocationSet.t =
   let l_i = alloc graph id in
   add_version_edge graph l_obj l_i None;
 
@@ -850,8 +823,8 @@ let dNVStrongUpdate (graph : t) (store : Store.t) (l_obj : location)
   LocationSet.singleton l_i
 
 let dNVWeakUpdate (graph : t) (store : Store.t) (_L_obj : LocationSet.t)
-  (_L_prop : LocationSet.t) (id : int) (add_node : location -> unit) :
-  LocationSet.t =
+    (_L_prop : LocationSet.t) (id : int) (add_node : location -> unit) :
+    LocationSet.t =
   let l_i = alloc graph id in
   add_node l_i;
 
@@ -873,15 +846,15 @@ let dNVWeakUpdate (graph : t) (store : Store.t) (_L_obj : LocationSet.t)
   LocationSet.singleton l_i
 
 let dynamicNewVersion (graph : t) (store : Store.t) (_L_obj : LocationSet.t)
-  (_L_prop : LocationSet.t) (id : int) (add_node : location -> unit) :
-  LocationSet.t =
+    (_L_prop : LocationSet.t) (id : int) (add_node : location -> unit) :
+    LocationSet.t =
   if LocationSet.cardinal _L_obj = 1 then
     dNVStrongUpdate graph store (LocationSet.min_elt _L_obj) _L_prop id add_node
   else dNVWeakUpdate graph store _L_obj _L_prop id add_node
 
 (* ------- T R A V E R S E ------- *)
 let get_neighbors (graph : t) (node : Node.t)
-  (is_neighbor : Node.t -> Edge.t -> bool) : Node.t list =
+    (is_neighbor : Node.t -> Edge.t -> bool) : Node.t list =
   fold_edges
     (fun from edges acc ->
       if EdgeSet.exists (is_neighbor node) edges then
@@ -893,8 +866,7 @@ let is_neighbor (node : Node.t) (edge : Edge.t) : bool =
   let allowed_edge_type =
     match edge._type with
     | Property _ | Dependency | Argument _ | Version _ | Parameter _ -> true
-    | _ -> false
-  in
+    | _ -> false in
   node.abs_loc = edge._to && allowed_edge_type
 
 module IntSet = Set.Make (Int)
@@ -911,24 +883,21 @@ let reaches graph src target : Node.t list list =
         let nghbrs =
           List.filter
             (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited))
-            nghbrs
-        in
+            nghbrs in
         let visited' =
           List.fold_left
             (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc)
-            visited nghbrs
-        in
+            visited nghbrs in
 
         let fst_paths = List.map (fun cur' -> cur' :: curr_path) nghbrs in
         reaches' graph visited' ret_paths (fst_paths @ tail_paths) target
-    | _ -> failwith "current path is empty"
-  in
+    | _ -> failwith "current path is empty" in
 
   let visited = IntSet.empty in
   reaches' graph visited [] [ [ src ] ] target
 
 let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) :
-  Node.t list =
+    Node.t list =
   let paths = reaches graph node f_node in
   List.filter_map
     (fun path ->

@@ -1,6 +1,7 @@
 (include_subdirs unqualified)
 
 (library
- (name ast)
+ (name graphjs_ast)
+ (wrapped false)
  (modules function grammar pp normalize)
  (libraries graphjs_base flow_parser))

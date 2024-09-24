@@ -3,7 +3,7 @@ module Graph = Mdg.Graph'
 module ExportedObject = Mdg.ExportedObject
 module ExternalReferences = Mdg.ExternalReferences
 module LocationSet = Mdg.Structures.LocationSet
-module Program = Ast.Grammar.Program
+module Program = Grammar.Program
 
 (* Monadic let binding for result *)
 let ( let* ) = Result.bind
@@ -39,11 +39,11 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
       let ast = Js_parser.from_file file_path in
 
       (* STEP 1 : Normalize AST *)
-      let norm_program = Ast.Normalize.program ast file_path in
+      let norm_program = Normalize.program ast file_path in
       let norm_program =
         if file_path = dep_tree.main_file then Program.set_main norm_program
         else norm_program in
-      let js_program = Ast.Pp.Js.print norm_program in
+      let js_program = Pp.Js.print norm_program in
       File_system.write_to_file
         Fpath.(to_string @@ (code_dir // file_name))
         js_program;

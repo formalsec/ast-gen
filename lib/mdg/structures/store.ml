@@ -1,5 +1,5 @@
 open Structures
-open Ast.Grammar
+open Grammar
 
 type t = (string, LocationSet.t) Hashtbl.t
 
@@ -86,11 +86,11 @@ let rec eval_expr (store : t) (this : LocationSet.t) (expr : m Expression.t) :
   LocationSet.t =
   match expr with
   | (_, Identifier _) as id ->
-    let id = Identifier.from_expression id in
+    let id = Identifier.from_expr id in
     get store id
   | _, Literal _ -> loc_literal
   | _, This _ -> this
-  | _, TemplateLiteral { expressions; _ } ->
+  | _, TemplateLiteral { exprs; _ } ->
     List.fold_left
       (fun acc elem -> LocationSet.union acc (eval_expr store this elem))
-      LocationSet.empty expressions
+      LocationSet.empty exprs
