@@ -3,5 +3,5 @@
 (library
  (name graphjs_ast)
  (wrapped false)
- (modules function grammar pp normalize)
+ (modules function grammar ast_pp normalize)
  (libraries graphjs_base flow_parser))

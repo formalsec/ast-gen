@@ -43,7 +43,7 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
       let norm_program =
         if file_path = dep_tree.main_file then Program.set_main norm_program
         else norm_program in
-      let js_program = Pp.Js.print norm_program in
+      let js_program = Ast_pp.str norm_program in
       File_system.write_to_file
         Fpath.(to_string @@ (code_dir // file_name))
         js_program;
