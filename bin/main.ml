@@ -98,9 +98,7 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
     if run_queries then (
       let exportedObject = Summaries.get summaries main in
       let config = Config.read config_path in
-
-      let res = (Queries.run_queries graph exportedObject config) in 
-      print_endline (Bool.to_string res);
+      (Queries.run_queries graph exportedObject config);
     );
   );
   
