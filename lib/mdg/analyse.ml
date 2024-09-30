@@ -27,18 +27,19 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       let curr_func = state.currFuncNode in 
       let alloc_fun      = Graph.alloc_function graph in
       let add_func_node  = Graph.add_func_node  graph curr_func in
-      let add_param_node = Graph.add_param_node graph curr_func in
+      let add_param_node = Graph.add_param_node graph in
       let add_param_edge = Graph.add_param_edge graph in
 
       let l_f = alloc_fun func.uid in
       add_func_node l_f func info.params (Location.empty ());
       Store.update' state.store func.name (LocationSet.singleton l_f);
+      let f = Graph.find_node graph l_f in
 
 
       (* add param nodes and edges *)
       List.iteri (fun i param ->
         let l_p = Graph.alloc_param graph in
-        add_param_node l_p param (Location.empty ());
+        add_param_node (Some f) l_p param (Location.empty ());
         if param = "this"
           then add_param_edge l_f l_p "this"
           else add_param_edge l_f l_p (Int.to_string (i - 1))

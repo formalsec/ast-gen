@@ -302,6 +302,7 @@ let copy (graph : t) : t = {graph with edges = HashTable.copy graph.edges; nodes
 let iter (f : location -> EdgeSet.t -> Node.t option -> unit) (graph : t) = HashTable.iter (fun loc edges -> let node = find_node_opt graph loc in f loc edges node) graph.edges
 
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
+
 let get_edges (graph : t) (origin : location) : EdgeSet.t = 
   Option.value (find_edges_opt graph origin) ~default:EdgeSet.empty
 
@@ -755,15 +756,8 @@ let dynamicNewVersion (graph : t) (store : Store.t) (_L_obj : LocationSet.t) (_L
   
 
 (* ------- T R A V E R S E ------- *)
-let get_neighbors (graph : t) (node : Node.t) (is_neighbor : Node.t -> Edge.t -> bool) : Node.t list = 
-  fold_edges (fun from edges acc -> 
-    if EdgeSet.exists (is_neighbor node) edges 
-      then find_node graph from :: acc
-      else acc
-  ) graph []
-
-let is_neighbor (node : Node.t) (edge : Edge.t) : bool = 
-  let allowed_edge_type = match edge._type with 
+let get_neighbors (graph : t) (node : Node.t) : Node.t list = 
+  let valid_edge: Edge._type -> bool = function 
     | Property _  
     | Dependency 
     | Argument _
@@ -771,33 +765,34 @@ let is_neighbor (node : Node.t) (edge : Edge.t) : bool =
     | Parameter _ -> true 
     | _ -> false 
   in 
-  node.abs_loc = edge._to && allowed_edge_type
+  EdgeSet.fold (fun edge acc -> if (valid_edge edge._type) then (find_node graph (Edge.get_to edge)) :: acc else acc) (get_edges graph node.abs_loc) []
+
 
 
 let reaches graph src target : Node.t list list = 
-  let rec reaches' graph visited ret_paths cur_paths target : Node.t list list = 
+  let rec reaches' graph visited cur_paths ret_paths target : Node.t list list = 
     match cur_paths with 
       | [] -> ret_paths
       | (cur::_ as curr_path)::tail_paths -> 
         if cur = target 
-          then reaches' graph visited (curr_path::ret_paths) tail_paths target
+          then reaches' graph visited tail_paths (curr_path::ret_paths) target
           else (
-            let nghbrs = get_neighbors graph cur is_neighbor in
+            let nghbrs = get_neighbors graph cur in
             let nghbrs = List.filter (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited)) nghbrs in 
             let visited' = List.fold_left (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc) visited nghbrs in 
             
             let fst_paths = List.map (fun cur' -> cur'::curr_path) nghbrs in 
-            reaches' graph visited' ret_paths (fst_paths @ tail_paths) target
+            reaches' graph visited' (fst_paths @ tail_paths) ret_paths target
           )
           
       | _ -> failwith "current path is empty"
   in 
 
   let visited  = IntSet.empty in
-  reaches' graph visited [] [ [ src ] ] target 
+  reaches' graph visited [ [ src ] ] []  target 
 
 let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) : Node.t list = 
-    let paths = reaches graph node f_node in 
+    let paths = reaches graph f_node node in 
     List.filter_map (fun path -> 
       let argument_index = List.length path - 2 in 
       if argument_index > 0 
