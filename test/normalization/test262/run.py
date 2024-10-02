@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 import os
 import subprocess
+import timeit
 
 
 TIMEOUT = 10
@@ -25,6 +26,11 @@ SMNT_E     = "smnt_e"
 TIMED_OUT   = "timed_out"
 CUMULATIVE = "cumulative"
 
+# time info
+TIME = "total_time"
+NORMALIZED = "normalized"
+
+
 # colors
 RED = "\033[91m"
 GREEN = "\033[92m"
@@ -40,16 +46,16 @@ def graphjs2_command(path):
 def normalize(path, command, output_folder):
     try:
         # run normalization
-        subprocess.run(command(path), capture_output=True, text=True, check=True, timeout=TIMEOUT)
+        execution_time = timeit.timeit(lambda: subprocess.run(command(path), capture_output=True, text=True, check=True, timeout=TIMEOUT), number=1)
         output_file = f"{output_folder}/{os.path.basename(path)}"
 
         if not os.path.exists(output_file):
-            return "no output file", FAIL, None
+            return "no output file", FAIL, None, None
         
         with open(output_file, "r") as file:
             norm_program = file.read()
             
-        return "", PASS, norm_program
+        return "", PASS, norm_program, execution_time
     except subprocess.CalledProcessError as e:
         info = FAIL
         error = e.stderr + "\n"
@@ -57,7 +63,7 @@ def normalize(path, command, output_folder):
         info = TOUT
         error = ""
 
-    return error, info, None
+    return error, info, None, None
 
 
 
@@ -116,8 +122,9 @@ def report(info, out_file):
         if key == CUMULATIVE:
             continue
         
+        time_avg = (info[key][TIME] / info[key][NORMALIZED]) * 1000
         ok_percentage = round(info[key][OK] / info[key][TOTAL] * 100, 1)
-        message = f"(PASSED {ok_percentage}%)\t{key}\t failed : {info[key][NORM_E]}/{info[key][SMNT_E]}   timeout : {info[key][TIMED_OUT]}"
+        message = f"(PASSED {ok_percentage}%)\t{key}\t failed : {info[key][NORM_E]}/{info[key][SMNT_E]}   timeout : {info[key][TIMED_OUT]}    time : {time_avg:.5}ms"
         print(message)
         out_file.write(message + "\n") 
     
@@ -128,6 +135,7 @@ def report(info, out_file):
     ok    : {info[CUMULATIVE][OK]}
     error : {info[CUMULATIVE][NORM_E]} + {info[CUMULATIVE][SMNT_E]} (normalization + semantics)
     timeout : {info[CUMULATIVE][TIMED_OUT]}
+    time : {(info[key][TIME] / info[key][NORMALIZED]) * 1000:.5}ms
     ==============================
     """
     print(message)
@@ -144,11 +152,13 @@ def parse_arguments():
 
 def empty_info():
     return {
-        TOTAL     : 0,
-        NORM_E    : 0,
-        SMNT_E    : 0, 
-        TIMED_OUT : 0,
-        OK        : 0, 
+        TOTAL      : 0,
+        NORM_E     : 0,
+        SMNT_E     : 0, 
+        TIMED_OUT  : 0,
+        OK         : 0,
+        TIME       : 0,
+        NORMALIZED : 0, 
     }
 
 def main():
@@ -195,7 +205,11 @@ def main():
 
                 # normalize + test program 
                 test_info, test_error = "", ""
-                norm_error, norm_info, norm_prog = normalize(path, command, output_folder)
+                norm_error, norm_info, norm_prog, exec_time = normalize(path, command, output_folder)
+                if exec_time:
+                    update_info(info, test_group, TIME, exec_time)
+                    update_info(info, test_group, NORMALIZED, 1)
+
                 if norm_prog:
                     test_prog = ("\"use strict\";\n" if is_strict else "") + harness + "\n" + norm_prog 
                     test_error, test_info = test(test_prog) 

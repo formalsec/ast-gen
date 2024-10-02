@@ -1,0 +1,3377 @@
+(7/2561) [NOK] language/statements/with/S12.10_A3.10_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2: myObj.p1 === "x1". Actual:  myObj.p1 ===a'
+	}
+	
+	Node.js v21.6.2
+	
+(15/2561) [NOK] language/statements/with/let-block-with-newline.js	 norm [fail]	semantics []
+	no output file(17/2561) [NOK] language/statements/with/S12.10_A3.4_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2: myObj.p1 === "x1". Actual:  myObj.p1 ===a'
+	}
+	
+	Node.js v21.6.2
+	
+(24/2561) [NOK] language/statements/with/S12.10_A3.10_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2: myObj.p1 === "x1". Actual:  myObj.p1 ===a'
+	}
+	
+	Node.js v21.6.2
+	
+(36/2561) [NOK] language/statements/with/S12.10_A3.4_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2: myObj.p1 === "x1". Actual:  myObj.p1 ===a'
+	}
+	
+	Node.js v21.6.2
+	
+(45/2561) [NOK] language/statements/with/let-identifier-with-newline.js	 norm [fail]	semantics []
+	no output file(53/2561) [NOK] language/statements/with/S12.10_A1.10_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#0: result === "value". Actual:  result ===result'
+	}
+	
+	Node.js v21.6.2
+	
+(60/2561) [NOK] language/statements/with/S12.10_A1.4_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#2: p2 === "x2". Actual:  p2 ===2' }
+	
+	Node.js v21.6.2
+	
+(67/2561) [NOK] language/statements/with/S12.10_A1.10_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#0: result === "myObj_value". Actual:  result ===result'
+	}
+	
+	Node.js v21.6.2
+	
+(77/2561) [NOK] language/statements/with/S12.10_A1.4_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#2: p2 === "x2". Actual:  p2 ===2' }
+	
+	Node.js v21.6.2
+	
+(93/2561) [NOK] language/statements/with/S12.10_A1.10_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#2: p2 === "x2". Actual:  p2 ===2' }
+	
+	Node.js v21.6.2
+	
+(96/2561) [NOK] language/statements/with/S12.10_A1.4_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#0: result === "value". Actual:  result ===result'
+	}
+	
+	Node.js v21.6.2
+	
+(103/2561) [NOK] language/statements/with/S12.10_A1.4_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#0: result === "myObj_value". Actual:  result ===result'
+	}
+	
+	Node.js v21.6.2
+	
+(114/2561) [NOK] language/statements/with/S12.10_A1.10_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#2: p2 === "x2". Actual:  p2 ===2' }
+	
+	Node.js v21.6.2
+	
+(121/2561) [NOK] language/statements/with/S12.10_A3.4_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: result === 1. Actual:  result ===result' }
+	
+	Node.js v21.6.2
+	
+(131/2561) [NOK] language/statements/with/S12.10_A3.10_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: result === 1. Actual:  result ===result' }
+	
+	Node.js v21.6.2
+	
+(137/2561) [NOK] language/statements/with/S12.10_A3.10_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: result === 1. Actual:  result ===result' }
+	
+	Node.js v21.6.2
+	
+(147/2561) [NOK] language/statements/with/S12.10_A3.4_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: result === 1. Actual:  result ===result' }
+	
+	Node.js v21.6.2
+	
+(167/2561) [NOK] language/statements/variable/S12.2_A1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: Using declarated variable before it declaration is admitted'
+	}
+	
+	Node.js v21.6.2
+	
+(173/2561) [NOK] language/statements/variable/S12.2_A10.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var inside "for" is admitted __ind is not defined'
+	}
+	
+	Node.js v21.6.2
+	
+(250/2561) [NOK] language/statements/if/let-block-with-newline.js	 norm [fail]	semantics []
+	no output file(255/2561) [NOK] language/statements/if/let-identifier-with-newline.js	 norm [fail]	semantics []
+	no output file(257/2561) [NOK] language/statements/if/if-stmt-else-fun-strict.js	 norm [pass]	semantics [pass]
+(258/2561) [NOK] language/statements/if/if-fun-no-else-strict.js	 norm [pass]	semantics [pass]
+(259/2561) [NOK] language/statements/if/if-stmt-else-decl-strict.js	 norm [pass]	semantics [pass]
+(261/2561) [NOK] language/statements/if/if-fun-else-fun-strict.js	 norm [pass]	semantics [pass]
+(264/2561) [NOK] language/statements/if/if-decl-else-stmt-strict.js	 norm [pass]	semantics [pass]
+(274/2561) [NOK] language/statements/if/if-fun-else-stmt-strict.js	 norm [pass]	semantics [pass]
+(279/2561) [NOK] language/statements/if/if-decl-no-else-strict.js	 norm [pass]	semantics [pass]
+(280/2561) [NOK] language/statements/if/if-decl-else-decl-strict.js	 norm [pass]	semantics [pass]
+(297/2561) [NOK] language/statements/function/S13.2.1_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:391
+	const __func = function (arg1, arg2) {
+	      ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(329/2561) [NOK] language/statements/function/S14_A3.js	 norm [pass]	semantics [fail]
+	[eval]:388
+	const v11 = typeof __func;
+	            ^
+	
+	ReferenceError: Cannot access '__func' before initialization
+	    at [eval]:388:13
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(341/2561) [NOK] language/statements/function/S13.2.2_A18_T2.js	 norm [pass]	semantics [fail]
+	[eval]:390
+	__obj.callee = 'a';
+	^
+	
+	ReferenceError: __obj is not defined
+	    at [eval]:390:1
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(355/2561) [NOK] language/statements/function/S13_A17_T2.js	 norm [pass]	semantics [fail]
+	[eval]:411
+	const __func = function () {
+	      ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(357/2561) [NOK] language/statements/function/S13_A19_T1.js	 norm [pass]	semantics [fail]
+	[eval]:403
+	const __decl = function () {
+	      ^
+	
+	SyntaxError: Identifier '__decl' has already been declared
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(360/2561) [NOK] language/statements/function/S13_A13_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1.1: arguments[0] === undefined' }
+	
+	Node.js v21.6.2
+	
+(369/2561) [NOK] language/statements/function/S13_A6_T1.js	 norm [pass]	semantics [fail]
+	[eval]:394
+	const __func = function () {
+	      ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(374/2561) [NOK] language/statements/function/S13_A11_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: Since arguments property has attribute { DontDelete } elements of arguments can be deleted'
+	}
+	
+	Node.js v21.6.2
+	
+(404/2561) [NOK] language/statements/function/S13.2.2_A19_T6.js	 norm [pass]	semantics [fail]
+	[eval]:404
+	    result = __func();
+	             ^
+	
+	TypeError: __func is not a function
+	    at [eval]:404:14
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(405/2561) [NOK] language/statements/function/S13_A13_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1.1: arguments[0] === undefined' }
+	
+	Node.js v21.6.2
+	
+(406/2561) [NOK] language/statements/function/S13.2.2_A15_T1.js	 norm [pass]	semantics [fail]
+	[eval]:388
+	var __obj = new __FACTORY();
+	            ^
+	
+	ReferenceError: Cannot access '__FACTORY' before initialization
+	    at [eval]:388:13
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(409/2561) [NOK] language/statements/function/S14_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:400
+	const __func = function () {
+	      ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(416/2561) [NOK] language/statements/function/S13.2.2_A8_T1.js	 norm [pass]	semantics [fail]
+	[eval]:392
+	    __gunc.prop = arg2;
+	    ^
+	
+	ReferenceError: Cannot access '__gunc' before initialization
+	    at new __func ([eval]:392:5)
+	    at [eval]:400:18
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(420/2561) [NOK] language/statements/function/S13.2.2_A17_T2.js	 norm [pass]	semantics [fail]
+	[eval]:392
+	__obj.p1 = 1;
+	^
+	
+	ReferenceError: __obj is not defined
+	    at [eval]:392:1
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(436/2561) [NOK] language/statements/function/S13_A13_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1.1: arguments[0] === undefined' }
+	
+	Node.js v21.6.2
+	
+(437/2561) [NOK] language/statements/function/S13.2.2_A15_T2.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	var __obj = new __FACTORY();
+	            ^
+	
+	ReferenceError: Cannot access '__FACTORY' before initialization
+	    at [eval]:389:13
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(438/2561) [NOK] language/statements/function/S14_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:400
+	const __func = function () {
+	      ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(446/2561) [NOK] language/statements/function/S13_A4_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2: __func(10, 20, 30) === 60. Actual: __func(10,20,30) ===40'
+	}
+	
+	Node.js v21.6.2
+	
+(451/2561) [NOK] language/statements/function/S13_A19_T2.js	 norm [pass]	semantics [fail]
+	[eval]:404
+	    const __decl = function () {
+	          ^
+	
+	SyntaxError: Identifier '__decl' has already been declared
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(457/2561) [NOK] language/statements/function/S13_A11_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: Since arguments property has attribute { DontDelete }, but elements of arguments can be deleted'
+	}
+	
+	Node.js v21.6.2
+	
+(468/2561) [NOK] language/statements/function/S13_A6_T2.js	 norm [pass]	semantics [fail]
+	[eval]:411
+	const __func = function () {
+	      ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(516/2561) [NOK] language/statements/function/S13.2.2_A12.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: "#1: var obj = new FACTORY() does not lead to throwing exception. Actual: Exception is ReferenceError: Cannot access 'func' before initialization"
+	}
+	
+	Node.js v21.6.2
+	
+(531/2561) [NOK] language/statements/labeled/let-block-with-newline.js	 norm [fail]	semantics []
+	no output file(533/2561) [NOK] language/statements/labeled/decl-fun-strict.js	 norm [pass]	semantics [pass]
+(534/2561) [NOK] language/statements/labeled/let-identifier-with-newline.js	 norm [fail]	semantics []
+	no output file(552/2561) [NOK] language/statements/do-while/S12.6.1_A1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: the inner statement of a do-loop should be evaluated before the expression: false evaluates to false'
+	}
+	
+	Node.js v21.6.2
+	
+(555/2561) [NOK] language/statements/do-while/S12.6.1_A4_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: (__in__do__before__break&&__in__do__IN__before__break&&!__in__do__IN__after__break&&__in__do__after__break)===true. Actual:  (__in__do__before__break&&__in__do__IN__before__break&&!__in__do__IN__after__break&&__in__do__after__break)===undefined'
+	}
+	
+	Node.js v21.6.2
+	
+(562/2561) [NOK] language/statements/do-while/S12.6.1_A9.js	 norm [pass]	semantics [fail]
+	[eval]:399
+	        throw e;
+	        ^
+	
+	Test262Error {
+	  message: '#1: "abbracadabra" lead to throwing exception'
+	}
+	
+	Node.js v21.6.2
+	
+(564/2561) [NOK] language/statements/do-while/S12.6.1_A4_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: (__in__do__before__break&&__in__do__IN__before__break&&!__in__do__IN__after__break&&__in__do__after__break)===true. Actual:  (__in__do__before__break&&__in__do__IN__before__break&&!__in__do__IN__after__break&&__in__do__after__break)===undefined'
+	}
+	
+	Node.js v21.6.2
+	
+(566/2561) [NOK] language/statements/do-while/S12.6.1_A4_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: (__in__do__before__break&&__in__do__IN__before__break&&!__in__do__IN__after__break&&!__in__do__after__break)===true. Actual:  (__in__do__before__break&&__in__do__IN__before__break&&!__in__do__IN__after__break&&!__in__do__after__break)===undefined'
+	}
+	
+	Node.js v21.6.2
+	
+(574/2561) [NOK] language/statements/do-while/S12.6.1_A2.js	 norm [pass]	semantics [tout]
+(575/2561) [NOK] language/statements/for/S12.6.3_A11.1_T1.js	 norm [pass]	semantics [tout]
+(577/2561) [NOK] language/statements/for/S12.6.3_A2.2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: When for (ExpressionNoIn ;  ; ) Statement is evaluated NoInExpression evaluates first'
+	}
+	
+	Node.js v21.6.2
+	
+(579/2561) [NOK] language/statements/for/scope-body-var-none.js	 norm [pass]	semantics [fail]
+	[eval]:473
+	const v84 = probeIncr();
+	            ^
+	
+	TypeError: probeIncr is not a function
+	    at [eval]:473:13
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(581/2561) [NOK] language/statements/for/let-block-with-newline.js	 norm [fail]	semantics []
+	no output file(585/2561) [NOK] language/statements/for/S12.6.3_A12_T1.js	 norm [pass]	semantics [tout]
+(590/2561) [NOK] language/statements/for/scope-head-var-none.js	 norm [pass]	semantics [fail]
+	[eval]:420
+	const v24 = probeIncr();
+	            ^
+	
+	TypeError: probeIncr is not a function
+	    at [eval]:420:13
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(593/2561) [NOK] language/statements/for/let-identifier-with-newline.js	 norm [fail]	semantics []
+	no output file(594/2561) [NOK] language/statements/for/head-init-expr-check-empty-inc-empty-syntax.js	 norm [pass]	semantics [tout]
+(597/2561) [NOK] language/statements/for/S12.6.3_A12.1_T1.js	 norm [pass]	semantics [tout]
+(599/2561) [NOK] language/statements/for/head-var-bound-names-in-stmt.js	 norm [pass]	semantics [tout]
+(601/2561) [NOK] language/statements/for/S12.6.3_A11_T1.js	 norm [pass]	semantics [tout]
+(605/2561) [NOK] language/statements/for/S12.6.3_A11_T2.js	 norm [pass]	semantics [fail]
+	[eval]:403
+	                    continue nested;
+	                             ^^^^^^
+	
+	SyntaxError: Illegal continue statement: 'nested' does not denote an iteration statement
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(615/2561) [NOK] language/statements/for/S12.6.3_A12.1_T2.js	 norm [pass]	semantics [tout]
+(618/2561) [NOK] language/statements/for/S12.6.3_A14.js	 norm [pass]	semantics [tout]
+(622/2561) [NOK] language/statements/for/S12.6.3_A12_T2.js	 norm [pass]	semantics [tout]
+(630/2561) [NOK] language/statements/for/S12.6.3_A11.1_T2.js	 norm [pass]	semantics [fail]
+	[eval]:401
+	                    continue nested;
+	                             ^^^^^^
+	
+	SyntaxError: Illegal continue statement: 'nested' does not denote an iteration statement
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(634/2561) [NOK] language/statements/for/S12.6.3_A2.1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2: When for (ExpressionNoIn ;  ; Expression) Statement is evaluated NoInExpression evaluates first'
+	}
+	
+	Node.js v21.6.2
+	
+(639/2561) [NOK] language/statements/for/head-init-var-check-empty-inc-empty-syntax.js	 norm [pass]	semantics [fail]
+	[eval]:390
+	    const v3 = count === supreme;
+	               ^
+	
+	ReferenceError: count is not defined
+	    at [eval]:390:16
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(663/2561) [NOK] language/statements/try/S12.14_A9_T4.js	 norm [pass]	semantics [tout]
+(666/2561) [NOK] language/statements/try/S12.14_A11_T2.js	 norm [tout]	semantics []
+(669/2561) [NOK] language/statements/try/S12.14_A9_T5.js	 norm [pass]	semantics [tout]
+(672/2561) [NOK] language/statements/try/S12.14_A11_T3.js	 norm [tout]	semantics []
+(684/2561) [NOK] language/statements/try/S12.14_A10_T2.js	 norm [tout]	semantics []
+(698/2561) [NOK] language/statements/try/S12.14_A10_T3.js	 norm [tout]	semantics []
+(702/2561) [NOK] language/statements/try/S12.14_A10_T4.js	 norm [pass]	semantics [tout]
+(718/2561) [NOK] language/statements/try/S12.14_A10_T5.js	 norm [pass]	semantics [tout]
+(723/2561) [NOK] language/statements/try/S12.14_A9_T2.js	 norm [tout]	semantics []
+(730/2561) [NOK] language/statements/try/S12.14_A11_T4.js	 norm [pass]	semantics [tout]
+(731/2561) [NOK] language/statements/try/S12.14_A9_T3.js	 norm [tout]	semantics []
+(744/2561) [NOK] language/statements/break/S12.8_A7.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '1.1: Appearing of break within eval statement inside of IterationStatement yields SyntaxError'
+	}
+	
+	Node.js v21.6.2
+	
+(765/2561) [NOK] language/statements/for-in/S12.6.4_A7_T2.js	 norm [pass]	semantics [fail]
+	[eval]:390
+	__obj.aa = 1;
+	         ^
+	
+	TypeError: Cannot set properties of undefined (setting 'aa')
+	    at [eval]:390:10
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(766/2561) [NOK] language/statements/for-in/let-block-with-newline.js	 norm [fail]	semantics []
+	no output file(767/2561) [NOK] language/statements/for-in/S12.6.4_A5.1.js	 norm [pass]	semantics [fail]
+	[eval]:410
+	__hash__map.a = v74;
+	              ^
+	
+	TypeError: Cannot set properties of undefined (setting 'a')
+	    at [eval]:410:15
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(768/2561) [NOK] language/statements/for-in/identifier-let-allowed-as-lefthandside-expression-not-strict.js	 norm [fail]	semantics []
+	no output file(772/2561) [NOK] language/statements/for-in/S12.6.4_A15.js	 norm [pass]	semantics [pass]
+(775/2561) [NOK] language/statements/for-in/let-identifier-with-newline.js	 norm [fail]	semantics []
+	no output file(777/2561) [NOK] language/statements/for-in/head-lhs-member.js	 norm [pass]	semantics [fail]
+	[eval]:392
+	for (v6 in v7) {
+	     ^
+	
+	TypeError: Assignment to constant variable.
+	    at [eval]:392:6
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(779/2561) [NOK] language/statements/for-in/head-var-bound-names-in-stmt.js	 norm [pass]	semantics [fail]
+	[eval]:392
+	    var x;
+	        ^
+	
+	SyntaxError: Identifier 'x' has already been declared
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(781/2561) [NOK] language/statements/for-in/S12.6.4_A5.js	 norm [pass]	semantics [fail]
+	[eval]:412
+	__hash__map.a = v74;
+	              ^
+	
+	TypeError: Cannot set properties of undefined (setting 'a')
+	    at [eval]:412:15
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(796/2561) [NOK] language/statements/for-in/S12.6.4_A7_T1.js	 norm [pass]	semantics [fail]
+	[eval]:391
+	__obj.aa = 1;
+	         ^
+	
+	TypeError: Cannot set properties of undefined (setting 'aa')
+	    at [eval]:391:10
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(799/2561) [NOK] language/statements/continue/line-terminators.js	 norm [pass]	semantics [tout]
+(808/2561) [NOK] language/statements/continue/S12.7_A9_T1.js	 norm [pass]	semantics [fail]
+	[eval]:402
+	                continue FOR;
+	                         ^^^
+	
+	SyntaxError: Illegal continue statement: 'FOR' does not denote an iteration statement
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(810/2561) [NOK] language/statements/continue/S12.7_A7.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '1.1: Appearing of continue within eval statement inside of IterationStatement yields SyntaxError'
+	}
+	
+	Node.js v21.6.2
+	
+(813/2561) [NOK] language/statements/continue/12.7-1.js	 norm [pass]	semantics [tout]
+(816/2561) [NOK] language/statements/while/let-block-with-newline.js	 norm [fail]	semantics []
+	no output file(821/2561) [NOK] language/statements/while/let-identifier-with-newline.js	 norm [fail]	semantics []
+	no output file(909/2561) [NOK] language/expressions/dynamic-import/catch/script-code_FIXTURE.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	const smoosh = function () {
+	      ^
+	
+	SyntaxError: Identifier 'smoosh' has already been declared
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(965/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 3. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(971/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 3. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(972/2561) [NOK] language/expressions/postfix-increment/11.3.1-2-3-s.js	 norm [pass]	semantics [fail]
+	[eval]:392
+	    const v7 = v6++;
+	                 ^
+	
+	TypeError: Assignment to constant variable.
+	    at testcase ([eval]:392:18)
+	    at [eval]:398:13
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(974/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:400
+	const v10 = v9++;
+	              ^
+	
+	TypeError: Assignment to constant variable.
+	    at [eval]:400:15
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(975/2561) [NOK] language/expressions/postfix-increment/11.3.1-2-3.js	 norm [pass]	semantics [fail]
+	[eval]:391
+	    const v7 = v6++;
+	                 ^
+	
+	TypeError: Assignment to constant variable.
+	    at testcase ([eval]:391:18)
+	    at [eval]:397:13
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(994/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A2.1_T1.js	 norm [pass]	semantics [fail]
+	[eval]:407
+	const v40 = v39++;
+	               ^
+	
+	TypeError: Assignment to constant variable.
+	    at [eval]:407:16
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(996/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v14 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(997/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 3. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1005/2561) [NOK] language/expressions/property-accessors/S11.2.1_A4_T4.js	 norm [fail]	semantics []
+	
+(1009/2561) [NOK] language/expressions/property-accessors/S11.2.1_A4_T5.js	 norm [fail]	semantics []
+	
+(1015/2561) [NOK] language/expressions/property-accessors/S11.2.1_A4_T8.js	 norm [fail]	semantics []
+	
+(1018/2561) [NOK] language/expressions/property-accessors/S11.2.1_A4_T9.js	 norm [fail]	semantics []
+	
+(1020/2561) [NOK] language/expressions/property-accessors/S11.2.1_A4_T2.js	 norm [fail]	semantics []
+	
+(1021/2561) [NOK] language/expressions/property-accessors/S11.2.1_A4_T6.js	 norm [fail]	semantics []
+	
+(1022/2561) [NOK] language/expressions/property-accessors/S11.2.1_A4_T7.js	 norm [fail]	semantics []
+	
+(1024/2561) [NOK] language/expressions/property-accessors/S11.2.1_A4_T3.js	 norm [fail]	semantics []
+	
+(1137/2561) [NOK] language/expressions/delete/11.4.1-4.a-9-s.js	 norm [pass]	semantics [fail]
+	[eval]:391
+	    const v6 = delete v5;
+	                      ^^
+	
+	SyntaxError: Delete of an unqualified identifier in strict mode.
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1140/2561) [NOK] language/expressions/delete/11.4.1-3-3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1141/2561) [NOK] language/expressions/delete/11.4.1-2-2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1143/2561) [NOK] language/expressions/delete/S11.4.1_A3.2_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: function MyFunction(){}; var MyObject = new MyFunction(); MyFunction.prop = 1; delete MyObject.prop === true'
+	}
+	
+	Node.js v21.6.2
+	
+(1145/2561) [NOK] language/expressions/delete/11.4.1-4-a-3-s.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'obj.hasOwnProperty("prop") Expected SameValue(<<true>>, <<false>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1146/2561) [NOK] language/expressions/delete/S11.4.1_A2.2_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: function MyFunction(){}; var MyObject = new MyFunction(); delete MyObject.prop === true'
+	}
+	
+	Node.js v21.6.2
+	
+(1148/2561) [NOK] language/expressions/delete/11.4.1-4-a-2-s.js	 norm [pass]	semantics [fail]
+	[eval]:401
+	    const v14 = delete v13;
+	                       ^^^
+	
+	SyntaxError: Delete of an unqualified identifier in strict mode.
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1149/2561) [NOK] language/expressions/delete/11.4.1-5-a-27-s.js	 norm [pass]	semantics [fail]
+	[eval]:395
+	const v7 = delete v6;
+	                  ^^
+	
+	SyntaxError: Delete of an unqualified identifier in strict mode.
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1150/2561) [NOK] language/expressions/delete/11.4.1-4.a-17.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'foo(1,2) Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1152/2561) [NOK] language/expressions/delete/S8.12.7_A3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var BLUE_NUM=1; var BLUE_STR="1"; var YELLOW_NUM=2; var YELLOW_STR="2"; var __color__map = {red:0xFF0000, BLUE_NUM:0x0000FF, green:0x00FF00, YELLOW_STR:0xFFFF00}; delete __color__map[YELLOW_NUM] === true;'
+	}
+	
+	Node.js v21.6.2
+	
+(1154/2561) [NOK] language/expressions/delete/S11.4.1_A3.2_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: function MyFunction(){}; MyFunction.prop = 1; delete MyFunction.prop === true'
+	}
+	
+	Node.js v21.6.2
+	
+(1155/2561) [NOK] language/expressions/delete/11.4.1-4.a-1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1156/2561) [NOK] language/expressions/delete/S11.4.1_A2.2_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: delete this.x === true' }
+	
+	Node.js v21.6.2
+	
+(1157/2561) [NOK] language/expressions/delete/11.4.1-4.a-8-s.js	 norm [pass]	semantics [fail]
+	[eval]:392
+	    const v6 = delete v5;
+	                      ^^
+	
+	SyntaxError: Delete of an unqualified identifier in strict mode.
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1158/2561) [NOK] language/expressions/delete/11.4.1-0-1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'delete delete z' }
+	
+	Node.js v21.6.2
+	
+(1160/2561) [NOK] language/expressions/delete/S8.12.7_A2_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var __color__map = {}; delete __color__map.red === true. Actual: false'
+	}
+	
+	Node.js v21.6.2
+	
+(1164/2561) [NOK] language/expressions/delete/11.4.1-4.a-3-s.js	 norm [pass]	semantics [fail]
+	[eval]:396
+	    const v8 = delete v7;
+	                      ^^
+	
+	SyntaxError: Delete of an unqualified identifier in strict mode.
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1165/2561) [NOK] language/expressions/delete/S11.4.1_A3.3_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: function MyFunction(){}; var MyObjectVar = new MyFunction(); MyFunction.prop = 1; delete MyObjectVar.prop; MyObjectVar.prop === undefined. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(1169/2561) [NOK] language/expressions/delete/non-reference-return-true.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'delete void a.b Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1174/2561) [NOK] language/expressions/delete/11.4.1-4-a-4-s.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'obj.hasOwnProperty("prop") Expected SameValue(<<true>>, <<false>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1178/2561) [NOK] language/expressions/delete/S11.4.1_A3.3_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: function MyFunction(){}; MyFunction.prop = 1; delete MyFunction.prop; MyFunction.prop === undefined. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(1179/2561) [NOK] language/expressions/delete/S11.4.1_A2.1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#2: delete new Object() === true' }
+	
+	Node.js v21.6.2
+	
+(1180/2561) [NOK] language/expressions/delete/11.4.4-4.a-3-s.js	 norm [pass]	semantics [fail]
+	[eval]:396
+	    const v8 = delete v7;
+	                      ^^
+	
+	SyntaxError: Delete of an unqualified identifier in strict mode.
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1183/2561) [NOK] language/expressions/delete/S11.4.1_A3.3_T5.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: function MyFunction(){}; MyObjectNotVar = new MyFunction(); MyFunction.prop = 1; delete MyObjectNotVar.prop; MyObjectNotVar.prop === undefined. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(1191/2561) [NOK] language/expressions/delete/S11.4.1_A5.js	 norm [pass]	semantics [fail]
+	[eval]:400
+	            const v16 = delete v15;
+	                               ^^^
+	
+	SyntaxError: Delete of an unqualified identifier in strict mode.
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1201/2561) [NOK] language/expressions/delete/11.4.1-4.a-14.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1205/2561) [NOK] language/expressions/delete/11.4.1-4.a-2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1206/2561) [NOK] language/expressions/delete/11.4.1-4-a-1-s.js	 norm [pass]	semantics [fail]
+	[eval]:398
+	    const v12 = delete v11;
+	                       ^^^
+	
+	SyntaxError: Delete of an unqualified identifier in strict mode.
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1209/2561) [NOK] language/expressions/delete/11.4.1-4.a-10.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1210/2561) [NOK] language/expressions/delete/S8.12.7_A2_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2 function Palette(){}; Palette.prototype = {red:0xFF0000, green:0x00FF00}; __palette = new Palette; delete __palette.red === true. Actual: false'
+	}
+	
+	Node.js v21.6.2
+	
+(1213/2561) [NOK] language/expressions/delete/11.4.1-4.a-11.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1214/2561) [NOK] language/expressions/delete/11.4.1-2-5.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1217/2561) [NOK] language/expressions/delete/11.4.1-4.a-15.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1236/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A2.1_T1.js	 norm [pass]	semantics [fail]
+	[eval]:407
+	const v46 = v45--;
+	               ^
+	
+	TypeError: Assignment to constant variable.
+	    at [eval]:407:16
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1239/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1242/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v14 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(1243/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1249/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 1. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1259/2561) [NOK] language/expressions/postfix-decrement/11.3.2-2-3-s.js	 norm [pass]	semantics [fail]
+	[eval]:391
+	    const v7 = v6--;
+	                 ^
+	
+	TypeError: Assignment to constant variable.
+	    at testcase ([eval]:391:18)
+	    at [eval]:397:13
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1260/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:400
+	const v10 = v9--;
+	              ^
+	
+	TypeError: Assignment to constant variable.
+	    at [eval]:400:15
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1352/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v14 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(1354/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 3. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1355/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A2.1_T1.js	 norm [pass]	semantics [fail]
+	[eval]:408
+	const v50 = ++v49;
+	              ^
+	
+	TypeError: Assignment to constant variable.
+	    at [eval]:408:15
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1358/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 3. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1360/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 3. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1369/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:400
+	const v10 = ++v9;
+	              ^
+	
+	TypeError: Assignment to constant variable.
+	    at [eval]:400:15
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1370/2561) [NOK] language/expressions/prefix-increment/11.4.4-2-3-s.js	 norm [pass]	semantics [fail]
+	[eval]:391
+	    const v7 = ++v6;
+	                 ^
+	
+	TypeError: Assignment to constant variable.
+	    at testcase ([eval]:391:18)
+	    at [eval]:397:13
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1404/2561) [NOK] language/expressions/in/S11.8.7_A4.js	 norm [fail]	semantics []
+	
+(1422/2561) [NOK] language/expressions/grouping/S11.1.6_A2_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2: var object = {}; delete (object.prop) === true'
+	}
+	
+	Node.js v21.6.2
+	
+(1431/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A2.1_T1.js	 norm [pass]	semantics [fail]
+	[eval]:408
+	const v50 = --v49;
+	              ^
+	
+	TypeError: Assignment to constant variable.
+	    at [eval]:408:15
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1438/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v14 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	    at v16 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(1441/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1445/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1447/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 1. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1455/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:400
+	const v10 = --v9;
+	              ^
+	
+	TypeError: Assignment to constant variable.
+	    at [eval]:400:15
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1456/2561) [NOK] language/expressions/prefix-decrement/11.4.5-2-3-s.js	 norm [pass]	semantics [fail]
+	[eval]:391
+	    const v7 = --v6;
+	                 ^
+	
+	TypeError: Assignment to constant variable.
+	    at testcase ([eval]:391:18)
+	    at [eval]:397:13
+	    at runScriptInThisContext (node:internal/vm:144:10)
+	    at node:internal/process/execution:109:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1458/2561) [NOK] language/expressions/assignment/S8.12.5_A2.js	 norm [fail]	semantics []
+	
+(1459/2561) [NOK] language/expressions/assignment/11.13.1-1-4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a ReferenceError but got a SyntaxError'
+	}
+	
+	Node.js v21.6.2
+	
+(1460/2561) [NOK] language/expressions/assignment/S11.13.1_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 1' }
+	
+	Node.js v21.6.2
+	
+(1462/2561) [NOK] language/expressions/assignment/S11.13.1_A6_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 1' }
+	
+	Node.js v21.6.2
+	
+(1467/2561) [NOK] language/expressions/assignment/11.13.1-1-1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a ReferenceError but got a SyntaxError'
+	}
+	
+	Node.js v21.6.2
+	
+(1472/2561) [NOK] language/expressions/assignment/S11.13.1_A7_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(1484/2561) [NOK] language/expressions/assignment/S11.13.1_A7_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(1497/2561) [NOK] language/expressions/assignment/S11.13.1_A7_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(1500/2561) [NOK] language/expressions/assignment/S11.13.1_A5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:398
+	    const v15 = delete v14;
+	                       ^^^
+	
+	SyntaxError: Delete of an unqualified identifier in strict mode.
+	    at makeContextifyScript (node:internal/vm:123:14)
+	    at node:internal/process/execution:98:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:92:62)
+	    at evalScript (node:internal/process/execution:123:10)
+	    at node:internal/main/eval_string:51:3
+	
+	Node.js v21.6.2
+	
+(1510/2561) [NOK] language/expressions/assignment/S11.13.1_A6_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === undefined. Actual: 1' }
+	
+	Node.js v21.6.2
+	
+(1513/2561) [NOK] language/expressions/assignment/11.13.1-1-2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a ReferenceError but got a SyntaxError'
+	}
+	
+	Node.js v21.6.2
+	
+(1515/2561) [NOK] language/expressions/assignment/11.13.1-1-3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a ReferenceError but got a SyntaxError'
+	}
+	
+	Node.js v21.6.2
+	
+(1682/2561) [NOK] language/expressions/call/11.2.3-3_3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'fooCalled Expected SameValue(<<true>>, <<false>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1691/2561) [NOK] language/expressions/call/S11.2.4_A1.4_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: function f_arg() {} f_arg(x,x=1) throw ReferenceError. Actual: Test262Error: #1.1: function f_arg() {} f_arg(x,x=1) throw ReferenceError. Actual: undefined'
+	}
+	
+	Node.js v21.6.2
+	
+(1765/2561) [NOK] language/expressions/object/S11.1.5_A1.2.js	 norm [fail]	semantics []
+	
+(1770/2561) [NOK] language/expressions/object/11.1.5_3-3-1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'obj.hasOwnProperty("prop") !== true' }
+	
+	Node.js v21.6.2
+	
+(1776/2561) [NOK] language/expressions/object/S11.1.5_A1.3.js	 norm [fail]	semantics []
+	
+(1779/2561) [NOK] language/expressions/object/S11.1.5_A1.4.js	 norm [fail]	semantics []
+	
+(1785/2561) [NOK] language/expressions/object/S11.1.5_A2.js	 norm [tout]	semantics []
+(1804/2561) [NOK] language/expressions/object/11.1.5_4-5-1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'obj.hasOwnProperty("prop2") !== true' }
+	
+	Node.js v21.6.2
+	
+(1922/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(1925/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 6. Actual: 4' }
+	
+	Node.js v21.6.2
+	
+(1928/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(1930/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.10_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 6' }
+	
+	Node.js v21.6.2
+	
+(1931/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T6.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = 1; var x1 = (x <<= 1); x1 === 2. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(1934/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 1. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(1935/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.5.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x -= 1 throw ReferenceError. Actual: Test262Error: #1.1: x -= 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(1936/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(1937/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(1946/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T1.3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = -1; var z = (x %= 2); z === -1. Actual: 2'
+	}
+	
+	Node.js v21.6.2
+	
+(1950/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1951/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.2_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: innerX === 2. Actual: 0.6666666666666666'
+	}
+	
+	Node.js v21.6.2
+	
+(1952/2561) [NOK] language/expressions/compound-assignment/sub-whitespace.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'U+0009 (expression) Expected SameValue(<<1>>, <<-2>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(1957/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 6. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1959/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x *= 1 throw ReferenceError. Actual: Test262Error: #1.1: x *= 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(1965/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T1.7.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = 4; var z = (x >>= 1); z === 2. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(1973/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(1976/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(1977/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(1981/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(1983/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(1984/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = -1; var x1 = (x %= 2); x1 === -1. Actual: 2'
+	}
+	
+	Node.js v21.6.2
+	
+(1986/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(1989/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T1.6.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = 1; var z = (x <<= 1); z === 2. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(1990/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(1995/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.4_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 3' }
+	
+	Node.js v21.6.2
+	
+(2007/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 6. Actual: 4' }
+	
+	Node.js v21.6.2
+	
+(2008/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.6_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 16' }
+	
+	Node.js v21.6.2
+	
+(2011/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T7.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = 4; var x1 = (x >>= 1); x1 === 2. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2012/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2014/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2015/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2016/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x += 1 throw ReferenceError. Actual: Test262Error: #1.1: x += 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2022/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(2025/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(2033/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2040/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T11.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2: y = 1; y1 = (y |= 0); y1 === 1. Actual: 0'
+	}
+	
+	Node.js v21.6.2
+	
+(2041/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.1_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 8' }
+	
+	Node.js v21.6.2
+	
+(2048/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(2050/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(2054/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2059/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2060/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2061/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2062/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.11_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 6' }
+	
+	Node.js v21.6.2
+	
+(2065/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T8.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = 4; var x1 = (x >>>= 1); x1 === 2. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2066/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 2. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2068/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(2069/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 3' }
+	
+	Node.js v21.6.2
+	
+(2073/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(2074/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.3_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#2: x === 3. Actual: 7' }
+	
+	Node.js v21.6.2
+	
+(2085/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2087/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.7_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 1' }
+	
+	Node.js v21.6.2
+	
+(2089/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 16. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2090/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2093/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 1. Actual: 3' }
+	
+	Node.js v21.6.2
+	
+(2097/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2100/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(2108/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(2109/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(2110/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(2111/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(2114/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T10.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2: y = 1; y1 = (y ^= 0); y1 === 1. Actual: 0'
+	}
+	
+	Node.js v21.6.2
+	
+(2119/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2128/2561) [NOK] language/expressions/compound-assignment/add-whitespace.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'U+0009 (expression) Expected SameValue(<<-1>>, <<-2>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(2131/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: scope.x === 3. Actual: function () {\n' +
+	    '        const v12 = this.x;\n' +
+	    '        const v13 = delete v12;\n' +
+	    '        v13;\n' +
+	    '        return 2;\n' +
+	    '    }1'
+	}
+	
+	Node.js v21.6.2
+	
+(2133/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T1.8.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = 4; var z = (x >>>= 1); z === 2. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2134/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 1' }
+	
+	Node.js v21.6.2
+	
+(2135/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.9.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x &= 1 throw ReferenceError. Actual: Test262Error: #1.1: x &= 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2136/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2138/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2139/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 16. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2141/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.9_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#2: x === 1. Actual: 5' }
+	
+	Node.js v21.6.2
+	
+(2143/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2148/2561) [NOK] language/expressions/compound-assignment/mod-whitespace.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'U+0009 (expression) Expected SameValue(<<-1>>, <<0>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(2149/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 2. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(2151/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2160/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(2161/2561) [NOK] language/expressions/compound-assignment/lshift-whitespace.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'U+0009 (expression) Expected SameValue(<<1>>, <<2>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(2162/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(2170/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2171/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2178/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: scope.x === 3. Actual: function () {\n' +
+	    '    const v11 = this.x;\n' +
+	    '    const v12 = delete v11;\n' +
+	    '    v12;\n' +
+	    '    return 2;\n' +
+	    '}1'
+	}
+	
+	Node.js v21.6.2
+	
+(2186/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2187/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(2192/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2193/2561) [NOK] language/expressions/compound-assignment/xor-whitespace.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'U+0009 (expression) Expected SameValue(<<1>>, <<0>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(2199/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: innerScope.x === 3. Actual: function () {\n' +
+	    '    const v13 = this.x;\n' +
+	    '    const v14 = delete v13;\n' +
+	    '    v14;\n' +
+	    '    return 2;\n' +
+	    '}1'
+	}
+	
+	Node.js v21.6.2
+	
+(2200/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.8.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x >>>= 1 throw ReferenceError. Actual: Test262Error: #1.1: x >>>= 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2202/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2204/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2205/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 16. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2209/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2211/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 3' }
+	
+	Node.js v21.6.2
+	
+(2216/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(2217/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2223/2561) [NOK] language/expressions/compound-assignment/mult-whitespace.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'U+0009 (expression) Expected SameValue(<<-1>>, <<1>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(2230/2561) [NOK] language/expressions/compound-assignment/div-whitespace.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'U+0009 (expression) Expected SameValue(<<-1>>, <<1>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(2231/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 6. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(2238/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x %= 1 throw ReferenceError. Actual: Test262Error: #1.1: x %= 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2239/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v21.6.2
+	
+(2242/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(2246/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(2248/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T1.5.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = 1; var z = (x -= 1); z === 0. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2251/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2257/2561) [NOK] language/expressions/compound-assignment/srshift-whitespace.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'U+0009 (expression) Expected SameValue(<<1>>, <<0>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(2261/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2262/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = 1; var x1 = (x += 1); x1 === 2. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2263/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2265/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.8_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 1' }
+	
+	Node.js v21.6.2
+	
+(2266/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.11.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x |= 1 throw ReferenceError. Actual: Test262Error: #1.1: x |= 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2267/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2270/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2271/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.7.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x >>= 1 throw ReferenceError. Actual: Test262Error: #1.1: x >>= 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2285/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2290/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 2. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(2296/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 6. Actual: 4' }
+	
+	Node.js v21.6.2
+	
+(2298/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A3.2_T5.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = -1; var x1 = (x -= 1); x1 === -2. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2300/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 2. Actual: 0' }
+	
+	Node.js v21.6.2
+	
+(2301/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.10.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x ^= 1 throw ReferenceError. Actual: Test262Error: #1.1: x ^= 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2302/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2307/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2308/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.6.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x <<= 1 throw ReferenceError. Actual: Test262Error: #1.1: x <<= 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2309/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2317/2561) [NOK] language/expressions/compound-assignment/urshift-whitespace.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'U+0009 (expression) Expected SameValue(<<1>>, <<0>>) to be true'
+	}
+	
+	Node.js v21.6.2
+	
+(2320/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2322/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(2326/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T5.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	    const v13 = this.x;
+	                     ^
+	
+	RangeError: Maximum call stack size exceeded
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	    at v15 ([eval]:389:22)
+	
+	Node.js v21.6.2
+	
+(2328/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 6. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(2333/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T3.2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: x /= 1 throw ReferenceError. Actual: Test262Error: #1.1: x /= 1 throw ReferenceError. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2339/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T1.10.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = 1; var z = (x ^= 1); z === 0. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2341/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 1. Actual: NaN' }
+	
+	Node.js v21.6.2
+	
+(2342/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A2.1_T1.4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: var x = 1; var z = (x += 1); z === 2. Actual: 1'
+	}
+	
+	Node.js v21.6.2
+	
+(2345/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v21.6.2
+	
+(2466/2561) [NOK] language/expressions/assignmenttargettype/simple-basic-identifierreference-yield.js	 norm [fail]	semantics []
+	no output file(PASSED 88.2%)	language/statements/with	 failed : 2/16   timeout : 0    time : 590.5ms
+(PASSED 100.0%)	language/statements/empty	 failed : 0/0   timeout : 0    time : 525.8ms
+(PASSED 97.8%)	language/statements/variable	 failed : 0/2   timeout : 0    time : 547.09ms
+(PASSED 100.0%)	language/statements/async-function	 failed : 0/0   timeout : 0    time : 513.24ms
+(PASSED 69.7%)	language/statements/if	 failed : 10/8   timeout : 0    time : 527.67ms
+(PASSED 100.0%)	language/statements/return	 failed : 0/0   timeout : 0    time : 520.47ms
+(PASSED 90.6%)	language/statements/function	 failed : 0/22   timeout : 0    time : 531.93ms
+(PASSED 50.0%)	language/statements/labeled	 failed : 3/1   timeout : 0    time : 508.99ms
+(PASSED 100.0%)	language/statements/throw	 failed : 0/0   timeout : 0    time : 559.58ms
+(PASSED 75.0%)	language/statements/do-while	 failed : 0/5   timeout : 1    time : 505.73ms
+(PASSED 73.1%)	language/statements/for	 failed : 2/7   timeout : 9    time : 638.01ms
+(PASSED 100.0%)	language/statements/switch	 failed : 0/0   timeout : 0    time : 1760.5ms
+(PASSED 100.0%)	language/statements/switch/syntax/redeclaration	 failed : 0/0   timeout : 0    time : 518.69ms
+(PASSED 86.9%)	language/statements/try	 failed : 0/0   timeout : 11    time : 1046.8ms
+(PASSED 100.0%)	language/statements/expression	 failed : 0/0   timeout : 0    time : 1501.0ms
+(PASSED 95.0%)	language/statements/break	 failed : 0/1   timeout : 0    time : 1559.4ms
+(PASSED 70.6%)	language/statements/for-in	 failed : 4/7   timeout : 0    time : 1487.8ms
+(PASSED 75.0%)	language/statements/continue	 failed : 0/2   timeout : 2    time : 1509.9ms
+(PASSED 92.0%)	language/statements/while	 failed : 2/0   timeout : 0    time : 1444.3ms
+(PASSED 100.0%)	language/statements/block	 failed : 0/0   timeout : 0    time : 1428.4ms
+(PASSED 100.0%)	language/expressions/modulus	 failed : 0/0   timeout : 0    time : 1896.7ms
+(PASSED 100.0%)	language/expressions/bitwise-and	 failed : 0/0   timeout : 0    time : 1567.6ms
+(PASSED 100.0%)	language/expressions/dynamic-import	 failed : 0/0   timeout : 0    time : 1545.3ms
+(PASSED 100.0%)	language/expressions/dynamic-import/namespace	 failed : 0/0   timeout : 0    time : 1573.1ms
+(PASSED 0.0%)	language/expressions/dynamic-import/catch	 failed : 0/1   timeout : 0    time : 1496.1ms
+(PASSED 100.0%)	language/expressions/dynamic-import/syntax/valid	 failed : 0/0   timeout : 0    time : 1536.9ms
+(PASSED 100.0%)	language/expressions/relational	 failed : 0/0   timeout : 0    time : 1223.2ms
+(PASSED 100.0%)	language/expressions/less-than	 failed : 0/0   timeout : 0    time : 1559.5ms
+(PASSED 100.0%)	language/expressions/concatenation	 failed : 0/0   timeout : 0    time : 1569.9ms
+(PASSED 100.0%)	language/expressions/unary-plus	 failed : 0/0   timeout : 0    time : 1477.3ms
+(PASSED 80.5%)	language/expressions/postfix-increment	 failed : 0/8   timeout : 0    time : 1508.6ms
+(PASSED 60.0%)	language/expressions/property-accessors	 failed : 8/0   timeout : 0    time : 1488.9ms
+(PASSED 100.0%)	language/expressions/logical-and	 failed : 0/0   timeout : 0    time : 1546.7ms
+(PASSED 100.0%)	language/expressions/division	 failed : 0/0   timeout : 0    time : 1566.6ms
+(PASSED 100.0%)	language/expressions/conditional	 failed : 0/0   timeout : 0    time : 1475.7ms
+(PASSED 100.0%)	language/expressions/instanceof	 failed : 0/0   timeout : 0    time : 1493.5ms
+(PASSED 62.9%)	language/expressions/delete	 failed : 0/33   timeout : 0    time : 1522.8ms
+(PASSED 82.1%)	language/expressions/postfix-decrement	 failed : 0/7   timeout : 0    time : 1540.0ms
+(PASSED 100.0%)	language/expressions/greater-than-or-equal	 failed : 0/0   timeout : 0    time : 1542.3ms
+(PASSED 100.0%)	language/expressions/subtraction	 failed : 0/0   timeout : 0    time : 1571.9ms
+(PASSED 100.0%)	language/expressions/array	 failed : 0/0   timeout : 0    time : 1848.1ms
+(PASSED 77.4%)	language/expressions/prefix-increment	 failed : 0/7   timeout : 0    time : 1530.2ms
+(PASSED 100.0%)	language/expressions/does-not-equals	 failed : 0/0   timeout : 0    time : 1555.6ms
+(PASSED 92.9%)	language/expressions/in	 failed : 1/0   timeout : 0    time : 1568.9ms
+(PASSED 90.0%)	language/expressions/grouping	 failed : 0/1   timeout : 0    time : 1493.8ms
+(PASSED 78.1%)	language/expressions/prefix-decrement	 failed : 0/7   timeout : 0    time : 1578.1ms
+(PASSED 79.7%)	language/expressions/assignment	 failed : 1/11   timeout : 0    time : 1500.0ms
+(PASSED 100.0%)	language/expressions/comma	 failed : 0/0   timeout : 0    time : 1597.8ms
+(PASSED 100.0%)	language/expressions/exponentiation	 failed : 0/0   timeout : 0    time : 1501.8ms
+(PASSED 100.0%)	language/expressions/function	 failed : 0/0   timeout : 0    time : 1497.1ms
+(PASSED 100.0%)	language/expressions/strict-does-not-equals	 failed : 0/0   timeout : 0    time : 1560.7ms
+(PASSED 100.0%)	language/expressions/unsigned-right-shift	 failed : 0/0   timeout : 0    time : 1665.9ms
+(PASSED 100.0%)	language/expressions/equals	 failed : 0/0   timeout : 0    time : 1570.5ms
+(PASSED 100.0%)	language/expressions/logical-not	 failed : 0/0   timeout : 0    time : 1579.6ms
+(PASSED 100.0%)	language/expressions/bitwise-xor	 failed : 0/0   timeout : 0    time : 1611.0ms
+(PASSED 94.7%)	language/expressions/call	 failed : 0/2   timeout : 0    time : 1533.0ms
+(PASSED 100.0%)	language/expressions/greater-than	 failed : 0/0   timeout : 0    time : 1559.8ms
+(PASSED 88.7%)	language/expressions/object	 failed : 3/2   timeout : 1    time : 1564.7ms
+(PASSED 100.0%)	language/expressions/bitwise-or	 failed : 0/0   timeout : 0    time : 1631.6ms
+(PASSED 100.0%)	language/expressions/void	 failed : 0/0   timeout : 0    time : 1499.9ms
+(PASSED 100.0%)	language/expressions/less-than-or-equal	 failed : 0/0   timeout : 0    time : 1532.4ms
+(PASSED 100.0%)	language/expressions/strict-equals	 failed : 0/0   timeout : 0    time : 1430.6ms
+(PASSED 100.0%)	language/expressions/import.meta/syntax	 failed : 0/0   timeout : 0    time : 1515.2ms
+(PASSED 100.0%)	language/expressions/new	 failed : 0/0   timeout : 0    time : 1453.4ms
+(PASSED 68.8%)	language/expressions/compound-assignment	 failed : 0/134   timeout : 0    time : 1659.9ms
+(PASSED 100.0%)	language/expressions/this	 failed : 0/0   timeout : 0    time : 1486.7ms
+(PASSED 100.0%)	language/expressions/bitwise-not	 failed : 0/0   timeout : 0    time : 1503.1ms
+(PASSED 100.0%)	language/expressions/logical-or	 failed : 0/0   timeout : 0    time : 1249.3ms
+(PASSED 100.0%)	language/expressions/right-shift	 failed : 0/0   timeout : 0    time : 1436.4ms
+(PASSED 100.0%)	language/expressions/multiplication	 failed : 0/0   timeout : 0    time : 1349.5ms
+(PASSED 100.0%)	language/expressions/unary-minus	 failed : 0/0   timeout : 0    time : 1285.1ms
+(PASSED 85.7%)	language/expressions/assignmenttargettype	 failed : 1/0   timeout : 0    time : 1552.2ms
+(PASSED 100.0%)	language/expressions/left-shift	 failed : 0/0   timeout : 0    time : 1533.7ms
+(PASSED 100.0%)	language/expressions/typeof	 failed : 0/0   timeout : 0    time : 1084.3ms
+(PASSED 100.0%)	language/expressions/addition	 failed : 0/0   timeout : 0    time : 986.57ms
+
+    ==============================
+    total : 2561
+    ok    : 2226
+    error : 37 + 284 (normalization + semantics)
+    timeout : 24
+    time : 986.57ms
+    ==============================
+    
