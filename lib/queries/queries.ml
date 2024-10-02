@@ -16,20 +16,14 @@ let rec is_reachable (graph : Graph.t) (node : Node.t)
 
 and is_reachable' (graph : Graph.t) (node : Node.t)
   (exported_locs : location list) : bool =
-  print_endline ("Processing: " ^ Node.label node);
   match node.func with
-  | None ->
-    print_endline "Node has no parent";
-    false
+  | None -> false
   | Some f_node ->
     let f_node_loc = Node.get_abs_loc f_node in
     let p_nodes = Graph.find_tainted_parameter graph f_node node in
-    if List.mem f_node_loc exported_locs then
-      let _ = print_endline ("Exported: " ^ Node.label f_node) in
-      true
+    if List.mem f_node_loc exported_locs then true
     else if p_nodes = [] then false
     else
-      let _ = print_endline ("Finding calls to: " ^ Node.label f_node) in
       let f_callers =
         Option.value ~default:[]
           (Option.map (Graph.get_callers graph) (Node.get_func_name f_node))
@@ -55,13 +49,17 @@ and is_reachable' (graph : Graph.t) (node : Node.t)
               p_nodes )
           f_args
       in
-      print_endline
-        ("Taited arguments: " ^ String.concat ", " (List.map Node.label f_args'));
       List.exists (fun arg -> is_reachable graph arg exported_locs) f_args'
 
-let print_vuln (call_sink : Node.t) : unit =
-  Format.printf "{@\n  file: \"%s\"@\n  sink: %s@\n  sink_lineno: %d@\n}@\n@."
-    call_sink.code_loc._file (Node.label call_sink)
+let print_vuln (vuln_t : string) (call_sink : Node.t) : unit =
+  Format.printf
+    "  {@\n\
+    \    \"vuln_type\": %S@\n\
+    \    \"file\": %S@\n\
+    \    \"sink\": %S@\n\
+    \    \"sink_lineno\": %d@\n\
+    \  }@\n"
+    vuln_t call_sink.code_loc._file (Node.label call_sink)
     call_sink.code_loc._start.line
 
 let run_tainted_queries (graph : Graph.t) (exportedObject : ExportedObject.t)
@@ -72,7 +70,7 @@ let run_tainted_queries (graph : Graph.t) (exportedObject : ExportedObject.t)
       List.iter
         (fun call_sink ->
           if is_reachable graph call_sink exported_locs then
-            print_vuln call_sink )
+            print_vuln sink.vuln_t call_sink )
         (Graph.get_callers graph sink.sink) )
     config.functions
 
@@ -82,4 +80,6 @@ let run_prototype_polution_queries (_graph : Graph.t)
 
 let run_queries (graph : Graph.t) (exportedObject : ExportedObject.t)
   (config : Config.t) : unit =
-  run_tainted_queries graph exportedObject config
+  Format.printf "[@\n";
+  run_tainted_queries graph exportedObject config;
+  Format.printf "]@\n"

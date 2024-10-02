@@ -8,16 +8,19 @@ type package = {
 }
 
 type functionSink = {
+  vuln_t  : string;
   sink    : string;
   args    : int list 
 }
 
 type newSink = {
+  vuln_t  : string;
   sink    : string;
   args    : int list 
 }
 
 type packageSink = {
+  vuln_t  : string;
   sink     : string;
   packages : package list 
 }
@@ -45,7 +48,7 @@ let rec read (config_path : string) : t =
   
   let sinks = config_json |> member "sinks" in
   if sinks != `Null then ( 
-    List.iter (fun (_vuln_type, sinks) -> 
+    List.iter (fun (vuln_t, sinks) -> 
       let sinks = sinks |> to_list in 
       
       List.iter (fun sink -> 
@@ -55,17 +58,17 @@ let rec read (config_path : string) : t =
         match sink_type with 
           | "new" -> 
             let args = List.map (to_int) (sink |> member "args" |> to_list) in 
-            let new_sink : newSink = {sink = sink_name; args = args} in 
+            let new_sink : newSink = {vuln_t; sink = sink_name; args = args} in 
             news' := new_sink :: !news'
 
           | "function" -> 
             let args = List.map (to_int) (sink |> member "args" |> to_list) in 
-            let func_sink : functionSink = {sink = sink_name; args = args} in
+            let func_sink : functionSink = {vuln_t; sink = sink_name; args = args} in
             functions' := func_sink :: !functions'
 
           | "package" -> 
             let packages = List.map (to_package) (sink |> member "packages" |> to_list) in 
-            let package_sink : packageSink = {sink = sink_name; packages = packages} in 
+            let package_sink : packageSink = {vuln_t; sink = sink_name; packages = packages} in 
             packageSinks' := package_sink :: !packageSinks'
 
           | _    -> failwith ("[ERROR] Sink type " ^ sink_type ^ " not allowed")
@@ -113,12 +116,12 @@ let get_function_sink_info (config : t) (func_name : string) : functionSink opti
   let sink_infos = (List.filter (((=) func_name) << get_function_sink_name) config.functions) in 
   List.nth_opt sink_infos 0
 
-let get_package_sink_info (config : t) (package_name : string) (method_name : string) : package option = 
+let get_package_sink_info (config : t) (package_name : string) (method_name : string) : string * package option = 
   let method_sink = List.filter ( fun package_sink -> package_sink.sink = method_name ) config.packageSinks |> (flip List.nth_opt 0) in 
   map_default (fun (method_sink : packageSink) ->
     let package = List.filter (fun package -> package.package = package_name) method_sink.packages |> (flip List.nth_opt 0) in
-    package
-  ) None method_sink
+    (method_sink.vuln_t, package)
+  ) ("", None) method_sink
 
 
 

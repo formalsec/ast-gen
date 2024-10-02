@@ -426,7 +426,7 @@ let rec add_taint_sinks (state : State.t) (config : Config.t) (ext_calls : Exter
           if List.length ref.properties = 1 then
             let method_name = List.nth ref.properties 0 in
             let package_name = ref._module in
-            let sink_info = Config.get_package_sink_info config package_name method_name in
+            let (_, sink_info) = Config.get_package_sink_info config package_name method_name in
             option_may (fun (sink_info : package) ->
               add_taink_sink graph loc node method_name sink_info.args
             ) sink_info
