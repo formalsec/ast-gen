@@ -90,8 +90,9 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
   if generate_mdg then (
     let main = DependencyTree.get_main dep_tree in
     let graph = ModuleGraphs.get module_graphs main in
-    if not no_dot then Mdg.Pp.Dot.output (Fpath.to_string graph_dir) graph;
-    Mdg.Pp.CSV.output (Fpath.to_string graph_dir) graph);
+    if not no_dot then Mdg.Pp.Dot.output graph_dir graph;
+    Mdg.Pp.CSV.output graph_dir graph;
+  );
   Ok 0
 
 (* setup comand line interface using CMDLiner library*)

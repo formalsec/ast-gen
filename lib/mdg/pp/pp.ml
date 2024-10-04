@@ -54,9 +54,9 @@ end
   
     !result
   
-  let output (file_path : string) (graph : Graph.t) : unit = 
-    let dot_file = file_path ^ "graph.dot" in
-    let svg_file = file_path ^ "graph.svg" in 
+  let output (file_path : Fpath.t) (graph : Graph.t) : unit = 
+    let dot_file = Fpath.(to_string @@ (file_path / "graph.dot")) in
+    let svg_file = Fpath.(to_string @@ (file_path / "graph.svg")) in 
     
     let file = open_out_bin dot_file in
     
@@ -69,11 +69,10 @@ end
 end
 
 module CSV = struct
-  let output (file_path : string) (graph : Graph.t) : unit =
-    
-    let nodes_file  = file_path ^ "nodes.csv" in 
-    let edges_file  = file_path ^ "rels.csv" in 
-    let graph_stats = file_path ^ "graph_stats.json" in
+  let output (file_path : Fpath.t) (graph : Graph.t) : unit =
+    let nodes_file  = Fpath.(to_string @@ (file_path / "nodes.csv")) in 
+    let edges_file  = Fpath.(to_string @@ (file_path / "rels.csv")) in 
+    let graph_stats = Fpath.(to_string @@ (file_path / "graph_stats.json")) in
 
     (* process node information *)
     let out_channel = open_out nodes_file in
