@@ -290,6 +290,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       (* -------- R E T U R N -------- *)
       | loc, Return {id; argument} ->
         let _L = Option.map eval_expr argument in
+        (match _L with Some l -> LocationSet.print l | None -> ());
         let l_retn = alloc id in
 
         if (Option.is_some _L) then (

@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "editor.inlayHints.enabled": "offUnlessPressed",
+    "ocaml.server.codelens": true,
+    "ocaml.server.extendedHover": true,
+    "files.exclude": {
+      // "_build/": true,
+      "_opam/": true
+    },
+  }
+}

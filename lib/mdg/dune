@@ -2,6 +2,4 @@
 
 (library
  (name mdg)
- (libraries ast setup ocamlgraph auxiliary)
- (preprocess (pps ppx_import)))
-
+ (libraries ast setup ocamlgraph auxiliary))

@@ -23,7 +23,8 @@ let setup_output output_path =
   Ok (code_dir, graph_dir, run_dir)
 
 (* TODO: Use Fpath everywhere *)
-let main file_name output_path config_path mode generate_mdg run_queries no_dot verbose =
+let main file_name output_path config_path mode generate_mdg run_queries no_dot
+  verbose =
   (* DANGEROUS: We create "run" but don't pass it to any function?
      Is there any global behaviour that will write to "run"? *)
   let* code_dir, graph_dir, run_dir = setup_output output_path in
@@ -55,7 +56,6 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
         js_program;
 
       (* STEP 2 : Generate MDG for the normalized code *)
-      
       if generate_mdg then (
         let graph, exportedObject, external_calls =
           Mdg.Analyse.program mode verbose config_path norm_program
@@ -75,19 +75,19 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
                 let func_loc =
                   ExportedObject.get_value_location moduleEO info.properties
                 in
-                (if not (Graph.has_external_function graph func_loc) then
-                   let func_graph = Graph.get_function moduleGraph func_loc in
-                   Graph.add_external_func graph func_graph l_call func_loc);
+                ( if not (Graph.has_external_function graph func_loc) then
+                    let func_graph = Graph.get_function moduleGraph func_loc in
+                    Graph.add_external_func graph func_graph l_call func_loc );
 
-                Graph.add_call_edge graph l_call func_loc)
-              moduleEO)
+                Graph.add_call_edge graph l_call func_loc )
+              moduleEO )
           external_calls;
         (* save current module info*)
         let alter_name = String.sub file_path 0 (String.length file_path - 3) in
         ModuleGraphs.add module_graphs file_path graph;
         ModuleGraphs.add module_graphs alter_name graph;
         Summaries.add summaries file_path exportedObject;
-        Summaries.add summaries alter_name exportedObject))
+        Summaries.add summaries alter_name exportedObject ) )
     (DependencyTree.bottom_up_visit dep_tree);
   
   (* output *)
@@ -101,13 +101,94 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
 
 
     (* run queries *)
-    if run_queries then (
+    if run_queries then
       let exportedObject = Summaries.get summaries main in
       let config = Config.read config_path in
-      (Queries.run_queries graph exportedObject config output_path);
-    );
-  );
-  
+      Queries.run_queries Format.std_formatter graph exportedObject config );
+
+  Ok 0
+
+let read_inputs dir =
+  let fold_f fpath acc = fpath :: acc in
+  let* files =
+    Bos.OS.Dir.fold_contents ~elements:`Files ~traverse:`Any fold_f [] dir
+  in
+  Ok
+    ( List.filter (Fpath.has_ext "js") files
+    |> List.map (fun f -> (Fpath.parent f, f)) )
+
+let queries input_dir config_path mode =
+  let* inputs = read_inputs (Fpath.v input_dir) in
+  ignore
+    (List.map
+       (fun (dir, input) ->
+         try
+           let file_name = Fpath.to_string input in
+           let name = Fpath.basename input in
+           let output = Fpath.((dir / name) + "out") in
+           let* dep_tree = DependencyTree.generate file_name mode in
+           let summaries = Summaries.empty () in
+           let module_graphs = ModuleGraphs.empty () in
+           List.iter
+             (fun file_path ->
+               let ast = Js_parser.from_file file_path in
+               let norm_program = Ast.Normalize.program ast file_path in
+               let norm_program =
+                 if file_path = dep_tree.main then Program.set_main norm_program
+                 else norm_program
+               in
+               (* STEP 2 : Generate MDG for the normalized code *)
+               let graph, exportedObject, external_calls =
+                 Mdg.Analyse.program mode false config_path norm_program
+               in
+               ExternalReferences.iter
+                 (fun locs info ->
+                   let l_call = LocationSet.min_elt locs in
+                   let module_name =
+                     Fpath.(to_string @@ (dir / info._module))
+                   in
+                   let moduleEO = Summaries.get_opt summaries module_name in
+                   option_may
+                     (fun moduleEO ->
+                       let moduleGraph =
+                         ModuleGraphs.get module_graphs module_name
+                       in
+                       let func_loc =
+                         ExportedObject.get_value_location moduleEO
+                           info.properties
+                       in
+                       ( if not (Graph.has_external_function graph func_loc) then
+                           let func_graph =
+                             Graph.get_function moduleGraph func_loc
+                           in
+                           Graph.add_external_func graph func_graph l_call
+                             func_loc );
+                       Graph.add_call_edge graph l_call func_loc )
+                     moduleEO )
+                 external_calls;
+               let alter_name =
+                 String.sub file_path 0 (String.length file_path - 3)
+               in
+               ModuleGraphs.add module_graphs file_path graph;
+               ModuleGraphs.add module_graphs alter_name graph;
+               Summaries.add summaries file_path exportedObject;
+               Summaries.add summaries alter_name exportedObject )
+             (DependencyTree.bottom_up_visit dep_tree);
+
+           let main = DependencyTree.get_main dep_tree in
+           let graph = ModuleGraphs.get module_graphs main in
+           let exportedObject = Summaries.get summaries main in
+           let config = Config.read config_path in
+           let oc = open_out (Fpath.to_string output) in
+           let ppf = Format.formatter_of_out_channel oc in
+           Queries.run_queries ppf graph exportedObject config;
+           close_out oc;
+           Ok 0
+         with _ ->
+           Format.eprintf "input = %a@\n@." Fpath.pp input;
+           Printexc.print_backtrace stderr;
+           Ok 1 )
+       inputs );
   Ok 0
 
 (* setup comand line interface using CMDLiner library*)
@@ -119,13 +200,17 @@ let input_file : string Term.t =
   let docv = "FILE_OR_DIR" in
   Arg.(required & pos 0 (some file) None & info [] ~doc ~docv)
 
+let input_dir : string Term.t =
+  let doc = "Path to JavaScript tests." in
+  let docv = "DIR" in
+  Arg.(required & pos 0 (some dir) None & info [] ~doc ~docv)
+
 let mode : Mode.t Term.t =
   let mode_enum =
     Arg.enum
-      [
-        ("basic", Mode.Basic);
-        ("single_file", Mode.Single_file);
-        ("multi_file", Mode.Multi_file);
+      [ ("basic", Mode.Basic)
+      ; ("single_file", Mode.Single_file)
+      ; ("multi_file", Mode.Multi_file)
       ]
   in
   let doc =
@@ -167,18 +252,22 @@ let verbose : bool Term.t =
   Arg.(value & flag & info [ "v"; "verbose" ] ~doc)
 
 let cli =
-  let cmd =
+  let queries_info = Cmd.info "queries" in
+  let queries = Term.(const queries $ input_dir $ config_path $ mode) in
+  let main_info = Cmd.info "run" in
+  let main =
     Term.(
-      const main $ input_file $ output_path $ config_path $ mode $ mdg $ run_queries $ no_dot
-      $ verbose)
+      const main $ input_file $ output_path $ config_path $ mode $ mdg
+      $ run_queries $ no_dot $ verbose )
   in
   let info = Cmd.info "graphjs2" in
-  Cmd.v info cmd
+  Cmd.group ~default:main info
+    [ Cmd.v main_info main; Cmd.v queries_info queries ]
 
 let () =
   match Cmd.eval_value' cli with
   | `Exit code -> exit code
   | `Ok return -> (
-      match return with
-      | Error (`Msg err) -> Fmt.failwith "%s" err
-      | Ok code -> exit code)
+    match return with
+    | Error (`Msg err) -> Fmt.failwith "%s" err
+    | Ok code -> exit code )

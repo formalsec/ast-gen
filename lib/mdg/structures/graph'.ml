@@ -795,7 +795,6 @@ let reaches graph src target : Node.t list list =
             let nghbrs = get_neighbors graph cur in
             let nghbrs = List.filter (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited)) nghbrs in 
             let visited' = List.fold_left (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc) visited nghbrs in 
-            
             let fst_paths = List.map (fun cur' -> cur'::curr_path) nghbrs in 
             reaches' graph visited' (fst_paths @ tail_paths) ret_paths target
           )
@@ -806,7 +805,7 @@ let reaches graph src target : Node.t list list =
   let visited  = IntSet.empty in
   reaches' graph visited [ [ src ] ] []  target 
 
-let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) : Node.t list = 
+let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) : Node.t list =
     let paths = reaches graph f_node node in 
     List.filter_map (fun path -> 
       let argument_index = List.length path - 2 in 
