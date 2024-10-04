@@ -4,6 +4,137 @@ import os
 import subprocess
 import timeit
 
+CONTROL_FLOW = "Control Flow Statements"
+control_flow_statements = {
+    "language/statements/if",
+    "language/statements/return",
+    "language/statements/break",
+    "language/statements/continue",
+    "language/statements/do-while",
+    "language/statements/for",
+    "language/statements/for-in",
+    "language/statements/while",
+    "language/statements/switch",
+    "language/statements/switch/syntax/redeclaration",
+    "language/statements/try",
+    "language/statements/throw",
+    "language/statements/with",
+}
+
+FUNCTIONS = "Function and Async Handling"
+function_and_async_handling = {
+    "language/statements/function",
+    "language/statements/async-function",
+    "language/expressions/call",
+    "language/expressions/function",
+    "language/expressions/new"
+}
+
+VARIBLES = "Variable and Assignment Handling"
+variable_and_assignment_handling = {
+    "language/statements/variable",
+    "language/expressions/assignment",
+    "language/expressions/compound-assignment",
+    "language/expressions/assignmenttargettype"
+}
+
+LOGICAL = "Logical and Conditional Expressions"
+logical_and_conditional_expressions = {
+    "language/expressions/logical-and",
+    "language/expressions/logical-or",
+    "language/expressions/logical-not",
+    "language/expressions/conditional",
+    "language/expressions/greater-than",
+    "language/expressions/greater-than-or-equal",
+    "language/expressions/less-than",
+    "language/expressions/less-than-or-equal",
+    "language/expressions/does-not-equals",
+    "language/expressions/strict-does-not-equals",
+    "language/expressions/equals",
+    "language/expressions/strict-equals",
+    "language/expressions/relational"
+}
+
+ARITHMETIC = "Arithmetic and Bitwise Operations"
+arithmetic_and_bitwise_operations = {
+    "language/expressions/addition",
+    "language/expressions/subtraction",
+    "language/expressions/multiplication",
+    "language/expressions/division",
+    "language/expressions/modulus",
+    "language/expressions/exponentiation",
+    "language/expressions/bitwise-and",
+    "language/expressions/bitwise-or",
+    "language/expressions/bitwise-xor",
+    "language/expressions/bitwise-not",
+    "language/expressions/left-shift",
+    "language/expressions/right-shift",
+    "language/expressions/unsigned-right-shift"
+}
+
+POSTFIX = "Postfix and Prefix Operations"
+postfix_and_prefix_operations = {
+    "language/expressions/postfix-increment",
+    "language/expressions/postfix-decrement",
+    "language/expressions/prefix-increment",
+    "language/expressions/prefix-decrement"
+}
+
+OBJECT = "Object and Array Handling"
+object_and_array_handling = {
+    "language/expressions/object",
+    "language/expressions/array",
+    "language/expressions/property-accessors",
+    "language/expressions/in",
+    "language/expressions/delete"
+}
+
+MISC = "Miscellaneous Expressions and Statements"
+miscellaneous_expressions_and_statements = {
+    "language/statements/empty",
+    "language/statements/block",
+    "language/statements/expression",
+    "language/statements/labeled",
+    "language/expressions/unary-plus",
+    "language/expressions/unary-minus",
+    "language/expressions/instanceof",
+    "language/expressions/typeof",
+    "language/expressions/void",
+    "language/expressions/this",
+    "language/expressions/comma",
+    "language/expressions/dynamic-import",
+    "language/expressions/dynamic-import/namespace",
+    "language/expressions/dynamic-import/catch",
+    "language/expressions/dynamic-import/syntax/valid",
+    "language/expressions/concatenation",
+    "language/expressions/grouping",
+    "language/expressions/import.meta/syntax",
+    "language/expressions/labeled"
+}
+
+classes = [CONTROL_FLOW, FUNCTIONS, VARIBLES, LOGICAL, ARITHMETIC, POSTFIX, OBJECT, MISC]
+
+def check_class (test_group):
+    if test_group in control_flow_statements:
+        return CONTROL_FLOW
+    elif test_group in function_and_async_handling:
+        return FUNCTIONS
+    elif test_group in variable_and_assignment_handling:
+        return VARIBLES
+    elif test_group in logical_and_conditional_expressions:
+        return LOGICAL
+    elif test_group in arithmetic_and_bitwise_operations:
+        return ARITHMETIC
+    elif test_group in postfix_and_prefix_operations:
+        return POSTFIX
+    elif test_group in object_and_array_handling:
+        return OBJECT
+    elif test_group in miscellaneous_expressions_and_statements:
+        return MISC
+    else:
+        print(f"error : class not defined for {test_group}")
+        exit(-1)
+    
 
 TIMEOUT = 10
 OUTPUT_PATH = "out"
@@ -83,25 +214,28 @@ def test(program):
 
     return error, info
 
-def update_info (info, group, key, value):
-    info[group][key] += value
+def update_info (info, groups, key, value):
+    for group in groups: 
+        info[group][key] += value
+
     info[CUMULATIVE][key] += value
 
-def update_test_info(info, out_file, test_group, file_name ,is_negative, norm_info, norm_error, test_info, test_error, total):
+def update_test_info(info, out_file, test_group, group_class, file_name ,is_negative, norm_info, norm_error, test_info, test_error, total):
     failed  = (norm_info == FAIL or test_info == FAIL)
     concrete_fail = failed != is_negative
     timed_out = (norm_info == TOUT or test_info == TOUT)
     
     if timed_out:
-        update_info(info, test_group, TIMED_OUT, 1)
+        update_info(info, [test_group, group_class], TIMED_OUT, 1)
         color = YELLOW
     elif concrete_fail:
         negative = FAIL if not is_negative else PASS
-        update_info(info, test_group, NORM_E, norm_info == negative)
-        update_info(info, test_group, SMNT_E, test_info == negative)
+        update_info(info, [test_group, group_class], NORM_E, norm_info == negative)
+        update_info(info, [test_group, group_class], SMNT_E, test_info == negative)        
+
         color = RED
     else:
-        update_info(info, test_group, OK, 1)
+        update_info(info, [test_group, group_class], OK, 1)
         color = GREEN
 
     # count 
@@ -118,13 +252,17 @@ def update_test_info(info, out_file, test_group, file_name ,is_negative, norm_in
         out_file.write("\t" + test_error.replace("\n", "\n\t")[::-1].replace("\t\n", "\n", 1)[::-1] if test_error != "" else test_error)
 
 def report(info, out_file):
+    classes_out = ""
     for key in info:
         if key == CUMULATIVE:
             continue
         
         time_avg = (info[key][TIME] / info[key][NORMALIZED]) * 1000
         ok_percentage = round(info[key][OK] / info[key][TOTAL] * 100, 1)
-        message = f"(PASSED {ok_percentage}%)\t{key}\t failed : {info[key][NORM_E]}/{info[key][SMNT_E]}   timeout : {info[key][TIMED_OUT]}    time : {time_avg:.5}ms"
+        if key in classes:
+            classes_out += f"{key}:\n---------------\n  - total: {info[key][TOTAL]}\n  - failed : {info[key][NORM_E] + info[key][SMNT_E]}\n  - timeout : {info[key][TIMED_OUT]}\n  - time : {time_avg:.5}ms\n---------------\n"
+        
+        message = f"(PASSED {ok_percentage}%)\t{key}\t total: {info[key][TOTAL]}   failed : {info[key][NORM_E] + info[key][SMNT_E]}   timeout : {info[key][TIMED_OUT]}    time : {time_avg:.5}ms"
         print(message)
         out_file.write(message + "\n") 
     
@@ -138,7 +276,9 @@ def report(info, out_file):
     time : {(info[key][TIME] / info[key][NORMALIZED]) * 1000:.5}ms
     ==============================
     """
+    print(classes_out)
     print(message)
+    out_file.write(classes_out + "\n")
     out_file.write(message + "\n")
 
 
@@ -195,7 +335,12 @@ def main():
                 test_group = path.parent.relative_to(test_root / TESTS).__str__()
                 if test_group not in info:
                     info[test_group] = empty_info()
-                update_info(info, test_group, TOTAL, 1)
+
+                group_class = check_class(test_group)
+                if group_class not in info:
+                    info[group_class] = empty_info()
+
+                update_info(info, [test_group, group_class], TOTAL, 1)
 
                 # preprocess file 
                 with open(path) as file:
@@ -207,15 +352,15 @@ def main():
                 test_info, test_error = "", ""
                 norm_error, norm_info, norm_prog, exec_time = normalize(path, command, output_folder)
                 if exec_time:
-                    update_info(info, test_group, TIME, exec_time)
-                    update_info(info, test_group, NORMALIZED, 1)
+                    update_info(info, [test_group, group_class], TIME, exec_time)
+                    update_info(info, [test_group, group_class], NORMALIZED, 1)
 
                 if norm_prog:
                     test_prog = ("\"use strict\";\n" if is_strict else "") + harness + "\n" + norm_prog 
                     test_error, test_info = test(test_prog) 
 
                 
-                update_test_info(info, out_file, test_group, file_name, is_negative, norm_info, norm_error, test_info, test_error, total)
+                update_test_info(info, out_file, test_group, group_class, file_name, is_negative, norm_info, norm_error, test_info, test_error, total)
 
         # output detailed report
         report(info, out_file)

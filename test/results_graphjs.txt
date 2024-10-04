@@ -1137,16 +1137,7 @@
 	
 	Node.js v21.6.2
 	
-(1160/2561) [NOK] language/expressions/delete/S8.12.7_A2_T1.js	 norm [pass]	semantics [fail]
-	[eval]:15
-	    throw new Test262Error(message);
-	    ^
-	
-	Test262Error {
-	  message: '#1: var __color__map = {}; delete __color__map.red === true. Actual: false'
-	}
-	
-	Node.js v21.6.2
+(1160/2561) [NOK] language/expressions/delete/S8.12.7_A2_T1.js	 norm [fail]	semantics []
 	
 (1164/2561) [NOK] language/expressions/delete/11.4.1-4.a-3-s.js	 norm [pass]	semantics [fail]
 	[eval]:396
@@ -3291,87 +3282,160 @@
 	Node.js v21.6.2
 	
 (2466/2561) [NOK] language/expressions/assignmenttargettype/simple-basic-identifierreference-yield.js	 norm [fail]	semantics []
-	no output file(PASSED 88.2%)	language/statements/with	 failed : 2/16   timeout : 0    time : 590.5ms
-(PASSED 100.0%)	language/statements/empty	 failed : 0/0   timeout : 0    time : 525.8ms
-(PASSED 97.8%)	language/statements/variable	 failed : 0/2   timeout : 0    time : 547.09ms
-(PASSED 100.0%)	language/statements/async-function	 failed : 0/0   timeout : 0    time : 513.24ms
-(PASSED 69.7%)	language/statements/if	 failed : 10/8   timeout : 0    time : 527.67ms
-(PASSED 100.0%)	language/statements/return	 failed : 0/0   timeout : 0    time : 520.47ms
-(PASSED 90.6%)	language/statements/function	 failed : 0/22   timeout : 0    time : 531.93ms
-(PASSED 50.0%)	language/statements/labeled	 failed : 3/1   timeout : 0    time : 508.99ms
-(PASSED 100.0%)	language/statements/throw	 failed : 0/0   timeout : 0    time : 559.58ms
-(PASSED 75.0%)	language/statements/do-while	 failed : 0/5   timeout : 1    time : 505.73ms
-(PASSED 73.1%)	language/statements/for	 failed : 2/7   timeout : 9    time : 638.01ms
-(PASSED 100.0%)	language/statements/switch	 failed : 0/0   timeout : 0    time : 1760.5ms
-(PASSED 100.0%)	language/statements/switch/syntax/redeclaration	 failed : 0/0   timeout : 0    time : 518.69ms
-(PASSED 86.9%)	language/statements/try	 failed : 0/0   timeout : 11    time : 1046.8ms
-(PASSED 100.0%)	language/statements/expression	 failed : 0/0   timeout : 0    time : 1501.0ms
-(PASSED 95.0%)	language/statements/break	 failed : 0/1   timeout : 0    time : 1559.4ms
-(PASSED 70.6%)	language/statements/for-in	 failed : 4/7   timeout : 0    time : 1487.8ms
-(PASSED 75.0%)	language/statements/continue	 failed : 0/2   timeout : 2    time : 1509.9ms
-(PASSED 92.0%)	language/statements/while	 failed : 2/0   timeout : 0    time : 1444.3ms
-(PASSED 100.0%)	language/statements/block	 failed : 0/0   timeout : 0    time : 1428.4ms
-(PASSED 100.0%)	language/expressions/modulus	 failed : 0/0   timeout : 0    time : 1896.7ms
-(PASSED 100.0%)	language/expressions/bitwise-and	 failed : 0/0   timeout : 0    time : 1567.6ms
-(PASSED 100.0%)	language/expressions/dynamic-import	 failed : 0/0   timeout : 0    time : 1545.3ms
-(PASSED 100.0%)	language/expressions/dynamic-import/namespace	 failed : 0/0   timeout : 0    time : 1573.1ms
-(PASSED 0.0%)	language/expressions/dynamic-import/catch	 failed : 0/1   timeout : 0    time : 1496.1ms
-(PASSED 100.0%)	language/expressions/dynamic-import/syntax/valid	 failed : 0/0   timeout : 0    time : 1536.9ms
-(PASSED 100.0%)	language/expressions/relational	 failed : 0/0   timeout : 0    time : 1223.2ms
-(PASSED 100.0%)	language/expressions/less-than	 failed : 0/0   timeout : 0    time : 1559.5ms
-(PASSED 100.0%)	language/expressions/concatenation	 failed : 0/0   timeout : 0    time : 1569.9ms
-(PASSED 100.0%)	language/expressions/unary-plus	 failed : 0/0   timeout : 0    time : 1477.3ms
-(PASSED 80.5%)	language/expressions/postfix-increment	 failed : 0/8   timeout : 0    time : 1508.6ms
-(PASSED 60.0%)	language/expressions/property-accessors	 failed : 8/0   timeout : 0    time : 1488.9ms
-(PASSED 100.0%)	language/expressions/logical-and	 failed : 0/0   timeout : 0    time : 1546.7ms
-(PASSED 100.0%)	language/expressions/division	 failed : 0/0   timeout : 0    time : 1566.6ms
-(PASSED 100.0%)	language/expressions/conditional	 failed : 0/0   timeout : 0    time : 1475.7ms
-(PASSED 100.0%)	language/expressions/instanceof	 failed : 0/0   timeout : 0    time : 1493.5ms
-(PASSED 62.9%)	language/expressions/delete	 failed : 0/33   timeout : 0    time : 1522.8ms
-(PASSED 82.1%)	language/expressions/postfix-decrement	 failed : 0/7   timeout : 0    time : 1540.0ms
-(PASSED 100.0%)	language/expressions/greater-than-or-equal	 failed : 0/0   timeout : 0    time : 1542.3ms
-(PASSED 100.0%)	language/expressions/subtraction	 failed : 0/0   timeout : 0    time : 1571.9ms
-(PASSED 100.0%)	language/expressions/array	 failed : 0/0   timeout : 0    time : 1848.1ms
-(PASSED 77.4%)	language/expressions/prefix-increment	 failed : 0/7   timeout : 0    time : 1530.2ms
-(PASSED 100.0%)	language/expressions/does-not-equals	 failed : 0/0   timeout : 0    time : 1555.6ms
-(PASSED 92.9%)	language/expressions/in	 failed : 1/0   timeout : 0    time : 1568.9ms
-(PASSED 90.0%)	language/expressions/grouping	 failed : 0/1   timeout : 0    time : 1493.8ms
-(PASSED 78.1%)	language/expressions/prefix-decrement	 failed : 0/7   timeout : 0    time : 1578.1ms
-(PASSED 79.7%)	language/expressions/assignment	 failed : 1/11   timeout : 0    time : 1500.0ms
-(PASSED 100.0%)	language/expressions/comma	 failed : 0/0   timeout : 0    time : 1597.8ms
-(PASSED 100.0%)	language/expressions/exponentiation	 failed : 0/0   timeout : 0    time : 1501.8ms
-(PASSED 100.0%)	language/expressions/function	 failed : 0/0   timeout : 0    time : 1497.1ms
-(PASSED 100.0%)	language/expressions/strict-does-not-equals	 failed : 0/0   timeout : 0    time : 1560.7ms
-(PASSED 100.0%)	language/expressions/unsigned-right-shift	 failed : 0/0   timeout : 0    time : 1665.9ms
-(PASSED 100.0%)	language/expressions/equals	 failed : 0/0   timeout : 0    time : 1570.5ms
-(PASSED 100.0%)	language/expressions/logical-not	 failed : 0/0   timeout : 0    time : 1579.6ms
-(PASSED 100.0%)	language/expressions/bitwise-xor	 failed : 0/0   timeout : 0    time : 1611.0ms
-(PASSED 94.7%)	language/expressions/call	 failed : 0/2   timeout : 0    time : 1533.0ms
-(PASSED 100.0%)	language/expressions/greater-than	 failed : 0/0   timeout : 0    time : 1559.8ms
-(PASSED 88.7%)	language/expressions/object	 failed : 3/2   timeout : 1    time : 1564.7ms
-(PASSED 100.0%)	language/expressions/bitwise-or	 failed : 0/0   timeout : 0    time : 1631.6ms
-(PASSED 100.0%)	language/expressions/void	 failed : 0/0   timeout : 0    time : 1499.9ms
-(PASSED 100.0%)	language/expressions/less-than-or-equal	 failed : 0/0   timeout : 0    time : 1532.4ms
-(PASSED 100.0%)	language/expressions/strict-equals	 failed : 0/0   timeout : 0    time : 1430.6ms
-(PASSED 100.0%)	language/expressions/import.meta/syntax	 failed : 0/0   timeout : 0    time : 1515.2ms
-(PASSED 100.0%)	language/expressions/new	 failed : 0/0   timeout : 0    time : 1453.4ms
-(PASSED 68.8%)	language/expressions/compound-assignment	 failed : 0/134   timeout : 0    time : 1659.9ms
-(PASSED 100.0%)	language/expressions/this	 failed : 0/0   timeout : 0    time : 1486.7ms
-(PASSED 100.0%)	language/expressions/bitwise-not	 failed : 0/0   timeout : 0    time : 1503.1ms
-(PASSED 100.0%)	language/expressions/logical-or	 failed : 0/0   timeout : 0    time : 1249.3ms
-(PASSED 100.0%)	language/expressions/right-shift	 failed : 0/0   timeout : 0    time : 1436.4ms
-(PASSED 100.0%)	language/expressions/multiplication	 failed : 0/0   timeout : 0    time : 1349.5ms
-(PASSED 100.0%)	language/expressions/unary-minus	 failed : 0/0   timeout : 0    time : 1285.1ms
-(PASSED 85.7%)	language/expressions/assignmenttargettype	 failed : 1/0   timeout : 0    time : 1552.2ms
-(PASSED 100.0%)	language/expressions/left-shift	 failed : 0/0   timeout : 0    time : 1533.7ms
-(PASSED 100.0%)	language/expressions/typeof	 failed : 0/0   timeout : 0    time : 1084.3ms
-(PASSED 100.0%)	language/expressions/addition	 failed : 0/0   timeout : 0    time : 986.57ms
+	no output file(PASSED 88.2%)	language/statements/with	 total: 153   failed : 18   timeout : 0    time : 630.79ms
+(PASSED 84.0%)	Control Flow Statements	 total: 501   failed : 66   timeout : 23    time : 870.7ms
+(PASSED 100.0%)	language/statements/empty	 total: 1   failed : 0   timeout : 0    time : 580.19ms
+(PASSED 96.3%)	Miscellaneous Expressions and Statements	 total: 136   failed : 6   timeout : 0    time : 1547.7ms
+(PASSED 97.8%)	language/statements/variable	 total: 92   failed : 2   timeout : 0    time : 540.38ms
+(PASSED 74.7%)	Variable and Assignment Handling	 total: 588   failed : 149   timeout : 0    time : 1636.7ms
+(PASSED 100.0%)	language/statements/async-function	 total: 1   failed : 0   timeout : 0    time : 514.62ms
+(PASSED 92.3%)	Function and Async Handling	 total: 311   failed : 24   timeout : 0    time : 807.17ms
+(PASSED 69.7%)	language/statements/if	 total: 33   failed : 18   timeout : 0    time : 529.72ms
+(PASSED 100.0%)	language/statements/return	 total: 16   failed : 0   timeout : 0    time : 525.52ms
+(PASSED 90.6%)	language/statements/function	 total: 234   failed : 22   timeout : 0    time : 541.61ms
+(PASSED 50.0%)	language/statements/labeled	 total: 6   failed : 4   timeout : 0    time : 586.81ms
+(PASSED 100.0%)	language/statements/throw	 total: 14   failed : 0   timeout : 0    time : 573.41ms
+(PASSED 75.0%)	language/statements/do-while	 total: 24   failed : 5   timeout : 1    time : 511.05ms
+(PASSED 73.1%)	language/statements/for	 total: 67   failed : 9   timeout : 9    time : 645.41ms
+(PASSED 100.0%)	language/statements/switch	 total: 14   failed : 0   timeout : 0    time : 1871.1ms
+(PASSED 100.0%)	language/statements/switch/syntax/redeclaration	 total: 1   failed : 0   timeout : 0    time : 533.45ms
+(PASSED 86.9%)	language/statements/try	 total: 84   failed : 0   timeout : 11    time : 1173.5ms
+(PASSED 100.0%)	language/statements/expression	 total: 3   failed : 0   timeout : 0    time : 1525.5ms
+(PASSED 95.0%)	language/statements/break	 total: 20   failed : 1   timeout : 0    time : 1529.2ms
+(PASSED 70.6%)	language/statements/for-in	 total: 34   failed : 11   timeout : 0    time : 1636.8ms
+(PASSED 75.0%)	language/statements/continue	 total: 16   failed : 2   timeout : 2    time : 1496.7ms
+(PASSED 92.0%)	language/statements/while	 total: 25   failed : 2   timeout : 0    time : 1596.9ms
+(PASSED 100.0%)	language/statements/block	 total: 12   failed : 0   timeout : 0    time : 1724.5ms
+(PASSED 100.0%)	language/expressions/modulus	 total: 33   failed : 0   timeout : 0    time : 2119.8ms
+(PASSED 100.0%)	Arithmetic and Bitwise Operations	 total: 368   failed : 0   timeout : 0    time : 1694.9ms
+(PASSED 100.0%)	language/expressions/bitwise-and	 total: 23   failed : 0   timeout : 0    time : 1731.9ms
+(PASSED 100.0%)	language/expressions/dynamic-import	 total: 1   failed : 0   timeout : 0    time : 1416.7ms
+(PASSED 100.0%)	language/expressions/dynamic-import/namespace	 total: 1   failed : 0   timeout : 0    time : 1583.8ms
+(PASSED 0.0%)	language/expressions/dynamic-import/catch	 total: 1   failed : 1   timeout : 0    time : 1374.0ms
+(PASSED 100.0%)	language/expressions/dynamic-import/syntax/valid	 total: 1   failed : 0   timeout : 0    time : 1506.3ms
+(PASSED 100.0%)	language/expressions/relational	 total: 1   failed : 0   timeout : 0    time : 1497.7ms
+(PASSED 100.0%)	Logical and Conditional Expressions	 total: 327   failed : 0   timeout : 0    time : 1717.4ms
+(PASSED 100.0%)	language/expressions/less-than	 total: 37   failed : 0   timeout : 0    time : 1714.0ms
+(PASSED 100.0%)	language/expressions/concatenation	 total: 5   failed : 0   timeout : 0    time : 1628.2ms
+(PASSED 100.0%)	language/expressions/unary-plus	 total: 10   failed : 0   timeout : 0    time : 1586.2ms
+(PASSED 80.5%)	language/expressions/postfix-increment	 total: 41   failed : 8   timeout : 0    time : 1700.0ms
+(PASSED 79.7%)	Postfix and Prefix Operations	 total: 143   failed : 29   timeout : 0    time : 1686.4ms
+(PASSED 60.0%)	language/expressions/property-accessors	 total: 20   failed : 8   timeout : 0    time : 1557.4ms
+(PASSED 74.3%)	Object and Array Handling	 total: 187   failed : 47   timeout : 1    time : 1723.4ms
+(PASSED 100.0%)	language/expressions/logical-and	 total: 16   failed : 0   timeout : 0    time : 1710.0ms
+(PASSED 100.0%)	language/expressions/division	 total: 38   failed : 0   timeout : 0    time : 1736.7ms
+(PASSED 100.0%)	language/expressions/conditional	 total: 15   failed : 0   timeout : 0    time : 1617.8ms
+(PASSED 100.0%)	language/expressions/instanceof	 total: 39   failed : 0   timeout : 0    time : 1577.6ms
+(PASSED 62.9%)	language/expressions/delete	 total: 89   failed : 33   timeout : 0    time : 1711.9ms
+(PASSED 82.1%)	language/expressions/postfix-decrement	 total: 39   failed : 7   timeout : 0    time : 1746.6ms
+(PASSED 100.0%)	language/expressions/greater-than-or-equal	 total: 37   failed : 0   timeout : 0    time : 1675.6ms
+(PASSED 100.0%)	language/expressions/subtraction	 total: 32   failed : 0   timeout : 0    time : 1831.6ms
+(PASSED 100.0%)	language/expressions/array	 total: 11   failed : 0   timeout : 0    time : 1971.5ms
+(PASSED 77.4%)	language/expressions/prefix-increment	 total: 31   failed : 7   timeout : 0    time : 1717.5ms
+(PASSED 100.0%)	language/expressions/does-not-equals	 total: 30   failed : 0   timeout : 0    time : 1740.4ms
+(PASSED 92.9%)	language/expressions/in	 total: 14   failed : 1   timeout : 0    time : 1770.2ms
+(PASSED 90.0%)	language/expressions/grouping	 total: 10   failed : 1   timeout : 0    time : 1769.3ms
+(PASSED 78.1%)	language/expressions/prefix-decrement	 total: 32   failed : 7   timeout : 0    time : 1574.9ms
+(PASSED 79.7%)	language/expressions/assignment	 total: 59   failed : 12   timeout : 0    time : 1584.2ms
+(PASSED 100.0%)	language/expressions/comma	 total: 5   failed : 0   timeout : 0    time : 1517.1ms
+(PASSED 100.0%)	language/expressions/exponentiation	 total: 1   failed : 0   timeout : 0    time : 1539.3ms
+(PASSED 100.0%)	language/expressions/function	 total: 21   failed : 0   timeout : 0    time : 1562.6ms
+(PASSED 100.0%)	language/expressions/strict-does-not-equals	 total: 22   failed : 0   timeout : 0    time : 1605.1ms
+(PASSED 100.0%)	language/expressions/unsigned-right-shift	 total: 38   failed : 0   timeout : 0    time : 1932.4ms
+(PASSED 100.0%)	language/expressions/equals	 total: 31   failed : 0   timeout : 0    time : 1731.9ms
+(PASSED 100.0%)	language/expressions/logical-not	 total: 17   failed : 0   timeout : 0    time : 1602.9ms
+(PASSED 100.0%)	language/expressions/bitwise-xor	 total: 23   failed : 0   timeout : 0    time : 1626.6ms
+(PASSED 94.7%)	language/expressions/call	 total: 38   failed : 2   timeout : 0    time : 1571.3ms
+(PASSED 100.0%)	language/expressions/greater-than	 total: 41   failed : 0   timeout : 0    time : 1568.1ms
+(PASSED 88.7%)	language/expressions/object	 total: 53   failed : 5   timeout : 1    time : 1716.2ms
+(PASSED 100.0%)	language/expressions/bitwise-or	 total: 23   failed : 0   timeout : 0    time : 1755.5ms
+(PASSED 100.0%)	language/expressions/void	 total: 9   failed : 0   timeout : 0    time : 1774.9ms
+(PASSED 100.0%)	language/expressions/less-than-or-equal	 total: 42   failed : 0   timeout : 0    time : 1855.2ms
+(PASSED 100.0%)	language/expressions/strict-equals	 total: 22   failed : 0   timeout : 0    time : 2124.2ms
+(PASSED 100.0%)	language/expressions/import.meta/syntax	 total: 1   failed : 0   timeout : 0    time : 1912.7ms
+(PASSED 100.0%)	language/expressions/new	 total: 17   failed : 0   timeout : 0    time : 1758.6ms
+(PASSED 68.8%)	language/expressions/compound-assignment	 total: 430   failed : 134   timeout : 0    time : 1861.9ms
+(PASSED 100.0%)	language/expressions/this	 total: 7   failed : 0   timeout : 0    time : 1679.6ms
+(PASSED 100.0%)	language/expressions/bitwise-not	 total: 14   failed : 0   timeout : 0    time : 1685.4ms
+(PASSED 100.0%)	language/expressions/logical-or	 total: 16   failed : 0   timeout : 0    time : 1603.8ms
+(PASSED 100.0%)	language/expressions/right-shift	 total: 30   failed : 0   timeout : 0    time : 1886.1ms
+(PASSED 100.0%)	language/expressions/multiplication	 total: 34   failed : 0   timeout : 0    time : 1665.6ms
+(PASSED 100.0%)	language/expressions/unary-minus	 total: 12   failed : 0   timeout : 0    time : 1433.5ms
+(PASSED 85.7%)	language/expressions/assignmenttargettype	 total: 7   failed : 1   timeout : 0    time : 1351.9ms
+(PASSED 100.0%)	language/expressions/left-shift	 total: 38   failed : 0   timeout : 0    time : 1421.0ms
+(PASSED 100.0%)	language/expressions/typeof	 total: 12   failed : 0   timeout : 0    time : 1303.4ms
+(PASSED 100.0%)	language/expressions/addition	 total: 41   failed : 0   timeout : 0    time : 1116.0ms
+
+Control Flow Statements:
+---------------
+  - total: 501
+  - failed : 66
+  - timeout : 23
+  - time : 870.7ms
+---------------
+
+Miscellaneous Expressions and Statements:
+---------------
+  - total: 136
+  - failed : 6
+  - timeout : 0
+  - time : 1547.7ms
+---------------
+
+Variable and Assignment Handling:
+---------------
+  - total: 588
+  - failed : 149
+  - timeout : 0
+  - time : 1636.7ms
+---------------
+
+Function and Async Handling:
+---------------
+  - total: 311
+  - failed : 24
+  - timeout : 0
+  - time : 807.17ms
+---------------
+
+Arithmetic and Bitwise Operations:
+---------------
+  - total: 368
+  - failed : 0
+  - timeout : 0
+  - time : 1694.9ms
+---------------
+
+Logical and Conditional Expressions:
+---------------
+  - total: 327
+  - failed : 0
+  - timeout : 0
+  - time : 1717.4ms
+---------------
+
+Postfix and Prefix Operations:
+---------------
+  - total: 143
+  - failed : 29
+  - timeout : 0
+  - time : 1686.4ms
+---------------
+
+Object and Array Handling:
+---------------
+  - total: 187
+  - failed : 47
+  - timeout : 1
+  - time : 1723.4ms
+---------------
+
 
     ==============================
     total : 2561
     ok    : 2226
-    error : 37 + 284 (normalization + semantics)
+    error : 38 + 283 (normalization + semantics)
     timeout : 24
-    time : 986.57ms
+    time : 1116.0ms
     ==============================
     
