@@ -1,4 +1,4 @@
-  $ graphjs2 input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
+  $ graphjs input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
   let x;
   x = function (z) {
      let v1;
@@ -9,7 +9,7 @@
   }
   
 
-  $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
+  $ graphjs input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let x;
   x = function (z) {
      let v1;
@@ -20,7 +20,7 @@
   }
   
 
-  $ graphjs2 input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
+  $ graphjs input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let v1;
   v1 = function (z) {
      let v2;
@@ -32,7 +32,7 @@
   a.b = v1;
   
 
-  $ graphjs2 input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
+  $ graphjs input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
   const a;
   let v1;
   v1 = [];
@@ -49,7 +49,7 @@
   a = v1.find(v2);
   
 
-  $ graphjs2 input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
+  $ graphjs input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
   const a;
   let v1;
   v1 = [];

@@ -2,38 +2,45 @@
 
 (using dune_site 0.1)
 
-(name graphjs2)
-
 (generate_opam_files true)
+
+(version 0.1.0)
+
+(name graphjs)
 
 (source
  (github formalsec/ast-gen))
 
 (authors "Tomás Tavares")
 
-(maintainers "Tomás Tavares")
+(maintainers "Tomás Tavares" "André Nascimento")
 
 (license "MIT")
 
-(documentation https://url/to/documentation)
+(documentation https://github.com/formalsec/ast-gen/)
 
 (package
- (name graphjs2)
- (synopsis "Graph.js new and improved")
- (description "MDG-based static vulnerability scanner specialized in analyzing npm packages and detecting taint-style and prototype pollution vulnerabilities.")
+ (name graphjs)
+ (synopsis "MDG-based vulnarability detection for JavaScript")
+ (description
+  "MDG-based static vulnerability scanner specialized in analyzing npm packages and detecting taint-style and prototype pollution vulnerabilities.")
  (depends
-  bos
-  conf-npm
-  cmdliner
+  (ocaml
+   (>= "4.14.1"))
+  ocamlgraph
   dune
   dune-site
+  yojson
+  bos
+  cmdliner
+  conf-npm
   (flow_parser
-   (>= "0.229.1"))
-  ocaml
-  ocamlgraph
-  ppx_import
-  yojson)
- (sites
-  (share config))
+   (>= "0.229.1")))
  (tags
-  (topics "to describe" your project)))
+  ("JavaScript"
+   "Node.js"
+   "Multiversion Dependency Graph"
+   "Vulnerability"
+   "Detection"))
+ (sites
+  (share config)))

@@ -1,4 +1,4 @@
-  $ graphjs2 input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
+  $ graphjs input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
   let status;
   let v1;
   if (true) {
@@ -8,7 +8,7 @@
   }
   status = v1;
   
-  $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
+  $ graphjs input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let x;
   x = 6;
   let status;
@@ -28,7 +28,7 @@
   }
   status = v1;
   
-  $ graphjs2 input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
+  $ graphjs input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let x;
   x = 0;
   let v1;
@@ -43,7 +43,7 @@
   }
   x = v1;
   
-  $ graphjs2 input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
+  $ graphjs input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
   let v1;
   if (stderr) {
      let v2;

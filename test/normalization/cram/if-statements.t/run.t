@@ -1,10 +1,10 @@
-  $ graphjs2 input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
+  $ graphjs input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
   if (true) {
      let v1;
      v1 = 1 + 2;
   }
   
-  $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
+  $ graphjs input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let x;
   x = 'Oi';
   let v1;
@@ -21,7 +21,7 @@
      z = v3 + 3;
   }
   
-  $ graphjs2 input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
+  $ graphjs input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let v1;
   v1 = x === y;
   if (v1) {
@@ -29,7 +29,7 @@
      v2 = alert("They are the same!");
   }
   
-  $ graphjs2 input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
+  $ graphjs input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
   const x;
   x = 1;
   let y;

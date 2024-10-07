@@ -1,11 +1,11 @@
-  $ graphjs2 input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
+  $ graphjs input-code-1.js -o out; cat out/code/input-code-1.js; echo; rm -fr out;
   let f1;
   f1 = function () {
      let x;
      x = 0;
   }
   
-  $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
+  $ graphjs input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let f;
   f = function (z, y, x) {
      let v1;
@@ -13,7 +13,7 @@
      x = x + 1;
   }
   
-  $ graphjs2 input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
+  $ graphjs input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let count;
   count = function () {
      var i;
@@ -27,7 +27,7 @@
      }
   }
   
-  $ graphjs2 input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
+  $ graphjs input-code-4.js -o out; cat out/code/input-code-4.js; echo; rm -fr out;
   let positive;
   positive = function (n) {
      let v1;
@@ -40,7 +40,7 @@
      }
   }
   
-  $ graphjs2 input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
+  $ graphjs input-code-5.js -o out; cat out/code/input-code-5.js; echo; rm -fr out;
   let f;
   f = function () {
   }

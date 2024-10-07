@@ -36,7 +36,7 @@ RESET = "\033[0m"
 def normalize(path):
     try:
         # run normalization
-        subprocess.run(["ast_gen", path, "-o", OUTPUT_PATH], capture_output=True, text=True, check=True, timeout=TIMEOUT)
+        subprocess.run(["graphjs", path, "-o", OUTPUT_PATH], capture_output=True, text=True, check=True, timeout=TIMEOUT)
         with open(NORMALIZED_CODE, "r") as file:
             norm_program = file.read()
             
