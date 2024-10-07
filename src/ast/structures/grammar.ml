@@ -1,5 +1,4 @@
 open Graphjs_base
-open Funcs
 module Ast' = Flow_ast
 
 module Location = struct
@@ -1405,7 +1404,7 @@ end = struct
         (* --------- traverse ast --------- *)
         | _, Statement.If {consequent; alternate; _} -> 
           traverse_body found_funcs parent_id consequent;
-          option_may (traverse_body found_funcs parent_id) alternate;
+          Option.iter (traverse_body found_funcs parent_id) alternate;
 
         | _, Statement.Switch {cases; _} -> 
           List.iter (fun (_, {Statement.Switch.Case.consequent; _}) -> 
@@ -1420,8 +1419,8 @@ end = struct
         
         | _, Statement.Try {body; handler; finalizer} -> 
           traverse_body found_funcs parent_id body;
-          option_may (fun (_, {Statement.Try.Catch.body; _}) -> traverse_body found_funcs parent_id body) handler;
-          option_may (traverse_body found_funcs parent_id) finalizer;
+          Option.iter (fun (_, {Statement.Try.Catch.body; _}) -> traverse_body found_funcs parent_id body) handler;
+          Option.iter (traverse_body found_funcs parent_id) finalizer;
 
         (* ------- ignore all other statements ------- *)
         | _ -> ()

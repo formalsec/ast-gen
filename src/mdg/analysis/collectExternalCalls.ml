@@ -2,8 +2,6 @@ open Graphjs_base
 open Graphjs_ast
 open Grammar
 open Structures
-open Funcs
-
 
 type external_reference = ExternalReferences.t'
 
@@ -69,9 +67,9 @@ module Analysis : AbstractAnalysis.T = struct
           let l_call = LocationSet.singleton (alloc id_call) in 
           let callee = eval_expr (Identifier.to_expression callee) in 
           let external_reference = get_ext_ref info callee in 
-          map_default (fun external_reference ->
+          Option.apply (fun external_reference ->
             add_ext_call info l_call external_reference
-          ) info external_reference;)
+          ) ~default:info external_reference;)
 
       
       | _, AssignMetCallStatic {_object; property; id_call; _} -> 
@@ -79,20 +77,20 @@ module Analysis : AbstractAnalysis.T = struct
         let l_call = LocationSet.singleton (alloc id_call) in 
         let callee = eval_expr _object in 
         let external_reference = get_ext_ref info callee in 
-        map_default (fun external_reference ->
+        Option.apply (fun external_reference ->
           let external_reference' = add_property external_reference property in 
           add_ext_call info l_call external_reference'
-        ) info external_reference
+        ) ~default:info external_reference
 
       | _, StaticLookup {left; _object; property; _} -> 
         (* check if object is an external reference *)
           let loc = eval_expr (Identifier.to_expression left) in 
           let loc_obj = eval_expr _object in 
           let external_reference = get_ext_ref info loc_obj in 
-          map_default (fun external_reference ->
+          Option.apply (fun external_reference ->
             let external_reference' = add_property external_reference property in 
             add_ext_ref info loc external_reference'
-          ) info external_reference;
+          ) ~default:info external_reference;
         
       | _ -> info
   

@@ -2,4 +2,5 @@
 
 (library
  (name graphjs_base)
- (libraries))
+ (modules list hashtbl fun option result config console fmt writer font log)
+ (libraries unix))

@@ -6,27 +6,27 @@ open Graphjs_client
 open Cmdliner
 module LocationSet = Structures.LocationSet
 module Program = Grammar.Program
-open Funcs
 
 (* Monadic let binding for result *)
-let ( let* ) = Result.bind
-
 let setup_output output_path =
-  let open Bos in
+  let open Result in
   let code_dir = Fpath.(output_path / "code") in
   let graph_dir = Fpath.(output_path / "graph") in
   let run_dir = Fpath.(output_path / "run") in
-  let* () = OS.Dir.delete ~recurse:true output_path in
-  let* _ = OS.Dir.create ~path:true code_dir in
-  let* _ = OS.Dir.create ~path:true graph_dir in
-  let* _ = OS.Dir.create ~path:true run_dir in
+  let* () = Bos.OS.Dir.delete ~recurse:true output_path in
+  let* _ = Bos.OS.Dir.create ~path:true code_dir in
+  let* _ = Bos.OS.Dir.create ~path:true graph_dir in
+  let* _ = Bos.OS.Dir.create ~path:true run_dir in
   Ok (code_dir, graph_dir, run_dir)
 
 (* TODO: Use Fpath everywhere *)
 let main file_name output_path config_path mode generate_mdg no_dot verbose =
   (* DANGEROUS: We create "run" but don't pass it to any function?
      Is there any global behaviour that will write to "run"? *)
-  let* (code_dir, graph_dir, _) = setup_output output_path in
+  let open Result in
+  let* (code_dir, graph_dir, _) =
+    match setup_output output_path with Ok _ as a -> a | _ -> failwith "temp"
+  in
   let* dep_tree = DependencyTree.generate file_name mode in
 
   (* process dependencies first with the aid of the depedency tree *)
@@ -61,7 +61,7 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
             (* module information *)
             let module_name = Fpath.(to_string @@ (dir / info._module)) in
             let moduleEO = Summaries.get_opt summaries module_name in
-            option_may
+            Option.iter
               (fun moduleEO ->
                 let moduleGraph = ModuleGraphs.get module_graphs module_name in
 
@@ -149,13 +149,11 @@ let cli =
       $ mdg
       $ no_dot
       $ verbose ) in
-  let info = Cmd.info "graphjs" in
+  let info = Cmd.info "graphjs2" in
   Cmd.v info cmd
 
 let () =
   match Cmd.eval_value' cli with
   | `Exit code -> exit code
   | `Ok return -> (
-    match return with
-    | Error (`Msg err) -> Fmt.failwith "%s" err
-    | Ok code -> exit code )
+    match return with Error err -> Log.fail "%s" err | Ok code -> exit code )

@@ -1,5 +1,4 @@
 open Graphjs_base
-open Funcs
 
 (* function id definition *)
 module Id  = struct
@@ -68,10 +67,10 @@ end = struct
   let remove (info : t) (func_id : Id.t) : unit = 
     let top_lvl = info.top_lvl in 
 
-    top_lvl := List.filter (not << Id.equal func_id) !top_lvl;
+    top_lvl := List.filter Fun.(not << Id.equal func_id) !top_lvl;
     FuncTable.remove info.functions func_id;
     FuncTable.filter_map_inplace (fun _ info -> 
-      Some {info with nested = List.filter (not << Id.equal func_id) info.nested}
+      Some {info with nested = List.filter Fun.(not << Id.equal func_id) info.nested}
     ) info.functions
 
   let iter (f : Id.t -> info -> unit) (info : t) : unit = FuncTable.iter f info.functions
@@ -88,7 +87,7 @@ end = struct
         parent_info.nested
       | None ->  get_top_lvl info
     in
-    List.find_opt (((=) func_name) << Id.get_name) context
+    List.find_opt Fun.(((=) func_name) << Id.get_name) context
 
 
   let add_nested (info : t) (parent_id : Id.t option) (func_id : Id.t) : unit =
@@ -103,7 +102,7 @@ end = struct
   let add (info : t) (func_id : Id.t) (parent_id : Id.t option) (params' : string list) : unit = 
     (* remove previous version if it exists *)
     let prev_definition = get_func_id info (Id.get_name func_id) parent_id in 
-    option_may (remove info) prev_definition;
+    Option.iter (remove info) prev_definition;
 
     (* add found node information *)
     let func_info : info = {
@@ -134,7 +133,7 @@ module Context = struct
   let get_func_id (context : t) (func_name : string) : Id.t option = 
     let get_func_info_id = Info.get_func_id context.functions in 
     let rec aux (path : Id.t list)  : Id.t option =
-      let parent_id = hd_opt path in
+      let parent_id = List.hd_opt path in
       let id = get_func_info_id func_name parent_id in 
 
       if Option.is_some id then id (* found function nested inside parent id *)
@@ -149,7 +148,7 @@ module Context = struct
 
   let get_func_info (context : t) (func_name : string) : Info.info option = 
     let func_id = get_func_id context func_name in 
-    Option.bind func_id (Option.some << get_func_info' context)
+    Option.bind func_id Fun.(Option.some << get_func_info' context)
 
   let get_param_names' (contents : t) (func_id : Id.t) : string list = 
     let func_info = get_func_info' contents func_id in 
@@ -161,11 +160,11 @@ module Context = struct
 
   let is_last_definition (context : t) (id : Id.t) : bool =
     let get_func_info_id = Info.get_func_id context.functions in 
-    let parent_id = hd_opt context.path in
+    let parent_id = List.hd_opt context.path in
     let found_id = get_func_info_id id.name parent_id in 
 
-    map_default_lazy 
+    Option.apply_lazy 
       (fun found_id -> (Id.get_id found_id) = (Id.get_id id)) 
-      (lazy (failwith ("[ERROR] Function " ^ id.name ^ " is not definied in the given context"))) found_id
+      ~default:(lazy (failwith ("[ERROR] Function " ^ id.name ^ " is not definied in the given context"))) found_id
   
 end

@@ -1,8 +1,6 @@
-(include_subdirs unqualified)
-
 (executable
- (public_name graphjs)
  (name graphjs)
+ (public_name graphjs)
  (modules graphjs share site)
  (libraries
   graphjs_base

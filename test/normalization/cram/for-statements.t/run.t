@@ -21,7 +21,7 @@
   
   $ graphjs input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   let extend;
-  extend = function (src, dest) {
+  extend = function (dest, src) {
      for (var v1 in src) {
         p = v1;
         x = src[p];

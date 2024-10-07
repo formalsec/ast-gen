@@ -2,4 +2,4 @@
 
 (library
  (name graphjs_setup)
- (libraries graphjs_base yojson flow_parser bos))
+  (libraries graphjs_base yojson flow_parser bos))

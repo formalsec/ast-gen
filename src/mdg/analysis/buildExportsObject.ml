@@ -2,8 +2,6 @@ open Graphjs_base
 open Graphjs_ast
 open Grammar
 open Structures
-open Structs
-open Funcs
 
 module Analysis : AbstractAnalysis.T = struct
   type t = AnalysisType.buildExportsObject
@@ -28,7 +26,7 @@ module Analysis : AbstractAnalysis.T = struct
       else exportsObjectInfo
     | (_, StaticUpdate { _object; property; right; _ }) ->
       let _object = Expression.get_id_opt _object in
-      map_default
+      Option.apply
         (fun _object ->
           (* update of a property of exports *)
           if
@@ -37,13 +35,13 @@ module Analysis : AbstractAnalysis.T = struct
                || AliasSet.mem _object exportsObjectInfo.exportsAliases )
           then (
             let l_right = Store.eval_expr state.store state.this right in
-            HashTable.replace exportsObjectInfo.exportsAssigns property l_right;
+            Hashtbl.replace exportsObjectInfo.exportsAssigns property l_right;
             exportsObjectInfo (* update of the module.exports value *) )
           else if _object = "module" && property = "exports" then (
             let l_right = Store.eval_expr state.store state.this right in
 
-            HashTable.clear exportsObjectInfo.moduleExportsAssigns;
-            HashTable.clear exportsObjectInfo.exportsAssigns;
+            Hashtbl.clear exportsObjectInfo.moduleExportsAssigns;
+            Hashtbl.clear exportsObjectInfo.exportsAssigns;
             { exportsObjectInfo with
               moduleExportsObject = Some l_right
             ; exportsIsModuleExports = false
@@ -54,19 +52,19 @@ module Analysis : AbstractAnalysis.T = struct
           else if AliasSet.mem _object exportsObjectInfo.moduleExportsAliases
           then (
             let l_right = Store.eval_expr state.store state.this right in
-            HashTable.replace exportsObjectInfo.moduleExportsAssigns property
+            Hashtbl.replace exportsObjectInfo.moduleExportsAssigns property
               l_right;
             exportsObjectInfo )
           else exportsObjectInfo )
-        exportsObjectInfo _object
+          ~default:exportsObjectInfo _object
     (* dont do anything on other statements *)
     | _ -> exportsObjectInfo
 
   let init () : t =
     { moduleExportsObject = None
-    ; moduleExportsAssigns = HashTable.create 10
+    ; moduleExportsAssigns = Hashtbl.create 10
     ; moduleExportsAliases = AliasSet.empty
-    ; exportsAssigns = HashTable.create 10
+    ; exportsAssigns = Hashtbl.create 10
     ; exportsAliases = AliasSet.empty
     ; exportsIsModuleExports = true
     }

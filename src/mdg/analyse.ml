@@ -3,10 +3,7 @@ open Graphjs_ast
 open Graphjs_setup
 module EdgeSet = Mdg.EdgeSet
 module Edge = Mdg.Edge
-open Config
 open Grammar
-open Funcs
-open Structs
 open Structures
 open AnalysisType
 open ExternalReferences
@@ -64,7 +61,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     | (_, If { consequent; alternate; _ }) ->
       let state' = State.copy state in
       analyse_sequence state analysis consequent;
-      option_may (analyse_sequence state' analysis) alternate;
+      Option.iter (analyse_sequence state' analysis) alternate;
 
       Mdg.lub state.graph state'.graph;
       Store.lub state.store state'.store
@@ -94,8 +91,8 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
         Option.map
           (fun (_, handler) -> handler.Statement.Try.Catch.body)
           handler in
-      option_may (analyse_sequence state analysis) handler_body;
-      option_may (analyse_sequence state analysis) finalizer
+      Option.iter (analyse_sequence state analysis) handler_body;
+      Option.iter (analyse_sequence state analysis) finalizer
     (* -------- W I T H  /  L A B E L E D -------- *)
     | (_, Labeled { body; _ }) | (_, With { body; _ }) ->
       analyse_sequence state analysis body
@@ -159,7 +156,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     | (loc, AssignBinary { left; opLeft; opRght; id; _ }) ->
       let (_L1, _L2) = (eval_expr opLeft, eval_expr opRght) in
       let l_i = alloc id in
-      LocationSet.apply (flip add_dep_edge l_i) (LocationSet.union _L1 _L2);
+      LocationSet.apply (Fun.flip add_dep_edge l_i) (LocationSet.union _L1 _L2);
       store_update left (LocationSet.singleton l_i);
 
       (* ! add node info*)
@@ -167,7 +164,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     | (loc, AssignUnary { left; argument; id; _ }) ->
       let _L1 = eval_expr argument in
       let l_i = alloc id in
-      LocationSet.apply (flip add_dep_edge l_i) _L1;
+      LocationSet.apply (Fun.flip add_dep_edge l_i) _L1;
       store_update left (LocationSet.singleton l_i);
 
       (* ! add node info*)
@@ -185,7 +182,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
       let _L = eval_expr _object in
       add_property _L property id add_node';
-      let _L' = LocationSet.map_flat (flip lookup property) _L in
+      let _L' = LocationSet.map_flat (Fun.flip lookup property) _L in
       store_update left _L'
     (* -------- D Y N A M I C   P R O P E R T Y   L O O K U P -------- *)
     | (loc, DynmicLookup { left; _object; property; id }) ->
@@ -195,7 +192,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
       let (_L1, _L2) = (eval_expr _object, eval_expr property) in
       add_property' _L1 _L2 id add_node';
-      let _L' = LocationSet.map_flat (flip lookup "*") _L1 in
+      let _L' = LocationSet.map_flat (Fun.flip lookup "*") _L1 in
       store_update left _L'
     (* -------- S T A T I C   P R O P E R T Y   U P D A T E -------- *)
     | (loc, StaticUpdate { _object; property; right; id; _ }) ->
@@ -247,7 +244,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       add_node l_retn (Identifier.get_name left) loc;
 
       (* argument edges *)
-      let params = map_default get_param_names [] f_id in
+      let params = Option.apply get_param_names ~default:[] f_id in
       List.iteri
         (fun i _Ls ->
           let param_name =
@@ -259,7 +256,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
       (* ! add ref call edge (shotcut) from function definition to this call *)
       let f_orig = get_curr_func () in
-      option_may
+      Option.iter
         (fun id ->
           let l_f = Mdg.get_func_node graph id in
           add_ref_call_edge (Option.get l_f) l_call;
@@ -271,7 +268,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       store_update left (LocationSet.singleton l_retn);
 
       (* call edge to function definition (if defined) *)
-      option_may
+      Option.iter
         (fun id ->
           let l_f = Mdg.get_func_node graph id in
           add_call_edge l_call (Option.get l_f) )
@@ -292,7 +289,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
       ( if Option.is_some _L then
           let _L = Option.get _L in
-          LocationSet.apply (flip add_dep_edge l_retn) _L );
+          LocationSet.apply (Fun.flip add_dep_edge l_retn) _L );
 
       add_ret_node l_retn loc
     | (_, AssignYield _)
@@ -356,7 +353,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     (* lookup function header node associated with the property *)
     let found_func = ref false in
     ( if property != "*" then
-        let _Lfunc = LocationSet.map_flat (flip lookup property) _Lthis in
+        let _Lfunc = LocationSet.map_flat (Fun.flip lookup property) _Lthis in
         if LocationSet.cardinal _Lfunc = 1 then
           let l_func = LocationSet.min_elt _Lfunc in
           let func_node = Mdg.find_node_opt graph l_func in
@@ -387,7 +384,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     (* ! add ref call edge (shotcut) from function definition to this call
        ! did this to be comaptible with graphjs queries *)
     let f_orig = get_curr_func () in
-    option_may
+    Option.iter
       (fun id ->
         let l_f = Mdg.get_func_node state.graph id in
         add_ref_call_edge (Option.get l_f) l_call;
@@ -406,7 +403,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     (state, !auxiliary)
 end
 
-let rec add_taint_sinks (state : State.t) (config : Config.t)
+let rec add_taint_sinks (state : State.t) (config : Tainted_config.t)
     (ext_calls : ExternalReferences.t) : unit =
   let graph = state.graph in
 
@@ -415,25 +412,25 @@ let rec add_taint_sinks (state : State.t) (config : Config.t)
       match node._type with
       | Call callee ->
         (* function sink *)
-        let sink_info = Config.get_function_sink_info config callee in
-        option_may
-          (fun (sink_info : functionSink) ->
+        let sink_info = Tainted_config.get_function_sink_info config callee in
+        Option.iter
+          (fun (sink_info : Tainted_config.functionSink) ->
             add_taink_sink graph loc node sink_info.sink sink_info.args )
           sink_info;
 
         (* package sink *)
         let referece_info = ExternalReferences.get_opt ext_calls loc in
-        option_may
+        Option.iter
           (fun ref ->
             (* check if there is only one property *)
             if List.length ref.properties = 1 then
               let method_name = List.nth ref.properties 0 in
               let package_name = ref._module in
               let sink_info =
-                Config.get_package_sink_info config package_name method_name
+                Tainted_config.get_package_sink_info config package_name method_name
               in
-              option_may
-                (fun (sink_info : package) ->
+              Option.iter
+                (fun (sink_info : Tainted_config.package) ->
                   add_taink_sink graph loc node method_name sink_info.args )
                 sink_info )
           referece_info
@@ -457,11 +454,11 @@ and add_taink_sink (graph : Mdg.t) (loc : location) (node : Mdg.Node.t)
   List.iter
     (fun dangerous_index ->
       let dangerous_index = string_of_int (dangerous_index - 1) in
-      let arg_locs = List.filter (( = ) dangerous_index << fst) args in
+      let arg_locs = List.filter Fun.(( = ) dangerous_index << fst) args in
       List.iter (fun (_, l) -> add_dep_edge l l_tsink) arg_locs )
     sink_args
 
-let add_taint_sources (state : State.t) (_config : Config.t) (mode : Mode.t)
+let add_taint_sources (state : State.t) (_config : Tainted_config.t) (mode : Mode.t)
     (is_main : bool) (exportsObject : ExportedObject.t) : unit =
   let graph = state.graph in
   let l_tsource = loc_taint_source in
@@ -511,12 +508,12 @@ let rec buildExportsObject (state : State.t) (info : buildExportsObject) :
     ExportedObject.t =
   (* module.exports is assigned to a variable *)
   let exportsObject = ref (ExportedObject.create 10) in
-  option_may
+  Option.iter
     (fun loc -> exportsObject := construct_object state loc)
     info.moduleExportsObject;
 
   (* assignments to the properties of module.exports *)
-  HashTable.iter
+  Hashtbl.iter
     (fun property loc ->
       let object' = construct_object state loc in
       exportsObject :=
@@ -524,7 +521,7 @@ let rec buildExportsObject (state : State.t) (info : buildExportsObject) :
     info.moduleExportsAssigns;
 
   (* assignments to the properties of exports *)
-  HashTable.iter
+  Hashtbl.iter
     (fun property loc ->
       let object' = construct_object state loc in
       exportsObject :=

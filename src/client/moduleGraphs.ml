@@ -1,11 +1,10 @@
 open Graphjs_base
 open Graphjs_mdg
-open Structs
 
 type key = string
 type value = Mdg.t
-type t = value HashTable.t
+type t = (string, value) Hashtbl.t
 
-let empty () : t = HashTable.create 10
-let add : t -> key -> value -> unit = HashTable.replace
-let get : t -> key -> value = HashTable.find
+let empty () : t = Hashtbl.create 10
+let add : t -> key -> value -> unit = Hashtbl.replace
+let get : t -> key -> value = Hashtbl.find

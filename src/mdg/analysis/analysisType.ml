@@ -1,16 +1,15 @@
 open Graphjs_base
 open Graphjs_setup
 open Structures
-open Structs
 
 type buildExportsObject = {
     (* module.exports *)
     moduleExportsObject  : LocationSet.t option;
-    moduleExportsAssigns : LocationSet.t HashTable.t;
+    moduleExportsAssigns : (string, LocationSet.t) Hashtbl.t;
     moduleExportsAliases : AliasSet.t;
 
     (* export *)
-    exportsAssigns : LocationSet.t HashTable.t;
+    exportsAssigns : (string, LocationSet.t) Hashtbl.t;
     exportsAliases : AliasSet.t;
 
     exportsIsModuleExports : bool
@@ -18,7 +17,7 @@ type buildExportsObject = {
 
 type collectExternalCalls = ExternalReferences.t
 type generateMDG = State.t
-type sinkAliases = Config.t
+type sinkAliases = Tainted_config.t
 
 type t =
   | BuildExportsObject   of buildExportsObject

@@ -2,8 +2,6 @@ open Graphjs_base
 module OcamlGraph = Graph
 open Mdg
 open Structures
-open Structs
-open Funcs
 
 module Dot = struct
   module DotNode = struct
@@ -23,8 +21,8 @@ module Dot = struct
   module G = OcamlGraph.Persistent.Digraph.ConcreteBidirectionalLabeled(DotNode)(DotEdge)
   
   module Dot = struct 
-    let node_info : (Mdg.Node.t HashTable.t) option ref = ref None 
-    let set_info (info : Mdg.Node.t HashTable.t) : unit =  node_info := Some info 
+    let node_info : ((string, Mdg.Node.t) Hashtbl.t) option ref = ref None 
+    let set_info (info : (string, Mdg.Node.t) Hashtbl.t) : unit =  node_info := Some info 
 
     module Dot' = OcamlGraph.Graphviz.Dot(struct
      include G (* use the graph module from above *)
@@ -36,7 +34,7 @@ module Dot = struct
      let vertex_name v = 
       let node_info = Option.get !node_info in 
       let node = Mdg.find_node_opt' node_info v in 
-      "\"" ^ map_default ((^) (v ^ " : ") << Node.label) v node ^ "\""
+      "\"" ^ Option.apply Fun.((^) (v ^ " : ") << Node.label) ~default:v node ^ "\""
 
      let default_vertex_attributes _ = []
     let graph_attributes _ = []

@@ -23,7 +23,7 @@
   
 
   $ graphjs input-code-5.js -o out 2>&1 | grep "Failure" && cat out/code/input-code-5.js && echo && rm -fr out
-           Failure("[ERROR] Unknown expression type to normalize (object on (9, 15) to (9, 60))")
+            Failure("[ERROR] Unknown expression type to normalize (object on (9, 15) to (9, 60))")
   cat: out/code/input-code-5.js: No such file or directory
   [1]
 

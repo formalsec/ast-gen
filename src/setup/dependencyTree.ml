@@ -1,7 +1,7 @@
 open Graphjs_base
 type t = { main : string; structure : Yojson.Basic.t }
 
-let generate_dt (filename : string) : Bos.Cmd.t = Bos.Cmd.(v "dt" % filename)
+(* let generate_dt (filename : string) : Bos.Cmd.t = Bos.Cmd.(v "dt" % filename) *)
 let single_file_dt filename = Format.sprintf "{ %S : {} }" filename
 
 let find_module_main (module_path : string) : string =
@@ -51,7 +51,7 @@ let generate (filename : string) (mode : Mode.t) =
   let main_file = get_main_file filename mode in
   let* output =
     match mode with
-    | Multi_file -> File_system.run_command' (generate_dt main_file)
+    | Multi_file -> Error "abc"(*File_system.run_command' (generate_dt main_file)*)
     | _ -> Ok (single_file_dt main_file)
   in
   Ok { main = main_file; structure = Yojson.Basic.from_string output }

@@ -1,8 +1,6 @@
 open Graphjs_base
 open Graphjs_ast
 open Structures
-open Funcs
-open Structs
 open Grammar
 
 (* =============== S T R U C T U R E S =============== *)
@@ -168,8 +166,8 @@ module Edge = struct
 
   let label (edge : t) : string =
     match edge._type with
-    | Property prop -> map_default (fun prop -> "P(" ^ prop ^ ")") "P(*)" prop
-    | Version prop -> map_default (fun prop -> "V(" ^ prop ^ ")") "V(*)" prop
+    | Property prop -> Option.apply (fun prop -> "P(" ^ prop ^ ")") ~default:"P(*)" prop
+    | Version prop -> Option.apply (fun prop -> "V(" ^ prop ^ ")") ~default:"V(*)" prop
     | Dependency -> "D"
     | Argument (_, id) -> "ARG(" ^ id ^ ")"
     | Parameter pos -> "param " ^ pos
@@ -242,8 +240,8 @@ module EdgeSet = struct
 end
 
 type t =
-  { edges : EdgeSet.t HashTable.t
-  ; nodes : Node.t HashTable.t
+  { edges : (string, EdgeSet.t) Hashtbl.t
+  ; nodes : (string, Node.t) Hashtbl.t
   ; register : unit -> unit
   }
 
@@ -253,29 +251,29 @@ type t =
 
 (* > EDGES FUNCTIONS : *)
 let iter_edges (f : location -> Edge.t -> unit) (graph : t) =
-  HashTable.iter (fun loc edges -> EdgeSet.iter (f loc) edges) graph.edges
+  Hashtbl.iter (fun loc edges -> EdgeSet.iter (f loc) edges) graph.edges
 
 let fold_edges (f : location -> EdgeSet.t -> 'acc -> 'acc) (graph : t) :
     'acc -> 'acc =
-  HashTable.fold f graph.edges
+  Hashtbl.fold f graph.edges
 
 let find_edges_opt (graph : t) : location -> EdgeSet.t option =
-  HashTable.find_opt graph.edges
+  Hashtbl.find_opt graph.edges
 
-let find_edges (graph : t) : location -> EdgeSet.t = HashTable.find graph.edges
-let mem_edges (graph : t) : location -> bool = HashTable.mem graph.edges
+let find_edges (graph : t) : location -> EdgeSet.t = Hashtbl.find graph.edges
+let mem_edges (graph : t) : location -> bool = Hashtbl.mem graph.edges
 
 let num_edges (graph : t) : int =
-  HashTable.fold (fun _ edges acc -> acc + EdgeSet.cardinal edges) graph.edges 0
+  Hashtbl.fold (fun _ edges acc -> acc + EdgeSet.cardinal edges) graph.edges 0
 
 let replace_edges (graph : t) (location : location) (edges : EdgeSet.t) : unit =
   let old_edges = find_edges_opt graph location in
-  map_default_lazy
+  Option.apply_lazy
     (fun old_edges ->
       if not (EdgeSet.subset edges old_edges) then graph.register () )
-    (lazy (graph.register ()))
+        ~default:(lazy (graph.register ()))
     old_edges;
-  HashTable.replace graph.edges location edges
+  Hashtbl.replace graph.edges location edges
 
 let rec print (graph : t) : unit =
   iter_edges print_edge graph;
@@ -286,24 +284,24 @@ and print_edge (from : location) (edge : Edge.t) : unit =
 
 (* > NODE FUNCTIONS : *)
 let iter_nodes (f : location -> Node.t -> unit) (graph : t) =
-  HashTable.iter f graph.nodes
+  Hashtbl.iter f graph.nodes
 
-let find_node_opt' : Node.t HashTable.t -> location -> Node.t option =
-  HashTable.find_opt
+let find_node_opt' : (string, Node.t) Hashtbl.t -> location -> Node.t option =
+  Hashtbl.find_opt
 
 let find_node_opt (graph : t) : location -> Node.t option =
   find_node_opt' graph.nodes
 
-let find_node (graph : t) : location -> Node.t = HashTable.find graph.nodes
-let num_nodes (graph : t) : int = HashTable.length graph.nodes
+let find_node (graph : t) : location -> Node.t = Hashtbl.find graph.nodes
+let num_nodes (graph : t) : int = Hashtbl.length graph.nodes
 
 let replace_node (graph : t) (location : location) (node : Node.t) =
   let old_node = find_node_opt graph location in
-  map_default_lazy
+  Option.apply_lazy
     (fun old_node -> if not (Node.equal old_node node) then graph.register ())
-    (lazy (graph.register ()))
+      ~default:(lazy (graph.register ()))
     old_node;
-  HashTable.replace graph.nodes location node
+  Hashtbl.replace graph.nodes location node
 
 let get_node_id (graph : t) (loc : location) : string =
   let node = find_node graph loc in
@@ -316,12 +314,12 @@ let get_node_name (graph : t) (loc : location) : string =
 (* > GRAPH FUNCTIONS : *)
 let copy (graph : t) : t =
   { graph with
-    edges = HashTable.copy graph.edges
-  ; nodes = HashTable.copy graph.nodes
+    edges = Hashtbl.copy graph.edges
+  ; nodes = Hashtbl.copy graph.nodes
   }
 
 let iter (f : location -> EdgeSet.t -> Node.t option -> unit) (graph : t) =
-  HashTable.iter
+  Hashtbl.iter
     (fun loc edges ->
       let node = find_node_opt graph loc in
       f loc edges node )
@@ -382,7 +380,7 @@ let lub (graph : t) (graph' : t) : unit =
 
       (* also update node info *)
       let node = find_node_opt graph from in
-      if Option.is_none node then option_may (replace_node graph from) node' )
+      if Option.is_none node then Option.iter (replace_node graph from) node' )
     graph'
 
 let alloc (_ : t) (id : int) : location = loc_obj_prefix ^ Int.to_string id
@@ -427,7 +425,7 @@ let lookup (graph : t) (loc : location) (property : property) : LocationSet.t =
       let seen_properties = ref properties in
 
       let properties = get_properties graph location in
-      let (known, unknown) = List.partition (Option.is_some << snd) properties in
+      let (known, unknown) = List.partition Fun.(Option.is_some << snd) properties in
 
       (* Direct Lookup - Unknown Property *)
       let (unknown, _) = List.split unknown in
@@ -442,7 +440,7 @@ let lookup (graph : t) (loc : location) (property : property) : LocationSet.t =
         if Option.is_none property then (
           let known =
             List.filter
-              (not << flip List.mem !seen_properties << Option.get << snd)
+            Fun.(not << flip List.mem !seen_properties << Option.get << snd)
               known in
           let (locations, properties) = List.split known in
           result := LocationSet.union !result (LocationSet.of_list locations);
@@ -475,7 +473,7 @@ let get_static_properties (graph : t) (loc : location) : property list =
     | [] -> result
     | location :: ls ->
       let properties = get_properties graph location in
-      let static = List.filter_map (identity << snd) properties in
+      let static = List.filter_map Fun.(id << snd) properties in
 
       let parents = get_parent_version graph location in
       let parents =
@@ -534,8 +532,7 @@ let add_taint_sink (graph : t) (abs_loc : location) (sink : string)
 
 let empty (register : unit -> unit) : t =
   let graph =
-    { edges = HashTable.create 100; nodes = HashTable.create 50; register }
-  in
+    { edges = Hashtbl.create 100; nodes = Hashtbl.create 50; register } in
   graph
 
 let add_edge (graph : t) (edge : Edge.t) (_to : location) (from : location) :
@@ -594,7 +591,7 @@ let get_func_node (graph : t) (func_id : Functions.Id.t) : location option =
     (fun location node ->
       let func_id' = Node.get_func_id node in
       let is_curr_func =
-        map_default (Functions.Id.equal func_id) false func_id' in
+        Option.apply (Functions.Id.equal func_id) ~default:false func_id' in
       if is_curr_func then res := Some location )
     graph;
   !res
@@ -639,8 +636,8 @@ let get_function (graph : t) (func_node : location) : t =
       let (visiting, to_visit') = LocationSet.pop to_visit in
       let node = find_node graph visiting in
       let edges = get_edges graph visiting in
-      HashTable.replace func_graph.nodes visiting node;
-      HashTable.replace func_graph.edges visiting edges;
+      Hashtbl.replace func_graph.nodes visiting node;
+      Hashtbl.replace func_graph.edges visiting edges;
 
       let tos = LocationSet.from_list (EdgeSet.get_to edges) in
       get_function' graph
@@ -660,7 +657,7 @@ let get_function (graph : t) (func_node : location) : t =
 
 let update_arg_edges (graph : t) (call_node : location)
     (parameters : string list) : unit =
-  HashTable.filter_map_inplace
+  Hashtbl.filter_map_inplace
     (fun _ edges ->
       let new_edges =
         EdgeSet.map
@@ -683,10 +680,10 @@ let update_arg_edges (graph : t) (call_node : location)
 let add_external_func (graph : t) (func_graph : t) (call_node : location)
     (function_node : location) : unit =
   (* add nodes *)
-  iter_nodes (fun loc node -> HashTable.replace graph.nodes loc node) func_graph;
+  iter_nodes (fun loc node -> Hashtbl.replace graph.nodes loc node) func_graph;
 
   (* add edges *)
-  iter (fun loc edges _ -> HashTable.replace graph.edges loc edges) func_graph;
+  iter (fun loc edges _ -> Hashtbl.replace graph.edges loc edges) func_graph;
 
   (* update argument edges *)
   let f_node = find_node graph function_node in
@@ -722,13 +719,13 @@ let dynamicAddProperty (graph : t) (_L_obj : LocationSet.t)
           if has_property graph l_o None then
             (* Add Unknown Property - Existing*)
             let l' = get_property graph l_o None in
-            LocationSet.apply (flip (add_dep_edge graph) l') _L_prop
+            LocationSet.apply (Fun.flip (add_dep_edge graph) l') _L_prop
           else
             (* Add Unknown Property - Non-Existing*)
             let l_i = alloc graph id in
             add_node l_i;
             add_prop_edge graph l_o l_i None;
-            LocationSet.apply (flip (add_dep_edge graph) l_i) _L_prop )
+            LocationSet.apply (Fun.flip (add_dep_edge graph) l_i) _L_prop )
         l_Os )
     _L_obj
 
