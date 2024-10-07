@@ -1,33 +1,22 @@
-*out/
-*.annot
-*.cmo
-*.cma
-*.cmi
-*.a
-*.o
-*.cmx
-*.cmxs
-*.cmxa
+# Local OPAM switch
+_opam/
 
-# ocamlbuild working directory
+# OCamlbuild working directory
 _build/
 
-# ocamlbuild targets
-*.byte
-*.native
-
-# oasis generated files
+# OASIS generated files
 setup.data
 setup.log
 
 # Merlin configuring file for Vim and Emacs
 .merlin
 
-# Dune generated files
-*.install
-
-# Local OPAM switch
-_opam/
-
+# NPM generated files
 package-lock.json
-graphjs-results/*
+
+# VSCode configuration files
+**/*.code-workspace
+.vscode/
+
+# Graphjs default results directory 
+_results/
