@@ -1,0 +1,17 @@
+(include_subdirs unqualified)
+
+(executable
+ (public_name graphjs)
+ (name graphjs)
+ (modules graphjs share site)
+ (libraries
+  graphjs_base
+  graphjs_setup
+  graphjs_ast
+  graphjs_mdg
+  graphjs_client
+  dune-site))
+
+(generate_sites_module
+ (module site)
+ (sites graphjs))

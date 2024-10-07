@@ -1,0 +1,5 @@
+(include_subdirs unqualified)
+
+(library
+ (name graphjs_client)
+ (libraries graphjs_base graphjs_setup graphjs_ast graphjs_mdg cmdliner))

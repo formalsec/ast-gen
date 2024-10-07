@@ -1,4 +1,0 @@
-(executable
- (public_name graphjs)
- (name main)
- (libraries auxiliary ast bos cmdliner fpath mdg setup))
