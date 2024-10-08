@@ -31,7 +31,6 @@
    (>= "0.229.1"))
   ocaml
   ocamlgraph
-  ppx_import
   yojson)
  (sites
   (share config))

@@ -19,7 +19,6 @@ depends: [
   "flow_parser" {>= "0.229.1"}
   "ocaml"
   "ocamlgraph"
-  "ppx_import"
   "yojson"
   "odoc" {with-doc}
 ]

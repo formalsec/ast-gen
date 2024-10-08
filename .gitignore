@@ -31,3 +31,5 @@ _opam/
 
 package-lock.json
 graphjs-results/*
+
+**/*.code-workspace
