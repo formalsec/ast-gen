@@ -17,6 +17,3 @@ package-lock.json
 # VSCode configuration files
 **/*.code-workspace
 .vscode/
-
-# Graphjs default results directory 
-_results/
