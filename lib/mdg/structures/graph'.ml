@@ -241,6 +241,7 @@ type t = {
   edges : EdgeSet.t HashTable.t;
   nodes : Node.t HashTable.t;
   callers : (string, Node.t list) Hashtbl.t;
+  returners : (string, Node.t list) Hashtbl.t;
   register : unit -> unit;
 }
 
@@ -458,6 +459,22 @@ let get_static_properties (graph : t) (loc : location) : property list =
 
   get_static_properties' graph [loc] [] []
 
+let get_all_property_nodes (graph: t) (loc: location): Node.t list = 
+  let rec get_all_property_nodes' graph unprocessed visited result = 
+    match unprocessed with
+      | [] -> List.map (find_node graph) result
+      | l :: ls when List.mem l visited ->  get_all_property_nodes' graph ls visited result
+      | l :: ls -> 
+        (* Format.printf "debug analysing -> %s@." l;  *)
+        let l_props = get_properties graph l |> List.map fst in 
+        (* Format.printf "debug l_props -> %s@." (String.concat ", " l_props); *)
+        let parents = get_parent_version graph l in 
+        let parents = List.filter_map (fun (parent, _) -> if not (List.exists ((=) parent) visited) then Some parent else None) parents in
+        (* Format.printf "debug parents -> %s@\n@." (String.concat ", " parents); *)
+        get_all_property_nodes' graph (parents @ l_props @ ls) (l :: visited) (l :: result)
+  in
+  get_all_property_nodes' graph [ loc ] [] []
+
 (* ------- G R A P H   M A N I P U L A T I O N ------- *)
 let add_node (graph : t) (loc : location) (node : Node.t) : unit =
   replace_node  graph loc node;
@@ -503,7 +520,7 @@ let add_taint_sink (graph : t) (curr_func : Node.t option) (abs_loc : location) 
   add_node graph abs_loc node
 
 let empty (register : unit -> unit) : t = 
-  let graph = {edges = HashTable.create 100; nodes = HashTable.create 50; callers = Hashtbl.create 50; register = register} in
+  let graph = {edges = HashTable.create 100; nodes = HashTable.create 50; callers = Hashtbl.create 50; returners = Hashtbl.create 50; register = register} in
   graph
 
 
@@ -583,7 +600,6 @@ let get_arg_locations (graph : t) (callee : location) : (string * location) list
           result := (index, loc) :: !result
       | _ -> ()
   ) graph;
-
   !result
 
 
@@ -771,7 +787,32 @@ let dynamicNewVersion (graph : t) (store : Store.t) (_L_obj : LocationSet.t) (_L
   
 
 (* ------- T R A V E R S E ------- *)
-let get_neighbors (graph : t) (node : Node.t) : Node.t list = 
+
+let rec get_neighbor (graph: t) (edge: Edge.t) : Node.t list = 
+  let nghbr = find_node graph edge._to in
+  match edge._type with
+  | Argument (_, "undefined") -> [nghbr]
+  | Argument (_, arg) -> 
+    (* Format.printf "nghbr = %s ---> called with %s@." nghbr.abs_loc arg; *)
+    let call_edge = EdgeSet.find_last (fun (e: Edge.t) -> match e._type with | Call -> true | _ -> false) (get_edges graph edge._to) in
+    (* Format.printf "call_edge to = %s@." call_edge._to; *)
+    let param_edge = EdgeSet.find_first (fun (e: Edge.t) -> match e._type with | Parameter _ -> (Node.get_id_name (find_node graph e._to)) = arg | _ -> false) (get_edges graph call_edge._to) in
+    let f_node = find_node graph call_edge._to in
+    let p_node = find_node graph param_edge._to in
+    (* Format.printf "next_func = %s | prev_func = %s@." f_node.abs_loc (Option.get nghbr.func).abs_loc; *)
+    if ((Some f_node) = nghbr.func) then [] else
+    let f_returns = HashTable.to_seq_values graph.nodes |> List.of_seq |> List.filter (fun (n: Node.t) -> n._type = Return && n.func = (Some f_node)) in
+    (* Format.printf "f_returns = [%s]@." (String.concat ", " (List.map Node.get_abs_loc f_returns)); *)
+    let reaches = List.map (reaches' graph IntSet.empty [[p_node]] []) f_returns |> List.flatten in
+    (* Format.printf "reaches: @\n%s@." (String.concat "\n" (List.map (fun path -> (String.concat " <- " (List.map Node.get_abs_loc path))) reaches)); *)
+    if reaches = [] then [nghbr]
+    else 
+      let ret_edge = EdgeSet.find_first (fun (e: Edge.t) -> match e._type with | Return -> true | _ -> false) (get_edges graph edge._to) in
+      let ret_node = find_node graph ret_edge._to in
+      [ret_node]
+  | _ -> [nghbr]
+
+and get_neighbors (graph : t) (node : Node.t) : Node.t list = 
   let valid_edge: Edge._type -> bool = function 
     | Property _  
     | Dependency 
@@ -780,36 +821,35 @@ let get_neighbors (graph : t) (node : Node.t) : Node.t list =
     | Parameter _ -> true 
     | _ -> false 
   in 
-  EdgeSet.fold (fun edge acc -> if (valid_edge edge._type) then (find_node graph (Edge.get_to edge)) :: acc else acc) (get_edges graph node.abs_loc) []
+  EdgeSet.fold (fun edge acc -> if (valid_edge edge._type) then (get_neighbor graph edge) @ acc else acc) (get_edges graph node.abs_loc) []
 
-
+and reaches' graph visited cur_paths ret_paths target : Node.t list list = 
+  match cur_paths with 
+  | [] -> ret_paths
+  | (cur::_ as curr_path)::tail_paths -> 
+    (* Format.printf "..............searching for %s from %s...@." target.abs_loc cur.abs_loc;  *)
+    if cur = target 
+      then reaches' graph visited tail_paths (curr_path::ret_paths) target
+  else (
+    let nghbrs = get_neighbors graph cur in
+    let nghbrs = List.filter (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited)) nghbrs in 
+    let visited' = List.fold_left (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc) visited nghbrs in 
+    let fst_paths = List.map (fun cur' -> cur'::curr_path) nghbrs in 
+    reaches' graph visited' (fst_paths @ tail_paths) ret_paths target
+    )
+  | _ -> failwith "current path is empty"
 
 let reaches graph src target : Node.t list list = 
-  let rec reaches' graph visited cur_paths ret_paths target : Node.t list list = 
-    match cur_paths with 
-      | [] -> ret_paths
-      | (cur::_ as curr_path)::tail_paths -> 
-        if cur = target 
-          then reaches' graph visited tail_paths (curr_path::ret_paths) target
-          else (
-            let nghbrs = get_neighbors graph cur in
-            let nghbrs = List.filter (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited)) nghbrs in 
-            let visited' = List.fold_left (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc) visited nghbrs in 
-            let fst_paths = List.map (fun cur' -> cur'::curr_path) nghbrs in 
-            reaches' graph visited' (fst_paths @ tail_paths) ret_paths target
-          )
-          
-      | _ -> failwith "current path is empty"
-  in 
-
   let visited  = IntSet.empty in
   reaches' graph visited [ [ src ] ] []  target 
+
 
 let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) : Node.t list =
     let paths = reaches graph f_node node in 
     List.filter_map (fun path -> 
+      (* Format.printf "path = { %s }@." (String.concat " <- " (List.map Node.get_abs_loc path)); *)
       let argument_index = List.length path - 2 in 
-      if argument_index > 0 
+      if argument_index >= 0 
         then Some (List.nth path argument_index)
         else None
     ) paths 

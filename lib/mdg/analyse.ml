@@ -290,15 +290,29 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       (* -------- R E T U R N -------- *)
       | loc, Return {id; argument} ->
         let _L = Option.map eval_expr argument in
-        (match _L with Some l -> LocationSet.print l | None -> ());
         let l_retn = alloc id in
-
+        add_ret_node l_retn loc;
+        let ret_node = Graph.find_node graph l_retn in
+        
         if (Option.is_some _L) then (
           let _L = Option.get _L in
-          LocationSet.apply (flip add_dep_edge l_retn) _L
+        LocationSet.apply (flip add_dep_edge l_retn) _L;
+        
+          let props = LocationSet.fold (fun l acc -> Graph.get_all_property_nodes graph l :: acc) _L [] |> List.flatten in
+          (* Format.printf "props = %s@." (String.concat ", " (List.map Graph.Node.get_abs_loc props)); *)
+          List.iter (fun (prop: Graph.Node.t) -> 
+            match prop._type with
+            | Function ({name; _}, _) -> 
+              (* Format.printf "func(%s) = %s@." name prop.abs_loc; *)
+              let returners = Option.value ~default:[] (Hashtbl.find_opt graph.returners name) in
+              let returners' = if List.mem prop returners then returners else ret_node :: returners in
+              (* Format.printf "returners(%s) = [%s]@\n@." name (String.concat ", " (List.map (Graph.Node.get_abs_loc) returners')); *)
+              Hashtbl.replace graph.returners name returners'
+            | _ -> ()
+          ) props
+
         );
 
-        add_ret_node l_retn loc;
   
       | _, Yield _ 
 
@@ -354,9 +368,9 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     let f        = obj_name ^ "." ^ property in
 
     (* node information *)
-    let _ = add_cnode l_call f loc in
+    let call_node = add_cnode l_call f loc in
     add_node l_retn (Identifier.get_name left) loc;
-
+    
     (* ! graphjs only adds edge for this property *)
     LocationSet.apply (fun l_this -> add_arg_edge  l_this l_call "this" "this") _Lthis;
 
@@ -368,12 +382,13 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
         let l_func = LocationSet.min_elt _Lfunc in
         let func_node = Graph.find_node_opt graph l_func in
         match func_node with
-          | Some {_type = Function (_, params); _} -> ();
+          | Some {_type = Function (id, params); _} -> ();
             List.iteri ( fun i _Ls ->
               let param_name = Option.value (List.nth_opt params i) ~default:"undefined" in
               LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) param_name) _Ls
             ) _Lss;
             add_call_edge l_call l_func;
+            Graph.register_call_node graph id.name call_node;
             found_func := true
           | _ -> ();
       );
