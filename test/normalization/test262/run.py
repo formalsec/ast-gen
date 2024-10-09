@@ -19,6 +19,9 @@ control_flow_statements = {
     "language/statements/try",
     "language/statements/throw",
     "language/statements/with",
+    "language/statements/labeled",
+    "language/expressions/labeled"
+
 }
 
 FUNCTIONS = "Function and Async Handling"
@@ -69,7 +72,9 @@ arithmetic_and_bitwise_operations = {
     "language/expressions/bitwise-not",
     "language/expressions/left-shift",
     "language/expressions/right-shift",
-    "language/expressions/unsigned-right-shift"
+    "language/expressions/unsigned-right-shift",
+    "language/expressions/unary-plus",
+    "language/expressions/unary-minus",
 }
 
 POSTFIX = "Postfix and Prefix Operations"
@@ -94,9 +99,6 @@ miscellaneous_expressions_and_statements = {
     "language/statements/empty",
     "language/statements/block",
     "language/statements/expression",
-    "language/statements/labeled",
-    "language/expressions/unary-plus",
-    "language/expressions/unary-minus",
     "language/expressions/instanceof",
     "language/expressions/typeof",
     "language/expressions/void",
@@ -109,7 +111,6 @@ miscellaneous_expressions_and_statements = {
     "language/expressions/concatenation",
     "language/expressions/grouping",
     "language/expressions/import.meta/syntax",
-    "language/expressions/labeled"
 }
 
 classes = [CONTROL_FLOW, FUNCTIONS, VARIBLES, LOGICAL, ARITHMETIC, POSTFIX, OBJECT, MISC]
@@ -138,6 +139,8 @@ def check_class (test_group):
 
 TIMEOUT = 10
 OUTPUT_PATH = "out"
+TIME_OUTPUTS = f"{OUTPUT_PATH}/run/time_stats.txt"
+
 
 # paths
 TESTS = "tests"
@@ -168,16 +171,26 @@ GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 
-def graphjs_command(path):
+def graphjs_command(path, _):
     return ["python3", "../../graphjs/graphjs_old.py", "-f", path, "-o", OUTPUT_PATH, "--norm_only"]
 
-def graphjs2_command(path):
+def graphjs2_command(path, _):
     return ["graphjs2", path, "-o", OUTPUT_PATH]
+
+def node_command(path, output_folder):
+    return ["cp", path, output_folder]
+
+def get_value_from_key(time_path, key):
+    with open(time_path, 'r') as data:
+        for line in data:
+            if key in line:
+                return float(line.split(": ")[1])
+    return -1
 
 def normalize(path, command, output_folder):
     try:
         # run normalization
-        execution_time = timeit.timeit(lambda: subprocess.run(command(path), capture_output=True, text=True, check=True, timeout=TIMEOUT), number=1)
+        execution_time = timeit.timeit(lambda: subprocess.run(command(path, output_folder), capture_output=True, text=True, check=True, timeout=TIMEOUT), number=1)
         output_file = f"{output_folder}/{os.path.basename(path)}"
 
         if not os.path.exists(output_file):
@@ -185,7 +198,7 @@ def normalize(path, command, output_folder):
         
         with open(output_file, "r") as file:
             norm_program = file.read()
-            
+
         return "", PASS, norm_program, execution_time
     except subprocess.CalledProcessError as e:
         info = FAIL
@@ -286,7 +299,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="test normalization against test262 test suite")
     parser.add_argument("test_root", type=str, help="path to the test262 test suite root")
     parser.add_argument("output"   , type=str, help="output file")
-    parser.add_argument("tool", type=str, choices=["graphjs", "graphjs2"], help="choose the tool to test")
+    parser.add_argument("tool", type=str, choices=["graphjs", "graphjs2", "node"], help="choose the tool to test")
 
     return parser.parse_args()
 
@@ -320,6 +333,13 @@ def main():
     elif args.tool == "graphjs2":
         command = graphjs2_command
         output_folder = f"{OUTPUT_PATH}/code"
+    elif args.tool == "node":
+        command = node_command
+        output_folder = f"{OUTPUT_PATH}"
+
+    # Create the directory
+    if not os.path.exists(OUTPUT_PATH):
+        os.makedirs(OUTPUT_PATH)
 
     # get harness
     with open(test_root / HARNESS) as file:
