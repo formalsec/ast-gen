@@ -162,7 +162,7 @@ open Graphjs_base
 open Graphjs_client
 open Cmdliner
 
-type status = (Status.t Cmd.eval_ok, Cmd.eval_error) Result.t
+type status = (unit Exec.status Cmd.eval_ok, Cmd.eval_error) Result.t
 
 let set_copts (lvl : Enums.DebugLvl.t) (colorless : bool) : unit =
   Font.Config.(colored $= not colorless);
@@ -179,14 +179,14 @@ let normalize_opts : Cmd_normalize.Options.t Term.t =
   $ Docs.NormalizeOpts.input
   $ Docs.NormalizeOpts.output
 
-let normalize_cmd : Status.t Cmd.t =
+let normalize_cmd : unit Exec.status Cmd.t =
   let open Docs.NormalizeCmd in
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
   Cmd.v info Term.(const Cmd_normalize.run $ copts $ normalize_opts)
 
-let cmd_list : Status.t Cmd.t list = [ normalize_cmd ]
+let cmd_list : unit Exec.status Cmd.t list = [ normalize_cmd ]
 
-let main_cmd : Status.t Cmd.t =
+let main_cmd : unit Exec.status Cmd.t =
   let open Docs.Application in
   let default = Term.(ret (const (fun _ -> `Help (`Pager, None)) $ copts)) in
   let info = Cmd.info name ~sdocs ~doc ~version ~man ~man_xrefs ~exits in
@@ -195,6 +195,7 @@ let main_cmd : Status.t Cmd.t =
 let eval_cmd : status -> int = function
   | Ok (`Help | `Version) -> Docs.ExitCodes.ok
   | Ok (`Ok (Ok ())) -> Docs.ExitCodes.ok
+  | Ok (`Ok (Error `ParseJS)) -> Docs.ExitCodes.parse
   | Ok (`Ok (Error (`Generic _))) -> Docs.ExitCodes.generic
   | Error `Term -> Docs.ExitCodes.term
   | Error `Parse -> Docs.ExitCodes.client
