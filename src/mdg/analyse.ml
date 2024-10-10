@@ -1,6 +1,6 @@
 open Graphjs_base
 open Graphjs_ast
-open Graphjs_setup
+open Graphjs_config
 module EdgeSet = Mdg.EdgeSet
 module Edge = Mdg.Edge
 open Grammar
@@ -403,7 +403,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     (state, !auxiliary)
 end
 
-let rec add_taint_sinks (state : State.t) (config : Tainted_config.t)
+let rec add_taint_sinks (state : State.t) (config : Tainted.t)
     (ext_calls : ExternalReferences.t) : unit =
   let graph = state.graph in
 
@@ -412,9 +412,9 @@ let rec add_taint_sinks (state : State.t) (config : Tainted_config.t)
       match node._type with
       | Call callee ->
         (* function sink *)
-        let sink_info = Tainted_config.get_function_sink_info config callee in
+        let sink_info = Tainted.get_function_sink_info config callee in
         Option.iter
-          (fun (sink_info : Tainted_config.functionSink) ->
+          (fun (sink_info : Tainted.functionSink) ->
             add_taink_sink graph loc node sink_info.sink sink_info.args )
           sink_info;
 
@@ -427,10 +427,10 @@ let rec add_taint_sinks (state : State.t) (config : Tainted_config.t)
               let method_name = List.nth ref.properties 0 in
               let package_name = ref._module in
               let sink_info =
-                Tainted_config.get_package_sink_info config package_name method_name
+                Tainted.get_package_sink_info config package_name method_name
               in
               Option.iter
-                (fun (sink_info : Tainted_config.package) ->
+                (fun (sink_info : Tainted.package) ->
                   add_taink_sink graph loc node method_name sink_info.args )
                 sink_info )
           referece_info
@@ -458,7 +458,7 @@ and add_taink_sink (graph : Mdg.t) (loc : location) (node : Mdg.Node.t)
       List.iter (fun (_, l) -> add_dep_edge l l_tsink) arg_locs )
     sink_args
 
-let add_taint_sources (state : State.t) (_config : Tainted_config.t) (mode : Mode.t)
+let add_taint_sources (state : State.t) (_config : Tainted.t) (mode : Mode.t)
     (is_main : bool) (exportsObject : ExportedObject.t) : unit =
   let graph = state.graph in
   let l_tsource = loc_taint_source in

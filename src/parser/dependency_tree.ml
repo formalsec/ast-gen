@@ -1,4 +1,4 @@
-open Graphjs_base
+(* open Graphjs_base
 type t = { main : string; structure : Yojson.Basic.t }
 
 (* let generate_dt (filename : string) : Bos.Cmd.t = Bos.Cmd.(v "dt" % filename) *)
@@ -75,4 +75,4 @@ let bottom_up_visit (dep_tree : t) : string list =
     (List.fold_left
        (fun final_order curr ->
          if List.mem curr final_order then final_order else curr :: final_order)
-       [] visit_order)
+       [] visit_order) *)

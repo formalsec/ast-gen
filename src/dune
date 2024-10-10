@@ -4,7 +4,7 @@
  (modules graphjs share site)
  (libraries
   graphjs_base
-  graphjs_setup
+  graphjs_config
   graphjs_ast
   graphjs_mdg
   graphjs_client

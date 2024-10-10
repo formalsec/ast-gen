@@ -1,5 +1,5 @@
 open Graphjs_base
-open Graphjs_setup
+open Graphjs_config
 open Structures
 
 type buildExportsObject = {
@@ -17,7 +17,7 @@ type buildExportsObject = {
 
 type collectExternalCalls = ExternalReferences.t
 type generateMDG = State.t
-type sinkAliases = Tainted_config.t
+type sinkAliases = Tainted.t
 
 type t =
   | BuildExportsObject   of buildExportsObject

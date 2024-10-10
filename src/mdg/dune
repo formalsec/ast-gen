@@ -2,4 +2,4 @@
 
 (library
  (name graphjs_mdg)
- (libraries graphjs_base graphjs_setup graphjs_ast ocamlgraph))
+ (libraries graphjs_base graphjs_config graphjs_ast ocamlgraph))

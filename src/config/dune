@@ -1,0 +1,6 @@
+(include_subdirs unqualified)
+
+(library
+ (name graphjs_config)
+ (modules mode tainted)
+ (libraries graphjs_base yojson))

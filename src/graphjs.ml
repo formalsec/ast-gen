@@ -1,5 +1,5 @@
 (* open Graphjs_base
-   open Graphjs_setup
+   open Graphjs_config
    open Graphjs_ast
    open Graphjs_mdg
    open Graphjs_client

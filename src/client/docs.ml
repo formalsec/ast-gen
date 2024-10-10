@@ -42,13 +42,13 @@ end
 
 module NormalizeOpts = struct
   let input =
-    let open Files.Parser in
+    let open Fs.Parser in
     let docv = "FILE" in
     let doc = "Path to the JavaScript file." in
     Arg.(required & pos 0 (some valid_file) None & info [] ~docv ~doc)
 
   let output =
-    let open Files.Parser in
+    let open Fs.Parser in
     let docv = "FILE" in
     let doc = "Path to store the normalized JavaScript file." in
     Arg.(value & opt (some fpath) None & info [ "o"; "output" ] ~docv ~doc)

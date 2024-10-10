@@ -2,4 +2,4 @@
 
 (library
  (name graphjs_client)
- (libraries graphjs_base graphjs_setup graphjs_ast graphjs_mdg cmdliner))
+ (libraries graphjs_base graphjs_config graphjs_ast graphjs_mdg bos cmdliner))
