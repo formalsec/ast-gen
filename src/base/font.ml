@@ -157,9 +157,18 @@ let pp (font : t) (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (v : 'a) : unit =
   if not (colored (Writer.find ppf)) then pp_v ppf v
   else Fmt.fmt ppf "%a%a%a" pp_font font pp_v v pp_font [ `Reset ]
 
-let str (font : t) (pp_v : Fmt.t -> 'a -> unit) (v : 'a) : string =
-  Fmt.str "%a" (pp font pp_v) v
-[@@inline]
+let pp_int (font : t) : Fmt.t -> int -> unit = pp font Fmt.pp_int
+let pp_float (font : t) : Fmt.t -> float -> unit = pp font Fmt.pp_float
+let pp_char (font : t) : Fmt.t -> char -> unit = pp font Fmt.pp_char
+let pp_str (font : t) : Fmt.t -> string -> unit = pp font Fmt.pp_str
+let pp_bool (font : t) : Fmt.t -> bool -> unit = pp font Fmt.pp_bool
+let pp_bytes (font : t) : Fmt.t -> bytes -> unit = pp font Fmt.pp_bytes
 
-let pp_text (font : t) : Fmt.t -> string -> unit = pp font Fmt.pp_str
-let str_text (font : t) : string -> string = str font Fmt.pp_str
+let kfmt (font : t) (ppf_f : Fmt.t -> 'a) (ppf : Fmt.t)
+    (format : ('b, Fmt.t, unit, 'a) format4) : 'b =
+  let pp_format ppf fmt = Fmt.fmt ppf "%t" fmt in
+  Fmt.kdly (Fmt.kfmt ppf_f ppf "%a" (pp font pp_format)) format
+
+let fmt (font : t) (ppf : Fmt.t) (format : ('a, Fmt.t, unit) format) : 'a =
+  kfmt font ignore ppf format
+[@@inline]

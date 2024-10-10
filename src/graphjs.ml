@@ -167,24 +167,23 @@ type status = (unit Exec.status Cmd.eval_ok, Cmd.eval_error) Result.t
 let set_copts (lvl : Enums.DebugLvl.t) (colorless : bool) : unit =
   Font.Config.(colored $= not colorless);
   Log.Config.(log_warns $= (lvl >= Warn));
+  Log.Config.(log_infos $= (lvl >= Info));
   Log.Config.(log_debugs $= (lvl >= Full))
 
 let copts : unit Term.t =
   let open Term in
   const set_copts $ Docs.CommonOpts.debug $ Docs.CommonOpts.colorless
 
-let normalize_opts : Cmd_normalize.Options.t Term.t =
+let parse_opts : Cmd_normalize.Options.t Term.t =
   let open Term in
-  const Cmd_normalize.Options.set
-  $ Docs.NormalizeOpts.input
-  $ Docs.NormalizeOpts.output
+  const Cmd_normalize.Options.set $ Docs.ParseOpts.input $ Docs.ParseOpts.output
 
-let normalize_cmd : unit Exec.status Cmd.t =
-  let open Docs.NormalizeCmd in
+let parse_cmd : unit Exec.status Cmd.t =
+  let open Docs.ParseCmd in
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
-  Cmd.v info Term.(const Cmd_normalize.run $ copts $ normalize_opts)
+  Cmd.v info Term.(const Cmd_normalize.run $ copts $ parse_opts)
 
-let cmd_list : unit Exec.status Cmd.t list = [ normalize_cmd ]
+let cmd_list : unit Exec.status Cmd.t list = [ parse_cmd ]
 
 let main_cmd : unit Exec.status Cmd.t =
   let open Docs.Application in
@@ -195,7 +194,8 @@ let main_cmd : unit Exec.status Cmd.t =
 let eval_cmd : status -> int = function
   | Ok (`Help | `Version) -> Docs.ExitCodes.ok
   | Ok (`Ok (Ok ())) -> Docs.ExitCodes.ok
-  | Ok (`Ok (Error `ParseJS)) -> Docs.ExitCodes.parse
+  | Ok (`Ok (Error (`DepTree _))) -> Docs.ExitCodes.deptree
+  | Ok (`Ok (Error (`ParseJS _))) -> Docs.ExitCodes.parsejs
   | Ok (`Ok (Error (`Generic _))) -> Docs.ExitCodes.generic
   | Error `Term -> Docs.ExitCodes.term
   | Error `Parse -> Docs.ExitCodes.client
@@ -206,6 +206,6 @@ let () =
   try Cmdliner.Cmd.eval_value main_cmd |> eval_cmd |> exit
   with exn ->
     flush_all ();
-    Log.fail "[graphjs] uncaught exception %s@." (Printexc.to_string exn);
+    Log.stderr "[graphjs] uncaught exception %s@." (Printexc.to_string exn);
     Printexc.print_backtrace stderr;
     exit Docs.ExitCodes.internal

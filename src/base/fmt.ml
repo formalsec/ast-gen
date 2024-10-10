@@ -6,7 +6,7 @@ let kfmt (k : t -> 'a) (ppf : t) (format : ('b, t, unit, 'a) format4) : 'b =
   kfprintf k ppf format
 [@@inline]
 
-let kinv (k : (t -> unit) -> 'a) (format : ('b, t, unit, 'a) format4) : 'b =
+let kdly (k : (t -> unit) -> 'a) (format : ('b, t, unit, 'a) format4) : 'b =
   kdprintf k format
 [@@inline]
 
@@ -21,7 +21,7 @@ let ksstr (k : string -> 'a) (format : ('b, t, unit, 'a) format4) : 'b =
 let fmt (ppf : t) (format : ('a, t, unit) format) : 'a = kfmt ignore ppf format
 [@@inline]
 
-let inv (format : ('a, t, unit, t -> unit) format4) : 'a = kinv Fun.id format
+let dly (format : ('a, t, unit, t -> unit) format4) : 'a = kdly Fun.id format
 [@@inline]
 
 let str (format : ('a, t, unit, string) format4) : 'a = kstr Fun.id format
@@ -30,7 +30,8 @@ let str (format : ('a, t, unit, string) format4) : 'a = kstr Fun.id format
 let sstr (format : ('a, t, unit, string) format4) : 'a = ksstr Fun.id format
 [@@inline]
 
-let ( !> ) : ('a, t, unit, t -> unit) format4 -> 'a = inv
+let ignore : t -> ('a, t, unit) format -> 'a = ifprintf
+let ( !> ) : ('a, t, unit, t -> unit) format4 -> 'a = dly
 let pp_none : t -> unit -> unit = fun _ () -> ()
 let pp_space : t -> unit -> unit = pp_print_space
 let pp_tab : t -> unit -> unit = pp_print_tab

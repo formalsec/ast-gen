@@ -2,8 +2,9 @@ open Cmdliner
 
 module ExitCodes = struct
   let ok = Cmd.Exit.ok
-  let parse = 2
-  let normalize = 3
+  let deptree = 2
+  let parsejs = 3
+  let normalize = 4
   let term = 122
   let generic = Cmd.Exit.some_error
   let client = Cmd.Exit.cli_error
@@ -15,8 +16,9 @@ module Exits = struct
 
   let common = info ~doc:"on terminal error" ExitCodes.term :: defaults
 
-  let normalize =
-    [ info ~doc:"on JavaScript parsing error" ExitCodes.parse
+  let parse =
+    [ info ~doc:"on Dependency Tree generation error" ExitCodes.deptree
+    ; info ~doc:"on JavaScript parsing error" ExitCodes.parsejs
     ; info ~doc:"on JavaScript normalization error" ExitCodes.normalize ]
 end
 
@@ -27,8 +29,9 @@ module CommonOpts = struct
     let doc =
       "Debug level used within the Graph.js application. Options include: (1) \
        'none' for hiding all Graph.js logs; (2) 'warn' [default] for showing \
-       Graph.js warnings; and (3) 'full' to show all, including debug prints."
-    in
+       Graph.js warnings; (3) 'info' to additionally show the information logs \
+       and program execution stage; and (4) 'full' to show all, including \
+       debug prints." in
     let levels = Arg.enum Enums.DebugLvl.(args all) in
     Arg.(value & opt levels Warn & info [ "debug" ] ~docs ~docv ~doc)
 
@@ -40,7 +43,7 @@ module CommonOpts = struct
     Arg.(value & flag & info [ "colorless" ] ~docs ~doc)
 end
 
-module NormalizeOpts = struct
+module ParseOpts = struct
   let input =
     let open Fs.Parser in
     let docv = "FILE" in
@@ -50,25 +53,25 @@ module NormalizeOpts = struct
   let output =
     let open Fs.Parser in
     let docv = "FILE" in
-    let doc = "Path to store the normalized JavaScript file." in
+    let doc = "Path to store the parsed JavaScript file." in
     Arg.(value & opt (some fpath) None & info [ "o"; "output" ] ~docv ~doc)
 end
 
-module NormalizeCmd = struct
-  let name = "normalize"
+module ParseCmd = struct
+  let name = "parse"
   let sdocs = Manpage.s_common_options
-  let doc = "Parses and normalizes a JavaScript Program"
+  let doc = "Parses and parses a JavaScript Program"
 
   let description =
     [| "Given a JavaScript (.js) file, parses the program using the \
-        open-source parser of Flow (https://flow.org/) and then normalizes it, \
+        open-source parser of Flow (https://flow.org/) and then parses it, \
         producing a simplified core subset of JavaScript. This process \
         involves reducing complex language constructs and eliminating \
         redundant statements and expressions." |]
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
-  let exits = Exits.normalize @ Exits.common
+  let exits = Exits.parse @ Exits.common
 end
 
 module Application = struct
@@ -85,13 +88,13 @@ module Application = struct
      ; "In the first phase, Graph.js parses the complete JavaScript program \
         using the open-source parser from Flow (https://flow.org/), a static \
         type checker for JavaScript developed by Meta. Since JavaScript is a \
-        notoriously difficult language to analyze, Graph.js normalizes the \
+        notoriously difficult language to analyze, Graph.js parses the \
         resulting AST by simplifying complex language elements and removing \
         all redundant statements and expressions."
      ; "In the second phase, Graph.js builds a Multiversion Dependency Graph \
-        (MDG) of the normalized program. This graph-based data structure \
-        merges into a single representation the abstract syntax tree, control \
-        flow graph, and data dependency graph."
+        (MDG) of the parsed program. This graph-based data structure merges \
+        into a single representation the abstract syntax tree, control flow \
+        graph, and data dependency graph."
      ; "In the third phase, Graph.js runs several built-in queries on the \
         graph using its internal query engine. These queries aim to identify \
         vulnerable code patterns, such as data dependency paths connecting \
