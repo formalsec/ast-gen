@@ -6,7 +6,7 @@ module Config = struct
   let log_debugs : bool t = static false
 
   let app : ((Fmt.t -> unit) * Font.t) t =
-    constant ((fun _ -> ()), Font.create ())
+    constant ((fun _ -> ()), Font.create ~fg:`White ())
 
   let error : ((Fmt.t -> unit) * Font.t) t =
     constant (Fmt.dly "error", Font.create ~fg:`LightRed ())

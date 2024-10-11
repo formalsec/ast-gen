@@ -1,0 +1,6 @@
+(include_subdirs unqualified)
+
+(library
+ (name graphjs_parser)
+ (modules dependency_tree parser)
+ (libraries graphjs_base graphjs_config unix flow_parser))

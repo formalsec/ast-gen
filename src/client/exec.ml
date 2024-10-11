@@ -9,7 +9,7 @@ type error =
 type 'a status = ('a, error) Result.t
 
 let log_error : error -> unit = function
-  | `DepTree fmt -> Log.stderr "%t@." fmt
+  | `DepTree fmt -> Log.error "%t@." fmt
   | `ParseJS fmt -> Log.stderr "%t@." fmt
   | `Generic err -> Log.error "%s@." err
 
@@ -23,6 +23,5 @@ let bos : ('a, [< `Msg of string ]) result -> 'a status = function
 
 let graphjs (exec_f : unit -> 'a) : 'a status =
   try Ok (exec_f ()) with
-  | _ -> error (`Generic "")
-  (* | Graphjs_parser.Dependency_tree.Error fmt -> error (`DepTree fmt) *)
-  (* | Graphjs_parser.Parser.Error fmt -> error (`ParseJS fmt) *)
+  | Graphjs_parser.Dependency_tree.Error fmt -> error (`DepTree fmt)
+  | Graphjs_parser.Parser.Error fmt -> error (`ParseJS fmt)

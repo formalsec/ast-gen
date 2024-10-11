@@ -93,27 +93,6 @@
      Ok 0
 
    (* setup comand line interface using CMDLiner library*)
-   let input_file : string Term.t =
-     let doc =
-       "Path to JavaScript file (.js) or directory containing JavaScript files \
-        for analysis." in
-     let docv = "FILE_OR_DIR" in
-     Arg.(required & pos 0 (some file) None & info [] ~doc ~docv)
-
-   let mode : Mode.t Term.t =
-     let mode_enum =
-       Arg.enum
-         [ ("basic", Mode.Basic); ("single_file", Mode.Single_file)
-         ; ("multi_file", Mode.Multi_file) ] in
-     let doc =
-       "Analysis mode.\n\
-        \t 1) basic: attacker controlls all parameters from all functions \n\
-        \t 2) single_file: the attacker controlls the functions that were \
-        exported by the input file \n\
-        \t 3) multi_file: the attacker controlls the functions that were exported \
-        in the \"main\" file" in
-     Arg.(value & opt mode_enum Mode.single_file & info [ "m"; "mode" ] ~doc)
-
    let mdg : bool Term.t =
      let doc = "Generates Multiversion Dependency Mdg." in
      Arg.(value & flag & info [ "mdg" ] ~doc)
@@ -123,11 +102,6 @@
      Arg.(value & flag & info [ "noDot" ] ~doc)
 
    let fpath = ((fun str -> `Ok (Fpath.v str)), Fpath.pp)
-
-   let output_path : Fpath.t Term.t =
-     let doc = "Path to store all output files." in
-     let default_path = Fpath.v "graphjs-results" in
-     Arg.(value & opt fpath default_path & info [ "o"; "output" ] ~doc)
 
    let config_path : string Term.t =
      let doc = "Path to configuration file." in
@@ -174,14 +148,17 @@ let copts : unit Term.t =
   let open Term in
   const set_copts $ Docs.CommonOpts.debug $ Docs.CommonOpts.colorless
 
-let parse_opts : Cmd_normalize.Options.t Term.t =
+let parse_opts : Cmd_parse.Options.t Term.t =
   let open Term in
-  const Cmd_normalize.Options.set $ Docs.ParseOpts.input $ Docs.ParseOpts.output
+  const Cmd_parse.Options.set
+  $ Docs.ParseOpts.input
+  $ Docs.ParseOpts.output
+  $ Docs.GraphjsOpts.mode
 
 let parse_cmd : unit Exec.status Cmd.t =
   let open Docs.ParseCmd in
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
-  Cmd.v info Term.(const Cmd_normalize.run $ copts $ parse_opts)
+  Cmd.v info Term.(const Cmd_parse.run $ copts $ parse_opts)
 
 let cmd_list : unit Exec.status Cmd.t list = [ parse_cmd ]
 

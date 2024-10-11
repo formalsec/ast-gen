@@ -5,6 +5,7 @@
  (libraries
   graphjs_base
   graphjs_config
+  graphjs_parser
   graphjs_ast
   graphjs_mdg
   graphjs_client

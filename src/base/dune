@@ -2,5 +2,17 @@
 
 (library
  (name graphjs_base)
- (modules list hashtbl fun option result config console fmt writer font log)
- (libraries unix))
+ (modules
+  list
+  hashtbl
+  fun
+  option
+  result
+  config
+  console
+  fmt
+  writer
+  font
+  log
+  json)
+ (libraries unix yojson))
