@@ -26,12 +26,14 @@ let setup_output output_path =
 let main file_name output_path config_path mode generate_mdg no_dot verbose =
   (* DANGEROUS: We create "run" but don't pass it to any function?
      Is there any global behaviour that will write to "run"? *)
-  let* code_dir, graph_dir, _ = setup_output output_path in
+  let* code_dir, graph_dir, run_dir = setup_output output_path in
   let* dep_tree = DependencyTree.generate file_name mode in
 
   (* process dependencies first with the aid of the depedency tree *)
   let summaries = Summaries.empty () in
   let module_graphs = ModuleGraphs.empty () in
+  
+  let start = Sys.time () in 
   List.iter
     (fun file_path ->
       let dir = Fpath.parent @@ Fpath.v file_name in
@@ -42,6 +44,7 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
 
       (* STEP 1 : Normalize AST *)
       let norm_program = Ast.Normalize.program ast file_path in
+
       let norm_program =
         if file_path = dep_tree.main then Program.set_main norm_program
         else norm_program
@@ -85,13 +88,15 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
         Summaries.add summaries file_path exportedObject;
         Summaries.add summaries alter_name exportedObject))
     (DependencyTree.bottom_up_visit dep_tree);
-
+  
   (* output *)
   if generate_mdg then (
+    let mdg_end = (Sys.time () -. start) *. 1000.0 in 
     let main = DependencyTree.get_main dep_tree in
     let graph = ModuleGraphs.get module_graphs main in
     if not no_dot then Mdg.Pp.Dot.output graph_dir graph;
     Mdg.Pp.CSV.output graph_dir graph;
+    Mdg.Pp.Time.output run_dir mdg_end;
   );
   Ok 0
 

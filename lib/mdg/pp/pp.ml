@@ -4,6 +4,7 @@ open Graph
 open Structures
 open Auxiliary.Structures
 open Auxiliary.Functions
+open Printf
 
 module Dot = struct
   module DotNode = struct
@@ -129,4 +130,21 @@ module CSV = struct
     output_string out_channel ("{ \"edges\": " ^ edges ^ ", \"nodes\": " ^ nodes ^ "}");
 
     close_out out_channel
+end
+
+module Time = struct
+  let output (output_dir : Fpath.t) (time : float) : unit =
+    let time_file  = Fpath.(to_string @@ (output_dir / "time_stats.txt")) in 
+
+    (* Open the file for writing *)
+    let oc = open_out time_file in
+
+    (* Format and write the required data *)
+    fprintf oc "graph: %f\n" time;
+    fprintf oc "import: 0\n";
+    fprintf oc "injection_detection: 0\n";
+    fprintf oc "proto_pollution_detection: 0\n";
+
+    (* Close the output channel *)
+    close_out oc;
 end
