@@ -30,6 +30,7 @@ let str (format : ('a, t, unit, string) format4) : 'a = kstr Fun.id format
 let sstr (format : ('a, t, unit, string) format4) : 'a = ksstr Fun.id format
 [@@inline]
 
+let kignore : (t -> 'a) -> t -> ('b, t, unit, 'a) format4 -> 'b = ikfprintf
 let ignore : t -> ('a, t, unit) format -> 'a = ifprintf
 let ( !> ) : ('a, t, unit, t -> unit) format4 -> 'a = dly
 let pp_none : t -> unit -> unit = fun _ () -> ()

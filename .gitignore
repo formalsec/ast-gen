@@ -12,6 +12,7 @@ setup.log
 .merlin
 
 # NPM generated files
+node-modules/
 package-lock.json
 
 # VSCode configuration files

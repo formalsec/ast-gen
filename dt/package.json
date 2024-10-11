@@ -1,17 +1,37 @@
 {
   "name": "dt",
   "version": "1.0.0",
-  "description": "",
-  "bin" : {
+  "description": "Given its main file, generates the dependency tree of a npm project",
+  "keywords": [
+    "javascript",
+    "nodejs",
+    "modules",
+    "dependency tree"
+  ],
+  "author": "André Nascimento",
+  "contributors": [
+    {
+      "name": "André Nascimento",
+      "email": "andreffnascimento@outlook.com",
+      "url": "https://github.com/andreffnascimento"
+    },
+    {
+      "name": "Tomás Tavares",
+      "url": "https://github.com/Th0mz"
+    },
+    {
+      "name": "Filipe Marques",
+      "url": "https://github.com/filipeom"
+    }
+  ],
+  "main": "index.js",
+  "bin": {
     "dt": "index.js"
   },
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"[dt]: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "dependency-tree": "^11.0.1",
     "path": "^0.12.7"
