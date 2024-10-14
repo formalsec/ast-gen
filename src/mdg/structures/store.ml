@@ -31,7 +31,7 @@ and print_locations (id : location) (locations : LocationSet.t) : unit =
     (id ^ " : [" ^ String.concat ", " (LocationSet.elements locations) ^ "]")
 
 let equal (store : t) (store' : t) : bool =
-  Hashtbl.equals LocationSet.equal store store'
+  Hashtbl.equal LocationSet.equal store store'
 
 (* ------- A U X I L I A R Y   F U N C T I O N S -------*)
 let get_locations (store : t) (id : location) : LocationSet.t =

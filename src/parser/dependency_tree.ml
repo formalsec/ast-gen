@@ -1,27 +1,71 @@
 open Graphjs_base
 open Graphjs_config
 
-type t =
-  { main_path : string
-  ; structure : Json.t
-  }
+exception Exn of (Fmt.t -> unit)
 
-let pp (ppf : Fmt.t) (dt : t) : unit = Yojson.Basic.pp ppf dt.structure
+module rec M : sig
+  type t =
+    { path : string
+    ; deps : DepSet.t
+    }
+
+  val compare : t -> t -> int
+end = struct
+  type t =
+    { path : string
+    ; deps : DepSet.t
+    }
+
+  let compare (dt1 : t) (dt2 : t) : int =
+    let path_cmp = String.compare dt1.path dt2.path in
+    if path_cmp != 0 then path_cmp else DepSet.compare dt1.deps dt2.deps
+end
+
+and DepSet : (Set.S with type elt = M.t) = Set.Make (struct
+  type t = M.t
+
+  let compare (dt1 : t) (dt2 : t) : int = M.compare dt1 dt2
+end)
+
+include M
+
+let rec create_deps : Json.t -> DepSet.t = function
+  | `Assoc structure ->
+    List.fold_left
+      (fun acc (path, deps) -> DepSet.add { path; deps = create_deps deps } acc)
+      DepSet.empty structure
+  | structure -> Log.fail "unexpected dependency tree: %a" Json.pp structure
+
+let create : Json.t -> t = function
+  | `Assoc [ (path, deps) ] -> { path; deps = create_deps deps }
+  | structure -> Log.fail "unexpected dependency tree: %a" Json.pp structure
+
+let rec pp (ppf : Fmt.t) (dt : t) : unit =
+  let pp_deps = Fmt.(pp_iter DepSet.iter !>",@\n" pp) in
+  let pp_indent ppf = Fmt.fmt ppf "@\n@[<v 2>  %a@]@\n" pp_deps in
+  if DepSet.cardinal dt.deps == 0 then Fmt.fmt ppf "%S: {}" dt.path
+  else Fmt.fmt ppf "%S: {%a}" dt.path pp_indent dt.deps
+
 let str : t -> string = Fmt.str "%a" pp
+let equal (dt1 : t) (dt2 : t) : bool = compare dt1 dt2 == 0 [@@inline]
 
-exception Error of (Fmt.t -> unit)
+let rec map (f : string -> string) (dt : t) : t =
+  { path = f dt.path; deps = DepSet.map (map f) dt.deps }
 
 open struct
+  let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
+    let raise_f acc = raise (Exn acc) in
+    Fmt.kdly (fun acc -> raise_f (fun ppf -> Log.fmt_error ppf "%t" acc)) fmt
+
   let get_result (ic : in_channel) : string =
-    let res = Buffer.create Config.(!dflt_buf_sz) in
-    let rec get_result' () =
+    let rec get_result' res =
       match input_line ic with
       | line ->
         Buffer.add_string res line;
         Buffer.add_char res '\n';
-        get_result' ()
+        get_result' res
       | exception End_of_file -> Buffer.contents res in
-    get_result' ()
+    get_result' (Buffer.create Config.(!dflt_buf_sz))
 
   let dependency_tree_cmd (main_file : string) : string =
     let cmd = Fmt.str "dt %s" main_file in
@@ -32,69 +76,42 @@ open struct
 end
 
 open struct
-  let raise (format : ('a, Fmt.t, unit, 'b) format4) : 'a =
-    Fmt.kdly (fun raise_f -> raise (Error raise_f)) format
-
   let find_main_of_package (module_path : string) : (bool * string) option =
     let package_path = Filename.concat module_path "package.json" in
     if not (Sys.file_exists package_path) then None
     else
       let package = Json.from_file package_path in
       match Json.member "main" package with
-      | `String main ->
+      | `String main -> (
         let main_path = Filename.concat module_path main in
-        if not (Sys.file_exists main_path) then
-          raise "Unable to find the main file %S described in package.json."
-            main_path
-        else if Sys.is_directory main_path then Some (false, main_path)
-        else Some (true, main_path)
+        try Some (Sys.is_directory main_path, main_path)
+        with Sys_error _ ->
+          raise "Unable to find main module %S of 'package.json'." main_path )
       | _ -> None
 
   let find_main_of_module (module_path : string) : string =
-    (* https://docs.npmjs.com/cli/v10/configuring-npm/package-json#main *)
     match find_main_of_package module_path with
-    | Some (true, main_path) -> main_path
-    | Some (false, root_path) ->
+    | Some (false, main_path) -> Unix.realpath main_path
+    | Some (true, root_path) ->
       let index_path = Filename.concat root_path "index.js" in
-      if Sys.file_exists index_path then index_path
-      else raise "Unable to find index.js in directory %S." root_path
-    | None -> raise "Unable to find main file of module '%s'." module_path
+      if Sys.file_exists index_path then Unix.realpath index_path
+      else raise "Unable to find 'index.js' in directory %S." root_path
+    | None -> raise "Unable to find main module of directory %S." module_path
 
   let find_main_file (path : string) (mode : Mode.t) : string =
     match (Sys.is_directory path, mode) with
-    | (false, _) -> path
+    | (false, _) -> Unix.realpath path
     | (true, MultiFile) -> find_main_of_module path
-    | (true, Basic) | (true, SingleFile) ->
+    | (true, (Basic | SingleFile)) ->
       raise "Unable to perform Single-file analysis in directory %S." path
+    | exception Sys_error _ -> raise "Unable to find the provided path %S." path
 
   let generate_structure (main_file : string) : Mode.t -> string = function
-    | Basic | SingleFile -> Fmt.str "{%S:{}}" main_file
+    | Basic | SingleFile -> Fmt.str "{ %S : {} }" main_file
     | MultiFile -> dependency_tree_cmd main_file
 end
 
-let generate (path : string) (mode : Mode.t) : t =
+let generate (mode : Mode.t) (path : string) : t =
   let main_path = find_main_file path mode in
   let structure = generate_structure main_path mode in
-  { main_path; structure = Json.from_string structure }
-
-(* let get_main (dep_tree : t) : string = dep_tree.main *)
-(*  *)
-(* let bottom_up_visit (dep_tree : t) : string list = *)
-(* let rec visit (dep_tree : Yojson.Basic.t) (acc : string list) = *)
-(* match dep_tree with *)
-(* | `Assoc list -> *)
-(* List.fold_left *)
-(* (fun acc (file, child_deps) -> visit child_deps acc @ [ file ]) *)
-(* acc list *)
-(* | _ -> *)
-(* failwith "[ERROR] Error visiting dependency tree in bottom up approach" *)
-(* in *)
-(*  *)
-(* let visit_order = visit dep_tree.structure [] in *)
-(* remove duplicated from visit *)
-(* List.rev *)
-(* (List.fold_left *)
-(* (fun final_order curr -> *)
-(* if List.mem curr final_order then final_order else curr :: final_order *)
-(* ) *)
-(* [] visit_order ) *)
+  create (Json.from_string structure)

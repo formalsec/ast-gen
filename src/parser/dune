@@ -2,5 +2,5 @@
 
 (library
  (name graphjs_parser)
- (modules dependency_tree parser)
+ (modules dependency_tree javascript_parser)
  (libraries graphjs_base graphjs_config unix flow_parser))

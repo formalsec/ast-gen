@@ -164,11 +164,20 @@ let pp_str (font : t) : Fmt.t -> string -> unit = pp font Fmt.pp_str
 let pp_bool (font : t) : Fmt.t -> bool -> unit = pp font Fmt.pp_bool
 let pp_bytes (font : t) : Fmt.t -> bytes -> unit = pp font Fmt.pp_bytes
 
-let kfmt (font : t) (ppf_f : Fmt.t -> 'a) (ppf : Fmt.t)
-    (format : ('b, Fmt.t, unit, 'a) format4) : 'b =
-  let pp_format ppf fmt = Fmt.fmt ppf "%t" fmt in
-  Fmt.kdly (Fmt.kfmt ppf_f ppf "%a" (pp font pp_format)) format
+let kfmt (font : t) (k : Fmt.t -> 'a) (ppf : Fmt.t) :
+    ('b, Fmt.t, unit, 'a) format4 -> 'b =
+  let pp_fmt ppf = Fmt.fmt ppf "%t" in
+  Fmt.kdly (fun acc -> pp font pp_fmt ppf acc |> fun () -> k ppf)
 
-let fmt (font : t) (ppf : Fmt.t) (format : ('a, Fmt.t, unit) format) : 'a =
-  kfmt font ignore ppf format
+let kdly (font : t) (k : (Fmt.t -> unit) -> 'a) :
+    ('b, Fmt.t, unit, 'a) format4 -> 'b =
+  let pp_fmt ppf = Fmt.fmt ppf "%t" in
+  Fmt.kdly (fun acc -> k (fun ppf -> pp font pp_fmt ppf acc))
+
+let fmt (font : t) (ppf : Fmt.t) : ('a, Fmt.t, unit, unit) format4 -> 'a =
+  kfmt font ignore ppf
+[@@inline]
+
+let dly (font : t) : ('a, Fmt.t, unit, Fmt.t -> unit) format4 -> 'a =
+  kdly font Fun.id
 [@@inline]

@@ -2,32 +2,31 @@ open Format
 
 type t = formatter
 
-let kfmt (k : t -> 'a) (ppf : t) (format : ('b, t, unit, 'a) format4) : 'b =
-  kfprintf k ppf format
+let kfmt (k : t -> 'a) (ppf : t) (fmt : ('b, t, unit, 'a) format4) : 'b =
+  kfprintf k ppf fmt
 [@@inline]
 
-let kdly (k : (t -> unit) -> 'a) (format : ('b, t, unit, 'a) format4) : 'b =
-  kdprintf k format
+let kdly (k : (t -> unit) -> 'a) (fmt : ('b, t, unit, 'a) format4) : 'b =
+  kdprintf k fmt
 [@@inline]
 
-let kstr (k : string -> 'a) (format : ('b, t, unit, 'a) format4) : 'b =
-  kfprintf (fun _ -> k (flush_str_formatter ())) str_formatter format
+let kstr (k : string -> 'a) (fmt : ('b, t, unit, 'a) format4) : 'b =
+  kfprintf (fun _ -> k (flush_str_formatter ())) str_formatter fmt
 [@@inline]
 
-let ksstr (k : string -> 'a) (format : ('b, t, unit, 'a) format4) : 'b =
-  kasprintf k format
+let ksstr (k : string -> 'a) (fmt : ('b, t, unit, 'a) format4) : 'b =
+  kasprintf k fmt
 [@@inline]
 
-let fmt (ppf : t) (format : ('a, t, unit) format) : 'a = kfmt ignore ppf format
+let fmt (ppf : t) (fmt : ('a, t, unit, unit) format4) : 'a = kfmt ignore ppf fmt
 [@@inline]
 
-let dly (format : ('a, t, unit, t -> unit) format4) : 'a = kdly Fun.id format
+let dly (fmt : ('a, t, unit, t -> unit) format4) : 'a = kdly Fun.id fmt
 [@@inline]
 
-let str (format : ('a, t, unit, string) format4) : 'a = kstr Fun.id format
-[@@inline]
+let str (fmt : ('a, t, unit, string) format4) : 'a = kstr Fun.id fmt [@@inline]
 
-let sstr (format : ('a, t, unit, string) format4) : 'a = ksstr Fun.id format
+let sstr (fmt : ('a, t, unit, string) format4) : 'a = ksstr Fun.id fmt
 [@@inline]
 
 let kignore : (t -> 'a) -> t -> ('b, t, unit, 'a) format4 -> 'b = ikfprintf
