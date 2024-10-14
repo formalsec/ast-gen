@@ -34,7 +34,7 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot 
   let module_graphs = ModuleGraphs.empty () in
   List.iter
     (fun file_path ->
-      let dir = Fpath.parent @@ Fpath.v file_name in
+      let dir = Fpath.append (Fpath.v (Unix.getcwd ())) @@ Fpath.parent @@ Fpath.v file_path in
       let file_name = Fpath.base @@ Fpath.v file_path in
 
       (* STEP 0 : Generate AST using Flow library *)
