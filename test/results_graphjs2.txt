@@ -1,0 +1,2374 @@
+(257/2561) [NOK] language/statements/if/if-stmt-else-fun-strict.js	 norm [pass]	semantics [pass]
+(258/2561) [NOK] language/statements/if/if-fun-no-else-strict.js	 norm [pass]	semantics [pass]
+(259/2561) [NOK] language/statements/if/if-stmt-else-decl-strict.js	 norm [pass]	semantics [pass]
+(261/2561) [NOK] language/statements/if/if-fun-else-fun-strict.js	 norm [pass]	semantics [pass]
+(264/2561) [NOK] language/statements/if/if-decl-else-stmt-strict.js	 norm [pass]	semantics [pass]
+(274/2561) [NOK] language/statements/if/if-fun-else-stmt-strict.js	 norm [pass]	semantics [pass]
+(279/2561) [NOK] language/statements/if/if-decl-no-else-strict.js	 norm [pass]	semantics [pass]
+(280/2561) [NOK] language/statements/if/if-decl-else-decl-strict.js	 norm [pass]	semantics [pass]
+(297/2561) [NOK] language/statements/function/S13.2.1_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:391
+	let __func;
+	    ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(318/2561) [NOK] language/statements/function/S14_A2.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	v1 = typeof f;
+	^
+	
+	ReferenceError: Cannot access 'f' before initialization
+	    at [eval]:389:1
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(329/2561) [NOK] language/statements/function/S14_A3.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	v1 = typeof __func;
+	^
+	
+	ReferenceError: Cannot access '__func' before initialization
+	    at [eval]:389:1
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(336/2561) [NOK] language/statements/function/S13_A18.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	v1 = typeof sinx;
+	^
+	
+	ReferenceError: Cannot access 'sinx' before initialization
+	    at [eval]:389:1
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(342/2561) [NOK] language/statements/function/S13.2.2_A16_T1.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	v1 = typeof __func;
+	^
+	
+	ReferenceError: Cannot access '__func' before initialization
+	    at [eval]:389:1
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(357/2561) [NOK] language/statements/function/S13_A19_T1.js	 norm [pass]	semantics [fail]
+	[eval]:412
+	let __decl;
+	    ^
+	
+	SyntaxError: Identifier '__decl' has already been declared
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(369/2561) [NOK] language/statements/function/S13_A6_T1.js	 norm [pass]	semantics [fail]
+	[eval]:396
+	let __func;
+	    ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(395/2561) [NOK] language/statements/function/S13_A2_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: "#2: typeof __func === 'undefined'. Actual: typeof __func ===function"
+	}
+	
+	Node.js v22.9.0
+	
+(406/2561) [NOK] language/statements/function/S13.2.2_A15_T1.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	__obj = new __FACTORY();
+	^
+	
+	ReferenceError: Cannot access '__FACTORY' before initialization
+	    at [eval]:389:1
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(409/2561) [NOK] language/statements/function/S14_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	let __func;
+	    ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(416/2561) [NOK] language/statements/function/S13.2.2_A8_T1.js	 norm [pass]	semantics [fail]
+	[eval]:395
+	   __gunc.prop = arg2;
+	   ^
+	
+	ReferenceError: Cannot access '__gunc' before initialization
+	    at new __func ([eval]:395:4)
+	    at [eval]:406:14
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(428/2561) [NOK] language/statements/function/S13_A2_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: "#2: typeof __func === 'undefined'. Actual: typeof __func ===function"
+	}
+	
+	Node.js v22.9.0
+	
+(430/2561) [NOK] language/statements/function/S13_A1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#2: typeof __exp__func === "undefined". Actual: typeof __exp__func ===function'
+	}
+	
+	Node.js v22.9.0
+	
+(437/2561) [NOK] language/statements/function/S13.2.2_A15_T2.js	 norm [pass]	semantics [fail]
+	[eval]:390
+	__obj = new __FACTORY();
+	^
+	
+	ReferenceError: Cannot access '__FACTORY' before initialization
+	    at [eval]:390:1
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(438/2561) [NOK] language/statements/function/S14_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	let __func;
+	    ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(451/2561) [NOK] language/statements/function/S13_A19_T2.js	 norm [pass]	semantics [fail]
+	[eval]:414
+	   let __decl;
+	       ^
+	
+	SyntaxError: Identifier '__decl' has already been declared
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(468/2561) [NOK] language/statements/function/S13_A6_T2.js	 norm [pass]	semantics [fail]
+	[eval]:419
+	let __func;
+	    ^
+	
+	SyntaxError: Identifier '__func' has already been declared
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(472/2561) [NOK] language/statements/function/S13_A2_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: "#2: typeof __func === 'undefined'. Actual: typeof __func ===function"
+	}
+	
+	Node.js v22.9.0
+	
+(496/2561) [NOK] language/statements/function/S13.2.2_A16_T2.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	v1 = typeof __func;
+	^
+	
+	ReferenceError: Cannot access '__func' before initialization
+	    at [eval]:389:1
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(508/2561) [NOK] language/statements/function/S13.2.2_A16_T3.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	v1 = typeof __func;
+	^
+	
+	ReferenceError: Cannot access '__func' before initialization
+	    at [eval]:389:1
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(516/2561) [NOK] language/statements/function/S13.2.2_A12.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: "#1: var obj = new FACTORY() does not lead to throwing exception. Actual: Exception is ReferenceError: Cannot access 'func' before initialization"
+	}
+	
+	Node.js v22.9.0
+	
+(533/2561) [NOK] language/statements/labeled/decl-fun-strict.js	 norm [pass]	semantics [pass]
+(575/2561) [NOK] language/statements/for/S12.6.3_A11.1_T1.js	 norm [pass]	semantics [tout]
+(601/2561) [NOK] language/statements/for/S12.6.3_A11_T1.js	 norm [pass]	semantics [tout]
+(605/2561) [NOK] language/statements/for/S12.6.3_A11_T2.js	 norm [pass]	semantics [fail]
+	[eval]:407
+	               continue nested;
+	                        ^^^^^^
+	
+	SyntaxError: Illegal continue statement: 'nested' does not denote an iteration statement
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(630/2561) [NOK] language/statements/for/S12.6.3_A11.1_T2.js	 norm [pass]	semantics [fail]
+	[eval]:407
+	               continue nested;
+	                        ^^^^^^
+	
+	SyntaxError: Illegal continue statement: 'nested' does not denote an iteration statement
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(662/2561) [NOK] language/statements/try/S12.14_A9_T4.js	 norm [pass]	semantics [tout]
+(665/2561) [NOK] language/statements/try/S12.14_A11_T2.js	 norm [pass]	semantics [tout]
+(668/2561) [NOK] language/statements/try/S12.14_A9_T5.js	 norm [pass]	semantics [tout]
+(683/2561) [NOK] language/statements/try/S12.14_A10_T2.js	 norm [pass]	semantics [tout]
+(701/2561) [NOK] language/statements/try/S12.14_A10_T4.js	 norm [pass]	semantics [tout]
+(717/2561) [NOK] language/statements/try/S12.14_A10_T5.js	 norm [pass]	semantics [tout]
+(722/2561) [NOK] language/statements/try/S12.14_A9_T2.js	 norm [pass]	semantics [tout]
+(729/2561) [NOK] language/statements/try/S12.14_A11_T4.js	 norm [pass]	semantics [tout]
+(764/2561) [NOK] language/statements/for-in/S12.6.4_A7_T2.js	 norm [pass]	semantics [fail]
+	[eval]:398
+	   v2 = erasator_T_1000(__obj, "b");
+	   ^
+	
+	ReferenceError: Cannot access 'erasator_T_1000' before initialization
+	    at [eval]:398:4
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(795/2561) [NOK] language/statements/for-in/S12.6.4_A7_T1.js	 norm [pass]	semantics [fail]
+	[eval]:399
+	   v2 = erasator_T_1000(__obj, "b");
+	   ^
+	
+	ReferenceError: Cannot access 'erasator_T_1000' before initialization
+	    at [eval]:399:4
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(798/2561) [NOK] language/statements/continue/line-terminators.js	 norm [pass]	semantics [tout]
+(807/2561) [NOK] language/statements/continue/S12.7_A9_T1.js	 norm [pass]	semantics [fail]
+	[eval]:408
+	            continue FOR;
+	                     ^^^
+	
+	SyntaxError: Illegal continue statement: 'FOR' does not denote an iteration statement
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(812/2561) [NOK] language/statements/continue/12.7-1.js	 norm [pass]	semantics [tout]
+(821/2561) [NOK] language/statements/while/S12.6.2_A10.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: FunctionExpression inside while construction expression allowed but function not declare'
+	}
+	
+	Node.js v22.9.0
+	
+(962/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 3. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(968/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 3. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(971/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(993/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:407
+	   x = v6 + 1;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:407:6)
+	    at [eval]:411:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(994/2561) [NOK] language/expressions/postfix-increment/S11.3.1_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 3. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1138/2561) [NOK] language/expressions/delete/11.4.1-2-2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v22.9.0
+	
+(1155/2561) [NOK] language/expressions/delete/11.4.1-0-1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'delete delete z' }
+	
+	Node.js v22.9.0
+	
+(1166/2561) [NOK] language/expressions/delete/non-reference-return-true.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'delete void a.b Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v22.9.0
+	
+(1176/2561) [NOK] language/expressions/delete/S11.4.1_A2.1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#2: delete new Object() === true' }
+	
+	Node.js v22.9.0
+	
+(1211/2561) [NOK] language/expressions/delete/11.4.1-2-5.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'd Expected SameValue(<<false>>, <<true>>) to be true'
+	}
+	
+	Node.js v22.9.0
+	
+(1236/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1239/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:407
+	   x = v6 - 1;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:407:6)
+	    at [eval]:411:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(1240/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1246/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1257/2561) [NOK] language/expressions/postfix-decrement/S11.3.2_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(1334/2561) [NOK] language/expressions/array/11.1.4_5-6-1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'arr.hasOwnProperty("1") !== true' }
+	
+	Node.js v22.9.0
+	
+(1337/2561) [NOK] language/expressions/array/11.1.4_4-5-1.js	 norm [pass]	semantics [fail]
+	Test262Error: arr.hasOwnProperty("0") !== true
+	(Use `node --trace-uncaught ...` to show where the exception was thrown)
+	
+	Node.js v22.9.0
+	
+(1349/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:407
+	   x = v6 + 1;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:407:6)
+	    at [eval]:411:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(1351/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 3. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1355/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 3. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1357/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 3. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1366/2561) [NOK] language/expressions/prefix-increment/S11.4.4_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(1435/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:407
+	   x = v6 - 1;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:407:6)
+	    at [eval]:411:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(1438/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1442/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1444/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1452/2561) [NOK] language/expressions/prefix-decrement/S11.4.5_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(1456/2561) [NOK] language/expressions/assignment/11.13.1-1-4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a ReferenceError but got a SyntaxError'
+	}
+	
+	Node.js v22.9.0
+	
+(1457/2561) [NOK] language/expressions/assignment/S11.13.1_A6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 1' }
+	
+	Node.js v22.9.0
+	
+(1459/2561) [NOK] language/expressions/assignment/S11.13.1_A6_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 1' }
+	
+	Node.js v22.9.0
+	
+(1464/2561) [NOK] language/expressions/assignment/11.13.1-1-1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a ReferenceError but got a SyntaxError'
+	}
+	
+	Node.js v22.9.0
+	
+(1469/2561) [NOK] language/expressions/assignment/S11.13.1_A7_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(1473/2561) [NOK] language/expressions/assignment/S11.13.1_A5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 2. Actual: undefined' }
+	
+	Node.js v22.9.0
+	
+(1478/2561) [NOK] language/expressions/assignment/S11.13.1_A5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: undefined' }
+	
+	Node.js v22.9.0
+	
+(1481/2561) [NOK] language/expressions/assignment/S11.13.1_A7_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(1491/2561) [NOK] language/expressions/assignment/S11.13.1_A5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: undefined' }
+	
+	Node.js v22.9.0
+	
+(1494/2561) [NOK] language/expressions/assignment/S11.13.1_A7_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(1497/2561) [NOK] language/expressions/assignment/S11.13.1_A5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:406
+	   x = v6;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v3 ([eval]:406:6)
+	    at [eval]:409:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(1507/2561) [NOK] language/expressions/assignment/S11.13.1_A6_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === undefined. Actual: 1' }
+	
+	Node.js v22.9.0
+	
+(1510/2561) [NOK] language/expressions/assignment/11.13.1-1-2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a ReferenceError but got a SyntaxError'
+	}
+	
+	Node.js v22.9.0
+	
+(1512/2561) [NOK] language/expressions/assignment/11.13.1-1-3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a ReferenceError but got a SyntaxError'
+	}
+	
+	Node.js v22.9.0
+	
+(1522/2561) [NOK] language/expressions/function/scope-name-var-close.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected SameValue(<<outside>>, <<function () {\n' +
+	    '   probe = function () {\n' +
+	    '      return f;\n' +
+	    '   }\n' +
+	    '}>>) to be true'
+	}
+	
+	Node.js v22.9.0
+	
+(1673/2561) [NOK] language/expressions/call/S11.2.3_A3_T2.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 663, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1679/2561) [NOK] language/expressions/call/11.2.3-3_3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'fooCalled Expected SameValue(<<true>>, <<false>>) to be true'
+	}
+	
+	Node.js v22.9.0
+	
+(1683/2561) [NOK] language/expressions/call/S11.2.3_A3_T3.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 663, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1688/2561) [NOK] language/expressions/call/S11.2.4_A1.4_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1.2: function f_arg() {} f_arg(x,x=1) throw ReferenceError. Actual: Test262Error: #1.1: function f_arg() {} f_arg(x,x=1) throw ReferenceError. Actual: undefined'
+	}
+	
+	Node.js v22.9.0
+	
+(1697/2561) [NOK] language/expressions/call/S11.2.3_A4_T4.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 663, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1698/2561) [NOK] language/expressions/call/scope-lex-open.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected SameValue(<<function () {\n' +
+	    '   let name;\n' +
+	    "   name = 'inside';\n" +
+	    '   probeInside = function () {\n' +
+	    '      return name;\n' +
+	    '   }\n' +
+	    '}>>, <<outside>>) to be true'
+	}
+	
+	Node.js v22.9.0
+	
+(1699/2561) [NOK] language/expressions/call/scope-var-open.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected SameValue(<<function () {\n' +
+	    '   var name;\n' +
+	    '   probeBody = function () {\n' +
+	    '      return name;\n' +
+	    '   }\n' +
+	    '}>>, <<outside>>) to be true'
+	}
+	
+	Node.js v22.9.0
+	
+(1705/2561) [NOK] language/expressions/call/S11.2.3_A3_T1.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 663, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1708/2561) [NOK] language/expressions/call/S11.2.3_A3_T5.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 663, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1767/2561) [NOK] language/expressions/object/11.1.5_3-3-1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'obj.hasOwnProperty("prop") !== true' }
+	
+	Node.js v22.9.0
+	
+(1801/2561) [NOK] language/expressions/object/11.1.5_4-5-1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'obj.hasOwnProperty("prop2") !== true' }
+	
+	Node.js v22.9.0
+	
+(1900/2561) [NOK] language/expressions/new/S11.2.2_A3_T2.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 590, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1902/2561) [NOK] language/expressions/new/ctorExpr-fn-ref-before-args-eval.js	 norm [pass]	semantics [fail]
+	[eval]:394
+	result = new x(x);
+	         ^
+	
+	TypeError: x is not a constructor
+	    at [eval]:394:10
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(1903/2561) [NOK] language/expressions/new/S11.2.2_A3_T3.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 590, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1905/2561) [NOK] language/expressions/new/ctorExpr-isCtor-after-args-eval.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+	}
+	
+	Node.js v22.9.0
+	
+(1906/2561) [NOK] language/expressions/new/ctorExpr-fn-ref-before-args-eval-fn-wrapup.js	 norm [pass]	semantics [fail]
+	[eval]:396
+	   result = new x(x);
+	            ^
+	
+	TypeError: x is not a constructor
+	    at fn ([eval]:396:13)
+	    at [eval]:407:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(1910/2561) [NOK] language/expressions/new/ctorExpr-isCtor-after-args-eval-fn-wrapup.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+	}
+	
+	Node.js v22.9.0
+	
+(1911/2561) [NOK] language/expressions/new/S11.2.2_A4_T4.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 590, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1914/2561) [NOK] language/expressions/new/S11.2.2_A3_T1.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 590, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1916/2561) [NOK] language/expressions/new/S11.2.2_A3_T5.js	 norm [fail]	semantics []
+	graphjs2: internal error, uncaught exception:
+	          Failure("[ERROR] Attempted to convert an expression into an identifier, but the expression provided does not correspond to a valid identifier.")
+	          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+	          Called from Ast__Normalize.normalize_expression in file "lib/ast/normalize.ml", line 590, characters 54-107
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 290, characters 24-50
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 71, characters 23-39
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml" (inlined), line 60, characters 12-45
+	          Called from Ast__Normalize.normalize_statement in file "lib/ast/normalize.ml", line 176, characters 24-53
+	          Called from Stdlib__List.map in file "list.ml", line 92, characters 20-23
+	          Called from Ast__Normalize.program in file "lib/ast/normalize.ml", line 53, characters 26-83
+	          Called from Dune__exe__Main.main.(fun) in file "bin/main.ml", line 44, characters 25-60
+	          Called from Stdlib__List.iter in file "list.ml", line 110, characters 12-15
+	          Called from Dune__exe__Main.main in file "bin/main.ml", line 35, characters 2-1023
+	          Called from Cmdliner_term.app.(fun) in file "cmdliner_term.ml", line 24, characters 19-24
+	          Called from Cmdliner_eval.run_parser in file "cmdliner_eval.ml", line 35, characters 37-44
+	
+(1918/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x * 3;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(1921/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 6. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1924/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(1926/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.10_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 6' }
+	
+	Node.js v22.9.0
+	
+(1930/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 1. Actual: 5' }
+	
+	Node.js v22.9.0
+	
+(1932/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(1933/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(1946/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 5' }
+	
+	Node.js v22.9.0
+	
+(1947/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.2_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: '#1: innerX === 2. Actual: 0.6666666666666666'
+	}
+	
+	Node.js v22.9.0
+	
+(1953/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 6. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1969/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(1972/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x % 3;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(1973/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(1977/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(1979/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(1982/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x >> 3;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(1986/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(1991/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.4_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 3' }
+	
+	Node.js v22.9.0
+	
+(2003/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 6. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2004/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.6_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 16' }
+	
+	Node.js v22.9.0
+	
+(2008/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 16' }
+	
+	Node.js v22.9.0
+	
+(2010/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 5' }
+	
+	Node.js v22.9.0
+	
+(2011/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2018/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(2021/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x - 1;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(2029/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2037/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.1_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 8' }
+	
+	Node.js v22.9.0
+	
+(2044/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(2046/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x / 3;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(2050/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2055/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2056/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2057/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2058/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.11_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 6' }
+	
+	Node.js v22.9.0
+	
+(2062/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 2. Actual: 16' }
+	
+	Node.js v22.9.0
+	
+(2064/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(2065/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2069/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 6' }
+	
+	Node.js v22.9.0
+	
+(2070/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.3_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#2: x === 3. Actual: 7' }
+	
+	Node.js v22.9.0
+	
+(2081/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2083/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.7_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 1' }
+	
+	Node.js v22.9.0
+	
+(2085/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 16. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2086/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 16' }
+	
+	Node.js v22.9.0
+	
+(2089/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2093/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2096/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x + 1;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(2104/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(2105/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(2106/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x << 3;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(2107/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(2115/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2127/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 3. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2130/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.5_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 1' }
+	
+	Node.js v22.9.0
+	
+(2132/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2134/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 16' }
+	
+	Node.js v22.9.0
+	
+(2135/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 16. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2137/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.9_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#2: x === 1. Actual: 5' }
+	
+	Node.js v22.9.0
+	
+(2139/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2145/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 2. Actual: 6' }
+	
+	Node.js v22.9.0
+	
+(2147/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2156/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.8_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x >>> 3;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(2158/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(2166/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2167/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2174/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 3. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2182/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.1_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2183/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x ^ 3;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(2188/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2195/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.4_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 3. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2198/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.7_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2200/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.9_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2201/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 16. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2205/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.11_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2207/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.10_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2212/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.2_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 6' }
+	
+	Node.js v22.9.0
+	
+(2213/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.3_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2227/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 6. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2235/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T4.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: 'Expected true but got false' }
+	
+	Node.js v22.9.0
+	
+(2238/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x & 3;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(2242/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2247/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2257/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.9_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 1. Actual: 5' }
+	
+	Node.js v22.9.0
+	
+(2259/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 16' }
+	
+	Node.js v22.9.0
+	
+(2261/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A6.8_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerX === 2. Actual: 1' }
+	
+	Node.js v22.9.0
+	
+(2263/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2266/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2281/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2286/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 2. Actual: 5' }
+	
+	Node.js v22.9.0
+	
+(2292/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 6. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2296/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.7_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 2. Actual: 16' }
+	
+	Node.js v22.9.0
+	
+(2298/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.10_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2303/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.6_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2305/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.8_T1.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2316/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.2_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2318/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.3_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 2. Actual: 5' }
+	
+	Node.js v22.9.0
+	
+(2322/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.11_T5.js	 norm [pass]	semantics [fail]
+	[eval]:405
+	   x = x | 4;
+	     ^
+	
+	ReferenceError: x is not defined
+	    at v5 ([eval]:405:6)
+	    at [eval]:408:6
+	    at runScriptInThisContext (node:internal/vm:209:10)
+	    at node:internal/process/execution:118:14
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(2324/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.1_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: scope.x === 6. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2337/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A5.5_T3.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error { message: '#1: innerScope.x === 1. Actual: 2' }
+	
+	Node.js v22.9.0
+	
+(2341/2561) [NOK] language/expressions/compound-assignment/S11.13.2_A7.4_T2.js	 norm [pass]	semantics [fail]
+	[eval]:15
+	    throw new Test262Error(message);
+	    ^
+	
+	Test262Error {
+	  message: 'Expected a DummyError but got a Test262Error'
+	}
+	
+	Node.js v22.9.0
+	
+(2559/2561) [NOK] language/expressions/dynamic-import/catch/script-code_FIXTURE.js	 norm [pass]	semantics [fail]
+	[eval]:389
+	let smoosh;
+	    ^
+	
+	SyntaxError: Identifier 'smoosh' has already been declared
+	    at makeContextifyScript (node:internal/vm:185:14)
+	    at node:internal/process/execution:107:22
+	    at [eval]-wrapper:6:24
+	    at runScript (node:internal/process/execution:101:62)
+	    at evalScript (node:internal/process/execution:136:3)
+	    at node:internal/main/eval_string:55:3
+	
+	Node.js v22.9.0
+	
+(PASSED 100.0%)	language/statements/with	 total: 153   failed : 0   timeout : 0    time : 6.739ms
+(PASSED 94.7%)	Control Flow Statements	 total: 507   failed : 24   timeout : 12    time : 7.1573ms
+(PASSED 100.0%)	language/statements/empty	 total: 1   failed : 0   timeout : 0    time : 5.8925ms
+(PASSED 99.1%)	Miscellaneous Expressions and Statements	 total: 108   failed : 1   timeout : 0    time : 6.4487ms
+(PASSED 100.0%)	language/statements/variable	 total: 92   failed : 0   timeout : 0    time : 6.5021ms
+(PASSED 80.8%)	Variable and Assignment Handling	 total: 588   failed : 113   timeout : 0    time : 6.7534ms
+(PASSED 100.0%)	language/statements/async-function	 total: 1   failed : 0   timeout : 0    time : 5.915ms
+(PASSED 87.1%)	Function and Async Handling	 total: 311   failed : 40   timeout : 0    time : 6.1731ms
+(PASSED 75.8%)	language/statements/if	 total: 33   failed : 16   timeout : 0    time : 6.0011ms
+(PASSED 100.0%)	language/statements/return	 total: 16   failed : 0   timeout : 0    time : 5.6895ms
+(PASSED 91.0%)	language/statements/function	 total: 234   failed : 21   timeout : 0    time : 6.1061ms
+(PASSED 83.3%)	language/statements/labeled	 total: 6   failed : 2   timeout : 0    time : 5.9838ms
+(PASSED 100.0%)	language/statements/throw	 total: 14   failed : 0   timeout : 0    time : 6.0792ms
+(PASSED 100.0%)	language/statements/do-while	 total: 24   failed : 0   timeout : 0    time : 5.7765ms
+(PASSED 94.0%)	language/statements/for	 total: 67   failed : 2   timeout : 2    time : 7.6099ms
+(PASSED 100.0%)	language/statements/switch	 total: 14   failed : 0   timeout : 0    time : 5.7156ms
+(PASSED 90.5%)	language/statements/try	 total: 84   failed : 0   timeout : 8    time : 9.0454ms
+(PASSED 100.0%)	language/statements/expression	 total: 3   failed : 0   timeout : 0    time : 6.5661ms
+(PASSED 100.0%)	language/statements/break	 total: 20   failed : 0   timeout : 0    time : 7.7477ms
+(PASSED 94.1%)	language/statements/for-in	 total: 34   failed : 2   timeout : 0    time : 8.0211ms
+(PASSED 81.2%)	language/statements/continue	 total: 16   failed : 1   timeout : 2    time : 6.5587ms
+(PASSED 96.0%)	language/statements/while	 total: 25   failed : 1   timeout : 0    time : 6.2882ms
+(PASSED 100.0%)	language/statements/block	 total: 12   failed : 0   timeout : 0    time : 6.1057ms
+(PASSED 100.0%)	language/statements/switch/syntax/redeclaration	 total: 1   failed : 0   timeout : 0    time : 5.9555ms
+(PASSED 100.0%)	language/expressions/modulus	 total: 33   failed : 0   timeout : 0    time : 6.5833ms
+(PASSED 100.0%)	Arithmetic and Bitwise Operations	 total: 390   failed : 0   timeout : 0    time : 6.8379ms
+(PASSED 100.0%)	language/expressions/bitwise-and	 total: 23   failed : 0   timeout : 0    time : 7.0216ms
+(PASSED 100.0%)	language/expressions/dynamic-import	 total: 1   failed : 0   timeout : 0    time : 6.01ms
+(PASSED 100.0%)	language/expressions/relational	 total: 1   failed : 0   timeout : 0    time : 6.0266ms
+(PASSED 100.0%)	Logical and Conditional Expressions	 total: 327   failed : 0   timeout : 0    time : 6.981ms
+(PASSED 100.0%)	language/expressions/less-than	 total: 37   failed : 0   timeout : 0    time : 6.3692ms
+(PASSED 100.0%)	language/expressions/concatenation	 total: 5   failed : 0   timeout : 0    time : 6.3179ms
+(PASSED 100.0%)	language/expressions/unary-plus	 total: 10   failed : 0   timeout : 0    time : 7.2651ms
+(PASSED 87.8%)	language/expressions/postfix-increment	 total: 41   failed : 5   timeout : 0    time : 9.0644ms
+(PASSED 86.0%)	Postfix and Prefix Operations	 total: 143   failed : 20   timeout : 0    time : 7.9932ms
+(PASSED 100.0%)	language/expressions/property-accessors	 total: 20   failed : 0   timeout : 0    time : 6.6283ms
+(PASSED 95.2%)	Object and Array Handling	 total: 187   failed : 9   timeout : 0    time : 6.6671ms
+(PASSED 100.0%)	language/expressions/logical-and	 total: 16   failed : 0   timeout : 0    time : 6.1558ms
+(PASSED 100.0%)	language/expressions/division	 total: 38   failed : 0   timeout : 0    time : 6.6198ms
+(PASSED 100.0%)	language/expressions/conditional	 total: 15   failed : 0   timeout : 0    time : 6.7655ms
+(PASSED 100.0%)	language/expressions/instanceof	 total: 39   failed : 0   timeout : 0    time : 6.2455ms
+(PASSED 94.4%)	language/expressions/delete	 total: 89   failed : 5   timeout : 0    time : 6.5192ms
+(PASSED 87.2%)	language/expressions/postfix-decrement	 total: 39   failed : 5   timeout : 0    time : 8.6989ms
+(PASSED 100.0%)	language/expressions/greater-than-or-equal	 total: 37   failed : 0   timeout : 0    time : 7.3082ms
+(PASSED 100.0%)	language/expressions/subtraction	 total: 32   failed : 0   timeout : 0    time : 6.8022ms
+(PASSED 81.8%)	language/expressions/array	 total: 11   failed : 2   timeout : 0    time : 6.2379ms
+(PASSED 83.9%)	language/expressions/prefix-increment	 total: 31   failed : 5   timeout : 0    time : 7.2373ms
+(PASSED 100.0%)	language/expressions/does-not-equals	 total: 30   failed : 0   timeout : 0    time : 6.3734ms
+(PASSED 100.0%)	language/expressions/in	 total: 14   failed : 0   timeout : 0    time : 7.3108ms
+(PASSED 100.0%)	language/expressions/grouping	 total: 10   failed : 0   timeout : 0    time : 6.5085ms
+(PASSED 84.4%)	language/expressions/prefix-decrement	 total: 32   failed : 5   timeout : 0    time : 6.7069ms
+(PASSED 76.3%)	language/expressions/assignment	 total: 59   failed : 14   timeout : 0    time : 7.1441ms
+(PASSED 100.0%)	language/expressions/comma	 total: 5   failed : 0   timeout : 0    time : 9.5126ms
+(PASSED 100.0%)	language/expressions/exponentiation	 total: 1   failed : 0   timeout : 0    time : 6.6965ms
+(PASSED 95.2%)	language/expressions/function	 total: 21   failed : 1   timeout : 0    time : 6.5687ms
+(PASSED 100.0%)	language/expressions/strict-does-not-equals	 total: 22   failed : 0   timeout : 0    time : 8.619ms
+(PASSED 100.0%)	language/expressions/unsigned-right-shift	 total: 38   failed : 0   timeout : 0    time : 7.1357ms
+(PASSED 100.0%)	language/expressions/equals	 total: 31   failed : 0   timeout : 0    time : 6.5419ms
+(PASSED 100.0%)	language/expressions/logical-not	 total: 17   failed : 0   timeout : 0    time : 8.0273ms
+(PASSED 100.0%)	language/expressions/bitwise-xor	 total: 23   failed : 0   timeout : 0    time : 6.295ms
+(PASSED 76.3%)	language/expressions/call	 total: 38   failed : 9   timeout : 0    time : 6.4826ms
+(PASSED 100.0%)	language/expressions/greater-than	 total: 41   failed : 0   timeout : 0    time : 6.2442ms
+(PASSED 96.2%)	language/expressions/object	 total: 53   failed : 2   timeout : 0    time : 6.8639ms
+(PASSED 100.0%)	language/expressions/bitwise-or	 total: 23   failed : 0   timeout : 0    time : 6.5412ms
+(PASSED 100.0%)	language/expressions/void	 total: 9   failed : 0   timeout : 0    time : 6.4236ms
+(PASSED 100.0%)	language/expressions/less-than-or-equal	 total: 42   failed : 0   timeout : 0    time : 6.3669ms
+(PASSED 100.0%)	language/expressions/strict-equals	 total: 22   failed : 0   timeout : 0    time : 9.3443ms
+(PASSED 47.1%)	language/expressions/new	 total: 17   failed : 9   timeout : 0    time : 6.1144ms
+(PASSED 77.0%)	language/expressions/compound-assignment	 total: 430   failed : 99   timeout : 0    time : 6.7628ms
+(PASSED 100.0%)	language/expressions/this	 total: 7   failed : 0   timeout : 0    time : 5.9217ms
+(PASSED 100.0%)	language/expressions/bitwise-not	 total: 14   failed : 0   timeout : 0    time : 6.1368ms
+(PASSED 100.0%)	language/expressions/logical-or	 total: 16   failed : 0   timeout : 0    time : 7.6034ms
+(PASSED 100.0%)	language/expressions/right-shift	 total: 30   failed : 0   timeout : 0    time : 7.9035ms
+(PASSED 100.0%)	language/expressions/multiplication	 total: 34   failed : 0   timeout : 0    time : 6.2345ms
+(PASSED 100.0%)	language/expressions/unary-minus	 total: 12   failed : 0   timeout : 0    time : 6.5984ms
+(PASSED 100.0%)	language/expressions/assignmenttargettype	 total: 7   failed : 0   timeout : 0    time : 5.9722ms
+(PASSED 100.0%)	language/expressions/left-shift	 total: 38   failed : 0   timeout : 0    time : 7.263ms
+(PASSED 100.0%)	language/expressions/typeof	 total: 12   failed : 0   timeout : 0    time : 6.5097ms
+(PASSED 100.0%)	language/expressions/addition	 total: 41   failed : 0   timeout : 0    time : 6.9ms
+(PASSED 100.0%)	language/expressions/dynamic-import/namespace	 total: 1   failed : 0   timeout : 0    time : 6.6471ms
+(PASSED 0.0%)	language/expressions/dynamic-import/catch	 total: 1   failed : 1   timeout : 0    time : 6.2964ms
+(PASSED 100.0%)	language/expressions/dynamic-import/syntax/valid	 total: 1   failed : 0   timeout : 0    time : 6.3159ms
+(PASSED 100.0%)	language/expressions/import.meta/syntax	 total: 1   failed : 0   timeout : 0    time : 6.0396ms
+Control Flow Statements:
+---------------
+  - total: 507
+  - failed : 24
+  - timeout : 12
+  - time : 7.1573ms
+---------------
+Miscellaneous Expressions and Statements:
+---------------
+  - total: 108
+  - failed : 1
+  - timeout : 0
+  - time : 6.4487ms
+---------------
+Variable and Assignment Handling:
+---------------
+  - total: 588
+  - failed : 113
+  - timeout : 0
+  - time : 6.7534ms
+---------------
+Function and Async Handling:
+---------------
+  - total: 311
+  - failed : 40
+  - timeout : 0
+  - time : 6.1731ms
+---------------
+Arithmetic and Bitwise Operations:
+---------------
+  - total: 390
+  - failed : 0
+  - timeout : 0
+  - time : 6.8379ms
+---------------
+Logical and Conditional Expressions:
+---------------
+  - total: 327
+  - failed : 0
+  - timeout : 0
+  - time : 6.981ms
+---------------
+Postfix and Prefix Operations:
+---------------
+  - total: 143
+  - failed : 20
+  - timeout : 0
+  - time : 7.9932ms
+---------------
+Object and Array Handling:
+---------------
+  - total: 187
+  - failed : 9
+  - timeout : 0
+  - time : 6.6671ms
+---------------
+
+
+    ==============================
+    total : 2561
+    ok    : 2351
+    error : 19 + 188 (normalization + semantics)
+    timeout : 12
+    time : 6.0396ms
+    ==============================
+    

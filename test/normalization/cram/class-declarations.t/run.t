@@ -27,6 +27,7 @@
      v4 = v3.constructor;
      let v5;
      v5 = v4();
+     v5;
   }
   let v2;
   v2 = new Bar();
@@ -35,6 +36,7 @@
   v6 = function () {
      let v7;
      v7 = 1 + 2;
+     v7;
   }
   v2.foo = v6;
   

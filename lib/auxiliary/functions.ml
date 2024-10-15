@@ -25,6 +25,6 @@ let hd_opt (lst : 'a list) : 'a option =
 
 let split3 (lst : ('a * 'b * 'c) list) : 'a list * 'b list * 'c list  =
   let rec aux lst (xs, ys, zs) = match lst with
-    | [] -> (xs, ys, zs)
+    | [] -> (List.rev xs, List.rev ys, List.rev zs)
     | (x, y, z)::tail -> aux tail (x::xs, y::ys, z::zs)
   in aux lst ([], [], [])
