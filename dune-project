@@ -1,4 +1,4 @@
-(lang dune 3.12)
+(lang dune 3.2)
 
 (using dune_site 0.1)
 
@@ -30,6 +30,7 @@
   ocamlgraph
   dune
   dune-site
+  (ppx_inline_test :with-test)
   yojson
   bos
   cmdliner

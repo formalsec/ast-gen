@@ -20,8 +20,9 @@ bug-reports: "https://github.com/formalsec/ast-gen/issues"
 depends: [
   "ocaml" {>= "4.14.1"}
   "ocamlgraph"
-  "dune" {>= "3.12"}
+  "dune" {>= "3.2"}
   "dune-site"
+  "ppx_inline_test" {with-test}
   "yojson"
   "bos"
   "cmdliner"

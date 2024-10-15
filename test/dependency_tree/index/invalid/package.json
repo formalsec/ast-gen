@@ -1,0 +1,5 @@
+{
+  "name": "index-invalid",
+  "description": "A package for testing dependency tree generation",
+  "main": "main"
+}
