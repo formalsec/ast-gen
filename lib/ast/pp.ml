@@ -67,6 +67,7 @@ module Js = struct
       | _, Labeled {label; body} ->
         let label' = print_identifier label in
         let new_identation = identation + spaces_per_identation in
+        
         let body' = print_stmts body new_identation in 
         identation_str ^ label' ^ ": {\n" ^ body' ^ identation_str ^ "}\n"
 
@@ -163,9 +164,9 @@ module Js = struct
         let argument' = map_default ((^) " " << print_expr) "" argument in
         identation_str ^ left' ^ " = yield" ^ argument' ^ ";\n" 
 
-      | _, AssignArray {left; _} ->
+      | _, AssignArray {left; size; _} ->
         let left' = print_identifier left in
-        identation_str ^ left' ^ " = [];\n"
+        identation_str ^ left' ^ " = new Array(" ^ string_of_int size ^ ");\n"
 
       | _, AssignObject {left; _} -> 
         let left' = print_identifier left in
@@ -238,9 +239,6 @@ module Js = struct
         
         identation_str ^ left' ^ " = " ^ _object' ^ "[" ^ property' ^ "];\n"
       
-      | _,  UseStrict _ ->
-        identation_str ^ "\"use strict\";\n"
-
       | _, AssignFunction {left; params; body; _} ->
         let left' = print_identifier left in 
         let params' = List.map print_param params in 
@@ -248,6 +246,8 @@ module Js = struct
         let body' = print_stmts body new_identation in 
 
         identation_str ^ left' ^ " = function (" ^ (String.concat ", " params') ^ ") {\n" ^ body' ^ identation_str ^ "}\n"
+      
+      | _, Expression expr -> identation_str ^ print_expr expr ^ ";\n"
 
     and print_expr (expr : m Expression.t): string =
     match expr with 
@@ -260,18 +260,6 @@ module Js = struct
       
       let quasi_expr = List.map (fun (raw, expr) -> raw ^ (if expr != "" then "${" ^ expr ^ "}" else "")) (List.combine quasis' (expressions' @ [""])) in
       "`" ^ String.concat "" quasi_expr ^ "`"
-    
-    (* 
-    | _, TaggedTemplate {tag; quasi} -> 
-      let tag' = print_expr tag in 
-      let quasi' = print_expr (Location.empty, Expression.TemplateLiteral quasi) in 
-      
-      tag' ^ quasi'
-
-    | _, MetaProperty {meta; property} ->
-      let meta' = print_identifier meta) in 
-      let property' = print_identifier property) in 
-      meta' ^ "." ^ property' *)
       
 
   and print_stmts (stmts : m Statement.t list) (identation : int): string =
@@ -306,6 +294,6 @@ module Js = struct
     let new_identation = identation + spaces_per_identation in
     let body' = print_stmts body new_identation in 
 
-    identation_str ^ "catch " ^ param' ^ "{\n" ^ body' ^ identation_str ^ "}"
+    "catch " ^ param' ^ "{\n" ^ body' ^ identation_str ^ "}"
 
 end

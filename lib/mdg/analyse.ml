@@ -185,7 +185,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
 
       (* -------- N E W   O B J E C T -------- *)
-      | loc, AssignArray {id; left}
+      | loc, AssignArray {id; left; _}
       | loc, AssignObject {id; left} ->
         let l_i = alloc id in
         store_update left (LocationSet.singleton l_i);
@@ -306,7 +306,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       | _, ExportNamedDecl   _
       | _, ImportDecl        _
 
-      | _, UseStrict _ 
+      | _, Expression _ 
       | _, StaticDelete _
       | _, DynamicDelete _ 
       | _, VarDecl  _

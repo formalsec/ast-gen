@@ -2,6 +2,7 @@
   while (false) {
      let v1;
      v1 = 1 + 2;
+     v1;
   }
   
   $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
@@ -13,6 +14,7 @@
      let v2;
      v2 = Number(x);
      x = v2 + 1;
+     v2;
      v1 = x < 1;
   }
   
@@ -25,6 +27,7 @@
      let v2;
      v2 = Number(x);
      x = v2 + 1;
+     v2;
      v1 = x < 1;
   }
   
@@ -37,6 +40,7 @@
      let v2;
      v2 = Number(x);
      x = v2 + 1;
+     v2;
      break;
      v1 = x < 1;
   }
@@ -49,6 +53,7 @@
   while (v1) {
      let v3;
      v3 = alert(i);
+     v3;
      let v2;
      v2 = Number(i);
      i = v2 + 1;
@@ -63,6 +68,7 @@
   while (v1) {
      let v3;
      v3 = alert(i);
+     v3;
      let v2;
      v2 = Number(i);
      i = v2 + 1;

@@ -7,6 +7,7 @@
   v3 = 3;
   let v4;
   v4 = 4;
+  v4;
   
   $ graphjs2 input-code-2.js -o out; cat out/code/input-code-2.js; echo; rm -fr out;
   let v1;
@@ -19,6 +20,7 @@
   v4 = v1;
   let v5;
   v5 = v3;
+  v5;
   
   $ graphjs2 input-code-3.js -o out; cat out/code/input-code-3.js; echo; rm -fr out;
   x = 0;
@@ -30,4 +32,5 @@
   v2 = x;
   let v3;
   v3 = y;
+  v3;
   

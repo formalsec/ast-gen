@@ -4,6 +4,7 @@ open Graph
 open Structures
 open Auxiliary.Structures
 open Auxiliary.Functions
+open Printf
 
 module Dot = struct
   module DotNode = struct
@@ -55,9 +56,8 @@ end
     !result
   
   let output (file_path : Fpath.t) (graph : Graph.t) : unit = 
-    
-    let dot_file = Fpath.(to_string @@ (file_path // Fpath.v "graph.dot")) in
-    let svg_file = Fpath.(to_string @@ (file_path // Fpath.v "graph.svg")) in 
+    let dot_file = Fpath.(to_string @@ (file_path / "graph.dot")) in
+    let svg_file = Fpath.(to_string @@ (file_path / "graph.svg")) in 
     
     let file = open_out_bin dot_file in
     
@@ -71,10 +71,9 @@ end
 
 module CSV = struct
   let output (file_path : Fpath.t) (graph : Graph.t) : unit =
-    
-    let nodes_file  = Fpath.(to_string @@ (file_path // Fpath.v "nodes.csv"))  in 
-    let edges_file  = Fpath.(to_string @@ (file_path // Fpath.v "rels.csv"))  in 
-    let graph_stats = Fpath.(to_string @@ (file_path // Fpath.v "graph_stats.json"))  in
+    let nodes_file  = Fpath.(to_string @@ (file_path / "nodes.csv")) in 
+    let edges_file  = Fpath.(to_string @@ (file_path / "rels.csv")) in 
+    let graph_stats = Fpath.(to_string @@ (file_path / "graph_stats.json")) in
 
     (* process node information *)
     let out_channel = open_out nodes_file in
@@ -132,4 +131,21 @@ module CSV = struct
     output_string out_channel ("{ \"edges\": " ^ edges ^ ", \"nodes\": " ^ nodes ^ "}");
 
     close_out out_channel
+end
+
+module Time = struct
+  let output (output_dir : Fpath.t) (time : float) : unit =
+    let time_file  = Fpath.(to_string @@ (output_dir / "time_stats.txt")) in 
+
+    (* Open the file for writing *)
+    let oc = open_out time_file in
+
+    (* Format and write the required data *)
+    fprintf oc "graph: %f\n" time;
+    fprintf oc "import: 0\n";
+    fprintf oc "injection_detection: 0\n";
+    fprintf oc "proto_pollution_detection: 0\n";
+
+    (* Close the output channel *)
+    close_out oc;
 end
