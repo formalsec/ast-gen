@@ -63,23 +63,28 @@ let print_vuln (vuln_t : string) (call_sink : Node.t) : unit =
     call_sink.code_loc._start.line
 
 let run_tainted_queries (graph : Graph.t) (exportedObject : ExportedObject.t)
-  (config : Config.t) : unit =
+  (config : Config.t) : Vulnerability.t list =
+  let vulns : Vulnerability.t list ref = ref [] in 
   let exported_locs = ExportedObject.get_all_values exportedObject in
-  List.iter
-    (fun (sink : Config.functionSink) ->
-      List.iter
-        (fun call_sink ->
-          if is_reachable graph call_sink exported_locs then
-            print_vuln sink.vuln_t call_sink )
-        (Graph.get_callers graph sink.sink) )
-    config.functions
+  List.iter ( fun (sink : Config.functionSink) ->
+    List.iter ( fun call_sink ->
+      if is_reachable graph call_sink exported_locs then
+        let vuln = Vulnerability.create' sink call_sink in 
+        vulns := vuln :: !vulns 
+    )(Graph.get_callers graph sink.sink)
+  ) config.functions;
+
+    !vulns
 
 let run_prototype_polution_queries (_graph : Graph.t)
   (_exportedObject : ExportedObject.t) (_config : Config.t) : unit =
   ()
 
-let run_queries (graph : Graph.t) (exportedObject : ExportedObject.t)
-  (config : Config.t) : unit =
-  Format.printf "[@\n";
-  run_tainted_queries graph exportedObject config;
-  Format.printf "]@\n"
+let run_queries (graph : Graph.t) (exportedObject : ExportedObject.t) (config : Config.t) (output_dir : Fpath.t) : unit =
+  let vulns = run_tainted_queries graph exportedObject config in 
+
+  let summary_file  = Fpath.(to_string @@ (output_dir / "taint_summary_detection.json")) in
+  let oc = open_out summary_file in
+  output_string oc (Vulnerability.to_string' vulns);
+  close_out oc
+  

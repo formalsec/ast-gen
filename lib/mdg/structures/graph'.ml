@@ -240,7 +240,6 @@ end
 type t = {
   edges : EdgeSet.t HashTable.t;
   nodes : Node.t HashTable.t;
-  call_nodes : (string, Node.t) Hashtbl.t;
   callers : (string, Node.t list) Hashtbl.t;
   register : unit -> unit;
 }
@@ -338,8 +337,11 @@ let get_params (graph : t) (location : location) : EdgeSet.t  =
 (* ------- C A L L   N O D E S ------- *)
 let register_call_node (graph : t) (func_name : string) (node : Node.t) : unit = 
   let callers = Option.value (Hashtbl.find_opt graph.callers func_name) ~default:[] in 
-  Hashtbl.replace graph.call_nodes func_name node;
   Hashtbl.replace graph.callers func_name (node :: callers)
+
+let register_call_nodes (graph: t) (func_name : string) (nodes : Node.t list) : unit = 
+  let callers = Option.value (Hashtbl.find_opt graph.callers func_name) ~default:[] in 
+  Hashtbl.replace graph.callers func_name (nodes @ callers) 
 
 (* ------- M A I N   F U N C T I O N S -------*)
 let lub (graph : t) (graph' : t) : unit = 
@@ -501,7 +503,7 @@ let add_taint_sink (graph : t) (curr_func : Node.t option) (abs_loc : location) 
   add_node graph abs_loc node
 
 let empty (register : unit -> unit) : t = 
-  let graph = {edges = HashTable.create 100; nodes = HashTable.create 50; call_nodes = Hashtbl.create 50; callers = Hashtbl.create 50; register = register} in
+  let graph = {edges = HashTable.create 100; nodes = HashTable.create 50; callers = Hashtbl.create 50; register = register} in
   graph
 
 
@@ -592,12 +594,20 @@ let has_external_function (graph : t) (func_node : location) : bool =
   exists_node graph func_node
 
 let get_function (graph : t) (func_node : location) : t = 
+  let add_to_callers (graph : t) (node : Node.t) : unit = 
+    match node._type with 
+      | Call func_name -> register_call_node graph func_name node
+      | _ -> () 
+    in 
+
   let rec get_function' (graph : t) (to_visit : LocationSet.t) (visited : LocationSet.t) (func_graph : t) : t =
     if not (LocationSet.is_empty to_visit) 
       then (
         let visiting, to_visit' = LocationSet.pop to_visit in 
         let node = find_node graph visiting in 
         let edges = get_edges graph visiting in 
+        
+        add_to_callers func_graph node; 
         HashTable.replace func_graph.nodes visiting node;
         HashTable.replace func_graph.edges visiting edges;
 
@@ -629,6 +639,11 @@ let update_arg_edges (graph : t) (call_node : location) (parameters : string lis
   ) graph.edges
 
 let add_external_func (graph : t) (func_graph : t) (call_node : location) (function_node : location) : unit =
+  (* add callers *)
+  Hashtbl.iter (fun func_name callers -> 
+    register_call_nodes graph func_name callers
+  ) func_graph.callers;
+
   (* add nodes *)
   iter_nodes (fun loc node ->
     HashTable.replace graph.nodes loc node
