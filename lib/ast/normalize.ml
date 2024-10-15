@@ -962,8 +962,7 @@ and normalize_array_elem (context : context) (array : m Identifier.t) (index : i
       let update_stmt = Statement.StaticUpdate.build (loc_f loc) (Identifier.to_expression array) (string_of_int index) true (Option.get expr) in 
       stmts @ [update_stmt]
     | Hole _ -> []
-    | _ -> []
-    (* | _ -> failwith "[ERROR] Cannot process spread array element" *)
+    | _ -> failwith "[ERROR] Cannot process spread array element"
 
 and normalize_argument_list (context : context) (_, {Ast'.Expression.ArgList.arguments; _}) : norm_expr_t list = 
   List.map (normalize_argument context) arguments
@@ -1219,8 +1218,7 @@ and normalize_property_key (key : ('M, 'T) Ast'.Expression.Object.Property.key) 
     | Identifier    (_, id)      -> [], Static (id.name, false)
     
     (* TODO : private name and computed key not implemented *)
-    | _ -> [], Static ("TODO", true)
-    (* | _ -> failwith "[ERROR] Private name and computed key not implemented" *)
+    | _ -> failwith "[ERROR] Private name and computed key not implemented"
 
 and normalize_init (init : ('M, 'T) Ast'.Statement.For.init) : norm_expr_t =
   let ne = normalize_expression empty_context in 
