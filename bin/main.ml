@@ -36,7 +36,7 @@ let main file_name output_path config_path mode generate_mdg no_dot verbose =
   let start = Sys.time () in 
   List.iter
     (fun file_path ->
-      let dir = Fpath.append (Fpath.v (Unix.getcwd ())) @@ Fpath.parent @@ Fpath.v file_name in
+      let dir = Fpath.append (Fpath.v (Unix.getcwd ())) @@ Fpath.parent @@ Fpath.v file_path in
       let file_name = Fpath.base @@ Fpath.v file_path in
 
       (* STEP 0 : Generate AST using Flow library *)
