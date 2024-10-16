@@ -33,7 +33,7 @@ end
 
 module Res = struct
   let err : ('a, Fmt.t, unit, 'b) format4 -> 'a =
-    Fmt.kdly (Fmt.str "%t%t" Log.Config.(fst !error))
+    Fmt.kdly (Fmt.str "%t %t" Log.Config.(fst !error))
 
   let ok (structure : string) : (t, string) Result.t =
     let dt = create (Json.from_string structure) in

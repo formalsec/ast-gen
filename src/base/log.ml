@@ -6,25 +6,26 @@ module Config = struct
   let log_debugs : bool t = static false
 
   let app : ((Fmt.t -> unit) * Font.t) t =
-    constant ((fun _ -> ()), Font.create ~fg:`White ())
+    constant (Fmt.dly "[graphjs]", Font.create ~fg:`White ())
 
   let error : ((Fmt.t -> unit) * Font.t) t =
-    constant (Fmt.dly "[error] ", Font.create ~fg:`LightRed ())
+    constant (Fmt.dly "[error]", Font.create ~fg:`LightRed ())
 
   let warn : ((Fmt.t -> unit) * Font.t) t =
-    constant (Fmt.dly "[warn] ", Font.create ~fg:`LightYellow ())
+    constant (Fmt.dly "[warn]", Font.create ~fg:`LightYellow ())
 
   let info : ((Fmt.t -> unit) * Font.t) t =
-    constant (Fmt.dly "[debug] ", Font.create ~fg:`LightCyan ())
+    constant (Fmt.dly "[info]", Font.create ~fg:`LightCyan ())
 
   let debug : ((Fmt.t -> unit) * Font.t) t =
-    constant (Fmt.dly "[debug] ", Font.create ~fg:`Cyan ())
+    constant (Fmt.dly "[debug]", Font.create ~fg:`Cyan ())
 end
 
 open struct
   let create_log ((header, font) : (Fmt.t -> unit) * Font.t) (ppf : Fmt.t) :
-      ('b, Fmt.t, unit, 'a) format4 -> 'b =
-    Fmt.kdly (Font.fmt font ppf "%t%t" header)
+      ('a, Fmt.t, unit, 'b) format4 -> 'a =
+    let pp_content ppf fmt = Font.fmt font ppf "%t %t" header fmt in
+    Fmt.kdly (fun fmt -> Fmt.fmt ppf "%a@." pp_content fmt)
   [@@inline]
 end
 

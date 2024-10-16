@@ -11,10 +11,6 @@ let apply_lazy ~(default : 'b lazy_t) (f : 'a -> 'b) : 'a t -> 'b = function
   | Some v -> f v
   | None -> Lazy.force default
 
-let map_default ~(default : 'b t) (f : 'a -> 'b) : 'a t -> 'b t = function
-  | Some v -> Some (f v)
-  | None -> default
-
 let map_none ~(value : 'a t) : 'a t -> 'a t = function
   | Some _ as o -> o
   | None -> value

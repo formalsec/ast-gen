@@ -9,8 +9,8 @@ type error =
 type 'a status = ('a, error) Result.t
 
 let log_exn : error -> unit = function
-  | `DepTree fmt -> Log.stderr "%t@." fmt
-  | `ParseJS fmt -> Log.stderr "%t@." fmt
+  | `DepTree fmt -> Log.stderr "%t" fmt
+  | `ParseJS fmt -> Log.stderr "%t" fmt
   | `Generic err -> Log.error "%s@." err
 
 let exn (err : error) : 'a status =

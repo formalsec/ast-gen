@@ -2,4 +2,6 @@
 
 (library
  (name graphjs_ast)
+ (modules graphjs_ast' ast printer metadata region grammar functions normalize pp)
+ (private_modules printer metadata region)
  (libraries graphjs_base flow_parser))
