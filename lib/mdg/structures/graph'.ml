@@ -269,11 +269,6 @@ let rec print (graph : t) : unit =
 and print_edge (from : location) (edge : Edge.t) : unit = 
   print_string (from ^ (Edge.to_string edge) ^ "\n")
 
-let get_callers (graph: t) (name: string) = 
-  match Hashtbl.find graph.callers name with 
-  | exception Not_found -> [] 
-  | vs -> vs
-
 (* > NODE FUNCTIONS : *)
 let iter_nodes (f : location -> Node.t -> unit) (graph : t) = HashTable.iter f graph.nodes
 
@@ -294,6 +289,17 @@ let get_node_id (graph : t) (loc : location) : string =
 let get_node_name (graph : t) (loc : location) : string =
   let node = find_node graph loc in 
   Node.get_name node
+
+
+let get_callers_old (graph: t) (name: string) = 
+match Hashtbl.find graph.callers name with 
+| exception Not_found -> [] 
+| vs -> vs
+
+let get_callers (graph: t) (loc: string) = 
+  let l_nodes = HashTable.to_seq_keys graph.nodes |> List.of_seq in
+  let all_edges = List.map (fun l_node -> l_node, (find_edges graph l_node |> EdgeSet.filter (fun e -> e._type = Call && String.equal e._to loc))) l_nodes in
+  all_edges |> List.filter (fun (_, edges) -> EdgeSet.cardinal edges > 0) |> List.map (fun (l_node, _) -> find_node graph l_node)
 
 
 (* > GRAPH FUNCTIONS : *)
@@ -847,7 +853,7 @@ let reaches graph src target : Node.t list list =
 let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) : Node.t list =
     let paths = reaches graph f_node node in 
     List.filter_map (fun path -> 
-      (* Format.printf "path = { %s }@." (String.concat " <- " (List.map Node.get_abs_loc path)); *)
+      Format.printf "path = { %s }@." (String.concat " <- " (List.map Node.get_abs_loc path));
       let argument_index = List.length path - 2 in 
       if argument_index >= 0 
         then Some (List.nth path argument_index)
