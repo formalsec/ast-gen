@@ -15,21 +15,16 @@ let pp_nodes (ppf : Format.formatter) (nodes : Node.t list) : unit =
 
 let rec is_reachable (graph : Graph.t) (node : Node.t)
   (exported_locs : location list) : bool =
-  Format.printf "========================================@\n";
-  Format.printf "target node:    %s@\n" (Node.get_abs_loc node);
   match node.func with
   | None -> false
   | Some f_node ->
-    Format.printf "function node:  %s@\n@." (Node.get_abs_loc f_node);
     let f_name = Node.get_func_name f_node in
     let f_node_loc = Node.get_abs_loc f_node in
     let p_nodes = Graph.find_tainted_parameter graph f_node node in
-    Format.printf "@\np_nodes:     %a@\n" pp_nodes p_nodes;
     if p_nodes = [] then false
     else if List.mem f_node_loc exported_locs then true
     else
       let f_callers = Graph.get_callers graph f_node_loc in
-      Format.printf "f_callers:   %a@\n" pp_nodes f_callers;
       let f_args =
         List.flatten
         @@ List.map
@@ -40,39 +35,31 @@ let rec is_reachable (graph : Graph.t) (node : Node.t)
                << Node.get_abs_loc )
              f_callers
       in
-      Format.printf "f_args:      %a@." pp_nodes f_args;
       let f_returners =
         Option.bind f_name (Hashtbl.find_opt graph.returners)
         |> Option.value ~default:[]
       in
-      Format.printf "f_returners: %a@." pp_nodes f_returners;
       List.exists
         (fun arg -> is_reachable graph arg exported_locs)
         (f_args @ f_returners)
 
-let print_vuln (ppf : Format.formatter) (vuln_t : string) (call_sink : Node.t) :
-  unit =
-  Format.fprintf ppf "========================================@\n@\n";
-  Format.fprintf ppf
-    "{@\n\
-    \  \"vuln_type\": %S@\n\
-    \  \"file\": %S@\n\
-    \  \"sink\": %S@\n\
-    \  \"sink_lineno\": %d@\n\
-    }@\n"
-    vuln_t call_sink.code_loc._file (Node.label call_sink)
-    call_sink.code_loc._start.line
 
-let run_tainted_queries (ppf : Format.formatter) (graph : Graph.t)
-  (exported_locs: location list) (config : Config.t) : unit =
+let run_tainted_queries (graph : Graph.t)
+  (exported_locs: location list) (config : Config.t) : Vulnerability.t list =
+  let vulns : Vulnerability.t list ref = ref [] in 
   List.iter
     (fun (sink : Config.functionSink) ->
       List.iter
         (fun call_sink ->
-          if is_reachable graph call_sink exported_locs then
-            print_vuln ppf sink.vuln_t call_sink )
+          if is_reachable graph call_sink exported_locs then (
+            let vuln = Vulnerability.create' sink call_sink in 
+            vulns := vuln :: !vulns
+          )
+         )
         (Graph.get_callers_old graph sink.sink) )
-    config.functions
+    config.functions;
+  
+  !vulns
 
 let run_prototype_polution_queries (ppf : Format.formatter) (graph : Graph.t) 
     (exported_locs: location list) : unit =
@@ -108,9 +95,18 @@ let run_prototype_polution_queries (ppf : Format.formatter) (graph : Graph.t)
 
 
 
-let run_queries (_ppf : Format.formatter) (_graph : Graph.t)
-  (_exportedObject : ExportedObject.t) (_config : Config.t) : unit =
-  let _exported_locs = ExportedObject.get_all_values _exportedObject in
-  (* run_tainted_queries _ppf _graph _exported_locs _config; *)
-  run_prototype_polution_queries _ppf _graph _exported_locs;
-  ()
+let run_queries (_ppf : Format.formatter) (graph : Graph.t)
+  (exportedObject : ExportedObject.t) (config : Config.t) (output_dir : Fpath.t): unit =
+  let exported_locs = ExportedObject.get_all_values exportedObject in
+  let taint_vulns = run_tainted_queries graph exported_locs config in
+
+  let summary_file  = Fpath.(to_string @@ (output_dir / "taint_summary_detection.json")) in
+  let oc = open_out summary_file in
+  output_string oc (Vulnerability.to_string' taint_vulns);
+  close_out oc;
+
+  if List.length taint_vulns > 0 then 
+    print_endline ("[INFO] Detected " ^ string_of_int (List.length taint_vulns) ^ " vulnerabilities.")
+  else
+    print_endline ("[INFO] No vulnerabilities detected.")
+

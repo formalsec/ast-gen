@@ -1,9 +1,55 @@
 module Mode = Auxiliary.Mode
+module StringSet = Auxiliary.Structures.StringSet
 
 type t = { main : string; structure : Yojson.Basic.t }
 
 let generate_dt (filename : string) : Bos.Cmd.t = Bos.Cmd.(v "dt" % filename)
 let single_file_dt filename = Format.sprintf "{ %S : {} }" filename
+
+let rec visit (dep_tree : Yojson.Basic.t) (acc : string list) =
+  match dep_tree with
+  | `Assoc list ->
+      List.fold_left
+        (fun acc (file, child_deps) -> visit child_deps acc @ [ file ])
+        acc list
+  | _ ->
+      failwith "[ERROR] Error visiting dependency tree in bottom up approach"
+
+let get_dependencies (dep_tree : Yojson.Basic.t) : string list = 
+  let visit_order = visit dep_tree [] in
+  let depedencies = List.fold_left (fun final_order curr ->
+    if List.mem curr final_order then final_order else curr :: final_order) [] visit_order 
+  in
+  List.tl depedencies 
+
+let bottom_up_visit (dep_tree : t) : string list =
+  let visit_order = visit dep_tree.structure [] in
+  (* remove duplicated from visit *)
+  let execution_order = List.rev
+    (List.fold_left
+       (fun final_order curr ->
+         if List.mem curr final_order then final_order else curr :: final_order)
+       [] visit_order) in 
+  execution_order 
+
+let aprox_main (files : string list) : string option = 
+  let rec aprox_main' (files : string list) (to_process : string list) (deps : StringSet.t): string option  =
+    match to_process with 
+      | [] -> 
+        let no_dep_files = List.filter (fun file -> not @@ StringSet.mem file deps) files in 
+        if List.length no_dep_files = 1 
+          then Some (List.hd no_dep_files) 
+          else None
+
+        | file :: rest ->
+          match File_system.run_command' (generate_dt file) with
+            | Ok output -> 
+              let dep_tree = Yojson.Basic.from_string output in 
+              let dependencies = List.to_seq @@ get_dependencies dep_tree in 
+              aprox_main' files rest (StringSet.add_seq dependencies deps)
+            | Error _ -> aprox_main' files rest deps
+  in
+  aprox_main' files files StringSet.empty
 
 let find_module_main (module_path : string) : string =
   (* https://docs.npmjs.com/cli/v10/configuring-npm/package-json#main *)
@@ -27,6 +73,16 @@ let find_module_main (module_path : string) : string =
   let index_path = Filename.concat !module_path "index.js" in
   if Sys.file_exists index_path && Option.is_none !main_file then
     main_file := Some index_path;
+
+  (* if there is only one file it is that one *)
+  let files = List.map (Filename.concat !module_path) @@ Array.to_list @@ Sys.readdir !module_path in
+  if List.length files = 1 && Option.is_none !main_file then
+    main_file := Some (List.hd files);
+
+  (* aproximate main file by the depedencies: the file that 
+     no other depends on may be the main file *)
+  if Option.is_none !main_file then 
+    main_file := aprox_main files;
 
   if Option.is_some !main_file then Option.get !main_file
   else failwith ("[ERROR] Unable to find main file of module : " ^ !module_path)
@@ -58,22 +114,3 @@ let generate (filename : string) (mode : Mode.t) =
   Ok { main = main_file; structure = Yojson.Basic.from_string output }
 
 let get_main (dep_tree : t) : string = dep_tree.main
-
-let bottom_up_visit (dep_tree : t) : string list =
-  let rec visit (dep_tree : Yojson.Basic.t) (acc : string list) =
-    match dep_tree with
-    | `Assoc list ->
-        List.fold_left
-          (fun acc (file, child_deps) -> visit child_deps acc @ [ file ])
-          acc list
-    | _ ->
-        failwith "[ERROR] Error visiting dependency tree in bottom up approach"
-  in
-
-  let visit_order = visit dep_tree.structure [] in
-  (* remove duplicated from visit *)
-  List.rev
-    (List.fold_left
-       (fun final_order curr ->
-         if List.mem curr final_order then final_order else curr :: final_order)
-       [] visit_order)

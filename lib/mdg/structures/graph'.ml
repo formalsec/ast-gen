@@ -853,7 +853,6 @@ let reaches graph src target : Node.t list list =
 let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) : Node.t list =
     let paths = reaches graph f_node node in 
     List.filter_map (fun path -> 
-      Format.printf "path = { %s }@." (String.concat " <- " (List.map Node.get_abs_loc path));
       let argument_index = List.length path - 2 in 
       if argument_index >= 0 
         then Some (List.nth path argument_index)

@@ -13,5 +13,7 @@ module HashTable = struct
 end
 
 module IntSet = Set.Make(Int)
+module StringSet = Set.Make(String)
+
 
     

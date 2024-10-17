@@ -40,6 +40,8 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
       let dir = Fpath.append (Fpath.v (Unix.getcwd ())) @@ Fpath.parent @@ Fpath.v file_path in
       let file_name = Fpath.base @@ Fpath.v file_path in
 
+      print_endline ("[STEP 1] Normalizing " ^ Fpath.to_string file_name ^ " code...");
+
       (* STEP 0 : Generate AST using Flow library *)
       let ast = Js_parser.from_file file_path in
 
@@ -57,6 +59,7 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
 
       (* STEP 2 : Generate MDG for the normalized code *)
       if generate_mdg then (
+        print_endline "[STEP 2] Generating MDG...";
         let graph, exportedObject, external_calls =
           Mdg.Analyse.program mode verbose config_path norm_program
         in
@@ -104,7 +107,8 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
     if run_queries then
       let exportedObject = Summaries.get summaries main in
       let config = Config.read config_path in
-      Queries.run_queries Format.std_formatter graph exportedObject config );
+      print_endline ("[STEP 3] Running queries...");
+      Queries.run_queries Format.std_formatter graph exportedObject config output_path);
 
   Ok 0
 
@@ -175,13 +179,13 @@ let queries input_dir config_path mode =
                Summaries.add summaries alter_name exportedObject )
              (DependencyTree.bottom_up_visit dep_tree);
 
-           let main = DependencyTree.get_main dep_tree in
+           (* let main = DependencyTree.get_main dep_tree in
            let graph = ModuleGraphs.get module_graphs main in
            let exportedObject = Summaries.get summaries main in
-           let config = Config.read config_path in
+           let config = Config.read config_path in *)
            let oc = open_out (Fpath.to_string output) in
-           let ppf = Format.formatter_of_out_channel oc in
-           Queries.run_queries ppf graph exportedObject config;
+           (* let ppf = Format.formatter_of_out_channel oc in *)
+           (* Queries.run_queries ppf graph exportedObject config; *)
            close_out oc;
            Ok 0
          with _ ->
