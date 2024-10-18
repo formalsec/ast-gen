@@ -5,6 +5,7 @@ module Config = Setup.Config
 module Funcs = Auxiliary.Functions
 module Edge = Graph.Edge
 module EdgeSet = Graph.EdgeSet
+module NodeSet = Graph.NodeSet
 open Auxiliary.Structures
 
 type location = Mdg.Structures.location
@@ -45,19 +46,16 @@ let rec is_reachable (graph : Graph.t) (node : Node.t)
 
 
 let run_tainted_queries (graph : Graph.t)
-  (exported_locs: location list) (config : Config.t) : Vulnerability.t list =
+  (exported_locs: location list) (_config : Config.t) : Vulnerability.t list =
   let vulns : Vulnerability.t list ref = ref [] in 
-  List.iter
-    (fun (sink : Config.functionSink) ->
-      List.iter
-        (fun call_sink ->
-          if is_reachable graph call_sink exported_locs then (
-            let vuln = Vulnerability.create' sink call_sink in 
-            vulns := vuln :: !vulns
-          )
-         )
-        (Graph.get_callers_old graph sink.sink) )
-    config.functions;
+
+  NodeSet.iter (fun sink_node ->
+    let sink_call_node = Graph.get_call_node graph sink_node in 
+    if is_reachable graph sink_call_node exported_locs then (
+      let vuln = Vulnerability.create' sink_node in 
+      vulns := vuln :: !vulns
+    )
+  ) !(graph.sinks);
   
   !vulns
 

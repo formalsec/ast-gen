@@ -13,7 +13,7 @@ module Node = struct
     | Parameter of string 
     | Return 
     | TaintSource
-    | TaintSink of string
+    | TaintSink of string * string
     | Literal
 
   type t = {
@@ -41,15 +41,17 @@ module Node = struct
     let same_type = match (node._type, node'._type) with
       | Object x, Object x'
       | Call x, Call x'
-      | TaintSink x, TaintSink x'
       | Parameter x, Parameter x' -> String.equal x x'
       | Function (x, _), Function (x', _) -> Functions.Id.equal x x'
+      | TaintSink (x, y), TaintSink (x', y') -> String.equal x x' && String.equal y y'
       | Return, Return
       | TaintSource, TaintSource
       | Literal, Literal -> true
       | _ -> false in 
     
     node.id = node'.id && same_type
+
+  let compare (node : t) (node' : t) = String.compare node.abs_loc node'.abs_loc
     
   let label (node : t) = match node._type with
     | Object obj -> obj 
@@ -86,7 +88,7 @@ module Node = struct
       | Function (id, _) -> id.name
       | Parameter name -> name
       | TaintSource -> "TAINT_SOURCE"
-      | TaintSink sink -> sink
+      | TaintSink (sink, _) -> sink
       | _ -> ""
 
   let get_raw (_ : t) : string = ""
@@ -112,6 +114,8 @@ module Node = struct
       | _ -> failwith "[ERROR] Tryed to get params from a node that isnt a function definition one"
   
 end
+
+module NodeSet = Set.Make(Node)
 
 module Edge = struct
     type _type = 
@@ -242,6 +246,7 @@ type t = {
   nodes : Node.t HashTable.t;
   callers : (string, Node.t list) Hashtbl.t;
   returners : (string, Node.t list) Hashtbl.t;
+  sinks : NodeSet.t ref;
   register : unit -> unit;
 }
 
@@ -521,12 +526,13 @@ let add_taint_source (graph : t) (curr_func : Node.t option): unit =
   let node : Node.t = Node.create TaintSource abs_loc code_loc curr_func in
   add_node graph abs_loc node
 
-let add_taint_sink (graph : t) (curr_func : Node.t option) (abs_loc : location) (sink : string) (code_loc : Location.t): unit = 
-  let node : Node.t = Node.create (TaintSink sink) abs_loc code_loc curr_func in
+let add_taint_sink (graph : t) (curr_func : Node.t option) (abs_loc : location) (vuln_type : string) (sink : string) (code_loc : Location.t): unit = 
+  let node : Node.t = Node.create (TaintSink (sink, vuln_type)) abs_loc code_loc curr_func in
+  graph.sinks := NodeSet.add node !(graph.sinks);
   add_node graph abs_loc node
 
 let empty (register : unit -> unit) : t = 
-  let graph = {edges = HashTable.create 100; nodes = HashTable.create 50; callers = Hashtbl.create 50; returners = Hashtbl.create 50; register = register} in
+  let graph = {edges = HashTable.create 100; nodes = HashTable.create 50; callers = Hashtbl.create 50; returners = Hashtbl.create 50; sinks = ref NodeSet.empty; register = register} in
   graph
 
 
@@ -616,9 +622,10 @@ let has_external_function (graph : t) (func_node : location) : bool =
   exists_node graph func_node
 
 let get_function (graph : t) (func_node : location) : t = 
-  let add_to_callers (graph : t) (node : Node.t) : unit = 
+  let process_additional_info (graph : t) (node : Node.t) : unit = 
     match node._type with 
       | Call func_name -> register_call_node graph func_name node
+      | TaintSink _ -> graph.sinks := NodeSet.add node !(graph.sinks)
       | _ -> () 
     in 
 
@@ -629,7 +636,7 @@ let get_function (graph : t) (func_node : location) : t =
         let node = find_node graph visiting in 
         let edges = get_edges graph visiting in 
         
-        add_to_callers func_graph node; 
+        process_additional_info func_graph node; 
         HashTable.replace func_graph.nodes visiting node;
         HashTable.replace func_graph.edges visiting edges;
 
@@ -665,6 +672,9 @@ let add_external_func (graph : t) (func_graph : t) (call_node : location) (funct
   Hashtbl.iter (fun func_name callers -> 
     register_call_nodes graph func_name callers
   ) func_graph.callers;
+
+  (* merge sinks *)
+  graph.sinks := NodeSet.union !(graph.sinks) !(func_graph.sinks);
 
   (* add nodes *)
   iter_nodes (fun loc node ->
@@ -858,5 +868,20 @@ let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) : Node.
         then Some (List.nth path argument_index)
         else None
     ) paths 
+
+let get_call_node (graph : t) (sink_node : Node.t) : Node.t = 
+  match sink_node._type with
+    | TaintSink (_, _) -> 
+      let call_node = ref None in  
+      iter_edges (fun from edge -> 
+        if edge._to = sink_node.abs_loc then (
+          match edge._type with
+            | Sink _ -> call_node := Some (find_node graph from);
+            | _ -> ()
+        )
+      ) graph;
+      Option.get !call_node
+
+    | _ -> failwith "[ERROR] provided node is not a sink node"
      
 

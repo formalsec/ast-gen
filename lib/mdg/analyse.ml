@@ -429,10 +429,11 @@ let rec add_taint_sinks (state : State.t) (config : Config.t) (ext_calls : Exter
   Graph.iter_nodes (fun loc node ->
     match node._type with
       | Call callee ->
+
         (* function sink *)
         let sink_info = Config.get_function_sink_info config callee in
         option_may (fun (sink_info : functionSink) ->
-          add_taink_sink graph loc node sink_info.sink sink_info.args
+          add_taink_sink graph loc node sink_info.vuln_t sink_info.sink sink_info.args
         ) sink_info;
 
         (* package sink *)
@@ -442,24 +443,24 @@ let rec add_taint_sinks (state : State.t) (config : Config.t) (ext_calls : Exter
           if List.length ref.properties = 1 then
             let method_name = List.nth ref.properties 0 in
             let package_name = ref._module in
-            let (_, sink_info) = Config.get_package_sink_info config package_name method_name in
+            let (vuln_type, sink_info) = Config.get_package_sink_info config package_name method_name in
             option_may (fun (sink_info : package) ->
-              add_taink_sink graph loc node method_name sink_info.args
+              add_taink_sink graph loc node vuln_type method_name sink_info.args
             ) sink_info
         ) referece_info
 
       | _ -> ()
   ) graph
 
-and add_taink_sink (graph : Graph.t) (loc : location) (node : Graph.Node.t) (sink_name : string) (sink_args : int list) : unit =
+and add_taink_sink (graph : Graph.t) (loc : location) (node : Graph.Node.t) (vuln_type : string) (sink_name : string) (sink_args : int list) : unit =
   let salloc = Graph.alloc_tsink graph in
-  let add_tsink = Graph.add_taint_sink graph None in
+  let add_tsink = Graph.add_taint_sink graph node.func in
   let add_sink_edge = Graph.add_sink_edge graph in
   let add_dep_edge = Graph.add_dep_edge graph in
 
   (* add taint sink *)
   let l_tsink = salloc node.id in
-  add_tsink l_tsink sink_name node.code_loc;
+  add_tsink l_tsink vuln_type sink_name node.code_loc;
   add_sink_edge loc l_tsink sink_name;
 
   (* add depedency edges from dangerous inputs (arguments) to taint sink *)
