@@ -806,7 +806,8 @@ let dynamicNewVersion (graph : t) (store : Store.t) (_L_obj : LocationSet.t) (_L
 
 let rec get_neighbor (graph: t) (edge: Edge.t) : Node.t list = 
   let nghbr = find_node graph edge._to in
-  match edge._type with
+  [nghbr]
+  (* match edge._type with
   | Argument (_, "undefined") -> [nghbr]
   | Argument (_, arg) -> 
     (* Format.printf "nghbr = %s ---> called with %s@." nghbr.abs_loc arg; *)
@@ -826,7 +827,7 @@ let rec get_neighbor (graph: t) (edge: Edge.t) : Node.t list =
       let ret_edge = EdgeSet.find_first (fun (e: Edge.t) -> match e._type with | Return -> true | _ -> false) (get_edges graph edge._to) in
       let ret_node = find_node graph ret_edge._to in
       [ret_node]
-  | _ -> [nghbr]
+  | _ -> [nghbr] *)
 
 and get_neighbors (graph : t) (node : Node.t) : Node.t list = 
   let valid_edge: Edge._type -> bool = function 
@@ -837,21 +838,24 @@ and get_neighbors (graph : t) (node : Node.t) : Node.t list =
     | Parameter _ -> true 
     | _ -> false 
   in 
-  EdgeSet.fold (fun edge acc -> if (valid_edge edge._type) then (get_neighbor graph edge) @ acc else acc) (get_edges graph node.abs_loc) []
+  let neighbour_edges = get_edges graph node.abs_loc in 
+  EdgeSet.fold (fun edge acc -> if (valid_edge edge._type) then (get_neighbor graph edge) @ acc else acc) neighbour_edges []
 
 and reaches' graph visited cur_paths ret_paths target : Node.t list list = 
+  (* print_endline "reaches'"; *)
+  (* print_endline (String.concat "|" @@ List.map (fun path -> String.concat ", " (List.map (Node.get_abs_loc) path)) cur_paths); *)
   match cur_paths with 
   | [] -> ret_paths
   | (cur::_ as curr_path)::tail_paths -> 
-    (* Format.printf "..............searching for %s from %s...@." target.abs_loc cur.abs_loc;  *)
+    (* Format.printf "..............searching for %s from %s...@." (Node.get_abs_loc target) (Node.get_abs_loc cur);  *)
     if cur = target 
       then reaches' graph visited tail_paths (curr_path::ret_paths) target
-  else (
-    let nghbrs = get_neighbors graph cur in
-    let nghbrs = List.filter (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited)) nghbrs in 
-    let visited' = List.fold_left (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc) visited nghbrs in 
-    let fst_paths = List.map (fun cur' -> cur'::curr_path) nghbrs in 
-    reaches' graph visited' (fst_paths @ tail_paths) ret_paths target
+    else (
+      let nghbrs = get_neighbors graph cur in
+      let nghbrs = List.filter (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited)) nghbrs in 
+      let visited' = List.fold_left (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc) visited nghbrs in 
+      let fst_paths = List.map (fun cur' -> cur'::curr_path) nghbrs in 
+      reaches' graph visited' (fst_paths @ tail_paths) ret_paths target
     )
   | _ -> failwith "current path is empty"
 

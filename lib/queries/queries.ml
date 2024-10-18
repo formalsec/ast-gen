@@ -22,6 +22,7 @@ let rec is_reachable (graph : Graph.t) (node : Node.t)
     let f_name = Node.get_func_name f_node in
     let f_node_loc = Node.get_abs_loc f_node in
     let p_nodes = Graph.find_tainted_parameter graph f_node node in
+
     if p_nodes = [] then false
     else if List.mem f_node_loc exported_locs then true
     else
