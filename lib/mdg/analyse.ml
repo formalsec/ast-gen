@@ -436,6 +436,12 @@ let rec add_taint_sinks (state : State.t) (config : Config.t) (ext_calls : Exter
           add_taink_sink graph loc node sink_info.vuln_t sink_info.sink sink_info.args
         ) sink_info;
 
+        (* new sink *)
+        let sink_info = Config.get_new_sink_info config callee in
+        option_may (fun (sink_info : newSink) ->
+          add_taink_sink graph loc node sink_info.vuln_t sink_info.sink sink_info.args
+        ) sink_info;
+
         (* package sink *)
         let referece_info = ExternalReferences.get_opt ext_calls loc in
         option_may (fun ref ->

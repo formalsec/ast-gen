@@ -111,9 +111,14 @@ let add_function_sink (config : t) (sink_info : functionSink) : t =
   {config with functions = sink_info :: config.functions}
 
 let get_function_sink_name (sink_info : functionSink) : string = sink_info.sink
+let get_new_sink_name (sink_info : newSink) : string = sink_info.sink
 
 let get_function_sink_info (config : t) (func_name : string) : functionSink option = 
   let sink_infos = (List.filter (((=) func_name) << get_function_sink_name) config.functions) in 
+  List.nth_opt sink_infos 0
+
+let get_new_sink_info (config : t) (new_name : string) : newSink option = 
+  let sink_infos = (List.filter (((=) new_name) << get_new_sink_name) config.news) in 
   List.nth_opt sink_infos 0
 
 let get_package_sink_info (config : t) (package_name : string) (method_name : string) : string * package option = 

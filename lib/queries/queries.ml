@@ -51,7 +51,11 @@ let run_tainted_queries (graph : Graph.t)
   let vulns : Vulnerability.t list ref = ref [] in 
 
   NodeSet.iter (fun sink_node ->
-    let sink_call_node = Graph.get_call_node graph sink_node in 
+    let sink_call_node = Graph.get_call_node graph sink_node in
+    print_endline "--------";
+    print_endline (Node.get_abs_loc sink_node);
+    print_endline (Node.get_abs_loc sink_call_node);
+     
     if is_reachable graph sink_call_node exported_locs then (
       let vuln = Vulnerability.create' sink_node in 
       vulns := vuln :: !vulns
