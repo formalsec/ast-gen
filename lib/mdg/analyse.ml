@@ -507,6 +507,8 @@ let add_taint_sources (state : State.t) (_config : Config.t) (mode : Mode.t) (is
       let func_node = Graph.find_node graph l_func in
       match func_node._type with
         | Function _ ->
+          Graph.set_attacker_controlable graph l_func;
+          (* add taint edges to params *)
           let edges = Graph.get_edges graph l_func in
           EdgeSet.iter (fun (edge : Edge.t) ->
             match edge._type with
