@@ -17,11 +17,12 @@ module Node = struct
     | Literal
 
   type t = {
-    id         : int;
-    abs_loc    : location;
-    code_loc   : Location.t;
-    _type      : _type;
-    func       : t option;
+    id       : int;
+    abs_loc  : location;
+    code_loc : Location.t;
+    _type    : _type;
+    func     : t option;
+    isSource : bool;
   }
 
   let id_count : int ref = ref (0)
@@ -34,7 +35,8 @@ module Node = struct
     abs_loc  = abs_loc;
     code_loc = code_loc;
     func     = func;
-    _type    = _type
+    _type    = _type;
+    isSource = false;
   }
 
   let equal (node : t) (node' : t) =
@@ -887,5 +889,11 @@ let get_call_node (graph : t) (sink_node : Node.t) : Node.t =
       Option.get !call_node
 
     | _ -> failwith "[ERROR] provided node is not a sink node"
+
+let set_attacker_controlable (graph : t) (location : location) : unit =
+  let node = find_node_opt graph location in 
+  option_may (fun node ->
+    HashTable.replace graph.nodes location {node with isSource = true};
+  ) node
      
 

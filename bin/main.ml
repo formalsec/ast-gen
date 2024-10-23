@@ -105,10 +105,9 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
 
     (* run queries *)
     if run_queries then
-      let exportedObject = Summaries.get summaries main in
       let config = Config.read config_path in
       print_endline ("[STEP 3] Running queries...");
-      Queries.run_queries Format.std_formatter graph exportedObject config output_path);
+      Queries.run_queries Format.std_formatter graph config output_path);
 
   Ok 0
 

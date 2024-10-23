@@ -14,8 +14,7 @@ let pp_nodes (ppf : Format.formatter) (nodes : Node.t list) : unit =
   Format.fprintf ppf "{ %s }"
     (String.concat ", " (List.map Node.get_abs_loc nodes))
 
-let rec is_reachable (graph : Graph.t) (node : Node.t)
-  (exported_locs : location list) : bool =
+let rec is_reachable (graph : Graph.t) (node : Node.t) : bool =
   match node.func with
   | None -> false
   | Some f_node ->
@@ -23,8 +22,8 @@ let rec is_reachable (graph : Graph.t) (node : Node.t)
     let f_node_loc = Node.get_abs_loc f_node in
     let p_nodes = Graph.find_tainted_parameter graph f_node node in
 
-    if p_nodes = [] then false
-    else if List.mem f_node_loc exported_locs then true
+    if p_nodes = []         then false
+    else if f_node.isSource then true
     else
       let f_callers = Graph.get_callers graph f_node_loc in
       let f_args =
@@ -42,12 +41,11 @@ let rec is_reachable (graph : Graph.t) (node : Node.t)
         |> Option.value ~default:[]
       in
       List.exists
-        (fun arg -> is_reachable graph arg exported_locs)
+        (fun arg -> is_reachable graph arg)
         (f_args @ f_returners)
 
 
-let run_tainted_queries (graph : Graph.t)
-  (exported_locs: location list) (_config : Config.t) : Vulnerability.t list =
+let run_tainted_queries (graph : Graph.t) (_config : Config.t) : Vulnerability.t list =
   let vulns : Vulnerability.t list ref = ref [] in 
 
   NodeSet.iter (fun sink_node ->
@@ -55,8 +53,8 @@ let run_tainted_queries (graph : Graph.t)
     print_endline "--------";
     print_endline (Node.get_abs_loc sink_node);
     print_endline (Node.get_abs_loc sink_call_node);
-     
-    if is_reachable graph sink_call_node exported_locs then (
+
+    if is_reachable graph sink_call_node then (
       let vuln = Vulnerability.create' sink_node in 
       vulns := vuln :: !vulns
     )
@@ -64,8 +62,7 @@ let run_tainted_queries (graph : Graph.t)
   
   !vulns
 
-let run_prototype_polution_queries (ppf : Format.formatter) (graph : Graph.t) 
-    (exported_locs: location list) : unit =
+let run_prototype_polution_queries (ppf : Format.formatter) (graph : Graph.t): unit =
   let fold_edges_f (l: location) (edges: EdgeSet.t) = EdgeSet.fold (fun edge acc -> (l, edge) :: acc) edges [] in
   let is_dynamic_prop_f (edge: Edge.t): bool = match edge._type with | Property None -> true | _ -> false in
   let is_dynamic_version_f (edge: Edge.t): bool = match edge._type with | Version None -> true | _ -> false in
@@ -85,9 +82,9 @@ let run_prototype_polution_queries (ppf : Format.formatter) (graph : Graph.t)
       List.iter (fun (_, edge) -> 
         let loc_3 = Edge.get_to edge in
         Format.fprintf ppf "    %s@\n" loc_3;
-        let tainted_1 = is_reachable graph (Graph.find_node graph loc_1) exported_locs in
-        let tainted_2 = is_reachable graph (Graph.find_node graph loc_2) exported_locs in
-        let tainted_3 = is_reachable graph (Graph.find_node graph loc_3) exported_locs in
+        let tainted_1 = is_reachable graph (Graph.find_node graph loc_1)  in
+        let tainted_2 = is_reachable graph (Graph.find_node graph loc_2)  in
+        let tainted_3 = is_reachable graph (Graph.find_node graph loc_3)  in
         Format.fprintf ppf "========================================@\n";
         Format.fprintf ppf "%s:%b | %s:%b | %s:%b@\n" loc_1 tainted_1 loc_2 tainted_2 loc_3 tainted_3;
         if (tainted_1 && tainted_2 && tainted_3) 
@@ -98,10 +95,8 @@ let run_prototype_polution_queries (ppf : Format.formatter) (graph : Graph.t)
 
 
 
-let run_queries (_ppf : Format.formatter) (graph : Graph.t)
-  (exportedObject : ExportedObject.t) (config : Config.t) (output_dir : Fpath.t): unit =
-  let exported_locs = ExportedObject.get_all_values exportedObject in
-  let taint_vulns = run_tainted_queries graph exported_locs config in
+let run_queries (_ppf : Format.formatter) (graph : Graph.t) (config : Config.t) (output_dir : Fpath.t): unit =
+  let taint_vulns = run_tainted_queries graph config in
 
   let summary_file  = Fpath.(to_string @@ (output_dir / "taint_summary_detection.json")) in
   let oc = open_out summary_file in
