@@ -505,6 +505,12 @@ let add_taint_sources (state : State.t) (_config : Config.t) (mode : Mode.t) (is
       match func_node._type with
         | Function _ ->
           Graph.set_attacker_controlable graph l_func;
+          (* get class methods if the exported function is a class *)
+          let methods = Graph.get_class_methods graph l_func in 
+          print_endline "methods";
+          List.iter (print_endline) methods;
+          List.iter (Graph.set_attacker_controlable graph) methods;
+            
           (* add taint edges to params *)
           let edges = Graph.get_edges graph l_func in
           EdgeSet.iter (fun (edge : Edge.t) ->
@@ -516,6 +522,7 @@ let add_taint_sources (state : State.t) (_config : Config.t) (mode : Mode.t) (is
         | _ -> ()
     ) exported_funcs
   )
+
 
 
 

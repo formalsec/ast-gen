@@ -334,6 +334,11 @@ let has_property (graph : t) (location : location) (property : property option) 
   let edges = get_edges graph location in 
   EdgeSet.exists (is_property_edge property) edges
 
+let get_versions (graph : t) (location : location) : (location * property option) list = 
+  let edges = get_edges graph location in 
+  let version_edges = EdgeSet.filter Edge.is_version edges in 
+  EdgeSet.map_list (fun edge -> (Edge.get_to edge, Edge.get_property edge)) version_edges
+
 let get_properties (graph : t) (location : location) : (location * property option) list = 
   let edges = get_edges graph location in 
   let prop_edges = EdgeSet.filter Edge.is_property edges in 
@@ -642,7 +647,8 @@ let get_function (graph : t) (func_node : location) : t =
         HashTable.replace func_graph.nodes visiting node;
         HashTable.replace func_graph.edges visiting edges;
 
-        let tos = LocationSet.from_list (EdgeSet.get_to edges) in 
+        
+        let tos = LocationSet.of_list (EdgeSet.get_to edges) in 
         get_function' graph (LocationSet.diff (LocationSet.union to_visit' tos) visited) (LocationSet.add visiting visited) func_graph
       )
       else func_graph
@@ -848,17 +854,15 @@ and reaches' graph visited cur_paths ret_paths target : Node.t list list =
   (* print_endline (String.concat "|" @@ List.map (fun path -> String.concat ", " (List.map (Node.get_abs_loc) path)) cur_paths); *)
   match cur_paths with 
   | [] -> ret_paths
+  | (cur::_ as curr_path)::tail_paths when cur = target -> 
+    reaches' graph visited tail_paths (curr_path::ret_paths) target
   | (cur::_ as curr_path)::tail_paths -> 
     (* Format.printf "..............searching for %s from %s...@." (Node.get_abs_loc target) (Node.get_abs_loc cur);  *)
-    if cur = target 
-      then reaches' graph visited tail_paths (curr_path::ret_paths) target
-    else (
-      let nghbrs = get_neighbors graph cur in
-      let nghbrs = List.filter (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited)) nghbrs in 
-      let visited' = List.fold_left (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc) visited nghbrs in 
-      let fst_paths = List.map (fun cur' -> cur'::curr_path) nghbrs in 
-      reaches' graph visited' (fst_paths @ tail_paths) ret_paths target
-    )
+    let nghbrs = get_neighbors graph cur in
+    let nghbrs = List.filter (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited)) nghbrs in 
+    let visited' = List.fold_left (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc) visited nghbrs in 
+    let fst_paths = List.map (fun cur' -> cur'::curr_path) nghbrs in 
+    reaches' graph visited' (fst_paths @ tail_paths) ret_paths target
   | _ -> failwith "current path is empty"
 
 let reaches graph src target : Node.t list list = 
@@ -895,5 +899,22 @@ let set_attacker_controlable (graph : t) (location : location) : unit =
   option_may (fun node ->
     HashTable.replace graph.nodes location {node with isSource = true};
   ) node
+
+
+let get_class_methods (graph : t) (location : location) : location list = 
+  let rec traverse_prototype graph unprocessed visited result = 
+    match unprocessed with
+      | [] -> result
+      | l :: ls when List.mem l visited -> traverse_prototype graph ls visited result
+      | l :: ls -> 
+        let l_props = get_properties graph l |> List.filter_map (fun (loc, prop) -> if Option.is_some prop then Some loc else None) in 
+        let l_versn = get_versions graph l |> List.filter_map (fun (loc, prop) -> if Option.is_some prop && not (List.mem loc visited) then Some loc else None) in 
+        traverse_prototype graph (ls @ l_versn) (l :: visited) (result @ l_props)
+  in 
+
+  let prototype = LocationSet.elements @@ lookup graph location "prototype" in
+  List.flatten @@ 
+  List.map (fun proto -> traverse_prototype graph [ proto ] [] []) prototype
+
      
 
