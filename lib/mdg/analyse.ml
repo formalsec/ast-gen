@@ -33,13 +33,11 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       let l_f = alloc_fun func.uid in
       add_func_node l_f func info.params (Location.empty ());
       Store.update' state.store func.name (LocationSet.singleton l_f);
-      let f = Graph.find_node graph l_f in
-
 
       (* add param nodes and edges *)
       List.iteri (fun i param ->
         let l_p = Graph.alloc_param graph in
-        add_param_node (Some f) l_p param (Location.empty ());
+        add_param_node (Some l_f) l_p param (Location.empty ());
         if param = "this"
           then add_param_edge l_f l_p "this"
           else add_param_edge l_f l_p (Int.to_string (i - 1))
@@ -155,11 +153,10 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
           let f_i = falloc id in
           store_update left (LocationSet.singleton f_i);
           let l_func_node = Graph.get_func_node graph func_id in 
-          let func_node = Option.map (Graph.find_node graph) l_func_node in 
 
           (* setup new store with only the param and corresponding locations *)
           let param_locs = get_param_locs func_id in
-          let new_state = {state with store = Store.merge store param_locs; context = visit func_id; currFuncNode = func_node} in
+          let new_state = {state with store = Store.merge store param_locs; context = visit func_id; currFuncNode = l_func_node} in
           analyse_sequence new_state analysis body
         );
 

@@ -15,7 +15,9 @@ let pp_nodes (ppf : Format.formatter) (nodes : Node.t list) : unit =
     (String.concat ", " (List.map Node.get_abs_loc nodes))
 
 let rec is_reachable (graph : Graph.t) (node : Node.t) : bool =
-  match node.func with
+  (* get function definition node where the node argument was defined *)
+  let f_node = Funcs.map_default (fun loc -> Graph.find_node_opt graph loc) None node.func in 
+  match f_node with
   | None -> false
   | Some f_node ->
     let f_name = Node.get_func_name f_node in
@@ -50,10 +52,6 @@ let run_tainted_queries (graph : Graph.t) (_config : Config.t) : Vulnerability.t
 
   NodeSet.iter (fun sink_node ->
     let sink_call_node = Graph.get_call_node graph sink_node in
-    print_endline "--------";
-    print_endline (Node.get_abs_loc sink_node);
-    print_endline (Node.get_abs_loc sink_call_node);
-
     if is_reachable graph sink_call_node then (
       let vuln = Vulnerability.create' sink_node in 
       vulns := vuln :: !vulns

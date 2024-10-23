@@ -23,7 +23,7 @@ type t = {
   this   : LocationSet.t;
   (* function information *)
   context      : Functions.Context.t;
-  currFuncNode : Graph.Node.t option;
+  currFuncNode : location option;
 }
 
 let empty_state (info : Functions.Info.t) = { 
