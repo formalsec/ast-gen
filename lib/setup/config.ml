@@ -129,10 +129,9 @@ let get_package_sink_info (config : t) (package_name : string) (method_name : st
   ) ("", None) method_sink
 
 
-
-
-let get_package_source_info (config : t) (package : string) (property : string) : packageSource option = 
-  let source_infos = (List.filter (fun source_info -> source_info.source = property && List.exists (fun pkg -> pkg.package = package) source_info.packages) config.packageSources) in 
-  List.nth_opt source_infos 0
+let get_package_source_info (config : t) (package : string) (property : string) : package option = 
+  let source_infos = List.filter (fun source_info -> source_info.source = property) config.packageSources in 
+  let packages = List.concat_map (fun info -> List.filter_map (fun pkg -> if pkg.package = package then Some pkg else None) info.packages) source_infos in 
+  List.nth_opt packages 0
 
 

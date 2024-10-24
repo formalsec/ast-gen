@@ -158,6 +158,13 @@
                 {"package": "process", "args": [ 0 ]},
                 {"package": "yargs", "args": [ 0 ]}
             ]
+        },
+        {
+            "source": "createServer",
+            "type": "package",
+            "packages": [
+                {"package": "http", "args": [ 1 ]}
+            ]
         }
     ],
     "functions-signatures": {

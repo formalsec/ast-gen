@@ -898,6 +898,14 @@ let set_attacker_controlable (graph : t) (location : location) : unit =
   let node = find_node_opt graph location in 
   option_may (fun node ->
     HashTable.replace graph.nodes location {node with isSource = true};
+
+    (* add taint edges to params (to function nodes) *)
+    let edges = get_edges graph location in
+    EdgeSet.iter (fun (edge : Edge.t) ->
+      match edge._type with
+        | Edge.Parameter _ -> add_taint_edge graph loc_taint_source edge._to
+        | _ -> ()
+    ) edges
   ) node
 
 

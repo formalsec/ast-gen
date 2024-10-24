@@ -469,25 +469,15 @@ and add_taink_sink (graph : Graph.t) (loc : location) (node : Graph.Node.t) (vul
   ) sink_args
 
 
-let add_taint_sources (state : State.t) (_config : Config.t) (mode : Mode.t) (is_main : bool) (exportsObject : ExportedObject.t): unit =
+let add_taint_sources (state : State.t) (config : Config.t) (mode : Mode.t) (is_main : bool) (exportsObject : ExportedObject.t) (externalCalls : ExternalReferences.t): unit =
   let graph = state.graph in
-  let l_tsource = loc_taint_source in
-  let add_taint_edge = Graph.add_taint_edge graph in
-
   (* BASIC ATTACKER MODEL :
     -> the attacker controlls all function parameters
   .*)
   if Mode.is_basic mode then (
     Graph.iter_nodes (fun location node ->
       match node._type with
-        | Function _ ->
-          let edges = Graph.get_edges graph location in
-          EdgeSet.iter (fun (edge : Edge.t) ->
-            match edge._type with
-              | Edge.Parameter _ -> add_taint_edge l_tsource edge._to
-              | _ -> ()
-          ) edges
-
+        | Function _ ->  Graph.set_attacker_controlable graph location;
         | _ -> ()
     ) graph
 
@@ -507,23 +497,34 @@ let add_taint_sources (state : State.t) (_config : Config.t) (mode : Mode.t) (is
           Graph.set_attacker_controlable graph l_func;
           (* get class methods if the exported function is a class *)
           let methods = Graph.get_class_methods graph l_func in 
-          print_endline "methods";
-          List.iter (print_endline) methods;
           List.iter (Graph.set_attacker_controlable graph) methods;
-            
-          (* add taint edges to params *)
-          let edges = Graph.get_edges graph l_func in
-          EdgeSet.iter (fun (edge : Edge.t) ->
-            match edge._type with
-              | Edge.Parameter _ -> add_taint_edge l_tsource edge._to
-              | _ -> ()
-          ) edges
-
         | _ -> ()
-    ) exported_funcs
+    ) exported_funcs;
+
+    (* add package sources *)
+    Graph.iter_nodes (fun loc node -> 
+      match node._type with
+      | Call _ -> 
+          let referece_info = ExternalReferences.get_opt externalCalls loc in
+          option_may (fun ref -> 
+            let method_name = List.nth ref.properties 0 in
+            let package_name = ref._module in
+            let source_info = Config.get_package_source_info config package_name method_name in 
+            option_may (fun (pkg : package)->  
+              let args = Graph.get_arg_locations graph loc in
+              List.iter (fun dangerous_index ->
+                if dangerous_index = 0 
+                  then Graph.set_attacker_controlable graph loc
+                  else let dangerous_index = string_of_int (dangerous_index - 1) in
+                       let arg_locs = List.filter (((=) dangerous_index) << fst) args in
+                       List.iter (fun (_, l) -> Graph.set_attacker_controlable graph l) arg_locs
+              ) pkg.args
+
+            ) source_info
+          ) referece_info
+      | _ -> ()
+    ) graph
   )
-
-
 
 
 let rec buildExportsObject (state : State.t) (info : buildExportsObject) : ExportedObject.t =
@@ -596,7 +597,7 @@ let rec program (mode : Mode.t) (is_verbose : bool) (config_path : string) (prog
 
   let exportsObject = buildExportsObject state exportsObjectInfo in
   add_taint_sinks state config external_calls;
-  add_taint_sources state config mode (Program.is_main program) exportsObject;
+  add_taint_sources state config mode (Program.is_main program) exportsObject external_calls;
 
   state.graph, exportsObject, external_calls;
 
