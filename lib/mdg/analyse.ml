@@ -25,6 +25,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     let init_func_header (state : State.t) (func : Functions.Id.t) (info : Functions.Info.info) : unit =
       let graph = state.graph in
       let curr_func = state.currFuncNode in 
+
       let alloc_fun      = Graph.alloc_function graph in
       let add_func_node  = Graph.add_func_node  graph curr_func in
       let add_param_node = Graph.add_param_node graph in
@@ -153,6 +154,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
           let f_i = falloc id in
           store_update left (LocationSet.singleton f_i);
           let l_func_node = Graph.get_func_node graph func_id in 
+          option_may (fun l_func -> Graph.update_func_def graph l_func curr_func) l_func_node;
 
           (* setup new store with only the param and corresponding locations *)
           let param_locs = get_param_locs func_id in
@@ -293,7 +295,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
         
         if (Option.is_some _L) then (
           let _L = Option.get _L in
-        LocationSet.apply (flip add_dep_edge l_retn) _L;
+          LocationSet.apply (flip add_dep_edge l_retn) _L;
         
           let props = LocationSet.fold (fun l acc -> Graph.get_all_property_nodes graph l :: acc) _L [] |> List.flatten in
           (* Format.printf "props = %s@." (String.concat ", " (List.map Graph.Node.get_abs_loc props)); *)
@@ -522,7 +524,7 @@ let add_taint_sources (state : State.t) (config : Config.t) (mode : Mode.t) (is_
                 ) pkg.args
 
               ) source_info)
-              
+
             ) referece_info
       | _ -> ()
     ) graph

@@ -14,12 +14,25 @@ let pp_nodes (ppf : Format.formatter) (nodes : Node.t list) : unit =
   Format.fprintf ppf "{ %s }"
     (String.concat ", " (List.map Node.get_abs_loc nodes))
 
+let rec is_reachable_new (graph : Graph.t) (call_node : Node.t) (_sensitive_inputs : int list)  =
+  let func_defs = reachable_func_defs graph call_node in 
+  func_defs
+
+and reachable_func_defs (graph : Graph.t) (node : Node.t) : Node.t list =
+  let rec aux (graph : Graph.t) (node : Node.t) (result : Node.t list) : Node.t list =
+    match node.func with 
+      | None -> result
+      | Some l_func -> 
+        let func_node = Graph.find_node graph l_func in
+        aux graph func_node (func_node :: result)
+  in
+
+  aux graph node []
+
 let rec is_reachable (graph : Graph.t) (node : Node.t) : bool =
   (* get function definition node where the node argument was defined *)
-  let f_node = Funcs.map_default (fun loc -> Graph.find_node_opt graph loc) None node.func in 
-  match f_node with
-  | None -> false
-  | Some f_node ->
+  let fun_defs = is_reachable_new graph node [] in 
+  List.exists (fun f_node -> 
     let f_name = Node.get_func_name f_node in
     let f_node_loc = Node.get_abs_loc f_node in
     let p_nodes = Graph.find_tainted_parameter graph f_node node in
@@ -31,20 +44,24 @@ let rec is_reachable (graph : Graph.t) (node : Node.t) : bool =
       let f_args =
         List.flatten
         @@ List.map
-             Funcs.(
-               List.map (Graph.find_node graph)
-               << snd << List.split
-               << Graph.get_arg_locations graph
-               << Node.get_abs_loc )
-             f_callers
+              Funcs.(
+                List.map (Graph.find_node graph)
+                << snd << List.split
+                << Graph.get_arg_locations graph
+                << Node.get_abs_loc )
+              f_callers
       in
       let f_returners =
         Option.bind f_name (Hashtbl.find_opt graph.returners)
         |> Option.value ~default:[]
       in
+      print_endline @@ "f_args : " ^ string_of_int @@ List.length f_args;
+      print_endline @@ "f_returners : " ^ string_of_int @@ List.length f_returners;
       List.exists
         (fun arg -> is_reachable graph arg)
         (f_args @ f_returners)
+  ) fun_defs
+
 
 
 let run_tainted_queries (graph : Graph.t) (_config : Config.t) : Vulnerability.t list =
