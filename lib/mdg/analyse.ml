@@ -507,21 +507,23 @@ let add_taint_sources (state : State.t) (config : Config.t) (mode : Mode.t) (is_
       | Call _ -> 
           let referece_info = ExternalReferences.get_opt externalCalls loc in
           option_may (fun ref -> 
-            let method_name = List.nth ref.properties 0 in
-            let package_name = ref._module in
-            let source_info = Config.get_package_source_info config package_name method_name in 
-            option_may (fun (pkg : package)->  
-              let args = Graph.get_arg_locations graph loc in
-              List.iter (fun dangerous_index ->
-                if dangerous_index = 0 
-                  then Graph.set_attacker_controlable graph loc
-                  else let dangerous_index = string_of_int (dangerous_index - 1) in
-                       let arg_locs = List.filter (((=) dangerous_index) << fst) args in
-                       List.iter (fun (_, l) -> Graph.set_attacker_controlable graph l) arg_locs
-              ) pkg.args
+            if List.length ref.properties = 1 then (
+              let method_name = List.nth ref.properties 0 in
+              let package_name = ref._module in
+              let source_info = Config.get_package_source_info config package_name method_name in 
+              option_may (fun (pkg : package)->  
+                let args = Graph.get_arg_locations graph loc in
+                List.iter (fun dangerous_index ->
+                  if dangerous_index = 0 
+                    then Graph.set_attacker_controlable graph loc
+                    else let dangerous_index = string_of_int (dangerous_index - 1) in
+                        let arg_locs = List.filter (((=) dangerous_index) << fst) args in
+                        List.iter (fun (_, l) -> Graph.set_attacker_controlable graph l) arg_locs
+                ) pkg.args
 
-            ) source_info
-          ) referece_info
+              ) source_info)
+              
+            ) referece_info
       | _ -> ()
     ) graph
   )
