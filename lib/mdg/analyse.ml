@@ -503,9 +503,9 @@ let add_taint_sources (state : State.t) (config : Config.t) (mode : Mode.t) (is_
     (* add package sources *)
     Graph.iter_nodes (fun loc node -> 
       match node._type with
-      | Call _ -> 
+      | Call name -> 
           let referece_info = ExternalReferences.get_opt externalCalls loc in
-          option_may (fun ref -> 
+          map_default_lazy (fun ref -> 
             if List.length ref.properties = 1 then (
               let method_name = List.nth ref.properties 0 in
               let package_name = ref._module in
@@ -522,7 +522,13 @@ let add_taint_sources (state : State.t) (config : Config.t) (mode : Mode.t) (is_
 
               ) source_info)
 
-            ) referece_info
+            ) 
+            (lazy (
+              if name = "Promise" then (
+                let args = Graph.get_arg_locations graph loc in 
+                List.iter (fun (i, loc) -> if i = 1 then Graph.set_attacker_controlable graph loc) args;
+              );
+            )) referece_info
       | _ -> ()
     ) graph
   )
