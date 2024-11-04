@@ -64,7 +64,9 @@ module Node = struct
     | TaintSink _ -> "taint sink"
     | Literal -> "literal value"
     | Return -> "RET_OBJ"
-
+  
+  let is_source (node : t) : bool = node.isSource
+  
   let get_abs_loc (node : t) : string = node.abs_loc
   (* get node information *)
   let get_id (node : t) : int = node.id
@@ -850,15 +852,6 @@ and get_neighbors (graph : t) (node : Node.t) : Node.t list =
 
 
 
-let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) : Node.t list =
-    let paths = reaches graph f_node node in 
-    List.filter_map (fun path -> 
-      let argument_index = List.length path - 2 in 
-      if argument_index >= 0 
-        then Some (List.nth path argument_index)
-        else None
-    ) paths 
-
 let get_call_node (graph : t) (sink_node : Node.t) : Node.t = 
   match sink_node._type with
     | TaintSink (_, _) -> 
@@ -912,6 +905,31 @@ let get_argument_index (graph : t) (argument : Node.t) (call_node : Node.t) : in
       | _ -> None 
   ) edges in
   indexes
+
+let get_param_index (graph : t) (param : Node.t) (func_def : Node.t) : int list = 
+  let edges = EdgeSet.elements @@ find_edges graph func_def.abs_loc in
+  let indexes = List.filter_map (fun (edge : Edge.t) -> 
+    match edge._type with 
+      | Parameter index when edge._to = param.abs_loc -> Some index
+      | _ -> None
+  ) edges in
+  indexes
+
+
+let get_sensitive_inputs (graph : t) (sink_node : Node.t) (call_node : Node.t) : int list = 
+  let arg_locs = get_arg_locations graph call_node.abs_loc in 
+  IntSet.elements (List.fold_left (fun acc (i, loc) -> 
+    let arg_edges = find_edges graph loc in 
+    let is_sensitive = EdgeSet.exists (fun edge -> 
+      match edge._type with 
+        | Dependency when edge._to = sink_node.abs_loc -> true 
+        | _ -> false 
+    ) arg_edges in 
+    
+    if is_sensitive 
+      then IntSet.add i acc 
+      else acc
+  ) IntSet.empty arg_locs)
   
      
 

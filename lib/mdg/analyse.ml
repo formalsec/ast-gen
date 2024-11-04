@@ -40,7 +40,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
         let l_p = Graph.alloc_param graph in
         add_param_node (Some l_f) l_p param (Location.empty ());
         add_param_edge l_f l_p i
-      ) ("this" :: info.params);
+      ) (info.params);
     in
 
     Functions.Info.iter (init_func_header state) funcs_info
