@@ -39,9 +39,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
       List.iteri (fun i param ->
         let l_p = Graph.alloc_param graph in
         add_param_node (Some l_f) l_p param (Location.empty ());
-        if param = "this"
-          then add_param_edge l_f l_p "this"
-          else add_param_edge l_f l_p (Int.to_string (i - 1))
+        add_param_edge l_f l_p i
       ) ("this" :: info.params);
     in
 

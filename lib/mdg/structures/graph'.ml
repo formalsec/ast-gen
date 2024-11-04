@@ -125,7 +125,7 @@ module Edge = struct
       | Version  of property option
       | Dependency
       | Argument of int (* argument index *) * string (* argument name *)   
-      | Parameter of string 
+      | Parameter of int 
       | RefCall
       | Call
       | Return 
@@ -155,8 +155,8 @@ module Edge = struct
       match Int.compare (_type_to_int t) (_type_to_int t'), t, t' with
       | 0, Property x, Property x'
       | 0, Version  x, Version  x' -> Option.compare (String.compare) x x'
+      | 0, Parameter x, Parameter x' -> Int.compare x x'
       | 0, Argument  (_, x), Argument  (_, x') 
-      | 0, Parameter x, Parameter x' 
       | 0, Sink      x, Sink      x' -> String.compare x x'
       | c, _, _ -> c
     
@@ -171,7 +171,7 @@ module Edge = struct
         | Version prop -> map_default (fun prop -> "V(" ^ prop ^ ")") "V(*)" prop
         | Dependency -> "D" 
         | Argument (_, id) -> "ARG(" ^ id ^ ")"
-        | Parameter pos -> "param " ^ pos
+        | Parameter pos -> "param " ^ string_of_int pos
         | RefCall -> "call"
         | Call -> "CG"
         | Return -> "RET"
@@ -218,7 +218,7 @@ module Edge = struct
 
     let get_par_i (edge : t) : string =
       match edge._type with
-        | Parameter i -> i
+        | Parameter i -> string_of_int i
         | _           -> "" 
   
     let get_stm_i (_ : t) : string = ""
@@ -563,7 +563,7 @@ let add_arg_edge (graph : t) (from : location) (_to : location) (index : int) (i
   let edge = {Edge._to = _to; _type = Argument (index, identifier)} in 
   add_edge graph edge _to from
 
-let add_param_edge (graph : t) (from : location) (_to : location) (index : string) : unit = 
+let add_param_edge (graph : t) (from : location) (_to : location) (index : int) : unit = 
   let edge = {Edge._to = _to; _type = Parameter index} in 
   add_edge graph edge _to from
 
