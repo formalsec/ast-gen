@@ -1472,7 +1472,7 @@ end = struct
         | _, Statement.AssignFunction {id; left; params; body; _} -> 
           (* add function information *)
           let func_id = Functions.Id.create id (Identifier.get_name left) in
-          let params' = List.map (fun (_, {Statement.AssignFunction.Param.argument; _}) -> Identifier.get_name argument) params in
+          let params' = "this" :: List.map (fun (_, {Statement.AssignFunction.Param.argument; _}) -> Identifier.get_name argument) params in
           
 
           Functions.Info.add found_funcs func_id parent_id params'; 

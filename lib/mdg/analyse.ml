@@ -255,8 +255,8 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
         (* argument edges *)
         let params = map_default get_param_names [] f_id in
         List.iteri ( fun i _Ls ->
-          let param_name = Option.value (List.nth_opt params i) ~default:"undefined" in
-          LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) param_name) _Ls
+          let param_name = Option.value (List.nth_opt params (i + 1)) ~default:"undefined" in
+          LocationSet.apply (fun l -> add_arg_edge l l_call (i + 1) param_name) _Ls
         ) _Lss;
         
         (* add call node *)
@@ -371,7 +371,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
     add_node l_retn (Identifier.get_name left) loc;
     
     (* ! graphjs only adds edge for this property *)
-    LocationSet.apply (fun l_this -> add_arg_edge  l_this l_call "this" "this") _Lthis;
+    LocationSet.apply (fun l_this -> add_arg_edge  l_this l_call 0 "this") _Lthis;
 
     (* lookup function header node associated with the property *)
     let found_func = ref false in
@@ -384,7 +384,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
           | Some {_type = Function (id, params); _} -> ();
             List.iteri ( fun i _Ls ->
               let param_name = Option.value (List.nth_opt params i) ~default:"undefined" in
-              LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) param_name) _Ls
+              LocationSet.apply (fun l -> add_arg_edge l l_call (i + 1) param_name) _Ls
             ) _Lss;
             add_call_edge l_call l_func;
             Graph.register_call_node graph id.name call_node;
@@ -395,7 +395,7 @@ module GraphConstrunction (Auxiliary : AbstractAnalysis.T) = struct
 
     if not !found_func then (
       List.iteri ( fun i _Ls ->
-        LocationSet.apply (fun l -> add_arg_edge l l_call (string_of_int i) "undefined") _Ls
+        LocationSet.apply (fun l -> add_arg_edge l l_call (i + 1) "undefined") _Ls
       ) _Lss
     );
 
@@ -465,9 +465,8 @@ and add_taink_sink (graph : Graph.t) (loc : location) (node : Graph.Node.t) (vul
   (* add depedency edges from dangerous inputs (arguments) to taint sink *)
   let args = Graph.get_arg_locations graph loc in
   List.iter (fun dangerous_index ->
-    let dangerous_index = string_of_int (dangerous_index - 1) in
-    let arg_locs = List.filter (((=) dangerous_index) << fst) args in
-    List.iter (fun (_, l) -> add_dep_edge l l_tsink) arg_locs
+    let arg_locs = List.filter_map (fun (index, loc) -> if index = dangerous_index then Some loc else None) args in
+    List.iter (fun loc -> add_dep_edge loc l_tsink) arg_locs
   ) sink_args
 
 
@@ -518,9 +517,9 @@ let add_taint_sources (state : State.t) (config : Config.t) (mode : Mode.t) (is_
                 List.iter (fun dangerous_index ->
                   if dangerous_index = 0 
                     then Graph.set_attacker_controlable graph loc
-                    else let dangerous_index = string_of_int (dangerous_index - 1) in
-                        let arg_locs = List.filter (((=) dangerous_index) << fst) args in
-                        List.iter (fun (_, l) -> Graph.set_attacker_controlable graph l) arg_locs
+                    else 
+                      let arg_locs = List.filter_map (fun (index, loc) -> if index = dangerous_index then Some loc else None) args in
+                      List.iter (fun loc -> Graph.set_attacker_controlable graph loc) arg_locs
                 ) pkg.args
 
               ) source_info)

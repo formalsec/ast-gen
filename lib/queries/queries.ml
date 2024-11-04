@@ -16,6 +16,27 @@ let pp_nodes (ppf : Format.formatter) (nodes : Node.t list) : unit =
 
 let rec is_reachable_new (graph : Graph.t) (call_node : Node.t) (_sensitive_inputs : int list)  =
   let func_defs = reachable_func_defs graph call_node in 
+  (* get all possible paths between the function definition node and the call node *)
+  (* let paths = List.map (fun func_def -> (func_def, Graph.reaches graph func_def call_node)) func_defs in *)
+
+  (* perform two operations: 
+      (1) filter the paths that dont reach sensitive inputs of the call node
+      (2) get the association (func_def, parameter) 
+  .*)
+  (* let src_params = List.map (fun (func_def, paths') ->
+    let filtered_paths = List.filter (fun path -> 
+        let arg_position = List.length path - 2 in 
+        if arg_position >= 0 
+          then 
+            let arg = List.nth path arg_position in 
+            let arg_index = Graph.get_argument_index graph arg call_node in 
+            List.exists (flip List.mem sensitive_inputs) arg_index
+          else false
+      ) paths' in 
+
+    filtered_paths
+  ) paths in  *)
+
   func_defs
 
 and reachable_func_defs (graph : Graph.t) (node : Node.t) : Node.t list =

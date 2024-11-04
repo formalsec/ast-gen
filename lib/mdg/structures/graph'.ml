@@ -124,7 +124,7 @@ module Edge = struct
       | Property of property option
       | Version  of property option
       | Dependency
-      | Argument of string (* argument index *) * string (* argument name *)   
+      | Argument of int (* argument index *) * string (* argument name *)   
       | Parameter of string 
       | RefCall
       | Call
@@ -559,7 +559,7 @@ let add_version_edge (graph : t) (from : location) (_to : location) (property : 
   let edge = {Edge._to = _to; _type = Version property} in 
   add_edge graph edge _to from
 
-let add_arg_edge (graph : t) (from : location) (_to : location) (index : string) (identifier : string) : unit = 
+let add_arg_edge (graph : t) (from : location) (_to : location) (index : int) (identifier : string) : unit = 
   let edge = {Edge._to = _to; _type = Argument (index, identifier)} in 
   add_edge graph edge _to from
 
@@ -616,7 +616,7 @@ let get_param_locations (graph : t) (func_id : Functions.Id.t) : Store.t =
 
   store
 
-let get_arg_locations (graph : t) (callee : location) : (string * location) list =
+let get_arg_locations (graph : t) (callee : location) : (int * location) list =
   let result = ref [] in 
   iter_edges (fun loc edge -> 
     match edge._type with 
@@ -672,7 +672,7 @@ let update_arg_edges (graph : t) (call_node : location) (parameters : string lis
       (* check if it is a argument edge pointing to the call_node*)
       match edge._to = call_node, edge._type with
         | true, Argument (index, _) -> 
-          let param_name = Option.value (if index = "this" then Some index else List.nth_opt parameters (int_of_string index)) ~default:"undefined" in
+          let param_name = Option.value (if index = 0 then Some "this" else List.nth_opt parameters index) ~default:"undefined" in
           {edge with _type = Argument (index, param_name)}
 
         | _ -> edge
@@ -904,5 +904,14 @@ let get_class_methods (graph : t) (location : location) : location list =
   List.flatten @@ 
   List.map (fun proto -> traverse_prototype graph [ proto ] [] []) prototype
 
+let get_argument_index (graph : t) (argument : Node.t) (call_node : Node.t) : int list = 
+  let edges = EdgeSet.elements @@ get_edges graph (Node.get_abs_loc argument) in 
+  let indexes = List.filter_map (fun (edge : Edge.t) -> 
+    match edge._type with 
+      | Argument (index, _) when edge._to = call_node.abs_loc -> Some index 
+      | _ -> None 
+  ) edges in
+  indexes
+  
      
 
