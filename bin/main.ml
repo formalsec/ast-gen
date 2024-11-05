@@ -63,18 +63,14 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
         let graph, exportedObject, external_calls =
           Mdg.Analyse.program mode verbose config_path norm_program
         in
-        Mdg.Pp.Dot.output graph_dir graph;
         ExternalReferences.iter
           (fun locs info ->
             let l_call = LocationSet.min_elt locs in
-            print_endline @@ "l_call : " ^ l_call;
 
             (* module information *)
             print_endline info._module;
             let module_name = Fpath.(to_string @@ (dir // (v info._module))) in
-            print_endline @@ "module_name : " ^ module_name;
             let moduleEO = Summaries.get_opt summaries module_name in
-            print_endline "module EO obtained";
             option_may
               (fun moduleEO ->
                 let moduleGraph = ModuleGraphs.get module_graphs module_name in
