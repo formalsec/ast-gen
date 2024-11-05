@@ -819,25 +819,29 @@ let dynamicNewVersion (graph : t) (store : Store.t) (_L_obj : LocationSet.t) (_L
   
 
 (* ------- T R A V E R S E ------- *)
-let rec reaches graph src target : Node.t list list = 
-  let visited  = IntSet.empty in
-  reaches' graph visited [ [ src ] ] []  target 
+let print_path (nodes : Node.t list) : unit = print_endline (String.concat " <- " (List.map Node.get_abs_loc nodes))
 
-and reaches' graph visited cur_paths ret_paths target : Node.t list list = 
+let rec reaches graph src target : Node.t list list = 
+  reaches' graph [ [ src ] ] []  target 
+
+and reaches' graph cur_paths ret_paths target : Node.t list list = 
   match cur_paths with 
   | [] -> ret_paths
-  | (cur::_ as curr_path)::tail_paths when cur = target -> 
+  | (cur::_ as cur_path)::tail_paths when cur = target -> 
     (* found a possible path *)
-    reaches' graph visited tail_paths (curr_path::ret_paths) target
-  | (cur::_ as curr_path)::tail_paths -> 
+    reaches' graph tail_paths (cur_path::ret_paths) target
+  | (cur::_ as cur_path)::tail_paths -> 
     (* no path found yet, need to keep exploring the current path *)
     let nghbrs = get_neighbors graph cur in
-    let nghbrs = List.filter (fun nghbr -> not (IntSet.mem (Node.get_id nghbr) visited)) nghbrs in 
-    let visited' = List.fold_left (fun acc nghbr -> IntSet.add (Node.get_id nghbr) acc) visited nghbrs in 
-    let fst_paths = List.map (fun cur' -> cur'::curr_path) nghbrs in 
-    reaches' graph visited' (fst_paths @ tail_paths) ret_paths target
+    let nghbrs = List.filter (fun nghbr -> not (in_path nghbr cur_path)) nghbrs in 
+    let fst_paths = List.map (fun cur' -> cur'::cur_path) nghbrs in 
+    reaches' graph (fst_paths @ tail_paths) ret_paths target
   | _ -> failwith "current path is empty"
-  
+
+and in_path (node : Node.t) (path : Node.t list) : bool =
+  let node_loc = Node.get_abs_loc node in  
+  List.exists (fun path_node -> Node.get_abs_loc path_node = node_loc) path
+
 and get_neighbors (graph : t) (node : Node.t) : Node.t list = 
   let valid_edge: Edge._type -> bool = function 
     | Property _  

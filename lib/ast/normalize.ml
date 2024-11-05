@@ -962,7 +962,8 @@ and normalize_array_elem (context : context) (array : m Identifier.t) (index : i
       let update_stmt = Statement.StaticUpdate.build (loc_f loc) (Identifier.to_expression array) (string_of_int index) true (Option.get expr) in 
       stmts @ [update_stmt]
     | Hole _ -> []
-    | _ -> failwith "[ERROR] Cannot process spread array element"
+    (* TODO : spread element not implemented *)
+    | Spread _ -> []
 
 and normalize_argument_list (context : context) (_, {Ast'.Expression.ArgList.arguments; _}) : norm_expr_t list = 
   List.map (normalize_argument context) arguments
@@ -1208,7 +1209,8 @@ and normalize_property (context : context) (obj_id : m Identifier.t) (property :
       key_stmts @ val_stmts @ decl @ [new_obj; set_get] @ set_prop
 
     (* TODO : spread property not implemented *)
-    | _ -> failwith "[ERROR] Spread property not implemented"
+    | SpreadProperty _ ->  
+      []
 
 and normalize_property_key (key : ('M, 'T) Ast'.Expression.Object.Property.key) : m Statement.t list * property = 
   match key with
@@ -1217,8 +1219,11 @@ and normalize_property_key (key : ('M, 'T) Ast'.Expression.Object.Property.key) 
     | BigIntLiteral (_, literal) -> [], Static (literal.raw  , true)
     | Identifier    (_, id)      -> [], Static (id.name, false)
     
-    (* TODO : private name and computed key not implemented *)
-    | _ -> failwith "[ERROR] Private name and computed key not implemented"
+    (* TODO : private name not implemented *)
+    | PrivateName (_, {name; _}) -> [], Static (name, false) 
+    
+    (* TODO : computed key not implemented *)
+    | Computed _ -> [], Static ("todo", false)
 
 and normalize_init (init : ('M, 'T) Ast'.Statement.For.init) : norm_expr_t =
   let ne = normalize_expression empty_context in 

@@ -47,8 +47,7 @@ and is_reachable' (graph : Graph.t) (call_node : Node.t) (sensitive_inputs : int
         else acc
     ) IntSet.empty filtered_paths in 
     
-    let res = (func_def, IntSet.elements source_params) in 
-    res
+    (func_def, IntSet.elements source_params)
   ) paths in 
 
   (* check if the sensitive inputs reach a attacker controlled function *)
