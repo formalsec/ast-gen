@@ -46,7 +46,10 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
       let ast = Js_parser.from_file file_path in
 
       (* STEP 1 : Normalize AST *)
+      let norm_start = Sys.time () in 
       let norm_program = Ast.Normalize.program ast file_path in
+      let norm_end = (Sys.time () -. norm_start) *. 1000.0 in 
+      print_endline ("normalization: " ^ string_of_float norm_end);
 
       let norm_program =
         if file_path = dep_tree.main then Program.set_main norm_program
@@ -60,9 +63,12 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
       (* STEP 2 : Generate MDG for the normalized code *)
       if generate_mdg then (
         print_endline "[STEP 2] Generating MDG...";
+        let mdg_start = Sys.time () in 
         let graph, exportedObject, external_calls =
           Mdg.Analyse.program mode verbose config_path norm_program
         in
+        let mdg_end = (Sys.time () -. mdg_start) *. 1000.0 in 
+        print_endline ("mdg: " ^ string_of_float mdg_end);
         ExternalReferences.iter
           (fun locs info ->
             let l_call = LocationSet.min_elt locs in
@@ -103,10 +109,14 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
     Mdg.Pp.Time.output run_dir mdg_end;
 
     (* run queries *)
-    if run_queries then
+    if run_queries then (
       let config = Config.read config_path in
       print_endline ("[STEP 3] Running queries...");
+      let query_start = Sys.time () in (
       Queries.run_queries Format.std_formatter graph config output_path);
+      let query_end = (Sys.time () -. query_start) *. 1000.0 in 
+      print_endline (string_of_float query_end))
+    );
 
   Ok 0
 
