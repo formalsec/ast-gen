@@ -1,0 +1,5 @@
+{
+  "name": "package",
+  "description": "A package for testing dependency tree generation",
+  "main": "main.js"
+}
