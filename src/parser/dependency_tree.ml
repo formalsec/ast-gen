@@ -1,5 +1,5 @@
 open Graphjs_base
-open Graphjs_config
+open Graphjs_shared
 
 exception Exn of (Fmt.t -> unit)
 
@@ -111,7 +111,21 @@ open struct
     | MultiFile -> dependency_tree_cmd main_file
 end
 
-let generate (mode : Mode.t) (path : string) : t =
+let generate_with_mode (mode : Mode.t) (path : string) : t =
   let main_path = find_main_file path mode in
   let structure = generate_structure main_path mode in
   create (Json.from_string structure)
+
+let generate (path : string) : t =
+  let mode = Parser_config.(!mode) in
+  generate_with_mode mode path
+
+let bottom_up_visit (f : string -> 'a) (dep_tree : t) : 'a list =
+  let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
+  let rec bottom_up_visit' visited { path; deps } acc =
+    if Hashtbl.mem visited path then acc
+    else
+      let _ = Hashtbl.add visited path () in
+      let deps_acc = DepSet.fold (bottom_up_visit' visited) deps [] in
+      acc @ deps_acc @ [ f path ] in
+  bottom_up_visit' visited dep_tree []

@@ -1,16 +1,16 @@
 open Graphjs_base
-open Graphjs_config
+open Graphjs_shared
 open Graphjs_parser.Dependency_tree
 
 open struct
   let pwd : string = Sys.getcwd ()
 
   let expected (exp : string) (res : string) : bool =
-    Log.stderr "Expected:@\n%s@\n@\nResult:@\n%s@\n@." exp res;
+    Log.stderr "Expected:@\n%s@\nResult:@\n%s@\n@." exp res;
     false
 
   let exec (mode : Mode.t) (path : string) : (t, string) Result.t =
-    match generate mode path with
+    match generate_with_mode mode path with
     | dt -> Ok dt
     | exception Exn fmt -> Error (Fmt.str "%t" fmt)
 
@@ -33,7 +33,7 @@ end
 
 module Res = struct
   let err : ('a, Fmt.t, unit, 'b) format4 -> 'a =
-    Fmt.kdly (Fmt.str "%t %t" Log.Config.(fst !error))
+    Fmt.kdly (Fmt.str "%t %t@\n" Log.Config.(fst !error))
 
   let ok (structure : string) : (t, string) Result.t =
     let dt = create (Json.from_string structure) in

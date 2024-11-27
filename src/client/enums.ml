@@ -7,7 +7,7 @@ module DebugLvl = struct
     | Info
     | Full
 
-  let all : t list = [ None; Warn; Full ]
+  let all : t list = [ None; Warn; Info; Full ]
 
   let pp (ppf : Fmt.t) : t -> unit = function
     | None -> Fmt.pp_str ppf "none"
@@ -48,7 +48,7 @@ module AnalysisMode = struct
   let args : t list -> (string * t) list =
     List.map (fun mode -> (str mode, mode))
 
-  let conv : t -> Graphjs_config.Mode.t = function
+  let conv : t -> Graphjs_shared.Mode.t = function
     | Basic -> Basic
     | SingleFile -> SingleFile
     | MultiFile -> MultiFile

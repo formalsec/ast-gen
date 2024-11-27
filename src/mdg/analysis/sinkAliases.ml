@@ -1,5 +1,5 @@
 open Graphjs_base
-open Graphjs_config
+open Graphjs_shared
 open Graphjs_ast
 open Grammar
 open Tainted

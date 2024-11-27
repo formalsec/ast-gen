@@ -151,9 +151,10 @@ let copts : unit Term.t =
 let parse_opts : Cmd_parse.Options.t Term.t =
   let open Term in
   const Cmd_parse.Options.set
+  $ Docs.GraphjsOpts.mode
   $ Docs.ParseOpts.input
   $ Docs.ParseOpts.output
-  $ Docs.GraphjsOpts.mode
+  $ Docs.ParseOpts.test262_conform_hoisted
 
 let parse_cmd : unit Exec.status Cmd.t =
   let open Docs.ParseCmd in

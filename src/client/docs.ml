@@ -38,7 +38,7 @@ module CommonOpts = struct
   let colorless =
     let docs = Manpage.s_common_options in
     let doc =
-      "Generate colorless output. This flag might be necessary for terminals \
+      "Generate colorless output. This flag may be required for terminals \
        lacking 16-ANSI-color support." in
     Arg.(value & flag & info [ "colorless" ] ~docs ~doc)
 end
@@ -68,6 +68,13 @@ module ParseOpts = struct
     let docv = "FILE" in
     let doc = "Path to store the parsed JavaScript file." in
     Arg.(value & opt (some fpath) None & info [ "o"; "output" ] ~docv ~doc)
+
+  let test262_conform_hoisted =
+    let doc =
+      "Normalizes function hoisting by representing hoisted functions as \
+       declarations instead of assignments. This flag is required for testing \
+       the normalizer against the Test262 conformance test suite." in
+    Arg.(value & flag & info [ "test262-conform-hoisted" ] ~doc)
 end
 
 module ParseCmd = struct

@@ -10,7 +10,7 @@ end
 
 open struct
   let pp_err (ppf : Fmt.t) (path : string) : unit =
-    Log.fmt_error ppf "Flow was unable to parse the file %S.@\n" path
+    Log.fmt_error ppf "Flow was unable to parse the file %S." path
 
   let pp_flow_loc (ppf : Fmt.t) ((path, loc) : string * Loc.t) : unit =
     let font = Config.(!loc_font) in
@@ -19,11 +19,11 @@ open struct
 
   let pp_flow_err (path : string) (ppf : Fmt.t)
       ((loc, err) : Loc.t * Parse_error.t) : unit =
-    Fmt.fmt ppf "%s@\n%a" (Parse_error.PP.error err) pp_flow_loc (path, loc)
+    Fmt.fmt ppf "%a@\n%s" pp_flow_loc (path, loc) (Parse_error.PP.error err)
 
   let raise (path : string) (flow_errors : (Loc.t * Parse_error.t) list) : 'a =
     let pp_flow_errs = Fmt.(pp_lst !>"@\n" (pp_flow_err path)) in
-    let err = Fmt.dly "%a%a" pp_err path pp_flow_errs flow_errors in
+    let err = Fmt.dly "%a%a@\n" pp_err path pp_flow_errs flow_errors in
     raise (Exn err)
 
   let parse_ic (path : string) (ic : in_channel) :

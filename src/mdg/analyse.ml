@@ -1,6 +1,6 @@
 open Graphjs_base
 open Graphjs_ast
-open Graphjs_config
+open Graphjs_shared
 module EdgeSet = Mdg.EdgeSet
 module Edge = Mdg.Edge
 open Grammar

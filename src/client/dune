@@ -2,9 +2,10 @@
 
 (library
  (name graphjs_client)
+ (modules fs exec enums docs cmd_parse)
  (libraries
   graphjs_base
-  graphjs_config
+  graphjs_shared
   graphjs_parser
   graphjs_ast
   graphjs_mdg
