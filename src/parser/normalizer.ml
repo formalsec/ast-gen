@@ -1,6 +1,6 @@
 open Graphjs_base
-open Graphjs_ast.Graphjs_ast'
-open Graphjs_ast.Graphjs_ast'.Metadata
+open Graphjs_ast
+open Graphjs_ast.Metadata
 module Flow = Flow_ast
 
 type id = Region.t Identifier.t

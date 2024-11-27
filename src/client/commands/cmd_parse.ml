@@ -1,6 +1,6 @@
 open Graphjs_base
 open Graphjs_shared
-open Graphjs_ast.Graphjs_ast'
+open Graphjs_ast
 open Graphjs_parser
 
 module Options = struct
