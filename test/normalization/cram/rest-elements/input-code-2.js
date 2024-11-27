@@ -1,1 +1,0 @@
-let [param1, ...otherParams] = a + b;

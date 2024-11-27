@@ -1,1 +1,0 @@
-var map = { '%r': repo }
