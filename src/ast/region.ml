@@ -11,8 +11,14 @@ type t =
   ; rpos : pos
   }
 
-let pos_none : pos = { line = -1; col = -1 }
-let none : t = { file = ""; lpos = pos_none; rpos = pos_none }
+let pos_none : unit -> pos =
+  let none = { line = -1; col = -1 } in
+  fun () -> none
+
+let none : unit -> t =
+  let none = { file = ""; lpos = pos_none (); rpos = pos_none () } in
+  fun () -> none
+
 let create_pos (line : int) (col : int) : pos = { line; col } [@@inline]
 
 let create (file : string) (lpos : pos) (rpos : pos) : t = { file; lpos; rpos }

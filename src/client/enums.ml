@@ -5,25 +5,19 @@ module DebugLvl = struct
     | None
     | Warn
     | Info
-    | Full
+    | All
 
-  let all : t list = [ None; Warn; Info; Full ]
+  let all : t list = [ None; Warn; Info; All ]
 
   let pp (ppf : Fmt.t) : t -> unit = function
     | None -> Fmt.pp_str ppf "none"
     | Warn -> Fmt.pp_str ppf "warn"
     | Info -> Fmt.pp_str ppf "info"
-    | Full -> Fmt.pp_str ppf "full"
+    | All -> Fmt.pp_str ppf "all"
 
   let str : t -> string = Fmt.str "%a" pp
   let args : t list -> (string * t) list = List.map (fun lvl -> (str lvl, lvl))
-
-  let value : t -> int = function
-    | None -> 0
-    | Warn -> 1
-    | Info -> 2
-    | Full -> 3
-
+  let value : t -> int = function None -> 0 | Warn -> 1 | Info -> 2 | All -> 3
   let ( < ) (lvl1 : t) (lvl2 : t) : bool = Stdlib.(value lvl1 < value lvl2)
   let ( > ) (lvl1 : t) (lvl2 : t) : bool = Stdlib.(value lvl1 > value lvl2)
   let ( <= ) (lvl1 : t) (lvl2 : t) : bool = Stdlib.(value lvl1 <= value lvl2)

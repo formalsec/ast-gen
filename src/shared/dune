@@ -2,5 +2,9 @@
 
 (library
  (name graphjs_shared)
- (modules mode tainted)
- (libraries graphjs_base yojson))
+ (modules mode vulnerability taint_config shared_config site)
+ (libraries graphjs_base dune-site yojson))
+
+(generate_sites_module
+ (module site)
+ (sites graphjs))

@@ -3,6 +3,12 @@ open Graphjs_shared
 
 exception Exn of (Fmt.t -> unit)
 
+open struct
+  let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
+    let raise_f acc = raise (Exn acc) in
+    Fmt.kdly (fun acc -> raise_f (fun ppf -> Log.fmt_error ppf "%t" acc)) fmt
+end
+
 module rec M : sig
   type t =
     { path : string
@@ -53,10 +59,6 @@ let rec map (f : string -> string) (dt : t) : t =
   { path = f dt.path; deps = DepSet.map (map f) dt.deps }
 
 open struct
-  let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
-    let raise_f acc = raise (Exn acc) in
-    Fmt.kdly (fun acc -> raise_f (fun ppf -> Log.fmt_error ppf "%t" acc)) fmt
-
   let get_result (ic : in_channel) : string =
     let rec get_result' res =
       match input_line ic with
@@ -117,7 +119,7 @@ let generate_with_mode (mode : Mode.t) (path : string) : t =
   create (Json.from_string structure)
 
 let generate (path : string) : t =
-  let mode = Parser_config.(!mode) in
+  let mode = Shared_config.(!mode) in
   generate_with_mode mode path
 
 let bottom_up_visit (f : string -> 'a) (dep_tree : t) : 'a list =

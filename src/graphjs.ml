@@ -103,15 +103,6 @@
 
    let fpath = ((fun str -> `Ok (Fpath.v str)), Fpath.pp)
 
-   let config_path : string Term.t =
-     let doc = "Path to configuration file." in
-     let default_path = Fpath.to_string @@ Share.Config.default () in
-     Arg.(value & opt non_dir_file default_path & info [ "c"; "config" ] ~doc)
-
-   let verbose : bool Term.t =
-     let doc = "Verbose mode." in
-     Arg.(value & flag & info [ "v"; "verbose" ] ~doc)
-
    let cli =
      let cmd =
        Term.(
@@ -138,30 +129,60 @@ open Cmdliner
 
 type status = (unit Exec.status Cmd.eval_ok, Cmd.eval_error) Result.t
 
-let set_copts (lvl : Enums.DebugLvl.t) (colorless : bool) : unit =
+let set_copts (colorless : bool) (lvl : Enums.DebugLvl.t) (verbose : bool) :
+    unit =
   Font.Config.(colored $= not colorless);
   Log.Config.(log_warns $= (lvl >= Warn));
   Log.Config.(log_infos $= (lvl >= Info));
-  Log.Config.(log_debugs $= (lvl >= Full))
+  Log.Config.(log_debugs $= (lvl >= Full));
+  Log.Config.(log_verbose $= verbose)
 
 let copts : unit Term.t =
   let open Term in
-  const set_copts $ Docs.CommonOpts.debug $ Docs.CommonOpts.colorless
+  const set_copts
+  $ Docs.CommonOpts.colorless
+  $ Docs.CommonOpts.debug
+  $ Docs.CommonOpts.verbose
 
-let parse_opts : Cmd_parse.Options.t Term.t =
+let set_shared_opts (mode' : Enums.AnalysisMode.t) () : unit =
+  let open Graphjs_shared in
+  Shared_config.(mode $= Enums.AnalysisMode.conv mode')
+
+let shared_opts : unit Term.t =
+  Term.(const set_shared_opts $ Docs.SharedOpts.mode $ copts)
+
+let parse_opts : unit Term.t =
+  Term.(const Cmd_parse.Options.set $ Docs.ParseOpts.test262_conform_hoisted)
+
+let parse_cmd_opts : Cmd_parse.Options.t Term.t =
   let open Term in
-  const Cmd_parse.Options.set
-  $ Docs.GraphjsOpts.mode
-  $ Docs.ParseOpts.input
-  $ Docs.ParseOpts.output
-  $ Docs.ParseOpts.test262_conform_hoisted
+  const Cmd_parse.Options.set_cmd
+  $ Docs.FileOpts.input
+  $ Docs.FileOpts.output
+  $ parse_opts
 
 let parse_cmd : unit Exec.status Cmd.t =
   let open Docs.ParseCmd in
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
-  Cmd.v info Term.(const Cmd_parse.run $ copts $ parse_opts)
+  Cmd.v info Term.(const Cmd_parse.run $ parse_cmd_opts $ shared_opts)
 
-let cmd_list : unit Exec.status Cmd.t list = [ parse_cmd ]
+(* let mdg_opts : unit Term.t =
+   Term.(const Cmd_mdg.Options.set) *)
+
+let mdg_cmd_opts : Cmd_mdg.Options.t Term.t =
+  let open Term in
+  const Cmd_mdg.Options.set_cmd
+  $ Docs.FileOpts.input
+  $ Docs.FileOpts.output
+  $ Docs.MdgOpts.config
+(* $ mdg_opts *)
+
+let mdg_cmd : unit Exec.status Cmd.t =
+  let open Docs.MdgCmd in
+  let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
+  Cmd.v info Term.(const Cmd_mdg.run $ mdg_cmd_opts $ shared_opts)
+
+let cmd_list : unit Exec.status Cmd.t list = [ parse_cmd; mdg_cmd ]
 
 let main_cmd : unit Exec.status Cmd.t =
   let open Docs.Application in

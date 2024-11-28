@@ -20,9 +20,18 @@ module Exits = struct
     [ info ~doc:"on Dependency Tree generation error" ExitCodes.deptree
     ; info ~doc:"on JavaScript parsing error" ExitCodes.parsejs
     ; info ~doc:"on JavaScript normalization error" ExitCodes.normalize ]
+
+  let mdg = [] (* TODO*)
 end
 
 module CommonOpts = struct
+  let colorless =
+    let docs = Manpage.s_common_options in
+    let doc =
+      "Generate colorless output. This flag may be required for terminals \
+       lacking 16-ANSI-color support." in
+    Arg.(value & flag & info [ "colorless" ] ~docs ~doc)
+
   let debug =
     let docs = Manpage.s_common_options in
     let docv = "LEVEL" in
@@ -35,15 +44,26 @@ module CommonOpts = struct
     let levels = Arg.enum Enums.DebugLvl.(args all) in
     Arg.(value & opt levels Warn & info [ "debug" ] ~docs ~docv ~doc)
 
-  let colorless =
-    let docs = Manpage.s_common_options in
-    let doc =
-      "Generate colorless output. This flag may be required for terminals \
-       lacking 16-ANSI-color support." in
-    Arg.(value & flag & info [ "colorless" ] ~docs ~doc)
+  let verbose =
+    let doc = "Run in verbose mode, printing all information available." in
+    Arg.(value & flag & info [ "v"; "verbose" ] ~doc)
 end
 
-module GraphjsOpts = struct
+module FileOpts = struct
+  let input =
+    let open Fs.Parser in
+    let docv = "FILE|DIR" in
+    let doc = "Path to the input file or package." in
+    Arg.(required & pos 0 (some valid_fpath) None & info [] ~docv ~doc)
+
+  let output =
+    let open Fs.Parser in
+    let docv = "FILE" in
+    let doc = "Path to the output file or directory." in
+    Arg.(value & opt (some fpath) None & info [ "o"; "output" ] ~docv ~doc)
+end
+
+module SharedOpts = struct
   let mode =
     let docv = "MODE" in
     let doc =
@@ -57,18 +77,6 @@ module GraphjsOpts = struct
 end
 
 module ParseOpts = struct
-  let input =
-    let open Fs.Parser in
-    let docv = "FILE|DIR" in
-    let doc = "Path to the JavaScript file." in
-    Arg.(required & pos 0 (some valid_fpath) None & info [] ~docv ~doc)
-
-  let output =
-    let open Fs.Parser in
-    let docv = "FILE" in
-    let doc = "Path to store the parsed JavaScript file." in
-    Arg.(value & opt (some fpath) None & info [ "o"; "output" ] ~docv ~doc)
-
   let test262_conform_hoisted =
     let doc =
       "Normalizes function hoisting by representing hoisted functions as \
@@ -80,41 +88,65 @@ end
 module ParseCmd = struct
   let name = "parse"
   let sdocs = Manpage.s_common_options
-  let doc = "Parses and parses a JavaScript Program"
+  let doc = "Parses and normalizes a Node.js package"
 
   let description =
-    [| "Given a JavaScript (.js) file, parses the program using the \
-        open-source parser of Flow (https://flow.org/) and then parses it, \
-        producing a simplified core subset of JavaScript. This process \
-        involves reducing complex language constructs and eliminating \
-        redundant statements and expressions." |]
+    [| "Given a Node.js package, generates the dependency tree of the package. \
+        Then parses each dependency using the open-source TypeScript/React \
+        parser from Flow (https://flow.org/). Finally, normalizes the \
+        resulting AST of each dependency, generating a simplified core subset \
+        of JavaScript" |]
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
-  let exits = Exits.parse @ Exits.common
+  let exits = Exits.common @ Exits.parse
+end
+
+module MdgOpts = struct
+  let config =
+    let open Fs.Parser in
+    let docv = "FILE" in
+    let doc = "Path to the taint source/sink configuration file." in
+    Arg.(value & opt (some valid_file) None & info [ "c"; "config" ] ~docv ~doc)
+end
+
+module MdgCmd = struct
+  let name = "mdg"
+  let sdocs = Manpage.s_common_options
+  let doc = "Builds the MDG of a Node.js package"
+
+  let description =
+    [| "Given a Node.js package, generates the Multiversion Dependency Graph \
+        (MDG) of the package, including the graph for each dependency \
+        individually and the complete graph of the package. This command is \
+        always preceded by the 'parse' command." |]
+
+  let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
+  let man_xrefs = []
+  let exits = Exits.common @ Exits.parse @ Exits.mdg
 end
 
 module Application = struct
   let name = "graphjs"
   let sdocs = Manpage.s_common_options
-  let doc = "MDG-based vulnarability detection for JavaScript"
+  let doc = "MDG-based vulnerability detection for JavaScript"
   let version = "0.1.0"
 
   let description =
     [| "Graph.js is a static vulnerability scanner specialized in analyzing \
-        npm packages and detecting taint-style and prototype pollution \
+        Node.js packages and detecting taint-style and prototype pollution \
         vulnerabilities. Its execution flow consists of three phases: program \
         normalization, graph construction, and graph queries."
      ; "In the first phase, Graph.js parses the complete JavaScript program \
         using the open-source parser from Flow (https://flow.org/), a static \
         type checker for JavaScript developed by Meta. Since JavaScript is a \
-        notoriously difficult language to analyze, Graph.js parses the \
-        resulting AST by simplifying complex language elements and removing \
+        notoriously difficult language to analyze, Graph.js normalizes the \
+        resulting AST by simplifying complex language constructs and removing \
         all redundant statements and expressions."
      ; "In the second phase, Graph.js builds a Multiversion Dependency Graph \
-        (MDG) of the parsed program. This graph-based data structure merges \
-        into a single representation the abstract syntax tree, control flow \
-        graph, and data dependency graph."
+        (MDG) of the normalized package. This graph-based data structure \
+        merges into a single representation the abstract syntax tree, control \
+        flow graph, and data dependency graph."
      ; "In the third phase, Graph.js runs several built-in queries on the \
         graph using its internal query engine. These queries aim to identify \
         vulnerable code patterns, such as data dependency paths connecting \

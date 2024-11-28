@@ -1,16 +1,11 @@
 (executable
  (name graphjs)
  (public_name graphjs)
- (modules graphjs share site)
+ (modules graphjs)
  (libraries
   graphjs_base
   graphjs_shared
   graphjs_parser
   graphjs_ast
   graphjs_mdg
-  graphjs_client
-  dune-site))
-
-(generate_sites_module
- (module site)
- (sites graphjs))
+  graphjs_client))
