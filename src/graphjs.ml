@@ -133,8 +133,8 @@ let set_copts (colorless : bool) (lvl : Enums.DebugLvl.t) (verbose : bool) :
     unit =
   Font.Config.(colored $= not colorless);
   Log.Config.(log_warns $= (lvl >= Warn));
-  Log.Config.(log_infos $= (lvl >= Info));
-  Log.Config.(log_debugs $= (lvl >= Full));
+  Log.Config.(log_infos $= (verbose || lvl >= Info));
+  Log.Config.(log_debugs $= (lvl >= All));
   Log.Config.(log_verbose $= verbose)
 
 let copts : unit Term.t =
@@ -164,7 +164,7 @@ let parse_cmd_opts : Cmd_parse.Options.t Term.t =
 let parse_cmd : unit Exec.status Cmd.t =
   let open Docs.ParseCmd in
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
-  Cmd.v info Term.(const Cmd_parse.run $ parse_cmd_opts $ shared_opts)
+  Cmd.v info Term.(const Cmd_parse.main $ parse_cmd_opts $ shared_opts)
 
 (* let mdg_opts : unit Term.t =
    Term.(const Cmd_mdg.Options.set) *)
@@ -180,7 +180,7 @@ let mdg_cmd_opts : Cmd_mdg.Options.t Term.t =
 let mdg_cmd : unit Exec.status Cmd.t =
   let open Docs.MdgCmd in
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
-  Cmd.v info Term.(const Cmd_mdg.run $ mdg_cmd_opts $ shared_opts)
+  Cmd.v info Term.(const Cmd_mdg.main $ mdg_cmd_opts $ shared_opts)
 
 let cmd_list : unit Exec.status Cmd.t list = [ parse_cmd; mdg_cmd ]
 

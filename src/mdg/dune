@@ -2,4 +2,5 @@
 
 (library
  (name graphjs_mdg)
- (libraries))
+ (modules location tainted node edge mdg store state builder)
+ (libraries graphjs_base graphjs_shared graphjs_ast))

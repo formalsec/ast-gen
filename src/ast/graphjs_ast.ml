@@ -50,6 +50,10 @@ module Identifier = struct
   [@@inline]
 
   let str (id : 'm t) : string = Fmt.str "%a" pp id [@@inline]
+  let name' (id : t') : string = id.name [@@inline]
+  let name (id : 'm t) : string = id.el.name [@@inline]
+  let generated' (id : t') : bool = id.generated [@@inline]
+  let generated (id : 'm t) : bool = id.el.generated [@@inline]
 end
 
 module LeftValueKind = struct
@@ -87,6 +91,14 @@ module LeftValue = struct
   [@@inline]
 
   let str (lval : 'm t) : string = Fmt.str "%a" pp lval [@@inline]
+  let name' (lval : t') : string = Identifier.name' lval.id [@@inline]
+  let name (lval : 'm t) : string = Identifier.name' lval.el.id [@@inline]
+  let kind' (lval : t') : LeftValueKind.t = lval.kind [@@inline]
+  let kind (lval : 'm t) : LeftValueKind.t = lval.el.kind [@@inline]
+  let generated' (lval : t') : bool = Identifier.generated' lval.id [@@inline]
+
+  let generated (lval : 'm t) : bool = Identifier.generated' lval.el.id
+  [@@inline]
 end
 
 module Prop = struct
@@ -96,6 +108,12 @@ module Prop = struct
   [@@inline]
 
   let str (prop : 'm t) : string = Fmt.str "%a" pp prop [@@inline]
+
+  let name (prop : 'm t) : string =
+    match prop.el with
+    | IProp id -> Identifier.name' id
+    | LProp { value = String name; _ } -> name
+    | LProp { raw; _ } -> raw
 end
 
 module Regex = struct
@@ -366,11 +384,11 @@ module StaticLookup = struct
     `StaticLookup (create left obj prop)
   [@@inline]
 
-  let pp (ppf : Fmt.t) (slookup : 'm t) : unit =
-    Printer.pp_static_lookup ppf slookup
+  let pp (ppf : Fmt.t) (lookup : 'm t) : unit =
+    Printer.pp_static_lookup ppf lookup
   [@@inline]
 
-  let str (slookup : 'm t) : string = Fmt.str "%a" pp slookup [@@inline]
+  let str (lookup : 'm t) : string = Fmt.str "%a" pp lookup [@@inline]
 end
 
 module DynamicLookup = struct
@@ -386,11 +404,11 @@ module DynamicLookup = struct
     `DynamicLookup (create left obj prop)
   [@@inline]
 
-  let pp (ppf : Fmt.t) (dlookup : 'm t) : unit =
-    Printer.pp_dynamic_lookup ppf dlookup
+  let pp (ppf : Fmt.t) (lookup : 'm t) : unit =
+    Printer.pp_dynamic_lookup ppf lookup
   [@@inline]
 
-  let str (dlookup : 'm t) : string = Fmt.str "%a" pp dlookup [@@inline]
+  let str (lookup : 'm t) : string = Fmt.str "%a" pp lookup [@@inline]
 end
 
 module StaticUpdate = struct
@@ -406,11 +424,11 @@ module StaticUpdate = struct
     `StaticUpdate (create obj prop right)
   [@@inline]
 
-  let pp (ppf : Fmt.t) (supdate : 'm t) : unit =
-    Printer.pp_static_update ppf supdate
+  let pp (ppf : Fmt.t) (update : 'm t) : unit =
+    Printer.pp_static_update ppf update
   [@@inline]
 
-  let str (supdate : 'm t) : string = Fmt.str "%a" pp supdate [@@inline]
+  let str (update : 'm t) : string = Fmt.str "%a" pp update [@@inline]
 end
 
 module DynamicUpdate = struct
@@ -426,11 +444,11 @@ module DynamicUpdate = struct
     `DynamicUpdate (create obj prop right)
   [@@inline]
 
-  let pp (ppf : Fmt.t) (dupdate : 'm t) : unit =
-    Printer.pp_dynamic_update ppf dupdate
+  let pp (ppf : Fmt.t) (update : 'm t) : unit =
+    Printer.pp_dynamic_update ppf update
   [@@inline]
 
-  let str (dupdate : 'm t) : string = Fmt.str "%a" pp dupdate [@@inline]
+  let str (update : 'm t) : string = Fmt.str "%a" pp update [@@inline]
 end
 
 module StaticDelete = struct
@@ -446,11 +464,11 @@ module StaticDelete = struct
     `StaticDelete (create left obj prop)
   [@@inline]
 
-  let pp (ppf : Fmt.t) (sdelete : 'm t) : unit =
-    Printer.pp_static_delete ppf sdelete
+  let pp (ppf : Fmt.t) (delete : 'm t) : unit =
+    Printer.pp_static_delete ppf delete
   [@@inline]
 
-  let str (sdelete : 'm t) : string = Fmt.str "%a" pp sdelete [@@inline]
+  let str (delete : 'm t) : string = Fmt.str "%a" pp delete [@@inline]
 end
 
 module DynamicDelete = struct
@@ -466,11 +484,11 @@ module DynamicDelete = struct
     `DynamicDelete (create left obj prop)
   [@@inline]
 
-  let pp (ppf : Fmt.t) (sdelete : 'm t) : unit =
-    Printer.pp_dynamic_delete ppf sdelete
+  let pp (ppf : Fmt.t) (delete : 'm t) : unit =
+    Printer.pp_dynamic_delete ppf delete
   [@@inline]
 
-  let str (sdelete : 'm t) : string = Fmt.str "%a" pp sdelete [@@inline]
+  let str (delete : 'm t) : string = Fmt.str "%a" pp delete [@@inline]
 end
 
 module AssignNewCall = struct
@@ -527,11 +545,11 @@ module AssignStaticMethodCall = struct
     `AssignStaticMethodCall (create left obj prop args)
   [@@inline]
 
-  let pp (ppf : Fmt.t) (smetcall : 'm t) : unit =
-    Printer.pp_assign_static_metcall ppf smetcall
+  let pp (ppf : Fmt.t) (methcall : 'm t) : unit =
+    Printer.pp_assign_static_metcall ppf methcall
   [@@inline]
 
-  let str (smetcall : 'm t) : string = Fmt.str "%a" pp smetcall [@@inline]
+  let str (methcall : 'm t) : string = Fmt.str "%a" pp methcall [@@inline]
 end
 
 module AssignDynamicMethodCall = struct
@@ -548,11 +566,11 @@ module AssignDynamicMethodCall = struct
     `AssignDynamicMethodCall (create left obj prop args)
   [@@inline]
 
-  let pp (ppf : Fmt.t) (dmetcall : 'm t) : unit =
-    Printer.pp_assign_dynamic_metcall ppf dmetcall
+  let pp (ppf : Fmt.t) (metcall : 'm t) : unit =
+    Printer.pp_assign_dynamic_metcall ppf metcall
   [@@inline]
 
-  let str (dmetcall : 'm t) : string = Fmt.str "%a" pp dmetcall [@@inline]
+  let str (metcall : 'm t) : string = Fmt.str "%a" pp metcall [@@inline]
 end
 
 module AssignFunctionDefinition = struct
@@ -627,6 +645,8 @@ module SwitchCase = struct
   [@@inline]
 
   let str (case : 'm t) : string = Fmt.str "%a" pp case [@@inline]
+  let test (case : 'm t) : 'm Ast.Expression.t option = case.el.test [@@inline]
+  let body (case : 'm t) : 'm Ast.Statement.t list = case.el.body [@@inline]
 end
 
 module Switch = struct
@@ -779,6 +799,11 @@ module Catch = struct
   [@@inline]
 
   let str (catch : 'm t) : string = Fmt.str "%a" pp catch [@@inline]
+
+  let param (catch : 'm t) : 'm Ast.Identifier.t option = catch.el.param
+  [@@inline]
+
+  let body (catch : 'm t) : 'm Ast.Statement.t list = catch.el.body [@@inline]
 end
 
 module Try = struct
@@ -926,7 +951,9 @@ end
 module Prog = struct
   type 'm t = 'm Ast.Prog.t
 
-  let create () : 'm t = Hashtbl.create Config.(!dflt_htbl_sz) [@@inline]
+  let create (files : (string * 'm File.t) list) : 'm t =
+    files |> List.to_seq |> Hashtbl.of_seq
+  [@@inline]
 
   let find (prog : 'm t) (path : string) : 'm Ast.File.t =
     Hashtbl.find prog path
