@@ -9,6 +9,7 @@
 (alias
  (name runtest)
  (deps
+  (package graphjs)
   (source_tree main)
   (source_tree recursive)
   (source_tree package)

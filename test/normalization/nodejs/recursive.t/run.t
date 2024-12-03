@@ -1,4 +1,4 @@
-  $ graphjs parse --mode=multi-file --debug=info main.js
+  $ graphjs parse --mode=multi-file --verbose main.js
   [info] Dependency tree of "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/recursive.t/main.js" generated successfully.
   "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/recursive.t/main.js": {
     "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/recursive.t/dependency.js": {
