@@ -3,7 +3,7 @@ open Graphjs_shared
 open Graphjs_parser.Dependency_tree
 
 open struct
-  let pwd : string = Sys.getcwd ()
+  let pwd : Fpath.t = Fpath.v (Sys.getcwd ())
 
   let expected (exp : string) (res : string) : bool =
     Log.stderr "Expected:@\n%s@\nResult:@\n%s@\n@." exp res;
@@ -37,7 +37,7 @@ module Res = struct
 
   let ok (structure : string) : (t, string) Result.t =
     let dt = create (Json.from_string structure) in
-    let dt' = map (Fmt.str "%s/%s" pwd) dt in
+    let dt' = map Fpath.(fun absolute -> pwd // absolute) dt in
     Ok dt'
 
   let unknown_path (path : string) : (t, string) Result.t =

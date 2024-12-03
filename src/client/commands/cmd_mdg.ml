@@ -23,33 +23,41 @@ let parse_taint_config = function
   | Some tconf -> Fpath.to_string tconf
   | None -> Shared_config.default_taint_config ()
 
-let taint_config (path : string) () : Taint_config.t =
+let taint_config (output : Fpath.t option) (path : string) () : Taint_config.t =
   let tconf = Taint_config.read path in
+  let tconf_path = Fpath.v "tconf.txt" in
   Log.info "Tainted config %S parsed successfully." path;
   Log.verbose "%a" Taint_config.pp tconf;
+  Fs.output output tconf_path (Fmt.dly "%a" Taint_config.pp tconf);
   tconf
 
-let build_mdgs (tconf : Taint_config.t) (dep_tree : Dependency_tree.t)
-    (prog : 'm Prog.t) : (string * Mdg.t) Exec.status list =
-  Fun.flip Dependency_tree.bottom_up_visit dep_tree @@ fun path ->
+let build_mdgs (output : Fpath.t option) (tconf : Taint_config.t)
+    (dep_tree : Dependency_tree.t) (prog : 'm Prog.t) :
+    (string * Mdg.t) Exec.status list =
+  Fun.flip Dependency_tree.bottom_up_visit dep_tree @@ fun (abs, rel) ->
+  let path = Fpath.to_string abs in
+  let mdg_path = Fpath.((v "graph" // rem_ext rel) + "txt") in
   let file = Prog.find prog path in
   let* mdg = Exec.graphjs (fun () -> Builder.build_file tconf file) in
   Log.info "MDG of %S built successfully." path;
   Log.verbose "%a" Mdg.pp mdg;
+  Fs.output output mdg_path (Fmt.dly "%a" Mdg.pp mdg);
   Ok (path, mdg)
 
 let merge_mdgs (mdgs : (string * Mdg.t) list) : Mdg.t Exec.status =
   Ok (List.hd mdgs |> snd)
 
-let run (input : Fpath.t) (config : Fpath.t option) : Mdg.t Exec.status =
+let run (input : Fpath.t) (output : Fpath.t option) (config : Fpath.t option) :
+    Mdg.t Exec.status =
   let config' = parse_taint_config config in
-  let* tconf = Exec.graphjs (taint_config config') in
-  let* (dep_tree, prog) = Cmd_parse.run input in
-  let build_res = build_mdgs tconf dep_tree prog in
+  let* tconf = Exec.graphjs (taint_config output config') in
+  let* (dep_tree, prog) = Cmd_parse.run input output in
+  let build_res = build_mdgs output tconf dep_tree prog in
   let* mdgs = Result.extract build_res in
   merge_mdgs mdgs
 
 let main (opts : Options.t) () : unit Exec.status =
-  let* mdg = run opts.input opts.config in
+  let* () = Fs.prepare opts.output in
+  let* mdg = run opts.input opts.output opts.config in
   if not Log.Config.(!log_verbose) then Log.stdout "%a@." Mdg.pp mdg;
   Ok ()

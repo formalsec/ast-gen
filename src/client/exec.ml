@@ -8,6 +8,11 @@ type error =
 
 type 'a status = ('a, error) Result.t
 
+let pp_exn (ppf : Fmt.t) : error -> unit = function
+  | `DepTree fmt -> Fmt.fmt ppf "%t" fmt
+  | `ParseJS fmt -> Fmt.fmt ppf "%t" fmt
+  | `Generic err -> Fmt.fmt ppf "%s" err
+
 let log_exn : error -> unit = function
   | `DepTree fmt -> Log.stderr "%t" fmt
   | `ParseJS fmt -> Log.stderr "%t" fmt
