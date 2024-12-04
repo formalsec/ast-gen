@@ -71,8 +71,13 @@ let kind_pp (ppf : Fmt.t) (kind : kind) : unit =
 type t =
   { src : Node.t
   ; tar : Node.t
-  ; kind : kind
+  ; kind : kind (* TODO: Optimize with a uid for sorting/comparing edges *)
   }
+
+let default : unit -> t =
+  let node = Node.default () in
+  let dflt = { src = node; tar = node; kind = Dependency } in
+  fun () -> dflt
 
 let create (src : Node.t) (tar : Node.t) (kind : kind) : t = { src; tar; kind }
 let src (edge : t) : Node.t = edge.src [@@inline]
@@ -94,6 +99,20 @@ let pp (ppf : Fmt.t) (edge : t) : unit =
     edge.tar
 
 let str (edge : t) : string = Fmt.str "%a" pp edge [@@inline]
+
+let label (edge : t) : string =
+  let prop_f = Option.value ~default:"*" in
+  match edge.kind with
+  | Dependency -> Fmt.str "D"
+  | Property prop -> Fmt.str "P(%s)" (prop_f prop)
+  | Version prop -> Fmt.str "V(%s)" (prop_f prop)
+  | RefParent prop -> Fmt.str "[[RefParent(%s)]]" (prop_f prop)
+  | Parameter idx -> Fmt.str "Param:%d" idx
+  | Argument idx -> Fmt.str "Arg:%d" idx
+  | RefArgument -> Fmt.str "[[RefArg]]"
+  | Return -> Fmt.str "Ret"
+  | RefReturn -> Fmt.str "[[RefRet]]"
+  | Call -> Fmt.str "Call"
 
 let create_dependency () : Node.t -> Node.t -> t =
  fun src tar -> create src tar Dependency

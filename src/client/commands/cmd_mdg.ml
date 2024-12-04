@@ -12,7 +12,9 @@ module Options = struct
     ; config : Fpath.t option
     }
 
-  let set () : unit = ()
+  let set (config : Fpath.t option) (no_svg : bool) : Fpath.t option =
+    Builder_config.(export_svg $= not no_svg);
+    config
 
   let set_cmd (input : Fpath.t) (output : Fpath.t option)
       (config : Fpath.t option) : t =
@@ -28,7 +30,7 @@ let taint_config (output : Fpath.t option) (path : string) () : Taint_config.t =
   let tconf_path = Fpath.v "tconf.txt" in
   Log.info "Tainted config %S parsed successfully." path;
   Log.verbose "%a" Taint_config.pp tconf;
-  Fs.output output tconf_path (Fmt.dly "%a" Taint_config.pp tconf);
+  Fs.write_noerr output tconf_path (Fmt.dly "%a" Taint_config.pp tconf);
   tconf
 
 let build_mdgs (output : Fpath.t option) (tconf : Taint_config.t)
@@ -36,12 +38,16 @@ let build_mdgs (output : Fpath.t option) (tconf : Taint_config.t)
     (string * Mdg.t) Exec.status list =
   Fun.flip Dependency_tree.bottom_up_visit dep_tree @@ fun (abs, rel) ->
   let path = Fpath.to_string abs in
-  let mdg_path = Fpath.((v "graph" // rem_ext rel) + "txt") in
+  let relative_path = Fpath.rem_ext rel in
+  let mdg_path = Fpath.((v "graph" // relative_path // relative_path) + "mdg") in
+  let export_path = Fpath.(v "graph" // relative_path // relative_path) in
   let file = Prog.find prog path in
   let* mdg = Exec.graphjs (fun () -> Builder.build_file tconf file) in
   Log.info "MDG of %S built successfully." path;
   Log.verbose "%a" Mdg.pp mdg;
-  Fs.output output mdg_path (Fmt.dly "%a" Mdg.pp mdg);
+  Fs.write_noerr output mdg_path (Fmt.dly "%a" Mdg.pp mdg);
+  Fs.output_noerr output export_path (fun path ->
+      Ok (Svg_exporter.export (Fpath.to_string path) mdg) );
   Ok (path, mdg)
 
 let merge_mdgs (mdgs : (string * Mdg.t) list) : Mdg.t Exec.status =

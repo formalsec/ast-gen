@@ -15,6 +15,7 @@ type kind =
   | Function of string * string list
   | Parameter of string
   | Call of string
+  | Return of string
 
 type t =
   { uid : Location.t
@@ -23,6 +24,11 @@ type t =
   ; kind : kind
   ; parent : t option
   }
+
+let default : unit -> t =
+  let region = Region.none () in
+  let dflt = { uid = -1; lid = -1; region; kind = Literal; parent = None } in
+  fun () -> dflt
 
 let create (uid : Location.t) (lid : Location.t) (region : Region.t)
     (kind : kind) (parent : t option) : t =
@@ -45,8 +51,31 @@ let pp (ppf : Fmt.t) (node : t) : unit =
   | Function (name, _) -> Fmt.fmt ppf "%s[f_%a]" name Location.pp node.lid
   | Parameter name -> Fmt.fmt ppf "%s[p_%a]" name Location.pp node.lid
   | Call name -> Fmt.fmt ppf "%s(...)[l_%a]" name Location.pp node.lid
+  | Return name -> Fmt.fmt ppf "%s[l_%a]" name Location.pp node.lid
 
 let str (node : t) : string = Fmt.str "%a" pp node [@@inline]
+
+let name (node : t) : string =
+  match node.kind with
+  | TaintSink sink -> Tainted.(name !sink)
+  | Object name -> name
+  | Function (name, _) -> name
+  | Parameter name -> name
+  | Call name -> name
+  | Return name -> name
+  | _ -> Log.fail "unexpected node without name"
+
+let label (node : t) : string =
+  (* TODO: add a flag to show the graph labels *)
+  match node.kind with
+  | Literal -> "{ Literal Node }"
+  | TaintSource -> "{ Taint Source }"
+  | TaintSink sink -> Fmt.str "%s sink" Tainted.(name !sink)
+  | Object name -> Fmt.str "%s" name
+  | Function (name, _) -> Fmt.str "function %s" name
+  | Parameter name -> Fmt.str "%s" name
+  | Call name -> Fmt.str "%s(...)" name
+  | Return name -> Fmt.str "%s" name
 
 let create_literal () : t =
   let literal_loc = Location.literal () in
@@ -83,15 +112,11 @@ let create_call (name : string) : Region.t -> t option -> t =
   let lid = obj_lid_gen.next () in
   create uid lid region (Call name) parent
 
-let name (node : t) : string =
-  match node.kind with
-  | Literal -> "[literal]"
-  | TaintSource -> "[taint-source]"
-  | TaintSink sink -> Tainted.(name !sink)
-  | Object name -> name
-  | Function (name, _) -> name
-  | Parameter name -> name
-  | Call name -> name
+let create_return (name : string) : Region.t -> t option -> t =
+ fun region parent ->
+  let uid = Location.create () in
+  let lid = obj_lid_gen.next () in
+  create uid lid region (Return name) parent
 
 module Set = struct
   type el = t

@@ -108,6 +108,10 @@ module MdgOpts = struct
     let docv = "FILE" in
     let doc = "Path to the taint source/sink configuration file." in
     Arg.(value & opt (some valid_file) None & info [ "c"; "config" ] ~docv ~doc)
+
+  let no_svg =
+    let doc = "Run without generating the .svg graph representation." in
+    Arg.(value & flag & info [ "no-svg" ] ~doc)
 end
 
 module MdgCmd = struct

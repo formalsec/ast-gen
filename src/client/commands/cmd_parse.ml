@@ -23,7 +23,7 @@ let dep_tree (output : Fpath.t option) (path : string) () : Dependency_tree.t =
   Log.info "Dependency tree of %a generated successfully."
     Dependency_tree.pp_path dep_tree.absolute;
   Log.verbose "%a" Dependency_tree.pp dep_tree;
-  Fs.output output dep_tree_path (Fmt.dly "%a" Dependency_tree.pp dep_tree);
+  Fs.write_noerr output dep_tree_path (Fmt.dly "%a" Dependency_tree.pp dep_tree);
   dep_tree
 
 let build_files (output : Fpath.t option) (dep_tree : Dependency_tree.t) :
@@ -35,7 +35,7 @@ let build_files (output : Fpath.t option) (dep_tree : Dependency_tree.t) :
   let file = Normalizer.normalize_file js_file in
   Log.info "File %S normalized successfully." path;
   Log.verbose "%a" File.pp file;
-  Fs.output output file_path (Fmt.dly "%a" File.pp file);
+  Fs.write_noerr output file_path (Fmt.dly "%a" File.pp file);
   Ok (path, file)
 
 let prog_ast (output : Fpath.t option) (dep_tree : Dependency_tree.t) :
@@ -50,7 +50,7 @@ let run (input : Fpath.t) (output : Fpath.t option) :
   let* dep_tree = Exec.graphjs (dep_tree output input') in
   let* prog = prog_ast output dep_tree in
   let prog_path = Fpath.v "code.js" in
-  Fs.output ~main:true output prog_path
+  Fs.write_noerr ~main:true output prog_path
     (Fmt.dly "%a" (Prog.pp ~filename:true) prog);
   Ok (dep_tree, prog)
 

@@ -70,6 +70,10 @@ let add_call_node (state : t) (region : Region.t) (name : string) : Node.t =
   add_node state (Node.create_call name) region
 [@@inline]
 
+let add_return_node (state : t) (region : Region.t) (name : string) : Node.t =
+  add_node state (Node.create_return name) region
+[@@inline]
+
 let add_dependency_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state (Edge.create_dependency ()) src tar
 [@@inline]

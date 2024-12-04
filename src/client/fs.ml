@@ -34,31 +34,50 @@ module Parser = struct
   let valid_dir = Fun.(parse Bos.OS.Dir.exists "Directory" << v, pp)
 end
 
-let prepare' (path : t) : unit Exec.status =
-  let open Result in
-  (* TODO: add a flag/mechanism to prevent overriding directories by default *)
-  let* exists = Exec.bos (Bos.OS.Path.exists path) in
-  if exists then Log.warn "Overriding \"%a\" path." pp path;
-  Exec.bos (Bos.OS.Path.delete ~recurse:true path)
+open struct
+  let prepare' (path : t) : unit Exec.status =
+    let open Result in
+    let* exists = Exec.bos (Bos.OS.Path.exists path) in
+    (* TODO: add a flag/mechanism to prevent overriding directories by default *)
+    if exists then Log.warn "Overriding \"%a\" path." pp path;
+    Exec.bos (Bos.OS.Path.delete ~recurse:true path)
+
+  let write' (fmt : Fmt.t -> unit) (path : t) : unit Exec.status =
+    let open Result in
+    let* _ = Exec.bos (Bos.OS.Dir.create (parent path)) in
+    Exec.bos (Bos.OS.File.writef path "%t" fmt)
+
+  let output' ?(main : bool = false) (root : t) (relative : t)
+      (output_f : t -> unit Exec.status) : unit Exec.status =
+    if is_dir_path root then output_f (root // relative)
+    else if main then output_f root
+    else Ok ()
+
+  let handle_err' (f : t -> unit Exec.status) (path : t) : unit Exec.status =
+    match f path with
+    | Ok () as res -> res
+    | Error exn as res ->
+      Log.warn "Unable to output to file \"%a\".@\n%a" pp path Exec.pp_exn exn;
+      res
+end
 
 let prepare (path : t option) : unit Exec.status =
   match path with None -> Ok () | Some path' -> prepare' path'
 
-let write (path : t) (fmt : Fmt.t -> unit) : unit =
-  let write_f () =
-    let open Result in
-    let* _ = Exec.bos (Bos.OS.Dir.create (parent path)) in
-    Exec.bos (Bos.OS.File.writef path "%t" fmt) in
-  match write_f () with
-  | Ok () -> ()
-  | Error exn ->
-    Log.warn "Unable to write to file \"%a\".@\n%a" pp path Exec.pp_exn exn
-
-let output' ?(main : bool = false) (root : t) (relative : t)
-    (fmt : Fmt.t -> unit) : unit =
-  if is_dir_path root then write (root // relative) fmt
-  else if main then write root fmt
-
 let output ?(main : bool = false) (root : t option) (relative : t)
+    (output_f : t -> unit Exec.status) : unit Exec.status =
+  match root with
+  | None -> Ok ()
+  | Some root' -> output' ~main root' relative output_f
+
+let output_noerr ?(main : bool = false) (root : t option) (relative : t)
+    (output_f : t -> unit Exec.status) : unit =
+  ignore (output ~main root relative (handle_err' output_f))
+
+let write ?(main : bool = false) (root : t option) (relative : t)
+    (fmt : Fmt.t -> unit) : unit Exec.status =
+  output ~main root relative (write' fmt)
+
+let write_noerr ?(main : bool = false) (root : t option) (relative : t)
     (fmt : Fmt.t -> unit) : unit =
-  Option.iter (fun root' -> output' ~main root' relative fmt) root
+  ignore (output ~main root relative (handle_err' (write' fmt)))

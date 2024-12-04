@@ -166,16 +166,15 @@ let parse_cmd : unit Exec.status Cmd.t =
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
   Cmd.v info Term.(const Cmd_parse.main $ parse_cmd_opts $ shared_opts)
 
-(* let mdg_opts : unit Term.t =
-   Term.(const Cmd_mdg.Options.set) *)
+let mdg_opts : Fpath.t option Term.t =
+  Term.(const Cmd_mdg.Options.set $ Docs.MdgOpts.config $ Docs.MdgOpts.no_svg)
 
 let mdg_cmd_opts : Cmd_mdg.Options.t Term.t =
   let open Term in
   const Cmd_mdg.Options.set_cmd
   $ Docs.FileOpts.input
   $ Docs.FileOpts.output
-  $ Docs.MdgOpts.config
-(* $ mdg_opts *)
+  $ mdg_opts
 
 let mdg_cmd : unit Exec.status Cmd.t =
   let open Docs.MdgCmd in
