@@ -36,9 +36,9 @@ module Res = struct
     Fmt.kdly (Fmt.str "[%t] %t@\n" Log.Config.(fst !error))
 
   let ok (structure : string) : (t, string) Result.t =
-    let dt = create (Json.from_string structure) in
-    let dt' = map Fpath.(fun absolute -> pwd // absolute) dt in
-    Ok dt'
+    create (Json.from_string structure)
+    |> map_absolute Fpath.(fun absolute -> pwd // absolute)
+    |> Result.ok
 
   let unknown_path (path : string) : (t, string) Result.t =
     Error (err "Unable to find the provided path %S." path)

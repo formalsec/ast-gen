@@ -38,9 +38,9 @@ open struct
   let prepare' (path : t) : unit Exec.status =
     let open Result in
     let* exists = Exec.bos (Bos.OS.Path.exists path) in
-    (* TODO: add a flag/mechanism to prevent overriding directories by default *)
     if exists then Log.warn "Overriding \"%a\" path." pp path;
     Exec.bos (Bos.OS.Path.delete ~recurse:true path)
+  (* TODO: add a flag/mechanism to prevent overriding directories by default *)
 
   let write' (fmt : Fmt.t -> unit) (path : t) : unit Exec.status =
     let open Result in

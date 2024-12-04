@@ -4,7 +4,7 @@ module ExitCodes = struct
   let ok = Cmd.Exit.ok
   let deptree = 2
   let parsejs = 3
-  let normalize = 4
+  let mdg_export = 4
   let term = 122
   let generic = Cmd.Exit.some_error
   let client = Cmd.Exit.cli_error
@@ -18,10 +18,9 @@ module Exits = struct
 
   let parse =
     [ info ~doc:"on Dependency Tree generation error" ExitCodes.deptree
-    ; info ~doc:"on JavaScript parsing error" ExitCodes.parsejs
-    ; info ~doc:"on JavaScript normalization error" ExitCodes.normalize ]
+    ; info ~doc:"on JavaScript parsing error" ExitCodes.parsejs ]
 
-  let mdg = [] (* TODO*)
+  let mdg = [ info ~doc:"on MDG export error" ExitCodes.mdg_export ]
 end
 
 module CommonOpts = struct
@@ -103,7 +102,7 @@ module ParseCmd = struct
 end
 
 module MdgOpts = struct
-  let config =
+  let taint_config =
     let open Fs.Parser in
     let docv = "FILE" in
     let doc = "Path to the taint source/sink configuration file." in

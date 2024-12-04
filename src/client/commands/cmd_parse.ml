@@ -17,42 +17,42 @@ module Options = struct
     { input; output }
 end
 
-let dep_tree (output : Fpath.t option) (path : string) () : Dependency_tree.t =
-  let dep_tree = Dependency_tree.generate path in
-  let dep_tree_path = Fpath.v "dep_tree.txt" in
-  Log.info "Dependency tree of %a generated successfully."
-    Dependency_tree.pp_path dep_tree.absolute;
-  Log.verbose "%a" Dependency_tree.pp dep_tree;
-  Fs.write_noerr output dep_tree_path (Fmt.dly "%a" Dependency_tree.pp dep_tree);
-  dep_tree
+let dep_tree (output : Fpath.t option) (path : Fpath.t) () : Dependency_tree.t =
+  let dt = Dependency_tree.generate path in
+  let dt_path = Fpath.v "dep_tree.txt" in
+  Log.info "Dependency tree of \"%a\" generated successfully." Fpath.pp dt.abs;
+  Log.verbose "%a" Dependency_tree.pp dt;
+  Fs.write_noerr output dt_path (Fmt.dly "%a" Dependency_tree.pp dt);
+  dt
 
-let build_files (output : Fpath.t option) (dep_tree : Dependency_tree.t) :
-    (string * 'm File.t) Exec.status list =
-  Fun.flip Dependency_tree.bottom_up_visit dep_tree @@ fun (abs, rel) ->
-  let path = Fpath.to_string abs in
-  let file_path = Fpath.(v "code" // rel) in
-  let* js_file = Exec.graphjs (fun () -> Javascript_parser.parse path) in
+let parse_js (path : Fpath.t) () : (Loc.t, Loc.t) Flow_ast.Program.t =
+  Javascript_parser.parse path
+
+let build_files (output : Fpath.t option) (dt : Dependency_tree.t) :
+    (Fpath.t * 'm File.t) Exec.status list =
+  Fun.flip Dependency_tree.bottom_up_visit dt @@ fun (abs_path, rel_path) ->
+  let* js_file = Exec.graphjs (parse_js abs_path) in
   let file = Normalizer.normalize_file js_file in
-  Log.info "File %S normalized successfully." path;
+  let file_path = Fpath.(v "code" // rel_path) in
+  Log.info "File \"%a\" normalized successfully." Fpath.pp abs_path;
   Log.verbose "%a" File.pp file;
   Fs.write_noerr output file_path (Fmt.dly "%a" File.pp file);
-  Ok (path, file)
+  Ok (abs_path, file)
 
-let prog_ast (output : Fpath.t option) (dep_tree : Dependency_tree.t) :
+let build_prog (output : Fpath.t option) (dt : Dependency_tree.t) :
     'm Prog.t Exec.status =
-  let build_res = build_files output dep_tree in
-  let* files = Result.extract build_res in
-  Ok (Prog.create files)
+  let* files = Result.extract (build_files output dt) in
+  let prog = Prog.create files in
+  let prog_path = Fpath.v "code.js" in
+  let prog_fmt = Fmt.dly "%a" (Prog.pp ~filename:true) prog in
+  Fs.write_noerr ~main:true output prog_path prog_fmt;
+  Ok prog
 
 let run (input : Fpath.t) (output : Fpath.t option) :
     (Dependency_tree.t * 'm Prog.t) Exec.status =
-  let input' = Fpath.to_string input in
-  let* dep_tree = Exec.graphjs (dep_tree output input') in
-  let* prog = prog_ast output dep_tree in
-  let prog_path = Fpath.v "code.js" in
-  Fs.write_noerr ~main:true output prog_path
-    (Fmt.dly "%a" (Prog.pp ~filename:true) prog);
-  Ok (dep_tree, prog)
+  let* dt = Exec.graphjs (dep_tree output input) in
+  let* prog = build_prog output dt in
+  Ok (dt, prog)
 
 let main (opts : Options.t) () : unit Exec.status =
   let* () = Fs.prepare opts.output in

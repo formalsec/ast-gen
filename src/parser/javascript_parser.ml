@@ -9,7 +9,7 @@ module Config = struct
 end
 
 open struct
-  let pp_err (ppf : Fmt.t) (path : string) : unit =
+  let pp_err_header (ppf : Fmt.t) (path : string) : unit =
     Log.fmt_error ppf "Flow was unable to parse the file %S." path
 
   let pp_flow_loc (ppf : Fmt.t) ((path, loc) : string * Loc.t) : unit =
@@ -21,12 +21,12 @@ open struct
       ((loc, err) : Loc.t * Parse_error.t) : unit =
     Fmt.fmt ppf "%a@\n%s" pp_flow_loc (path, loc) (Parse_error.PP.error err)
 
-  let raise (path : string) (flow_errors : (Loc.t * Parse_error.t) list) : 'a =
+  let raise (path : string) (flow_errs : (Loc.t * Parse_error.t) list) : 'a =
     let pp_flow_errs = Fmt.(pp_lst !>"@\n" (pp_flow_err path)) in
-    let err = Fmt.dly "%a%a@\n" pp_err path pp_flow_errs flow_errors in
+    let err = Fmt.dly "%a%a@\n" pp_err_header path pp_flow_errs flow_errs in
     raise (Exn err)
 
-  let parse_ic (path : string) (ic : in_channel) :
+  let parse_ic (ic : in_channel) (path : string) :
       (Loc.t, Loc.t) Flow_ast.Program.t =
     let ic_sz = in_channel_length ic in
     let prog_text = really_input_string ic ic_sz in
@@ -34,8 +34,9 @@ open struct
     match flow_errors with [] -> flow_ast | _ -> raise path flow_errors
 end
 
-let parse (path : string) : (Loc.t, Loc.t) Flow_ast.Program.t =
-  let ic = open_in path in
-  let parse_f () = parse_ic path ic in
+let parse (path : Fpath.t) : (Loc.t, Loc.t) Flow_ast.Program.t =
+  let path' = Fpath.to_string path in
+  let ic = open_in path' in
+  let parse_f () = parse_ic ic path' in
   let finally () = close_in_noerr ic in
   Fun.protect ~finally parse_f

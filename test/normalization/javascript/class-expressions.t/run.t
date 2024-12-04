@@ -250,70 +250,70 @@
   $ graphjs parse extends.js
   let $v1 = function () {
     let $v2 = this.__proto__;
-    let $v3 = $v2.__proto__;
-    let $v4 = $v3.constructor();
+    $v2 = $v2.__proto__;
+    let $v3 = $v2.constructor();
   }
-  let $v5 = $v1.prototype;
-  $v5.constructor = $v1;
-  let $v6 = Foo.prototype;
+  let $v4 = $v1.prototype;
+  $v4.constructor = $v1;
+  let $v5 = Foo.prototype;
   $v1.__proto__ = Foo;
-  $v5.__proto__ = $v6;
-  let $v7 = function () {
-    let $v8 = this.__proto__;
-    let $v9 = $v8.__proto__;
-    let $v10 = $v9.constructor();
+  $v4.__proto__ = $v5;
+  let $v6 = function () {
+    let $v7 = this.__proto__;
+    $v7 = $v7.__proto__;
+    let $v8 = $v7.constructor();
   }
-  let $v11 = $v7.prototype;
-  $v11.constructor = $v7;
-  let $v12 = Foo.prototype;
-  $v7.__proto__ = Foo;
-  $v11.__proto__ = $v12;
-  let $v13 = function () {
-    let $v14 = this.__proto__;
-    let $v15 = $v14.__proto__;
-    let $v16 = $v15.constructor();
+  let $v9 = $v6.prototype;
+  $v9.constructor = $v6;
+  let $v10 = Foo.prototype;
+  $v6.__proto__ = Foo;
+  $v9.__proto__ = $v10;
+  let $v11 = function () {
+    let $v12 = this.__proto__;
+    $v12 = $v12.__proto__;
+    let $v13 = $v12.constructor();
   }
-  let $v17 = $v13.prototype;
-  $v17.constructor = $v13;
-  let $v18 = Foo.prototype;
-  $v13.__proto__ = Foo;
-  $v17.__proto__ = $v18;
+  let $v14 = $v11.prototype;
+  $v14.constructor = $v11;
+  let $v15 = Foo.prototype;
+  $v11.__proto__ = Foo;
+  $v14.__proto__ = $v15;
+  let $v16 = function () {
+    let $v17 = this.__proto__;
+    $v17 = $v17.__proto__;
+    let $v18 = $v17.bar;
+    $v18;
+  }
+  $v14.bar = $v16;
   let $v19 = function () {
     let $v20 = this.__proto__;
-    let $v21 = $v20.__proto__;
-    let $v22 = $v21.bar;
-    $v22;
+    $v20 = $v20.__proto__;
+    let $v21 = $v20.constructor();
   }
-  $v17.bar = $v19;
-  let $v23 = function () {
-    let $v24 = this.__proto__;
-    let $v25 = $v24.__proto__;
-    let $v26 = $v25.constructor();
+  let $v22 = $v19.prototype;
+  $v22.constructor = $v19;
+  let $v23 = Foo.prototype;
+  $v19.__proto__ = Foo;
+  $v22.__proto__ = $v23;
+  let $v24 = function () {
+    let $v25 = this.__proto__;
+    $v25 = $v25.__proto__;
+    $v25.bar = 10;
   }
-  let $v27 = $v23.prototype;
-  $v27.constructor = $v23;
-  let $v28 = Foo.prototype;
-  $v23.__proto__ = Foo;
-  $v27.__proto__ = $v28;
-  let $v29 = function () {
-    let $v30 = this.__proto__;
-    let $v31 = $v30.__proto__;
-    $v31.bar = 10;
+  $v22.bar = $v24;
+  let $v26 = function () {
+    let $v27 = this.__proto__;
+    $v27 = $v27.__proto__;
+    let $v28 = $v27.constructor();
   }
-  $v27.bar = $v29;
-  let $v32 = function () {
-    let $v33 = this.__proto__;
-    let $v34 = $v33.__proto__;
-    let $v35 = $v34.constructor();
+  let $v29 = $v26.prototype;
+  $v29.constructor = $v26;
+  let $v30 = Foo.prototype;
+  $v26.__proto__ = Foo;
+  $v29.__proto__ = $v30;
+  let $v31 = function () {
+    let $v32 = this.__proto__;
+    $v32 = $v32.__proto__;
+    let $v33 = $v32.bar();
   }
-  let $v36 = $v32.prototype;
-  $v36.constructor = $v32;
-  let $v37 = Foo.prototype;
-  $v32.__proto__ = Foo;
-  $v36.__proto__ = $v37;
-  let $v38 = function () {
-    let $v39 = this.__proto__;
-    let $v40 = $v39.__proto__;
-    let $v41 = $v40.bar();
-  }
-  $v36.bar = $v38;
+  $v29.bar = $v31;

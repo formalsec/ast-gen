@@ -134,7 +134,6 @@ let create ?(fg : Code.color option) ?(bg : Code.color option)
     ?(effect : Code.effect option) ?(bold : bool option) ?(italic : bool option)
     ?(underline : bool option) ?(strike : bool option) () : t =
   make_font fg bg effect bold italic underline strike
-[@@inline]
 
 let update ?(fg : Code.color option) ?(bg : Code.color option)
     ?(effect : Code.effect option) ?(bold : bool option) ?(italic : bool option)
@@ -151,7 +150,6 @@ let update ?(fg : Code.color option) ?(bg : Code.color option)
 let pp_font (ppf : Fmt.t) (font : t) : unit =
   let pp_code ppf code = Fmt.pp_int ppf Code.(!code) in
   Fmt.fmt ppf "\027[%am" Fmt.(pp_lst !>";" pp_code) font
-[@@inline]
 
 let pp (font : t) (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (v : 'a) : unit =
   if not (colored (Writer.find ppf)) then pp_v ppf v
@@ -176,8 +174,6 @@ let kdly (font : t) (k : (Fmt.t -> unit) -> 'a) :
 
 let fmt (font : t) (ppf : Fmt.t) : ('a, Fmt.t, unit, unit) format4 -> 'a =
   kfmt font ignore ppf
-[@@inline]
 
 let dly (font : t) : ('a, Fmt.t, unit, Fmt.t -> unit) format4 -> 'a =
   kdly font Fun.id
-[@@inline]

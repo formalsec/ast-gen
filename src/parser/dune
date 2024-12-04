@@ -3,4 +3,4 @@
 (library
  (name graphjs_parser)
  (modules parser_config dependency_tree javascript_parser normalizer)
- (libraries graphjs_base graphjs_shared graphjs_ast fpath flow_parser))
+ (libraries graphjs_base graphjs_shared graphjs_ast flow_parser))

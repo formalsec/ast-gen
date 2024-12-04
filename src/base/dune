@@ -3,17 +3,18 @@
 (library
  (name graphjs_base)
  (modules
+  set
   list
   hashtbl
   fun
   option
   result
+  json
   config
   generator
   console
   fmt
   writer
   font
-  log
-  json)
- (libraries unix yojson))
+  log)
+ (libraries unix fpath yojson))

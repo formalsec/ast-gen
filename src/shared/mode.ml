@@ -11,7 +11,7 @@ let is_multi_file : t -> bool = function MultiFile -> true | _ -> false
 
 let pp (ppf : Fmt.t) : t -> unit = function
   | Basic -> Fmt.pp_str ppf "basic"
-  | SingleFile -> Fmt.pp_str ppf "single_file"
-  | MultiFile -> Fmt.pp_str ppf "multi_file"
+  | SingleFile -> Fmt.pp_str ppf "single-file"
+  | MultiFile -> Fmt.pp_str ppf "multi-file"
 
-let str (mode : t) : string = Fmt.str "%a" pp mode
+let str (mode : t) : string = Fmt.str "%a" pp mode [@@inline]

@@ -11,10 +11,10 @@ end =
 and LeftValue : sig
   module Kind : sig
     type t =
-      | None
       | Var
       | Let
       | Const
+      | None
   end
 
   type 'm t = ('m, t') Metadata.t
@@ -48,8 +48,8 @@ and Expression : sig
       | Null
       | String of string
       | Number of float
-      | BigInt of int64 option
       | Boolean of bool
+      | BigInt of int64 option
       | Regex of Regex.t
 
     type t =
@@ -115,7 +115,7 @@ and Statement : sig
   module AssignUnopt : sig
     type 'm t =
       { left : 'm LeftValue.t
-      ; operator : Operator.Unary.t
+      ; op : Operator.Unary.t
       ; arg : 'm Expression.t
       }
   end
@@ -123,7 +123,7 @@ and Statement : sig
   module AssignBinopt : sig
     type 'm t =
       { left : 'm LeftValue.t
-      ; operator : Operator.Binary.t
+      ; op : Operator.Binary.t
       ; arg1 : 'm Expression.t
       ; arg2 : 'm Expression.t
       }
@@ -370,8 +370,8 @@ and Statement : sig
   type 'm t = ('m, 'm t') Metadata.t
 
   and 'm t' =
-    [ `VarDecl of LeftValue.t'
-    | `ExprStmt of 'm Expression.t'
+    [ `ExprStmt of 'm Expression.t'
+    | `VarDecl of LeftValue.t'
     | `AssignSimple of 'm AssignSimple.t
     | `AssignNewObject of 'm AssignNewObject.t
     | `AssignNewArray of 'm AssignNewArray.t
@@ -459,6 +459,6 @@ end =
   File
 
 and Prog : sig
-  type 'm t = (string, 'm File.t) Hashtbl.t
+  type 'm t = (Fpath.t, 'm File.t) Hashtbl.t
 end =
   Prog

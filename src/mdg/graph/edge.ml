@@ -1,14 +1,13 @@
 open Graphjs_base
 
 type kind =
+  (* TODO: add a flag to disable ref parent and argument edges *)
   | Dependency
   | Property of string option
   | Version of string option
-  (* TODO: add a flag to disable ref parent edges *)
   | RefParent of string option
   | Parameter of int
   | Argument of int
-  (* TODO: add a flag to disable ref argument edges *)
   | RefArgument
   | Return
   | RefReturn
@@ -85,14 +84,14 @@ let tar (edge : t) : Node.t = edge.tar [@@inline]
 let kind (edge : t) : kind = edge.kind [@@inline]
 let hash (edge : t) : int = Node.hash edge.tar
 
-let compare (edge1 : t) (edge2 : t) : int =
-  let tar_cmp = Node.compare edge1.tar edge2.tar in
-  if tar_cmp != 0 then tar_cmp else kind_compare edge1.kind edge2.kind
-
 let equal (edge1 : t) (edge2 : t) : bool =
   Node.equal edge1.src edge2.src
   && Node.equal edge1.tar edge2.tar
   && kind_equal edge1.kind edge2.kind
+
+let compare (edge1 : t) (edge2 : t) : int =
+  let tar_cmp = Node.compare edge1.tar edge2.tar in
+  if tar_cmp != 0 then tar_cmp else kind_compare edge1.kind edge2.kind
 
 let pp (ppf : Fmt.t) (edge : t) : unit =
   Fmt.fmt ppf "%a --< %a >--> %a" Node.pp edge.src kind_pp edge.kind Node.pp
@@ -193,12 +192,10 @@ let property (edge : t) : string option =
   | _ -> Log.fail "expecting property or version edge"
 
 module Set = struct
-  type el = t
-
   include Set.Make (struct
-    type t = el
+    type elt = t
 
-    let compare : t -> t -> int = compare
+    let compare : elt -> elt -> int = compare
   end)
 
   let pp (ppf : Fmt.t) (edges : t) : unit =

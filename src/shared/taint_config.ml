@@ -100,8 +100,7 @@ open struct
     | "code-injection" -> CodeInjection
     | "command-injection" -> CommandInjection
     | "path-traversal" -> PathTraversal
-    | vuln_type ->
-      raise "Unsupported vulnerability type '%s' in taint config." vuln_type
+    | vuln -> raise "Unsupported vulnerability type '%s' in taint config." vuln
 
   let read_package (package : Json.t) : package =
     let package_name = package |> Json.member "package" |> Json.to_string in
@@ -159,8 +158,8 @@ open struct
     else List.fold_right read_vuln_sink (Json.to_assoc sinks) ([], [], [])
 end
 
-let read (config_path : string) : t =
-  let config = Json.from_file config_path in
+let read (path : Fpath.t) : t =
+  let config = Json.from_file (Fpath.to_string path) in
   let package_sources = read_sources config in
   let (package_sinks, function_sinks, new_sinks) = read_sinks config in
   { package_sources; package_sinks; function_sinks; new_sinks }

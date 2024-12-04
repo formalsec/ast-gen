@@ -2,6 +2,6 @@
 
 (library
  (name graphjs_ast)
- (modules graphjs_ast ast printer metadata region)
- (private_modules printer metadata region)
+ (modules region metadata printer ast graphjs_ast)
+ (private_modules metadata region printer)
  (libraries graphjs_base flow_parser))

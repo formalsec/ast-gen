@@ -1,5 +1,13 @@
 open Graphjs_base
 
+exception Exn of (Fmt.t -> unit)
+
+open struct
+  let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
+    let raise_f acc = raise (Exn acc) in
+    Fmt.kdly (fun acc -> raise_f (fun ppf -> Log.fmt_error ppf "%t" acc)) fmt
+end
+
 module DotNode = struct
   type t = Node.t
 
@@ -65,7 +73,7 @@ module Dot = struct
 end
 
 open struct
-  let convert_node_edges_f (edge : Edge.t) (graph : GraphBuilder.t) :
+  let build_graph_edges_f (edge : Edge.t) (graph : GraphBuilder.t) :
       GraphBuilder.t =
     match edge.kind with
     | RefParent _ | RefArgument | RefReturn -> graph
@@ -73,22 +81,28 @@ open struct
       let e = GraphBuilder.E.create edge.src edge edge.tar in
       GraphBuilder.add_edge_e graph e
 
-  let convert_graph_nodes_f (mdg : Mdg.t) (loc : Location.t) (node : Node.t)
+  let build_graph_nodes_f (mdg : Mdg.t) (loc : Location.t) (node : Node.t)
       (graph : GraphBuilder.t) : GraphBuilder.t =
     let graph' = GraphBuilder.add_vertex graph node in
     let edges = Mdg.edges mdg loc in
-    Edge.Set.fold convert_node_edges_f edges graph'
+    Edge.Set.fold build_graph_edges_f edges graph'
 end
 
-let convert_graph (mdg : Mdg.t) : GraphBuilder.t =
-  Hashtbl.fold (convert_graph_nodes_f mdg) mdg.nodes GraphBuilder.empty
+let build_graph (mdg : Mdg.t) : GraphBuilder.t =
+  Dot.set_info mdg;
+  Hashtbl.fold (build_graph_nodes_f mdg) mdg.nodes GraphBuilder.empty
 
-let export (path : string) (mdg : Mdg.t) : unit =
-  if Builder_config.(!export_svg) then (
-    let dot_path = path ^ ".dot" in
-    let svg_path = path ^ ".svg" in
-    let dot_file = open_out_bin dot_path in
-    Dot.set_info mdg;
-    Dot.output_graph dot_file (convert_graph mdg);
-    close_out_noerr dot_file;
-    ignore (Sys.command ("dot -Tsvg " ^ dot_path ^ " -o " ^ svg_path)) )
+let output_result (dot_path : string) (svg_path : string)
+    (graph : GraphBuilder.t) : unit =
+  let dot_file = open_out_bin dot_path in
+  Dot.output_graph dot_file graph;
+  close_out_noerr dot_file;
+  if Sys.command ("dot -Tsvg " ^ dot_path ^ " -o " ^ svg_path) != 0 then
+    raise "Unable to generate the %S file." svg_path
+
+let export (path : Fpath.t) (mdg : Mdg.t) : unit =
+  if Builder_config.(!export_svg) then
+    let dot_path = Fpath.(to_string (path + "dot")) in
+    let svg_path = Fpath.(to_string (path + "svg")) in
+    let graph = build_graph mdg in
+    output_result dot_path svg_path graph

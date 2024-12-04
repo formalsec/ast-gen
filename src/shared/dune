@@ -3,7 +3,7 @@
 (library
  (name graphjs_shared)
  (modules mode vulnerability taint_config shared_config site)
- (libraries graphjs_base dune-site yojson))
+ (libraries graphjs_base dune-site))
 
 (generate_sites_module
  (module site)

@@ -46,14 +46,14 @@
   Foo.baz = $v6;
   var Foo = function (baz) {
     let $v7 = this.__proto__;
-    let $v8 = $v7.__proto__;
-    let $v9 = $v8.constructor(baz);
+    $v7 = $v7.__proto__;
+    let $v8 = $v7.constructor(baz);
   }
-  let $v10 = Foo.prototype;
-  $v10.constructor = Foo;
-  let $v11 = Bar.prototype;
+  let $v9 = Foo.prototype;
+  $v9.constructor = Foo;
+  let $v10 = Bar.prototype;
   Foo.__proto__ = Bar;
-  $v10.__proto__ = $v11;
+  $v9.__proto__ = $v10;
 
   $ graphjs parse import.js
   import foo from "module";

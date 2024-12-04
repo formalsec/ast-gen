@@ -27,7 +27,6 @@ open struct
       ('a, Fmt.t, unit, 'b) format4 -> 'a =
     let pp_content ppf fmt = Font.fmt font ppf "[%t] %t" header fmt in
     Fmt.kdly (Fmt.fmt ppf "%a@." pp_content)
-  [@@inline]
 end
 
 let fmt_app (ppf : Fmt.t) (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
