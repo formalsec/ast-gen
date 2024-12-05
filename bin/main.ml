@@ -113,7 +113,8 @@ let main file_name output_path config_path mode generate_mdg run_queries no_dot
       let config = Config.read config_path in
       print_endline ("[STEP 3] Running queries...");
       let query_start = Sys.time () in (
-      Queries.run_queries Format.std_formatter graph config output_path);
+      let exportedObject = Summaries.get summaries main in
+      Queries.run_queries Format.std_formatter graph config  exportedObject output_path);
       let query_end = (Sys.time () -. query_start) *. 1000.0 in 
       print_endline (string_of_float query_end))
     );

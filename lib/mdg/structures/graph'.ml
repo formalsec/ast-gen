@@ -937,3 +937,12 @@ let get_sensitive_inputs (graph : t) (sink_node : Node.t) (call_node : Node.t) :
   
      
 
+
+  let find_tainted_parameter (graph : t) (f_node : Node.t) (node : Node.t) : Node.t list =
+      let paths = reaches graph f_node node in 
+      List.filter_map (fun path -> 
+        let argument_index = List.length path - 2 in 
+        if argument_index >= 0 
+          then Some (List.nth path argument_index)
+          else None
+      ) paths 
