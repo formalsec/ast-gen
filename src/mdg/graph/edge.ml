@@ -1,7 +1,7 @@
 open Graphjs_base
 
+(* TODO: add a flag to disable ref parent and argument edges *)
 type kind =
-  (* TODO: add a flag to disable ref parent and argument edges *)
   | Dependency
   | Property of string option
   | Version of string option
@@ -12,20 +12,6 @@ type kind =
   | Return
   | RefReturn
   | Call
-
-let kind_equal (kind1 : kind) (kind2 : kind) : bool =
-  match (kind1, kind2) with
-  | (Dependency, Dependency) -> true
-  | (Property prop1, Property prop2) -> Option.equal String.equal prop1 prop2
-  | (Version prop1, Version prop2) -> Option.equal String.equal prop1 prop2
-  | (RefParent prop1, RefParent prop2) -> Option.equal String.equal prop1 prop2
-  | (Parameter idx1, Parameter idx2) -> Int.equal idx1 idx2
-  | (Argument idx1, Argument idx2) -> Int.equal idx1 idx2
-  | (RefArgument, RefArgument) -> true
-  | (Return, Return) -> true
-  | (RefReturn, RefReturn) -> true
-  | (Call, Call) -> true
-  | _ -> false
 
 let kind_id : kind -> int = function
   | Dependency -> 1
@@ -39,21 +25,35 @@ let kind_id : kind -> int = function
   | RefReturn -> 9
   | Call -> 10
 
-let kind_compare (kind1 : kind) (kind2 : kind) : int =
-  let (kind_id1, kind_id2) = (kind_id kind1, kind_id kind2) in
-  if kind_id1 < kind_id2 then -1
-  else if kind_id1 > kind_id2 then 1
-  else
-    match (kind1, kind2) with
-    | (Property prop1, Property prop2)
-    | (Version prop1, Version prop2)
-    | (RefParent prop1, RefParent prop2) ->
-      Option.compare String.compare prop1 prop2
-    | (Parameter idx1, Parameter idx2) | (Argument idx1, Argument idx2) ->
-      Int.compare idx1 idx2
-    | _ -> 0
+let equal_kind (kind1 : kind) (kind2 : kind) : bool =
+  match (kind1, kind2) with
+  | (Dependency, Dependency) -> true
+  | (Property prop1, Property prop2) -> Option.equal String.equal prop1 prop2
+  | (Version prop1, Version prop2) -> Option.equal String.equal prop1 prop2
+  | (RefParent prop1, RefParent prop2) -> Option.equal String.equal prop1 prop2
+  | (Parameter idx1, Parameter idx2) -> Int.equal idx1 idx2
+  | (Argument idx1, Argument idx2) -> Int.equal idx1 idx2
+  | (RefArgument, RefArgument) -> true
+  | (Return, Return) -> true
+  | (RefReturn, RefReturn) -> true
+  | (Call, Call) -> true
+  | _ -> false
 
-let kind_pp (ppf : Fmt.t) (kind : kind) : unit =
+let compare_kind_arg (kind1 : kind) (kind2 : kind) : int =
+  match (kind1, kind2) with
+  | (Property prop1, Property prop2)
+  | (Version prop1, Version prop2)
+  | (RefParent prop1, RefParent prop2) ->
+    Option.compare String.compare prop1 prop2
+  | (Parameter idx1, Parameter idx2) | (Argument idx1, Argument idx2) ->
+    Int.compare idx1 idx2
+  | _ -> 0
+
+let compare_kind (kind1 : kind) (kind2 : kind) : int =
+  let kind_cmp = Int.compare (kind_id kind1) (kind_id kind2) in
+  if kind_cmp != 0 then kind_cmp else compare_kind_arg kind1 kind2
+
+let pp_kind (ppf : Fmt.t) (kind : kind) : unit =
   let prop_f = Option.value ~default:"*" in
   match kind with
   | Dependency -> Fmt.fmt ppf "D"
@@ -70,7 +70,7 @@ let kind_pp (ppf : Fmt.t) (kind : kind) : unit =
 type t =
   { src : Node.t
   ; tar : Node.t
-  ; kind : kind (* TODO: Optimize with a uid for sorting/comparing edges *)
+  ; kind : kind
   }
 
 let default : unit -> t =
@@ -82,22 +82,38 @@ let create (src : Node.t) (tar : Node.t) (kind : kind) : t = { src; tar; kind }
 let src (edge : t) : Node.t = edge.src [@@inline]
 let tar (edge : t) : Node.t = edge.tar [@@inline]
 let kind (edge : t) : kind = edge.kind [@@inline]
-let hash (edge : t) : int = Node.hash edge.tar
+let hash (edge : t) : int = Node.hash edge.tar [@@inline]
 
 let equal (edge1 : t) (edge2 : t) : bool =
   Node.equal edge1.src edge2.src
   && Node.equal edge1.tar edge2.tar
-  && kind_equal edge1.kind edge2.kind
+  && equal_kind edge1.kind edge2.kind
 
 let compare (edge1 : t) (edge2 : t) : int =
+  let src_cmp = Node.compare edge1.src edge2.src in
   let tar_cmp = Node.compare edge1.tar edge2.tar in
-  if tar_cmp != 0 then tar_cmp else kind_compare edge1.kind edge2.kind
+  if src_cmp != 0 then src_cmp
+  else if tar_cmp != 0 then tar_cmp
+  else compare_kind edge1.kind edge2.kind
 
 let pp (ppf : Fmt.t) (edge : t) : unit =
-  Fmt.fmt ppf "%a --< %a >--> %a" Node.pp edge.src kind_pp edge.kind Node.pp
+  Fmt.fmt ppf "%a --< %a >--> %a" Node.pp edge.src pp_kind edge.kind Node.pp
     edge.tar
 
 let str (edge : t) : string = Fmt.str "%a" pp edge [@@inline]
+
+module Set = struct
+  include Set.Make (struct
+    type elt = t
+
+    let compare : elt -> elt -> int = compare
+  end)
+
+  let pp (ppf : Fmt.t) (edges : t) : unit =
+    Fmt.(pp_iter iter !>"@\n" pp) ppf edges
+
+  let str (edges : t) : string = Fmt.str "%a" pp edges [@@inline]
+end
 
 let label (edge : t) : string =
   let prop_f = Option.value ~default:"*" in
@@ -106,7 +122,9 @@ let label (edge : t) : string =
   | Property prop -> Fmt.str "P(%s)" (prop_f prop)
   | Version prop -> Fmt.str "V(%s)" (prop_f prop)
   | RefParent prop -> Fmt.str "[[RefParent(%s)]]" (prop_f prop)
+  | Parameter 0 -> Fmt.str "this"
   | Parameter idx -> Fmt.str "Param:%d" idx
+  | Argument 0 -> Fmt.str "[[this]]"
   | Argument idx -> Fmt.str "Arg:%d" idx
   | RefArgument -> Fmt.str "[[RefArg]]"
   | Return -> Fmt.str "Ret"
@@ -189,17 +207,9 @@ let is_call (edge : t) : bool = match edge.kind with Call -> true | _ -> false
 let property (edge : t) : string option =
   match edge.kind with
   | Property prop | Version prop | RefParent prop -> prop
-  | _ -> Log.fail "expecting property or version edge"
+  | _ -> Log.fail "unexpected edge without an associated property"
 
-module Set = struct
-  include Set.Make (struct
-    type elt = t
-
-    let compare : elt -> elt -> int = compare
-  end)
-
-  let pp (ppf : Fmt.t) (edges : t) : unit =
-    Fmt.(pp_iter iter !>"@\n" pp) ppf edges
-
-  let str (edges : t) : string = Fmt.str "%a" pp edges [@@inline]
-end
+let argument (edge : t) : int =
+  match edge.kind with
+  | Parameter idx | Argument idx -> idx
+  | _ -> Log.fail "unexpected edge without an associated param/argument index"

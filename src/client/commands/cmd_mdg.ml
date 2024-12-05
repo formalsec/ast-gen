@@ -54,6 +54,7 @@ let build_mdgs (output : Fpath.t option) (tc : Taint_config.t)
   Ok (abs_path, mdg)
 
 let merge_mdgs (mdgs : (Fpath.t * Mdg.t) list) : Mdg.t Exec.status =
+  (* temp mdg exported *)
   Ok (List.hd mdgs |> snd)
 
 let run (input : Fpath.t) (output : Fpath.t option) (taint_config : Fpath.t) :
