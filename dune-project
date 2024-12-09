@@ -11,9 +11,9 @@
 (source
  (github formalsec/ast-gen))
 
-(authors "Tomás Tavares")
+(authors "André Nascimento" "Tomás Tavares")
 
-(maintainers "Tomás Tavares" "André Nascimento")
+(maintainers "André Nascimento")
 
 (license "MIT")
 
@@ -27,6 +27,8 @@
  (depends
   (ocaml
    (>= "4.14.1"))
+  ocamlformat
+  ocaml-lsp-server
   ocamlgraph
   dune
   dune-site
@@ -35,8 +37,7 @@
   bos
   cmdliner
   conf-npm
-  (flow_parser
-   (>= "0.229.1")))
+  flow_parser)
  (tags
   ("JavaScript"
    "Node.js"

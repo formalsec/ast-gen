@@ -4,8 +4,8 @@ version: "0.1.0"
 synopsis: "MDG-based vulnarability detection for JavaScript"
 description:
   "MDG-based static vulnerability scanner specialized in analyzing npm packages and detecting taint-style and prototype pollution vulnerabilities."
-maintainer: ["Tomás Tavares" "André Nascimento"]
-authors: ["Tomás Tavares"]
+maintainer: ["André Nascimento"]
+authors: ["André Nascimento" "Tomás Tavares"]
 license: "MIT"
 tags: [
   "JavaScript"
@@ -19,6 +19,8 @@ doc: "https://github.com/formalsec/ast-gen/"
 bug-reports: "https://github.com/formalsec/ast-gen/issues"
 depends: [
   "ocaml" {>= "4.14.1"}
+  "ocamlformat"
+  "ocaml-lsp-server"
   "ocamlgraph"
   "dune" {>= "3.2"}
   "dune-site"
@@ -27,7 +29,7 @@ depends: [
   "bos"
   "cmdliner"
   "conf-npm"
-  "flow_parser" {>= "0.229.1"}
+  "flow_parser"
   "odoc" {with-doc}
 ]
 build: [
