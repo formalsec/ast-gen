@@ -39,7 +39,7 @@ let known_functions (state : State.t) (ls_funcs : Node.Set.t) : Node.t list =
 let update_scope (state : State.t) (left : 'm LeftValue.t) (nodes : Node.Set.t)
     : unit =
   match LeftValue.kind left with
-  | None -> Store.update state.store (LeftValue.name left) nodes
+  | None -> Store.replace state.store (LeftValue.name left) nodes
   | Var | Let | Const -> Store.replace state.store (LeftValue.name left) nodes
 
 let add_tainted_sink (make_generic_sink_f : 'a -> Tainted.sink)
@@ -47,7 +47,7 @@ let add_tainted_sink (make_generic_sink_f : 'a -> Tainted.sink)
   let sink = make_generic_sink_f generic_sink in
   let sink_name = Tainted.(name !sink) in
   let sink_node = Node.create_sink sink in
-  Store.set state.store sink_name sink_node
+  Store.replace state.store sink_name (Node.Set.singleton sink_node)
 
 let add_static_orig_object_property (state : State.t) (cid : cid)
     (name : string) (ls_obj : Node.Set.t) (prop : string option) : unit =
@@ -86,7 +86,7 @@ let static_nv_weak_update (state : State.t) (cid : cid) (name : string)
     State.add_version_edge state l_obj l_node prop;
     Store.weak_update state.store l_obj new' );
   let ls_nodes = Node.Set.singleton l_node in
-  Store.update state.store name ls_nodes;
+  Store.replace state.store name ls_nodes;
   ls_nodes
 
 let dynamic_nv_strong_update (state : State.t) (cid : cid) (name : string)
@@ -106,7 +106,7 @@ let dynamic_nv_weak_update (state : State.t) (cid : cid) (name : string)
     Store.weak_update state.store l_obj new' );
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop;
   let ls_nodes = Node.Set.singleton l_node in
-  Store.update state.store name ls_nodes;
+  Store.replace state.store name ls_nodes;
   ls_nodes
 
 let add_static_object_version (state : State.t) (cid : cid) (name : string)
@@ -167,8 +167,8 @@ let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   match expr.el with
   | `Literal _ -> Node.Set.singleton state.literal_node
   | `TemplateLiteral { exprs; _ } -> List.fold_left exprs_f Node.Set.empty exprs
-  | `Identifier id -> Store.retrieve state.store (Identifier.name' id)
-  | `This _ -> Store.get state.store "this"
+  | `Identifier id -> Store.find state.store (Identifier.name' id)
+  | `This _ -> Store.find state.store "this"
 
 let rec initialize_state (tconf : Taint_config.t) (stmts : 'm Statement.t list)
     : State.t =
@@ -297,7 +297,7 @@ and build_function_call (state : State.t) (left : 'm LeftValue.t)
   (* the callee identifier evaluates to the literal object in dynamic function calls *)
   let call = Identifier.name callee in
   let retn = LeftValue.name left in
-  let ls_funcs = Store.retrieve state.store call in
+  let ls_funcs = Store.find state.store call in
   let l_funcs = known_functions state ls_funcs in
   let ls_this = None in
   let ls_args = List.map (eval_expr state) args in
@@ -375,20 +375,20 @@ and build_assign_function_definition (state : State.t) (left : 'm LeftValue.t)
     State.t =
   let func_name = LeftValue.name left in
   let l_func = State.add_function_node state cid func_name in
-  Store.set state.store func_name l_func;
-  let store' = Store.extend state.store in
+  Store.replace state.store func_name (Node.Set.singleton l_func);
+  let store' = Store.copy state.store in
   let state' = { state with store = store'; curr_func = Some l_func } in
   let cid' = offset cid (List.length params + 1) in
   let l_this = State.add_parameter_node state' cid' 0 "this" in
   State.add_parameter_edge state' l_func l_this 0;
-  Store.set state'.store "this" l_this;
+  Store.replace state'.store "this" (Node.Set.singleton l_this);
   ( Fun.flip List.iteri params @@ fun idx param ->
     let idx' = idx + 1 in
     let cid' = offset cid idx' in
     let param_name = Identifier.name param in
     let l_param = State.add_parameter_node state' cid' idx' param_name in
     State.add_parameter_edge state' l_func l_param idx';
-    Store.set state'.store param_name l_param );
+    Store.replace state'.store param_name (Node.Set.singleton l_param) );
   let _state'' = build_sequence state' body in
   state
 
