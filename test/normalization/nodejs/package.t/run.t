@@ -1,7 +1,9 @@
   $ graphjs parse --mode=multi-file --verbose .
   [info] Dependency tree of "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/main.js" generated successfully.
-  "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/main.js": {
-    "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/dependency.js": {}
+  {
+    "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/main.js": {
+      "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/dependency.js": {}
+    }
   }
   [info] File "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/dependency.js" normalized successfully.
   var foo = function () {

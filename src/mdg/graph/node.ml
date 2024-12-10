@@ -76,17 +76,6 @@ module Set = struct
   let str (nodes : t) : string = Fmt.str "%a" pp nodes [@@inline]
 end
 
-let label (node : t) : string =
-  (* TODO: add a flag to show the graph local identifiers in the labels *)
-  match node.kind with
-  | Literal -> Fmt.str "{ Literal Object }"
-  | Object name -> Fmt.str "%s" name
-  | Function name -> Fmt.str "function %s" name
-  | Parameter name -> Fmt.str "%s" name
-  | Call name -> Fmt.str "%s(...)" name
-  | Return name -> Fmt.str "%s" name
-  | TaintSink sink -> Fmt.str "%s sink" Tainted.(name !sink)
-
 let create_literal () : t =
   let uid = Location.create uid_gen in
   let lid = Config.(!literal_loc) in

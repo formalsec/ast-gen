@@ -46,20 +46,30 @@ module CommonOpts = struct
   let verbose =
     let doc = "Run in verbose mode, printing all information available." in
     Arg.(value & flag & info [ "v"; "verbose" ] ~doc)
+
+  let output_override =
+    let doc = "Override existing files when outputing to the provided path." in
+    Arg.(value & flag & info [ "output-override" ] ~doc)
 end
 
 module FileOpts = struct
   let input =
-    let open Fs.Parser in
     let docv = "FILE|DIR" in
-    let doc = "Path to the input file or package." in
-    Arg.(required & pos 0 (some valid_fpath) None & info [] ~docv ~doc)
+    let doc = "Path to the input file or directory." in
+    let parser = Fs.Parser.valid_fpath in
+    Arg.(required & pos 0 (some parser) None & info [] ~docv ~doc)
 
   let output =
-    let open Fs.Parser in
-    let docv = "FILE" in
+    let docv = "FILE|DIR" in
     let doc = "Path to the output file or directory." in
-    Arg.(value & opt (some fpath) None & info [ "o"; "output" ] ~docv ~doc)
+    let parser = Fs.Parser.fpath in
+    Arg.(value & opt (some parser) None & info [ "o"; "output" ] ~docv ~doc)
+
+  let output_dir =
+    let docv = "DIR" in
+    let doc = "Path to the output directory." in
+    let parser = Fs.Parser.dir in
+    Arg.(value & opt (some parser) None & info [ "o"; "output" ] ~docv ~doc)
 end
 
 module SharedOpts = struct
@@ -103,10 +113,10 @@ end
 
 module MdgOpts = struct
   let taint_config =
-    let open Fs.Parser in
     let docv = "FILE" in
     let doc = "Path to the taint source/sink configuration file." in
-    Arg.(value & opt (some valid_file) None & info [ "c"; "config" ] ~docv ~doc)
+    let parser = Fs.Parser.valid_file in
+    Arg.(value & opt (some parser) None & info [ "c"; "config" ] ~docv ~doc)
 
   let no_svg =
     let doc = "Run without generating the .svg graph representation." in

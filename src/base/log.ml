@@ -13,7 +13,7 @@ module Config = struct
     constant (Fmt.dly "error", Font.create ~fg:`LightRed ())
 
   let warn : ((Fmt.t -> unit) * Font.t) t =
-    constant (Fmt.dly "warn", Font.create ~fg:`LightYellow ())
+    constant (Fmt.dly "warn", Font.create ~fg:`Yellow ())
 
   let info : ((Fmt.t -> unit) * Font.t) t =
     constant (Fmt.dly "info", Font.create ~fg:`LightCyan ())

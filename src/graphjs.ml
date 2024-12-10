@@ -4,13 +4,14 @@ open Cmdliner
 
 type status = (unit Exec.status Cmd.eval_ok, Cmd.eval_error) Result.t
 
-let set_copts (colorless : bool) (lvl : Enums.DebugLvl.t) (verbose : bool) :
-    unit =
+let set_copts (colorless : bool) (lvl : Enums.DebugLvl.t) (verbose : bool)
+    (output_override : bool) : unit =
   Font.Config.(colored $= not colorless);
   Log.Config.(log_warns $= (lvl >= Warn));
   Log.Config.(log_infos $= (verbose || lvl >= Info));
   Log.Config.(log_debugs $= (lvl >= All));
-  Log.Config.(log_verbose $= verbose)
+  Log.Config.(log_verbose $= verbose);
+  Fs.Config.(override $= output_override)
 
 let copts : unit Term.t =
   let open Term in
@@ -18,6 +19,7 @@ let copts : unit Term.t =
   $ Docs.CommonOpts.colorless
   $ Docs.CommonOpts.debug
   $ Docs.CommonOpts.verbose
+  $ Docs.CommonOpts.output_override
 
 let set_shared_opts (mode' : Enums.AnalysisMode.t) () : unit =
   let open Graphjs_shared in
@@ -33,7 +35,7 @@ let parse_cmd_opts : Cmd_parse.Options.t Term.t =
   let open Term in
   const Cmd_parse.Options.set_cmd
   $ Docs.FileOpts.input
-  $ Docs.FileOpts.output
+  $ Docs.FileOpts.output_dir
   $ parse_opts
 
 let parse_cmd : unit Exec.status Cmd.t =

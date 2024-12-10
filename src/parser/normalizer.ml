@@ -57,7 +57,7 @@ module FlowUtils = struct
 end
 
 let get_leftvalue (ctx : Ctx.t) (n_loc : Region.t) : lval =
-  (* TODO: add a flag to disable this and always generate random *)
+  (* TODO[flag]: disable this and always generate random *)
   match ctx.curr_lval with
   | None -> LeftValue.random () @> n_loc
   | Some n_lval -> n_lval
@@ -279,7 +279,7 @@ and normalize_this_expr (_ : Ctx.t) (loc : Loc.t) : n_expr =
   ([], This.create_expr () @!> loc)
 
 and normalize_super_expr (_ : Ctx.t) (loc : Loc.t) : n_expr =
-  (* TODO: add a flag to optimize the super by storing the __super__ property in the object *)
+  (* TODO[flag]: optimize the super by storing the __super__ property in the object *)
   let n_loc = normalize_location loc in
   let n_this = This.create_expr () @> n_loc in
   let p_proto = Static (Prop.IProp (Identifier.create "__proto__") @> n_loc) in
@@ -362,7 +362,7 @@ and normalize_getter_setter_property (ctx : Ctx.t) (loc : Loc.t) (kind : string)
 
 and normalize_getter_setter_wrapper (_ : Ctx.t) (n_loc : Region.t)
     (kind : string) (n_func : expr) : n_expr =
-  (* TODO: add a flag to disable getters and setters *)
+  (* TODO[flag]: disable getters and setters *)
   let p_kind = Prop.IProp (Identifier.create kind) @> n_loc in
   let p_config = Prop.IProp (Identifier.create "configurable") @> n_loc in
   let tr = Literal.(to_expr @@ boolean true) @> n_loc in
@@ -437,7 +437,7 @@ and normalize_not_null_or_undef (n_loc : Region.t) (n_arg : expr)
 
 and normalize_default_value (n_left : lval)
     ((loc, _) as dflt : (Loc.t, Loc.t) Flow.Expression.t) : n_stmt =
-  (* TODO: add a flag to disable this and ignore all defaults *)
+  (* TODO[flag]: disable this and ignore all defaults *)
   let n_loc = normalize_location loc in
   let n_left' = LeftValue.to_expr n_left @> n_loc in
   let n_undef = Identifier.undefined_expr () @> n_loc in
@@ -611,7 +611,7 @@ and normalize_binary_expr (ctx : Ctx.t) (loc : Loc.t)
 
 and normalize_logical_expr (ctx : Ctx.t) (loc : Loc.t)
     (logical : (Loc.t, Loc.t) Flow.Expression.Logical.t) : n_expr =
-  (* TODO: add a flag to normalize short circuit as normal operators *)
+  (* TODO[flag]: normalize short circuit as normal operators *)
   match logical.operator with
   | And -> normalize_and_logical_expr ctx loc logical
   | Or -> normalize_or_logical_expr ctx loc logical
@@ -662,7 +662,7 @@ and normalize_nullish_coalesce_expr (ctx : Ctx.t) (loc : Loc.t)
 
 and normalize_conditional_expr (ctx : Ctx.t) (loc : Loc.t)
     (cond : (Loc.t, Loc.t) Flow.Expression.Conditional.t) : n_expr =
-  (* TODO: add a flag to disable short circuit *)
+  (* TODO[flag]: disable short circuit *)
   let n_loc = normalize_location loc in
   let (n_left_s, n_left) = get_leftvalue_redef ctx n_loc in
   let n_left' = LeftValue.to_expr n_left @> n_loc in
@@ -678,7 +678,7 @@ and normalize_conditional_expr (ctx : Ctx.t) (loc : Loc.t)
 
 and normalize_update_expr (ctx : Ctx.t) (loc : Loc.t)
     (update : (Loc.t, Loc.t) Flow.Expression.Update.t) : n_expr =
-  (* TODO: add a flag to avoid generating the temp variable when ignoring the result *)
+  (* TODO[flag]: avoid generating the temp variable when ignoring the result *)
   let n_loc = normalize_location loc in
   let binopt = translate_update update.operator in
   let n_one = Literal.(to_expr @@ integer 1) @> n_loc in
@@ -1325,7 +1325,7 @@ and normalize_stmt ?(ctx : Ctx.t = Ctx.default ())
 and normalize_alias_wrapper (ctx : Ctx.t) (n_loc : Region.t)
     (wrapped_f : lval -> n_stmt) (n_left : lval)
     (alias : (Loc.t, Loc.t) Flow.Identifier.t option) : n_stmt =
-  (* TODO: add a flag to disable function/class aliases  *)
+  (* TODO[flag]: disable function/class aliases  *)
   match alias with
   | None -> wrapped_f n_left
   | Some alias ->

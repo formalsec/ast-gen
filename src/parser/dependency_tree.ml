@@ -60,12 +60,15 @@ let equal (dt1 : t) (dt2 : t) : bool = compare dt1 dt2 == 0 [@@inline]
 let rec map_absolute (f : Fpath.t -> Fpath.t) (dt : t) : t =
   { abs = f dt.abs; rel = dt.rel; deps = DepSet.map (map_absolute f) dt.deps }
 
-let rec pp (ppf : Fmt.t) (dt : t) : unit =
+let rec pp_binds (ppf : Fmt.t) (dt : t) : unit =
   let pp_path ppf path = Fmt.fmt ppf "\"%a\"" Fpath.pp path in
-  let pp_deps ppf deps = Fmt.(pp_iter DepSet.iter !>",@\n" pp) ppf deps in
+  let pp_deps ppf deps = Fmt.(pp_iter DepSet.iter !>",@\n" pp_binds) ppf deps in
   let pp_indent ppf deps = Fmt.fmt ppf "@\n@[<v 2>  %a@]@\n" pp_deps deps in
   if DepSet.cardinal dt.deps == 0 then Fmt.fmt ppf "%a: {}" pp_path dt.abs
   else Fmt.fmt ppf "%a: {%a}" pp_path dt.abs pp_indent dt.deps
+
+let pp (ppf : Fmt.t) (dt : t) : unit =
+  Fmt.fmt ppf "{@\n@[<v 2>  %a@]@\n}" pp_binds dt
 
 let str (dt : t) : string = Fmt.str "%a" pp dt
 

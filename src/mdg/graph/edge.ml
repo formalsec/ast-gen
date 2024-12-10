@@ -1,6 +1,5 @@
 open Graphjs_base
 
-(* TODO: add a flag to disable ref parent and argument edges *)
 type kind =
   | Dependency
   | Property of string option
@@ -114,22 +113,6 @@ module Set = struct
 
   let str (edges : t) : string = Fmt.str "%a" pp edges [@@inline]
 end
-
-let label (edge : t) : string =
-  let prop_f = Option.value ~default:"*" in
-  match edge.kind with
-  | Dependency -> Fmt.str "D"
-  | Property prop -> Fmt.str "P(%s)" (prop_f prop)
-  | Version prop -> Fmt.str "V(%s)" (prop_f prop)
-  | RefParent prop -> Fmt.str "[[RefParent(%s)]]" (prop_f prop)
-  | Parameter 0 -> Fmt.str "this"
-  | Parameter idx -> Fmt.str "Param:%d" idx
-  | Argument 0 -> Fmt.str "[[this]]"
-  | Argument idx -> Fmt.str "Arg:%d" idx
-  | RefArgument -> Fmt.str "[[RefArg]]"
-  | Return -> Fmt.str "Ret"
-  | RefReturn -> Fmt.str "[[RefRet]]"
-  | Call -> Fmt.str "Call"
 
 let create_dependency () : Node.t -> Node.t -> t =
  fun src tar -> create src tar Dependency

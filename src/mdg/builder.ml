@@ -9,7 +9,7 @@ let cid : 'm Statement.t -> cid = State.CodeCache.cid
 let offset : cid -> int -> cid = State.CodeCache.offset
 
 let object_name (ls_obj : Node.Set.t) (obj : 'm Expression.t) : string =
-  (* TODO: add a flag to disable compound object names *)
+  (* TODO[flag]: disable composite object names *)
   if Node.Set.cardinal ls_obj == 1 then Node.name (Node.Set.choose ls_obj)
   else Expression.str obj
 
@@ -237,7 +237,6 @@ and build_static_lookup (state : State.t) (left : 'm LeftValue.t)
   let ls_obj = eval_expr state obj in
   let prop' = Some (Prop.name prop) in
   let name = object_property_name ls_obj obj prop' in
-  (* TODO: add a flag to only create property on orig when needed *)
   add_static_orig_object_property state cid name ls_obj prop';
   let ls_fields = lookup_property state ls_obj prop' in
   update_scope state left ls_fields;
@@ -248,7 +247,6 @@ and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
   let ls_obj = eval_expr state obj in
   let ls_prop = eval_expr state prop in
   let name = object_property_name ls_obj obj None in
-  (* TODO: check what to do with dynamic properties, and where to add them *)
   add_dynamic_orig_object_property state cid name ls_obj ls_prop;
   let ls_fields = lookup_property state ls_obj None in
   update_scope state left ls_fields;
@@ -295,7 +293,8 @@ and build_dynamic_delete (state : State.t) (_left : 'm LeftValue.t)
 and build_function_call (state : State.t) (left : 'm LeftValue.t)
     (callee : 'm Identifier.t) (args : 'm Expression.t list) (cid0 : cid) :
     State.t =
-  (* TODO: handle dynamic function calls (callee evaluates to the literal object) *)
+  (* TODO: implement dynamic function calls by calling every function available in the scope *)
+  (* the callee identifier evaluates to the literal object in dynamic function calls *)
   let call = Identifier.name callee in
   let retn = LeftValue.name left in
   let ls_funcs = Store.retrieve state.store call in
@@ -317,7 +316,6 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
   let prop' = Some (Prop.str prop) in
   let call = object_property_name ls_obj obj prop' in
   let retn = LeftValue.name left in
-  (* TODO: add a flag to only create property on orig when needed *)
   add_static_orig_object_property state cid0 call ls_obj prop';
   let ls_mthds = lookup_property state ls_obj prop' in
   let l_mthds = known_functions state ls_mthds in
@@ -325,7 +323,6 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
   let cid2 = offset cid0 2 in
   let (l_call, l_retn) = add_caller state cid1 cid2 call retn ls_this ls_args in
   add_call_connections state l_mthds l_call ls_this ls_args;
-  (* TODO: properly set the this binding *)
   update_scope state left (Node.Set.singleton l_retn);
   state
 
@@ -338,7 +335,6 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let ls_args = List.map (eval_expr state) args in
   let call = object_property_name ls_obj obj None in
   let retn = LeftValue.name left in
-  (* TODO: check what to do with dynamic properties, and where to add them *)
   add_dynamic_orig_object_property state cid0 call ls_obj ls_prop;
   let ls_mthds = lookup_property state ls_obj None in
   let l_mthds = known_functions state ls_mthds in
@@ -346,7 +342,6 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let cid2 = offset cid0 2 in
   let (l_call, l_retn) = add_caller state cid1 cid2 call retn ls_this ls_args in
   add_call_connections state l_mthds l_call ls_this ls_args;
-  (* TODO: properly set the this binding *)
   update_scope state left (Node.Set.singleton l_retn);
   state
 
@@ -367,8 +362,9 @@ and build_switch (state : State.t) (cases : 'm SwitchCase.t list) : State.t =
   List.map SwitchCase.body cases |> List.fold_left build_sequence state
 
 and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
-  (* TODO: handle the assignment in the forin and forof statement *)
+  (* TODO: model the assignment in the forin and forof statement *)
   (* we treat this assignment as a lookup on all properties of the expression *)
+  (* the left value should depend of all the properties of the right value *)
   let store' = Store.copy state.store in
   let state' = build_sequence state body in
   Store.lub state'.store store';
@@ -382,7 +378,6 @@ and build_assign_function_definition (state : State.t) (left : 'm LeftValue.t)
   Store.set state.store func_name l_func;
   let store' = Store.extend state.store in
   let state' = { state with store = store'; curr_func = Some l_func } in
-  (* TODO: remove the this from the graph if not used *)
   let cid' = offset cid (List.length params + 1) in
   let l_this = State.add_parameter_node state' cid' 0 "this" in
   State.add_parameter_edge state' l_func l_this 0;
@@ -395,8 +390,6 @@ and build_assign_function_definition (state : State.t) (left : 'm LeftValue.t)
     State.add_parameter_edge state' l_func l_param idx';
     Store.set state'.store param_name l_param );
   let _state'' = build_sequence state' body in
-  (* TODO: store the context difference generated by the function body in the environment *)
-  (* this context should be used when calling the function to modify the current context accordingly *)
   state
 
 and build_loop_break (state : State.t) (_label : 'm Identifier.t option) :

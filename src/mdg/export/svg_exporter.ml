@@ -31,6 +31,33 @@ module Dot = struct
   let set_info (mdg' : Mdg.t) : unit = mdg := Some mdg'
   let ( ! ) (mdg : Mdg.t option ref) : Mdg.t = Option.get !mdg
 
+  let node_label (node : Node.t) : string =
+    (* TODO[flag]: show the graph local identifiers in the labels *)
+    match node.kind with
+    | Literal -> Fmt.str "{ Literal Object }"
+    | Object name -> Fmt.str "%s" name
+    | Function name -> Fmt.str "function %s" name
+    | Parameter name -> Fmt.str "%s" name
+    | Call name -> Fmt.str "%s(...)" name
+    | Return name -> Fmt.str "%s" name
+    | TaintSink sink -> Fmt.str "%s sink" Tainted.(name !sink)
+
+  let edge_label (edge : Edge.t) : string =
+    let prop_f = Option.value ~default:"*" in
+    match edge.kind with
+    | Dependency -> Fmt.str "D"
+    | Property prop -> Fmt.str "P(%s)" (prop_f prop)
+    | Version prop -> Fmt.str "V(%s)" (prop_f prop)
+    | RefParent prop -> Fmt.str "[[RefParent(%s)]]" (prop_f prop)
+    | Parameter 0 -> Fmt.str "this"
+    | Parameter idx -> Fmt.str "Param:%d" idx
+    | Argument 0 -> Fmt.str "[[this]]"
+    | Argument idx -> Fmt.str "Arg:%d" idx
+    | RefArgument -> Fmt.str "[[RefArg]]"
+    | Return -> Fmt.str "Ret"
+    | RefReturn -> Fmt.str "[[RefRet]]"
+    | Call -> Fmt.str "Call"
+
   include Graph.Graphviz.Dot (struct
     include GraphBuilder
 
@@ -39,7 +66,7 @@ module Dot = struct
     let default_edge_attributes (_ : t) = [ `Arrowhead `Normal ]
 
     let vertex_attributes (node : V.t) : 'a list =
-      `Label (Node.label node)
+      `Label (node_label node)
       ::
       ( match node.kind with
       | Literal -> [ `Color 26214; `Fillcolor 13434879 ]
@@ -52,7 +79,7 @@ module Dot = struct
       | TaintSink _ -> [ `Color 6684672; `Fillcolor 16724787 ] )
 
     let edge_attributes ((_, edge, _) : Node.t * Edge.t * Node.t) : 'a list =
-      `Label (Edge.label edge)
+      `Label (edge_label edge)
       ::
       ( match edge.kind with
       | RefParent _ -> [ `Style `Invis ]
@@ -70,7 +97,7 @@ module Dot = struct
 
     let vertex_name (node : V.t) = Location.str node.uid
 
-    (* TODO: improve the graph with Ocamlgraph layers and subgraphs *)
+    (* TODO: set each function to its own subgraph *)
     let get_subgraph _ = None
   end)
 end
@@ -78,8 +105,6 @@ end
 open struct
   let build_graph_edges_f (edge : Edge.t) (graph : GraphBuilder.t) :
       GraphBuilder.t =
-    (* TODO: add a flag to show the this argument edge *)
-    (* TODO: add a flag to show the reference edges *)
     match edge.kind with
     | RefParent _ -> graph
     | Argument 0 -> graph
