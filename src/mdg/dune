@@ -10,6 +10,7 @@
   mdg
   store
   state
+  function
   builder_config
   builder
   svg_exporter)

@@ -4,7 +4,7 @@ let obj = true ? {} : {};
 obj.foo = 10;
 // static update with a non-exiting identifier property (dependency)
 let dep = {}
-obj.foo = dep;
+obj.bar = dep;
 // static update with non-exiting nested identifier properties
 obj.bar.baz = 10;
 // static update with a non-existing null property

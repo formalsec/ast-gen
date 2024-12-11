@@ -49,3 +49,8 @@ let%test "valid_index_path" =
   let index = Fmt.str "%S : {}" "index/valid/main/index.js" in
   let dep_tree = Fmt.str "{ %s }" index in
   Analysis.multi "index/valid/" @@ Res.ok dep_tree
+
+let%test "stdlib_dependency" =
+  let stdlib = Fmt.str "%S : {}" "stdlib/stdlib.js" in
+  let dep_tree = Fmt.str "{ %s }" stdlib in
+  Analysis.multi "stdlib/stdlib.js" @@ Res.ok dep_tree

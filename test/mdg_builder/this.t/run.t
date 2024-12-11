@@ -11,6 +11,7 @@
   x1[p_1] --< [[RefArg]] >--> [[literal]]
   this.foo[l_1] -
   this.bar[l_2] -
+  this.bar(...)[l_3] --< Call >--> this.bar[l_2]
   this.bar(...)[l_3] --< Ret >--> y[l_4]
   y[l_4] -
   obj[l_5] --< V(foo) >--> obj[l_6]

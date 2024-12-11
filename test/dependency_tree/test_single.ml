@@ -26,3 +26,8 @@ let%test "recursive_file" =
 
 let%test "directory_path" =
   Analysis.single "main/" @@ Res.invalid_directory "main/"
+
+let%test "stdlib_dependency" =
+  let stdlib = Fmt.str "%S : {}" "stdlib/stdlib.js" in
+  let dep_tree = Fmt.str "{ %s }" stdlib in
+  Analysis.single "stdlib/stdlib.js" @@ Res.ok dep_tree

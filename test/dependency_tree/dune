@@ -13,4 +13,5 @@
   (source_tree main)
   (source_tree recursive)
   (source_tree package)
-  (source_tree index)))
+  (source_tree index)
+  (source_tree stdlib)))

@@ -70,7 +70,6 @@
   $v5.p1[l_12] -
   $v7[l_13] --< V(p) >--> $v7[l_14]
   $v7[l_14] --< P(p) >--> w1[p_1]
-  $v7[l_14] --< P(p) >--> $v5.p1[l_12]
   $v7[l_14] --< [[RefParent(p)]] >--> $v7[l_13]
 
   $ graphjs mdg return.js
