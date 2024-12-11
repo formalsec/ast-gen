@@ -117,8 +117,14 @@ let object_lookup_property (mdg : t) (node : Node.t) (prop : string option) :
       lookup
       @@ Fun.flip2 List.fold_left nodes (get_versions mdg node)
       @@ fun acc (parent_node, parent_prop) ->
-      if not (List.mem parent_node !visited) then (
-        visited := parent_node :: !visited;
-        if prop != parent_prop then parent_node :: acc else acc )
+      if not (List.mem parent_node !visited) then
+        match parent_prop with
+        | Some _ when prop != parent_prop ->
+          visited := parent_node :: !visited;
+          parent_node :: acc
+        | None ->
+          visited := parent_node :: !visited;
+          parent_node :: acc
+        | _ -> acc
       else [] in
   lookup [ node ]

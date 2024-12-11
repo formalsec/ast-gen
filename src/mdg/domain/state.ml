@@ -66,6 +66,9 @@ let add_edge (state : t) (create_edge_f : Node.t -> Node.t -> Edge.t)
   let edge = create_edge_f src tar in
   Mdg.add_edge state.mdg src edge
 
+let add_literal_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
+  add_node state (Node.create_literal_object name) id
+
 let add_object_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
   add_node state (Node.create_object name) id
 

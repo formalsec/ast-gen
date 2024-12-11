@@ -70,6 +70,8 @@ module Dot = struct
       ::
       ( match node.kind with
       | Literal -> [ `Color 26214; `Fillcolor 13434879 ]
+      | Object _ when node.lid == Node.Config.(!literal_loc) ->
+        [ `Color 26214; `Fillcolor 13434879 ]
       | Object _ -> [ `Color 2105376; `Fillcolor 14737632 ]
       | Function _ -> [ `Color 26112; `Fillcolor 52224 ]
       | Parameter "this" -> [ `Color 6684774; `Fillcolor 16764159 ]

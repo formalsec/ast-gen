@@ -16,12 +16,13 @@ module Options = struct
     | Some taint_config -> taint_config
     | None -> Shared_config.default_taint_config ()
 
-  let set (taint_config : Fpath.t option) (no_svg : bool) : Fpath.t =
+  let set (no_svg : bool) (wrap_prop_updates : bool) : unit =
     Builder_config.(export_svg $= not no_svg);
-    parse_taint_config taint_config
+    Builder_config.(wrap_literal_property_updates $= wrap_prop_updates)
 
   let set_cmd (input : Fpath.t) (output : Fpath.t option)
-      (taint_config : Fpath.t) : t =
+      (taint_config' : Fpath.t option) () : t =
+    let taint_config = parse_taint_config taint_config' in
     { input; output; taint_config }
 end
 

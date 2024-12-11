@@ -10,7 +10,8 @@ let offset : cid -> int -> cid = State.CodeCache.offset
 
 let object_name (ls_obj : Node.Set.t) (obj : 'm Expression.t) : string =
   (* TODO[flag]: disable composite object names *)
-  if Node.Set.cardinal ls_obj == 1 then Node.name (Node.Set.choose ls_obj)
+  if Node.Set.cardinal ls_obj == 1 then
+    try Node.name (Node.Set.choose ls_obj) with _ -> Expression.str obj
   else Expression.str obj
 
 let object_property_name (ls_obj : Node.Set.t) (obj : 'm Expression.t)
@@ -26,6 +27,20 @@ let lookup_property (state : State.t) (ls_obj : Node.Set.t)
     (prop' : string option) : Node.Set.t =
   let lookup_f = Fun.flip (Mdg.object_lookup_property state.mdg) prop' in
   Node.Set.map_flat lookup_f ls_obj
+
+let update_property_wrapper (state : State.t) (cid : cid)
+    (ls_right : Node.Set.t) (right : 'm Expression.t) : Node.Set.t =
+  (* this function prevents new versions from being created from the literal object *)
+  if Builder_config.(!wrap_literal_property_updates) then
+    Fun.flip2 Node.Set.fold ls_right Node.Set.empty @@ fun node acc ->
+    match node.kind with
+    | Literal ->
+      let cid' = offset cid (Node.Set.cardinal acc + 1) in
+      let l_wrapper = State.add_literal_node state cid' (Expression.str right) in
+      State.add_dependency_edge state node l_wrapper;
+      Node.Set.add l_wrapper acc
+    | _ -> Node.Set.add node acc
+  else ls_right
 
 let known_functions (state : State.t) (ls_funcs : Node.Set.t) : Node.t list =
   Fun.flip2 Node.Set.fold ls_funcs [] @@ fun l_func acc ->
@@ -254,27 +269,27 @@ and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
 
 and build_static_update (state : State.t) (obj : 'm Expression.t)
     (prop : 'm Prop.t) (right : 'm Expression.t) (cid : cid) : State.t =
-  (* FIXME: resolve the issue of assigning a value to a literal property *)
   let ls_obj = eval_expr state obj in
   let ls_right = eval_expr state right in
   let prop' = Some (Prop.name prop) in
+  let ls_right' = update_property_wrapper state cid ls_right right in
   let name = object_name ls_obj obj in
   let ls_new = add_static_object_version state cid name ls_obj prop' in
   ( Fun.flip Node.Set.iter ls_new @@ fun l_new ->
-    Fun.flip Node.Set.iter ls_right @@ fun l_right ->
+    Fun.flip Node.Set.iter ls_right' @@ fun l_right ->
     State.add_property_edge state l_new l_right prop' );
   state
 
 and build_dynamic_update (state : State.t) (obj : 'm Expression.t)
     (prop : 'm Expression.t) (right : 'm Expression.t) (cid : cid) : State.t =
-  (* FIXME: resolve the issue of assigning a value to a literal property *)
   let ls_obj = eval_expr state obj in
   let ls_prop = eval_expr state prop in
   let ls_right = eval_expr state right in
   let name = object_name ls_obj obj in
+  let ls_right' = update_property_wrapper state cid ls_right right in
   let ls_new = add_dynamic_object_version state cid name ls_obj ls_prop in
   ( Fun.flip Node.Set.iter ls_new @@ fun l_new ->
-    Fun.flip Node.Set.iter ls_right @@ fun l_right ->
+    Fun.flip Node.Set.iter ls_right' @@ fun l_right ->
     State.add_property_edge state l_new l_right None );
   state
 
@@ -318,11 +333,11 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
   let retn = LeftValue.name left in
   add_static_orig_object_property state cid0 call ls_obj prop';
   let ls_mthds = lookup_property state ls_obj prop' in
-  let l_mthds = known_functions state ls_mthds in
+  let mthds = known_functions state ls_mthds in
   let cid1 = offset cid0 1 in
   let cid2 = offset cid0 2 in
   let (l_call, l_retn) = add_caller state cid1 cid2 call retn ls_this ls_args in
-  add_call_connections state l_mthds l_call ls_this ls_args;
+  add_call_connections state mthds l_call ls_this ls_args;
   update_scope state left (Node.Set.singleton l_retn);
   state
 
@@ -337,11 +352,11 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let retn = LeftValue.name left in
   add_dynamic_orig_object_property state cid0 call ls_obj ls_prop;
   let ls_mthds = lookup_property state ls_obj None in
-  let l_mthds = known_functions state ls_mthds in
+  let mthds = known_functions state ls_mthds in
   let cid1 = offset cid0 1 in
   let cid2 = offset cid0 2 in
   let (l_call, l_retn) = add_caller state cid1 cid2 call retn ls_this ls_args in
-  add_call_connections state l_mthds l_call ls_this ls_args;
+  add_call_connections state mthds l_call ls_this ls_args;
   update_scope state left (Node.Set.singleton l_retn);
   state
 

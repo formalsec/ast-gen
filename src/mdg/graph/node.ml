@@ -82,34 +82,40 @@ let create_literal () : t =
   let at = Region.default () in
   create uid lid Literal None at
 
+let create_literal_object (name : string) : t option -> Region.t -> t =
+ fun parent at ->
+  let uid = Location.create uid_gen in
+  let lid = Config.(!literal_loc) in
+  create uid lid (Object name) parent at
+
 let create_object (name : string) : t option -> Region.t -> t =
- fun parent region ->
+ fun parent at ->
   let uid = Location.create uid_gen in
   let lid = Location.create obj_lid_gen in
-  create uid lid (Object name) parent region
+  create uid lid (Object name) parent at
 
 let create_function (name : string) : t option -> Region.t -> t =
- fun parent region ->
+ fun parent at ->
   let uid = Location.create uid_gen in
   let lid = Location.create func_lid_gen in
-  create uid lid (Function name) parent region
+  create uid lid (Function name) parent at
 
 let create_parameter (idx : int) (name : string) : t option -> Region.t -> t =
- fun parent region ->
+ fun parent at ->
   let uid = Location.create uid_gen in
-  create uid idx (Parameter name) parent region
+  create uid idx (Parameter name) parent at
 
 let create_call (name : string) : t option -> Region.t -> t =
- fun parent region ->
+ fun parent at ->
   let uid = Location.create uid_gen in
   let lid = Location.create obj_lid_gen in
-  create uid lid (Call name) parent region
+  create uid lid (Call name) parent at
 
 let create_return (name : string) : t option -> Region.t -> t =
- fun parent region ->
+ fun parent at ->
   let uid = Location.create uid_gen in
   let lid = Location.create obj_lid_gen in
-  create uid lid (Return name) parent region
+  create uid lid (Return name) parent at
 
 let create_sink (sink : Tainted.sink) : t =
   let uid = Location.create uid_gen in

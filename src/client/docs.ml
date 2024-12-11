@@ -83,6 +83,12 @@ module SharedOpts = struct
        the functions that were exported by the 'main' file of the module." in
     let modes = Arg.enum Enums.AnalysisMode.(args all) in
     Arg.(value & opt modes SingleFile & info [ "m"; "mode" ] ~docv ~doc)
+
+  let taint_config =
+    let docv = "FILE" in
+    let doc = "Path to the taint source/sink configuration file." in
+    let parser = Fs.Parser.valid_file in
+    Arg.(value & opt (some parser) None & info [ "c"; "config" ] ~docv ~doc)
 end
 
 module ParseOpts = struct
@@ -112,15 +118,13 @@ module ParseCmd = struct
 end
 
 module MdgOpts = struct
-  let taint_config =
-    let docv = "FILE" in
-    let doc = "Path to the taint source/sink configuration file." in
-    let parser = Fs.Parser.valid_file in
-    Arg.(value & opt (some parser) None & info [ "c"; "config" ] ~docv ~doc)
-
   let no_svg =
     let doc = "Run without generating the .svg graph representation." in
     Arg.(value & flag & info [ "no-svg" ] ~doc)
+
+  let wrap_literal_property_updates =
+    let doc = "Wrap property updates on literal values in a new object node." in
+    Arg.(value & flag & info [ "wrap-literal-property-updates" ] ~doc)
 end
 
 module MdgCmd = struct

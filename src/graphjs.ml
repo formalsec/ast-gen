@@ -43,15 +43,18 @@ let parse_cmd : unit Exec.status Cmd.t =
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
   Cmd.v info Term.(const Cmd_parse.main $ parse_cmd_opts $ shared_opts)
 
-let mdg_opts : Fpath.t Term.t =
+let mdg_opts : unit Term.t =
   let open Term in
-  const Cmd_mdg.Options.set $ Docs.MdgOpts.taint_config $ Docs.MdgOpts.no_svg
+  const Cmd_mdg.Options.set
+  $ Docs.MdgOpts.no_svg
+  $ Docs.MdgOpts.wrap_literal_property_updates
 
 let mdg_cmd_opts : Cmd_mdg.Options.t Term.t =
   let open Term in
   const Cmd_mdg.Options.set_cmd
   $ Docs.FileOpts.input
   $ Docs.FileOpts.output
+  $ Docs.SharedOpts.taint_config
   $ mdg_opts
 
 let mdg_cmd : unit Exec.status Cmd.t =
