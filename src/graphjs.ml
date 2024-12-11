@@ -75,7 +75,8 @@ let eval_cmd : status -> int = function
   | Ok (`Ok (Ok ())) -> Docs.ExitCodes.ok
   | Ok (`Ok (Error (`DepTree _))) -> Docs.ExitCodes.deptree
   | Ok (`Ok (Error (`ParseJS _))) -> Docs.ExitCodes.parsejs
-  | Ok (`Ok (Error (`ExportMDG _))) -> Docs.ExitCodes.mdg_export
+  | Ok (`Ok (Error (`BuildMDG _))) -> Docs.ExitCodes.build_mdg
+  | Ok (`Ok (Error (`ExportMDG _))) -> Docs.ExitCodes.export_mdg
   | Ok (`Ok (Error (`Generic _))) -> Docs.ExitCodes.generic
   | Error `Term -> Docs.ExitCodes.term
   | Error `Parse -> Docs.ExitCodes.client

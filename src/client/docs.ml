@@ -4,7 +4,8 @@ module ExitCodes = struct
   let ok = Cmd.Exit.ok
   let deptree = 2
   let parsejs = 3
-  let mdg_export = 4
+  let build_mdg = 4
+  let export_mdg = 5
   let term = 122
   let generic = Cmd.Exit.some_error
   let client = Cmd.Exit.cli_error
@@ -20,7 +21,9 @@ module Exits = struct
     [ info ~doc:"on Dependency Tree generation error" ExitCodes.deptree
     ; info ~doc:"on JavaScript parsing error" ExitCodes.parsejs ]
 
-  let mdg = [ info ~doc:"on MDG export error" ExitCodes.mdg_export ]
+  let mdg =
+    [ info ~doc:"on MDG construction" ExitCodes.build_mdg
+    ; info ~doc:"on MDG export error" ExitCodes.export_mdg ]
 end
 
 module CommonOpts = struct

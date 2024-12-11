@@ -77,7 +77,7 @@ module LeftValue = struct
 end
 
 module LeftValueKind = struct
-  type t = Ast.LeftValue.Kind.t
+  include Ast.LeftValue.Kind
 
   let pp (ppf : Fmt.t) (kind : t) : unit = Printer.pp_leftvalue_kind ppf kind
   let str (kind : t) : string = Fmt.str "%a" pp kind
@@ -97,7 +97,7 @@ module Prop = struct
 end
 
 module Regex = struct
-  type t = Ast.Expression.Literal.Regex.t
+  include Ast.Expression.Literal.Regex
 
   let create (pattern : string) (flags : string) : t = { pattern; flags }
   let pp (ppf : Fmt.t) (regex : t) : unit = Printer.pp_regex ppf regex
@@ -105,8 +105,7 @@ module Regex = struct
 end
 
 module Literal = struct
-  type t' = Ast.Expression.Literal.t'
-  type t = Ast.Expression.Literal.t
+  include Ast.Expression.Literal
 
   let create (value : t') (raw : string) : t = { value; raw }
   let null () : t = create Null "null"
@@ -163,7 +162,7 @@ module TemplateElement = struct
 end
 
 module TemplateValue = struct
-  type t = Ast.Expression.TemplateLiteral.Element.Value.t
+  include Ast.Expression.TemplateLiteral.Element.Value
 
   let create (raw : string) (cooked : string) : t = { raw; cooked }
 
@@ -174,7 +173,7 @@ module TemplateValue = struct
 end
 
 module This = struct
-  type t = Ast.Expression.This.t
+  include Ast.Expression.This
 
   let create () : t = ()
   let create_expr () : 'm Ast.Expression.t' = `This (create ())
@@ -201,13 +200,13 @@ module ExprStmt = struct
 end
 
 module VarDecl = struct
-  type t = Ast.LeftValue.t'
+  include Ast.LeftValue
 
   let create_stmt (lval : Ast.LeftValue.t') : 'm Ast.Statement.t' =
     `VarDecl lval
 
-  let pp (ppf : Fmt.t) (vdecl : t) : unit = Printer.pp_vdecl ppf vdecl
-  let str (vdecl : t) : string = Fmt.str "%a" pp vdecl
+  let pp (ppf : Fmt.t) (vdecl : t') : unit = Printer.pp_vdecl ppf vdecl
+  let str (vdecl : t') : string = Fmt.str "%a" pp vdecl
 end
 
 module AssignSimple = struct
@@ -679,7 +678,7 @@ module Labeled = struct
 end
 
 module Debugger = struct
-  type t = Ast.Statement.Debugger.t
+  include Ast.Statement.Debugger
 
   let create () : t = ()
   let create_stmt () : 'm Ast.Statement.t' = `Debugger (create ())

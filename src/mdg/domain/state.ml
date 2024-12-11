@@ -1,6 +1,12 @@
 open Graphjs_base
 open Graphjs_ast
 
+exception Exn of (Fmt.t -> unit)
+
+let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
+  let raise_f acc = raise (Exn acc) in
+  Fmt.kdly (fun acc -> raise_f (fun ppf -> Log.fmt_error ppf "%t" acc)) fmt
+
 module CodeCache = struct
   type id = Region.t Statement.t * int
   type t = (id, Node.t) Hashtbl.t
@@ -24,26 +30,48 @@ end
 type t =
   { mdg : Mdg.t
   ; store : Store.t
-  ; code_cache : CodeCache.t
-  ; curr_func : Node.t option
   ; literal_node : Node.t
+  ; code_cache : CodeCache.t
+  ; stdlib_funcs : (Node.t, func_handler) Hashtbl.t
+  ; curr_func : Node.t option
   }
+
+and func_handler =
+     t
+  -> CodeCache.id
+  -> Node.t
+  -> Node.t
+  -> Node.t
+  -> Node.Set.t option list
+  -> Region.t Expression.t list
+  -> unit
 
 let create () : t =
   let mdg = Mdg.create () in
   let store = Store.create () in
-  let code_cache = CodeCache.create () in
-  let curr_func = None in
   let literal_node = Node.create_literal () in
-  { mdg; store; literal_node; code_cache; curr_func }
+  let code_cache = CodeCache.create () in
+  let stdlib_funcs = Hashtbl.create Config.(!dflt_htbl_sz) in
+  let curr_func = None in
+  { mdg; store; literal_node; code_cache; stdlib_funcs; curr_func }
+
+let extend (state : t) : t =
+  let mdg = Mdg.copy state.mdg in
+  let store = Store.copy state.store in
+  let literal_node = state.literal_node in
+  let code_cache = CodeCache.copy state.code_cache in
+  let stdlib_funcs = state.stdlib_funcs in
+  let curr_func = None in
+  { mdg; store; literal_node; code_cache; stdlib_funcs; curr_func }
 
 let copy (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
-  let code_cache = CodeCache.copy state.code_cache in
-  let curr_func = state.curr_func in
   let literal_node = state.literal_node in
-  { mdg; store; literal_node; code_cache; curr_func }
+  let code_cache = CodeCache.copy state.code_cache in
+  let stdlib_funcs = state.stdlib_funcs in
+  let curr_func = state.curr_func in
+  { mdg; store; literal_node; code_cache; stdlib_funcs; curr_func }
 
 let lub (state1 : t) (state2 : t) : t =
   Mdg.lub state1.mdg state2.mdg;
@@ -85,6 +113,9 @@ let add_call_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
 let add_return_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
   add_node state (Node.create_return name) id
 
+let add_module_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
+  add_node state (Node.create_module name) id
+
 let add_dependency_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state (Edge.create_dependency ()) src tar
 
@@ -116,3 +147,6 @@ let add_ref_return_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
 
 let add_call_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state (Edge.create_call ()) src tar
+
+let is_stdlib_func (state : t) (func : Node.t) : bool =
+  Hashtbl.mem state.stdlib_funcs func

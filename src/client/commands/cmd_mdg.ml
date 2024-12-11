@@ -35,15 +35,16 @@ let read_taint_config (output : Fpath.t option) (path : Fpath.t) () :
   Fs.write_noerr tc_path (Fmt.dly "%a" Taint_config.pp tc);
   tc
 
-let build_file (tc : Taint_config.t) (file : 'm File.t) () : Mdg.t =
-  Builder.build_file tc file
+let build_file (builder : State.t) (file : 'm File.t) () : Mdg.t =
+  Builder.build_file builder file
 
-let build_mdgs (output : Fpath.t option) (tc : Taint_config.t)
+let build_mdgs (output : Fpath.t option) (taint_config : Taint_config.t)
     (dt : Dependency_tree.t) (prog : 'm Prog.t) :
     (Fpath.t * Mdg.t) Exec.status list =
+  let builder = Builder.initialize_builder taint_config in
   Fun.flip Dependency_tree.bottom_up_visit dt @@ fun (abs_path, rel_path) ->
   let file = Prog.find prog abs_path in
-  let* mdg = Exec.graphjs (build_file tc file) in
+  let* mdg = Exec.graphjs (build_file builder file) in
   let rel_path' = Fpath.rem_ext rel_path in
   let graph_path = Fs.OptPath.(create Dir output / "mdg" // rel_path') in
   let mdg_path = Fs.OptPath.((graph_path // rel_path') + "mdg") in

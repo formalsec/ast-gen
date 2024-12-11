@@ -40,6 +40,7 @@ module Dot = struct
     | Parameter name -> Fmt.str "%s" name
     | Call name -> Fmt.str "%s(...)" name
     | Return name -> Fmt.str "%s" name
+    | Module name -> Fmt.str "module %s" name
     | TaintSink sink -> Fmt.str "%s sink" Tainted.(name !sink)
 
   let edge_label (edge : Edge.t) : string =
@@ -70,7 +71,7 @@ module Dot = struct
       ::
       ( match node.kind with
       | Literal -> [ `Color 26214; `Fillcolor 13434879 ]
-      | Object _ when node.lid == Node.Config.(!literal_loc) ->
+      | Object _ when Node.is_literal_object node ->
         [ `Color 26214; `Fillcolor 13434879 ]
       | Object _ -> [ `Color 2105376; `Fillcolor 14737632 ]
       | Function _ -> [ `Color 26112; `Fillcolor 52224 ]
@@ -78,6 +79,7 @@ module Dot = struct
       | Parameter _ -> [ `Color 26112; `Fillcolor 13434828 ]
       | Call _ -> [ `Color 6697728; `Fillcolor 13395456 ]
       | Return _ -> [ `Color 6697728; `Fillcolor 16770508 ]
+      | Module _ -> [ `Color 3342438; `Fillcolor 15060223 ]
       | TaintSink _ -> [ `Color 6684672; `Fillcolor 16724787 ] )
 
     let edge_attributes ((_, edge, _) : Node.t * Edge.t * Node.t) : 'a list =
@@ -85,16 +87,17 @@ module Dot = struct
       ::
       ( match edge.kind with
       | RefParent _ -> [ `Style `Invis ]
-      | Parameter 0 -> [ `Color 6684774; `Fontcolor 6684774 ]
-      | Parameter _ -> [ `Color 26112; `Fontcolor 26112 ]
       | Argument 0 -> [ `Style `Invis ]
-      (* | Argument 0 -> [ `Color 6684774; `Fontcolor 6684774 ] *)
       | RefArgument -> [ `Style `Invis ]
-      | Return -> [ `Color 6697728; `Fontcolor 6697728 ]
       | RefReturn -> [ `Style `Invis ]
-      | Call -> [ `Color 6697728; `Fontcolor 6697728 ]
       | (Dependency | Argument _) when Node.is_literal edge.src ->
         [ `Style `Dotted; `Color 26214; `Fontcolor 26214 ]
+      | Dependency when Node.is_module edge.src ->
+        [ `Style `Dotted; `Color 3342438; `Fontcolor 3342438 ]
+      | Parameter 0 -> [ `Color 6684774; `Fontcolor 6684774 ]
+      | Parameter _ -> [ `Color 26112; `Fontcolor 26112 ]
+      | Return -> [ `Color 6697728; `Fontcolor 6697728 ]
+      | Call -> [ `Color 6697728; `Fontcolor 6697728 ]
       | _ -> [ `Color 2105376 ] )
 
     let vertex_name (node : V.t) = Location.str node.uid

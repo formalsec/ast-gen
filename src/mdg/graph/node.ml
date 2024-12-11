@@ -12,7 +12,7 @@ open struct
   let uid_gen : Location.t Generator.t = Location.make_generator ()
   let obj_lid_gen : Location.t Generator.t = Location.make_generator ()
   let func_lid_gen : Location.t Generator.t = Location.make_generator ()
-  let sink_lid_gen : Location.t Generator.t = Location.make_generator ()
+  let std_lid_gen : Location.t Generator.t = Location.make_generator ()
 end
 
 type kind =
@@ -22,6 +22,7 @@ type kind =
   | Parameter of string
   | Call of string
   | Return of string
+  | Module of string
   | TaintSink of Tainted.sink
 
 type t =
@@ -57,6 +58,7 @@ let pp (ppf : Fmt.t) (node : t) : unit =
   | Parameter name -> Fmt.fmt ppf "%s[p_%a]" name Location.pp node.lid
   | Call name -> Fmt.fmt ppf "%s(...)[l_%a]" name Location.pp node.lid
   | Return name -> Fmt.fmt ppf "%s[l_%a]" name Location.pp node.lid
+  | Module name -> Fmt.fmt ppf "require(%s)[l_%a]" name Location.pp node.lid
   | TaintSink sink ->
     Fmt.fmt ppf "%s[s_%a]" Tainted.(name !sink) Location.pp node.lid
 
@@ -77,7 +79,7 @@ module Set = struct
 end
 
 let create_literal () : t =
-  let uid = Location.create uid_gen in
+  let uid = Config.(!literal_loc) in
   let lid = Config.(!literal_loc) in
   let at = Region.default () in
   create uid lid Literal None at
@@ -100,6 +102,18 @@ let create_function (name : string) : t option -> Region.t -> t =
   let lid = Location.create func_lid_gen in
   create uid lid (Function name) parent at
 
+let create_std_function (name : string) : t =
+  let uid = Location.create uid_gen in
+  let lid = Location.create std_lid_gen in
+  let at = Region.default () in
+  create uid lid (Function name) None at
+
+let create_std_sink (sink : Tainted.sink) : t =
+  let uid = Location.create uid_gen in
+  let lid = Location.create std_lid_gen in
+  let at = Region.default () in
+  create uid lid (TaintSink sink) None at
+
 let create_parameter (idx : int) (name : string) : t option -> Region.t -> t =
  fun parent at ->
   let uid = Location.create uid_gen in
@@ -117,17 +131,22 @@ let create_return (name : string) : t option -> Region.t -> t =
   let lid = Location.create obj_lid_gen in
   create uid lid (Return name) parent at
 
-let create_sink (sink : Tainted.sink) : t =
+let create_module (name : string) : t option -> Region.t -> t =
+ fun parent at ->
   let uid = Location.create uid_gen in
-  let lid = Location.create sink_lid_gen in
-  let at = Region.default () in
-  create uid lid (TaintSink sink) None at
+  let lid = Location.create obj_lid_gen in
+  create uid lid (Module name) parent at
 
 let is_literal (node : t) : bool =
   match node.kind with Literal -> true | _ -> false
 
-let is_this_parameter (node : t) : bool =
-  match node.kind with Parameter "this" -> true | _ -> false
+let is_literal_object (node : t) : bool =
+  match node.kind with
+  | Object _ when node.lid == Config.(!literal_loc) -> true
+  | _ -> false
+
+let is_module (node : t) : bool =
+  match node.kind with Module _ -> true | _ -> false
 
 let name (node : t) : string =
   match node.kind with

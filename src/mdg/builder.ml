@@ -24,9 +24,12 @@ let object_property_name (ls_obj : Node.Set.t) (obj : 'm Expression.t)
   | _ -> Log.fail "unexpected object name' %S" obj_name
 
 let lookup_property (state : State.t) (ls_obj : Node.Set.t)
-    (prop' : string option) : Node.Set.t =
-  let lookup_f = Fun.flip (Mdg.object_lookup_property state.mdg) prop' in
-  Node.Set.map_flat lookup_f ls_obj
+    (prop : string option) : Node.Set.t =
+  match prop with
+  | None -> Node.Set.map_flat (Mdg.object_dynamic_lookup state.mdg) ls_obj
+  | Some prop' ->
+    let lookup_f = Fun.flip (Mdg.object_static_lookup state.mdg) prop' in
+    Node.Set.map_flat lookup_f ls_obj
 
 let update_property_wrapper (state : State.t) (cid : cid)
     (ls_right : Node.Set.t) (right : 'm Expression.t) : Node.Set.t =
@@ -42,27 +45,11 @@ let update_property_wrapper (state : State.t) (cid : cid)
     | _ -> Node.Set.add node acc
   else ls_right
 
-let known_functions (state : State.t) (ls_funcs : Node.Set.t) : Node.t list =
-  Fun.flip2 Node.Set.fold ls_funcs [] @@ fun l_func acc ->
-  match Node.kind l_func with
-  | Function _ -> l_func :: acc
-  | TaintSink _ ->
-    Mdg.add_node state.mdg l_func;
-    l_func :: acc
-  | _ -> acc
-
 let update_scope (state : State.t) (left : 'm LeftValue.t) (nodes : Node.Set.t)
     : unit =
   match LeftValue.kind left with
   | None -> Store.replace state.store (LeftValue.name left) nodes
   | Var | Let | Const -> Store.replace state.store (LeftValue.name left) nodes
-
-let add_tainted_sink (make_generic_sink_f : 'a -> Tainted.sink)
-    (state : State.t) (generic_sink : 'a) : unit =
-  let sink = make_generic_sink_f generic_sink in
-  let sink_name = Tainted.(name !sink) in
-  let sink_node = Node.create_sink sink in
-  Store.replace state.store sink_name (Node.Set.singleton sink_node)
 
 let add_static_orig_object_property (state : State.t) (cid : cid)
     (name : string) (ls_obj : Node.Set.t) (prop : string option) : unit =
@@ -153,22 +140,6 @@ let add_caller (state : State.t) (call_cid : cid) (retn_cid : cid)
     Node.Set.iter (add_arg_f l_call idx') ls_arg );
   (l_call, l_retn)
 
-let rec add_call_connections (state : State.t) (l_funcs : Node.t list)
-    (l_call : Node.t) (l_this : Node.Set.t option) (ls_args : Node.Set.t list) :
-    unit =
-  let ls_args' = l_this :: List.map Option.some ls_args in
-  Fun.flip List.iter l_funcs @@ fun l_func ->
-  match Node.kind l_func with
-  | Function _ ->
-    let l_params = Mdg.get_parameters state.mdg l_func in
-    State.add_call_edge state l_call l_func;
-    add_argument_connections state l_params ls_args'
-  | TaintSink _ ->
-    let l_params = List.mapi (fun idx _ -> (idx, l_func)) ls_args' in
-    State.add_call_edge state l_call l_func;
-    add_argument_connections state l_params ls_args'
-  | _ -> ()
-
 and add_argument_connections (state : State.t) (l_params : (int * Node.t) list)
     (ls_args : Node.Set.t option list) : unit =
   Fun.flip List.iter l_params @@ fun (idx, l_param) ->
@@ -185,18 +156,11 @@ let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   | `Identifier id -> Store.find state.store (Identifier.name' id)
   | `This _ -> Store.find state.store "this"
 
-let rec initialize_state (tconf : Taint_config.t) (stmts : 'm Statement.t list)
-    : State.t =
-  let state = State.create () in
-  Mdg.add_node state.mdg state.literal_node;
-  initialize_tainted_sinks state tconf;
-  initialize_hoisted_functions state stmts
-
-and initialize_tainted_sinks (state : State.t) (tconf : Taint_config.t) : unit =
-  let make_fun_sink_f sink = `FunctionSink sink in
-  let make_new_sink_f sink = `NewSink sink in
-  List.iter (add_tainted_sink make_fun_sink_f state) tconf.function_sinks;
-  List.iter (add_tainted_sink make_new_sink_f state) tconf.new_sinks
+let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
+    State.t =
+  let state' = State.extend state in
+  Mdg.add_node state'.mdg state'.literal_node;
+  initialize_hoisted_functions state' stmts
 
 and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
     : State.t =
@@ -306,57 +270,60 @@ and build_dynamic_delete (state : State.t) (_left : 'm LeftValue.t)
   state
 
 and build_function_call (state : State.t) (left : 'm LeftValue.t)
-    (callee : 'm Identifier.t) (args : 'm Expression.t list) (cid0 : cid) :
+    (callee : 'm Identifier.t) (args : 'm Expression.t list) (cid : cid) :
     State.t =
   (* TODO: implement dynamic function calls by calling every function available in the scope *)
   (* the callee identifier evaluates to the literal object in dynamic function calls *)
   let call = Identifier.name callee in
   let retn = LeftValue.name left in
   let ls_funcs = Store.find state.store call in
-  let l_funcs = known_functions state ls_funcs in
+  Function.set_stdlib_functions state ls_funcs;
   let ls_this = None in
   let ls_args = List.map (eval_expr state) args in
-  let cid1 = offset cid0 1 in
-  let (l_call, l_retn) = add_caller state cid0 cid1 call retn ls_this ls_args in
-  add_call_connections state l_funcs l_call ls_this ls_args;
+  let cid1 = offset cid 1 in
+  let cid2 = offset cid 2 in
+  let (l_call, l_retn) = add_caller state cid cid1 call retn ls_this ls_args in
+  Function.set_call state cid2 ls_funcs l_call l_retn ls_this ls_args args;
   update_scope state left (Node.Set.singleton l_retn);
   state
 
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
-    (cid0 : cid) : State.t =
+    (cid : cid) : State.t =
   let ls_obj = eval_expr state obj in
   let ls_this = Some ls_obj in
   let ls_args = List.map (eval_expr state) args in
   let prop' = Some (Prop.str prop) in
   let call = object_property_name ls_obj obj prop' in
   let retn = LeftValue.name left in
-  add_static_orig_object_property state cid0 call ls_obj prop';
+  add_static_orig_object_property state cid call ls_obj prop';
   let ls_mthds = lookup_property state ls_obj prop' in
-  let mthds = known_functions state ls_mthds in
-  let cid1 = offset cid0 1 in
-  let cid2 = offset cid0 2 in
+  Function.set_stdlib_functions state ls_mthds;
+  let cid1 = offset cid 1 in
+  let cid2 = offset cid 2 in
+  let cid3 = offset cid 3 in
   let (l_call, l_retn) = add_caller state cid1 cid2 call retn ls_this ls_args in
-  add_call_connections state mthds l_call ls_this ls_args;
+  Function.set_call state cid3 ls_mthds l_call l_retn ls_this ls_args args;
   update_scope state left (Node.Set.singleton l_retn);
   state
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
-    (args : 'm Expression.t list) (cid0 : cid) : State.t =
+    (args : 'm Expression.t list) (cid : cid) : State.t =
   let ls_obj = eval_expr state obj in
   let ls_prop = eval_expr state prop in
   let ls_this = Some ls_obj in
   let ls_args = List.map (eval_expr state) args in
   let call = object_property_name ls_obj obj None in
   let retn = LeftValue.name left in
-  add_dynamic_orig_object_property state cid0 call ls_obj ls_prop;
+  add_dynamic_orig_object_property state cid call ls_obj ls_prop;
   let ls_mthds = lookup_property state ls_obj None in
-  let mthds = known_functions state ls_mthds in
-  let cid1 = offset cid0 1 in
-  let cid2 = offset cid0 2 in
+  Function.set_stdlib_functions state ls_mthds;
+  let cid1 = offset cid 1 in
+  let cid2 = offset cid 2 in
+  let cid3 = offset cid 3 in
   let (l_call, l_retn) = add_caller state cid1 cid2 call retn ls_this ls_args in
-  add_call_connections state mthds l_call ls_this ls_args;
+  Function.set_call state cid3 ls_mthds l_call l_retn ls_this ls_args args;
   update_scope state left (Node.Set.singleton l_retn);
   state
 
@@ -506,7 +473,11 @@ and build_sequence_opt (state : State.t) (stmts : 'm Statement.t list option) :
     State.t =
   Option.fold ~none:state ~some:(build_sequence state) stmts
 
-let build_file (conf : Taint_config.t) (file : 'm File.t) : Mdg.t =
-  let state' = initialize_state conf file in
+let build_file (state : State.t) (file : 'm File.t) : Mdg.t =
+  let state' = initialize_state state file in
   let state'' = build_sequence state' file in
   state''.mdg
+
+let initialize_builder (taint_config : Taint_config.t) : State.t =
+  let state = State.create () in
+  Function.initialize_stdlib state taint_config
