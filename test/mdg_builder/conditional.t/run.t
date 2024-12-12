@@ -1,4 +1,4 @@
-  $ graphjs mdg if.js
+  $ graphjs mdg --no-svg if.js
   [[literal]] -
   x1[l_1] --< V(p1) >--> x1[l_2]
   x1[l_2] --< P(p1) >--> [[literal]]

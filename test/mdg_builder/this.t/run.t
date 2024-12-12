@@ -1,4 +1,4 @@
-  $ graphjs mdg this.js
+  $ graphjs mdg --no-svg this.js
   [[literal]] --< Arg(1) >--> this.bar(...)[l_3]
   [[literal]] --< Arg(1) >--> bar(...)[l_8]
   [[literal]] --< Arg(1) >--> obj.bar(...)[l_11]

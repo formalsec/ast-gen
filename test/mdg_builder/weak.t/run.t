@@ -1,4 +1,4 @@
-  $ graphjs mdg static_property_lookup.js
+  $ graphjs mdg --no-svg static_property_lookup.js
   [[literal]] -
   $v1[l_1] --< P(foo) >--> obj.foo[l_3]
   $v1[l_1] --< P(bar) >--> obj.bar[l_4]
@@ -17,7 +17,7 @@
   obj.abc[l_7] -
   obj.10[l_8] -
 
-  $ graphjs mdg static_property_update.js
+  $ graphjs mdg --no-svg static_property_update.js
   [[literal]] -
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(bar) >--> obj.bar[l_6]
@@ -43,7 +43,7 @@
   obj[l_10] --< P(10) >--> [[literal]]
   obj[l_10] --< [[RefParent(10)]] >--> obj[l_9]
 
-  $ graphjs mdg static_property_access.js
+  $ graphjs mdg --no-svg static_property_access.js
   [[literal]] -
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(foo) >--> obj.foo[l_4]
@@ -63,7 +63,7 @@
   obj[l_7] --< P(bar) >--> [[literal]]
   obj[l_7] --< [[RefParent(bar)]] >--> obj[l_6]
 
-  $ graphjs mdg function_call.js
+  $ graphjs mdg --no-svg function_call.js
   [[literal]] --< Arg(1) >--> baz(...)[l_1]
   [[literal]] --< Arg(1) >--> baz(...)[l_3]
   [[literal]] --< Arg(2) >--> baz(...)[l_3]

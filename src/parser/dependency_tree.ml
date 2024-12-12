@@ -103,27 +103,10 @@ open struct
       raise "Unable to perform Single-file analysis in directory %S." path
     | exception Sys_error _ -> raise "Unable to find the provided path %S." path
 
-  let dependency_tree_result (ic : in_channel) : string =
-    let rec get_result' res =
-      match input_line ic with
-      | line ->
-        Buffer.add_string res line;
-        Buffer.add_char res '\n';
-        get_result' res
-      | exception End_of_file -> Buffer.contents res in
-    get_result' (Buffer.create Config.(!dflt_buf_sz))
-
-  let dependency_tree_cmd (main_file : string) : string =
-    let cmd = Fmt.str "dt %s" main_file in
-    let ic = Unix.open_process_in cmd in
-    let execute () = dependency_tree_result ic in
-    let finally () = ignore (Unix.close_process_in ic) in
-    Fun.protect ~finally execute
-
   let generate_structure (mode : Mode.t) (main_file : string) : string =
     match mode with
     | Basic | SingleFile -> Fmt.str "{ %S : {} }" main_file
-    | MultiFile -> dependency_tree_cmd main_file
+    | MultiFile -> Console.execute (Fmt.str "dt %s" main_file)
 end
 
 let generate_with_mode (mode : Mode.t) (path : string) : t =
@@ -135,7 +118,9 @@ let generate (path : Fpath.t) : t =
   let mode = Shared_config.(!mode) in
   generate_with_mode mode (Fpath.to_string path)
 
-let bottom_up_visit (f : Fpath.t * Fpath.t -> 'a) (dep_tree : t) : 'a list =
+let multi_file (dt : t) : bool = DepSet.cardinal dt.deps > 0
+
+let bottom_up_visit (f : Fpath.t * Fpath.t -> 'a) (dt : t) : 'a list =
   let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
   let rec bottom_up_visit' visited { abs; rel; deps } acc =
     if Hashtbl.mem visited abs then acc
@@ -143,4 +128,4 @@ let bottom_up_visit (f : Fpath.t * Fpath.t -> 'a) (dep_tree : t) : 'a list =
       let _ = Hashtbl.add visited abs () in
       let deps_acc = DepSet.fold (bottom_up_visit' visited) deps [] in
       acc @ deps_acc @ [ f (abs, rel) ] in
-  bottom_up_visit' visited dep_tree []
+  bottom_up_visit' visited dt []

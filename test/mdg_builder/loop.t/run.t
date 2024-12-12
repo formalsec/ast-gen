@@ -1,4 +1,4 @@
-  $ graphjs mdg while.js
+  $ graphjs mdg --no-svg while.js
   [[literal]] -
   x1[l_1] --< V(p1) >--> x1[l_2]
   x1[l_2] --< P(p1) >--> [[literal]]
@@ -13,7 +13,7 @@
   y3[l_8] --< P(p3) >--> [[literal]]
   y3[l_8] --< [[RefParent(p3)]] >--> y3[l_7]
 
-  $ graphjs mdg forin.js
+  $ graphjs mdg --no-svg forin.js
   [[literal]] -
   $v1[l_1] -
   x1[l_2] --< V(p1) >--> x1[l_3]
@@ -30,7 +30,7 @@
   y3[l_10] --< P(p3) >--> [[literal]]
   y3[l_10] --< [[RefParent(p3)]] >--> y3[l_9]
 
-  $ graphjs mdg forof.js
+  $ graphjs mdg --no-svg forof.js
   [[literal]] -
   $v1[l_1] -
   x1[l_2] --< V(p1) >--> x1[l_3]

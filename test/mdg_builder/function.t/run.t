@@ -1,4 +1,4 @@
-  $ graphjs mdg header.js
+  $ graphjs mdg --no-svg header.js
   [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x1[p_1]
@@ -25,7 +25,7 @@
   z2[p_2] -
   z3[p_3] -
 
-  $ graphjs mdg body.js
+  $ graphjs mdg --no-svg body.js
   [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x1[p_1]
@@ -72,7 +72,7 @@
   $v7[l_14] --< P(p) >--> w1[p_1]
   $v7[l_14] --< [[RefParent(p)]] >--> $v7[l_13]
 
-  $ graphjs mdg return.js
+  $ graphjs mdg --no-svg return.js
   [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x1[p_1]
@@ -94,14 +94,14 @@
   this[p_0] -
   w1[p_1] -
 
-  $ graphjs mdg scope.js
+  $ graphjs mdg --no-svg scope.js
   [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x[p_1]
   this[p_0] -
   x[p_1] -
 
-  $ graphjs mdg call.js
+  $ graphjs mdg --no-svg call.js
   [[literal]] --< Arg(1) >--> foo(...)[l_1]
   [[literal]] --< Arg(1) >--> bar(...)[l_3]
   [[literal]] --< Arg(1) >--> bar(...)[l_5]
@@ -138,7 +138,7 @@
   baz(...)[l_9] --< Ret >--> $v5[l_10]
   $v5[l_10] -
 
-  $ graphjs mdg sink.js
+  $ graphjs mdg --no-svg sink.js
   [[literal]] --< Arg(1) >--> eval(...)[l_1]
   eval[s_1] --< [[RefArg]] >--> x1[p_1]
   foo[f_1] --< Param(0) >--> this[p_0]

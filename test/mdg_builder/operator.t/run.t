@@ -1,4 +1,4 @@
-  $ graphjs mdg unopt.js
+  $ graphjs mdg --no-svg unopt.js
   [[literal]] --< D >--> $v1[l_1]
   $v1[l_1] -
   $v2[l_2] --< D >--> $v3[l_3]
@@ -7,7 +7,7 @@
   $v5[l_5] --< D >--> $v6[l_6]
   $v6[l_6] -
 
-  $ graphjs mdg binopt.js
+  $ graphjs mdg --no-svg binopt.js
   [[literal]] --< D >--> $v1[l_1]
   [[literal]] --< D >--> $v3[l_3]
   $v1[l_1] -
