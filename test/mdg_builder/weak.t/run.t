@@ -63,6 +63,27 @@
   obj[l_7] --< P(bar) >--> [[literal]]
   obj[l_7] --< [[RefParent(bar)]] >--> obj[l_6]
 
+  $ graphjs mdg --no-svg static_property_value.js
+  [[literal]] -
+  $v1[l_1] --< V(foo) >--> obj[l_3]
+  $v1[l_1] --< P(foo) >--> obj.foo[l_8]
+  $v2[l_2] --< V(foo) >--> obj[l_3]
+  $v2[l_2] --< P(foo) >--> obj.foo[l_8]
+  obj[l_3] --< P(foo) >--> [[literal]]
+  obj[l_3] --< [[RefParent(foo)]] >--> $v1[l_1]
+  obj[l_3] --< [[RefParent(foo)]] >--> $v2[l_2]
+  obj[l_3] --< V(foo) >--> obj[l_6]
+  $v4[l_4] -
+  $v5[l_5] -
+  obj[l_6] --< [[RefParent(foo)]] >--> obj[l_3]
+  obj[l_6] --< P(foo) >--> $v4[l_4]
+  obj[l_6] --< P(foo) >--> $v5[l_5]
+  obj2[l_7] --< V(bar) >--> obj2[l_9]
+  obj.foo[l_8] -
+  obj2[l_9] --< P(bar) >--> $v4[l_4]
+  obj2[l_9] --< P(bar) >--> $v5[l_5]
+  obj2[l_9] --< [[RefParent(bar)]] >--> obj2[l_7]
+
   $ graphjs mdg --no-svg function_call.js
   [[literal]] --< Arg(1) >--> baz(...)[l_1]
   [[literal]] --< Arg(1) >--> baz(...)[l_3]

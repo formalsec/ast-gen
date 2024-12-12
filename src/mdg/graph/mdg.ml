@@ -48,12 +48,11 @@ let add_edge (mdg : t) (src : Node.t) (edge : Edge.t) : unit =
 let has_property (mdg : t) (node : Node.t) (prop : string option) : bool =
   edges mdg node.uid |> Edge.Set.exists (Edge.is_property ~prop:(Some prop))
 
-let get_property (mdg : t) (node : Node.t) (prop : string option) :
-    Node.t option =
+let get_property (mdg : t) (node : Node.t) (prp : string option) : Node.t list =
   edges mdg node.uid
   |> Edge.Set.elements
-  |> List.find_opt (Edge.is_property ~prop:(Some prop))
-  |> Option.map Edge.tar
+  |> List.find_all (Edge.is_property ~prop:(Some prp))
+  |> List.map Edge.tar
 
 let get_properties (mdg : t) (node : Node.t) : (Node.t * string option) list =
   edges mdg node.uid
@@ -96,20 +95,19 @@ let object_orig_versions (mdg : t) (node : Node.t) : Node.Set.t =
       else orig (parent_nodes @ nodes) visited' result in
   orig [ node ] [] Node.Set.empty
 
-let object_static_lookup (mdg : t) (node : Node.t) (prop : string) : Node.Set.t
-    =
+let object_static_lookup (mdg : t) (node : Node.t) (prp : string) : Node.Set.t =
   let rec lookup visited node =
     let dynamic_props = Node.Set.of_list (get_dynamic_properties mdg node) in
-    match get_property mdg node (Some prop) with
-    | Some prop_node -> Node.Set.add prop_node dynamic_props
-    | None ->
+    match get_property mdg node (Some prp) with
+    | [] ->
       Fun.flip2 List.fold_left dynamic_props (get_versions mdg node)
       @@ fun acc (parent_node, _) ->
-      if Node.Set.mem parent_node visited then
-        let visited = Node.Set.add parent_node visited in
-        Node.Set.union acc (lookup visited parent_node)
-      else acc in
-  lookup Node.Set.empty node
+      if not (Node.Set.mem parent_node visited) then
+        let visited' = Node.Set.add parent_node visited in
+        Node.Set.union acc (lookup visited' parent_node)
+      else acc
+    | props -> Node.Set.union dynamic_props (Node.Set.of_list props) in
+  lookup (Node.Set.singleton node) node
 
 let object_dynamic_lookup (mdg : t) (node : Node.t) : Node.Set.t =
   let rec lookup seen_props visited node =
@@ -121,49 +119,11 @@ let object_dynamic_lookup (mdg : t) (node : Node.t) : Node.Set.t =
     let unseen_props = List.filter check_unseen_prop_f static_props in
     let (unseen_prop_nodes, unseen_prop_names) = List.split unseen_props in
     let seen_props' = seen_props @ unseen_prop_names in
-    let result = Node.Set.of_list (dynamic_prop_nodes @ unseen_prop_nodes) in
-    Fun.flip2 List.fold_left result (get_versions mdg node)
+    let prop_nodes = Node.Set.of_list (dynamic_prop_nodes @ unseen_prop_nodes) in
+    Fun.flip2 List.fold_left prop_nodes (get_versions mdg node)
     @@ fun acc (parent_node, _) ->
-    if Node.Set.mem parent_node visited then
-      let visited = Node.Set.add parent_node visited in
-      Node.Set.union acc (lookup seen_props' visited parent_node)
+    if not (Node.Set.mem parent_node visited) then
+      let visited' = Node.Set.add parent_node visited in
+      Node.Set.union acc (lookup seen_props' visited' parent_node)
     else acc in
-  lookup [] Node.Set.empty node
-
-(* let object_lookup_property (mdg : t) (node : Node.t) (prop : string option) :
-    Node.Set.t =
-  let (visited, seen_props, result) = (ref [], ref [], ref Node.Set.empty) in
-  let rec lookup = function
-    | [] -> !result
-    | node :: nodes ->
-      let props = get_properties mdg node in
-      let (static, dynamic) = List.partition Fun.(Option.is_some << snd) props in
-      let (dynamic_prop_nodes, _) = List.split dynamic in
-      (* direct lookup - dynamic object properties *)
-      result := Node.Set.union !result (Node.Set.of_list dynamic_prop_nodes);
-      (* direct lookup - static object properties *)
-      ( match (prop, get_property mdg node prop) with
-      | (Some _, Some prop_node) -> result := Node.Set.add prop_node !result
-      | (None, _) ->
-        let check_unseen_prop_f (_, prop) = not (List.mem prop !seen_props) in
-        let static' = List.map (fun (n, p) -> (n, Option.get p)) static in
-        let unseen = List.filter check_unseen_prop_f static' in
-        let (unseen_prop_nodes, unseen_prop_names) = List.split unseen in
-        result := Node.Set.union !result (Node.Set.of_list unseen_prop_nodes);
-        seen_props := !seen_props @ unseen_prop_names
-      | _ -> () );
-      (* indirect lookup - static and dynamic object properties *)
-      lookup
-      @@ Fun.flip2 List.fold_left nodes (get_versions mdg node)
-      @@ fun acc (parent_node, parent_prop) ->
-      if not (List.mem parent_node !visited) then
-        match parent_prop with
-        | Some _ when prop != parent_prop ->
-          visited := parent_node :: !visited;
-          parent_node :: acc
-        | None ->
-          visited := parent_node :: !visited;
-          parent_node :: acc
-        | _ -> acc
-      else [] in
-  lookup [ node ] *)
+  lookup [] (Node.Set.singleton node) node

@@ -66,12 +66,13 @@ let add_dynamic_orig_object_property (state : State.t) (cid : cid)
   let ls_orig = Mdg.object_orig_versions state.mdg l_obj in
   Fun.flip Node.Set.iter ls_orig @@ fun l_orig ->
   match Mdg.get_property state.mdg l_orig None with
-  | Some l_node ->
-    Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop
-  | None ->
+  | [] ->
     let l_node = State.add_object_node state cid name in
     State.add_property_edge state l_orig l_node None;
     Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop
+  | l_node :: [] ->
+    Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop
+  | _ -> Log.fail "unexpected multiple dynamic properties in orig node"
 
 let static_nv_strong_update (state : State.t) (cid : cid) (name : string)
     (l_obj : Node.t) (prop : string option) : Node.Set.t =

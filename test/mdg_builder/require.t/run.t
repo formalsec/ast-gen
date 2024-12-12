@@ -12,17 +12,6 @@
   $v1[l_6] -
 
   $ graphjs mdg --no-svg --mode=multi-file main.js
-  [[literal]] --< Arg(1) >--> require(...)[l_3]
-  require[f_8] -
-  require(...)[l_3] --< Call >--> require[f_8]
-  require(...)[l_3] --< Ret >--> dep[l_4]
-  dep[l_4] --< P(foo) >--> dep.foo[l_6]
-  dep[l_4] --< Arg(0) >--> dep.foo(...)[l_7]
-  require(dependency.js)[l_5] --< D >--> dep[l_4]
-  dep.foo[l_6] -
-  dep.foo(...)[l_7] --< Call >--> dep.foo[l_6]
-  dep.foo(...)[l_7] --< Ret >--> $v2[l_8]
-  $v2[l_8] -
 
   $ graphjs mdg --no-svg --mode=single-file stdlib.js
   [[literal]] --< Arg(1) >--> require(...)[l_1]
