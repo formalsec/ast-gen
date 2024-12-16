@@ -11,7 +11,7 @@ let set_copts (colorless : bool) (lvl : Enums.DebugLvl.t) (verbose : bool)
   Log.Config.(log_infos $= (verbose || lvl >= Info));
   Log.Config.(log_debugs $= (lvl >= All));
   Log.Config.(log_verbose $= verbose);
-  Fs.Config.(override $= output_override)
+  Workspace.Config.(override $= output_override)
 
 let copts : unit Term.t =
   let open Term in
@@ -34,7 +34,7 @@ let parse_opts : unit Term.t =
 let parse_cmd_opts : Cmd_parse.Options.t Term.t =
   let open Term in
   const Cmd_parse.Options.set_cmd
-  $ Docs.FileOpts.input
+  $ Docs.FileOpts.inputs
   $ Docs.FileOpts.output_dir
   $ parse_opts
 
@@ -52,7 +52,7 @@ let mdg_opts : unit Term.t =
 let mdg_cmd_opts : Cmd_mdg.Options.t Term.t =
   let open Term in
   const Cmd_mdg.Options.set_cmd
-  $ Docs.FileOpts.input
+  $ Docs.FileOpts.inputs
   $ Docs.FileOpts.output
   $ Docs.SharedOpts.taint_config
   $ mdg_opts

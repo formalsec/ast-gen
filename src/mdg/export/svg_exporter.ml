@@ -35,16 +35,16 @@ module Dot = struct
     (* TODO[flag]: show the graph local identifiers in the labels *)
     match node.kind with
     | Literal -> Fmt.str "{ Literal Object }"
-    | Object name -> Fmt.str "%s" name
-    | Function name -> Fmt.str "function %s" name
-    | Parameter name -> Fmt.str "%s" name
-    | Call name -> Fmt.str "%s(...)" name
-    | Return name -> Fmt.str "%s" name
-    | Module name -> Fmt.str "module %s" name
+    | Object name -> Fmt.str "%s" (String.escaped name)
+    | Function name -> Fmt.str "function %s" (String.escaped name)
+    | Parameter name -> Fmt.str "%s" (String.escaped name)
+    | Call name -> Fmt.str "%s(...)" (String.escaped name)
+    | Return name -> Fmt.str "%s" (String.escaped name)
+    | Module name -> Fmt.str "module %s" (String.escaped name)
     | TaintSink sink -> Fmt.str "%s sink" Tainted.(name !sink)
 
   let edge_label (edge : Edge.t) : string =
-    let prop_f = Option.value ~default:"*" in
+    let prop_f = Option.fold ~none:"*" ~some:String.escaped in
     match edge.kind with
     | Dependency -> Fmt.str "D"
     | Property prop -> Fmt.str "P(%s)" (prop_f prop)
@@ -130,17 +130,25 @@ let build_graph (mdg : Mdg.t) : GraphBuilder.t =
   Dot.set_info mdg;
   Hashtbl.fold (build_graph_nodes_f mdg) mdg.nodes GraphBuilder.empty
 
-let output_result (dot_path : string) (svg_path : string)
-    (graph : GraphBuilder.t) : unit =
-  let dot_file = open_out_bin dot_path in
+let output_dot (path : string) (graph : GraphBuilder.t) : unit =
+  let dot_file = open_out_bin path in
   Dot.output_graph dot_file graph;
-  close_out_noerr dot_file;
-  if Sys.command ("dot -Tsvg " ^ dot_path ^ " -o " ^ svg_path) != 0 then
-    raise "Unable to generate the %S file." svg_path
+  close_out_noerr dot_file
 
-let export (path : Fpath.t) (mdg : Mdg.t) : unit =
-  if Builder_config.(!export_svg) then
-    let dot_path = Fpath.(to_string (path + "dot")) in
-    let svg_path = Fpath.(to_string (path + "svg")) in
+let output_svg (path : string) (dot_path : string) : unit =
+  if Sys.command ("dot -Tsvg " ^ dot_path ^ " -o " ^ path) != 0 then
+    raise "Unable to generate the %S file." path
+
+let export_dot (path : Fpath.t) (mdg : Mdg.t) : unit =
+  let graph = build_graph mdg in
+  output_dot (Fpath.to_string path) graph
+
+let export_svg (path : Fpath.t) : [> `Dot of Fpath.t | `Mdg of Mdg.t ] -> unit =
+  function
+  | `Dot dot_path ->
+    output_svg (Fpath.to_string path) (Fpath.to_string dot_path)
+  | `Mdg mdg ->
+    let dot_path = Filename.temp_file "graphjs" "dot" in
     let graph = build_graph mdg in
-    output_result dot_path svg_path graph
+    output_dot dot_path graph;
+    output_svg (Fpath.to_string path) dot_path

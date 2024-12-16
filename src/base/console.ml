@@ -45,6 +45,10 @@ module Config = struct
   let system : system t = constant (get_system ())
 end
 
+let pwd : unit -> string =
+  let pwd = Unix.getcwd () in
+  fun () -> pwd
+
 let longname (fd : Unix.file_descr) : string =
   let res = console_attribute fd "tput longname" in
   Option.fold ~none:"" ~some:Fun.id res

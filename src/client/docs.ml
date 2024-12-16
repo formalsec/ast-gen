@@ -62,6 +62,12 @@ module FileOpts = struct
     let parser = Fs.Parser.valid_fpath in
     Arg.(required & pos 0 (some parser) None & info [] ~docv ~doc)
 
+  let inputs =
+    let docv = "FILE|DIR..." in
+    let doc = "Path to the input files or directories." in
+    let parser = Fs.Parser.valid_fpath in
+    Arg.(non_empty & pos_all parser [] & info [] ~docv ~doc)
+
   let output =
     let docv = "FILE|DIR" in
     let doc = "Path to the output file or directory." in
