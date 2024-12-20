@@ -1,4 +1,6 @@
 // forin statement with an object initialization
-for (x0 in {}) { let x1 = { p1: 10 } }
+for (x in {}) { let x1 = { p1: 10 } }
 // forin statement with out of order object initializations
-for (y0 in {}) { let y1 = { p1: y2 }; let y2 = { p2: y3 }; let y3 = { p3: 10 } }
+for (y in {}) { let y1 = { p1: y2 }; let y2 = { p2: y3 }; let y3 = { p3: 10 }; let y4 = { p4: y1 } }
+// forof statement with a nested while statement
+for (z in {}) { for (z0 in {}) { let z1 = { p1: z2 }; let z2 = { p2: z3 }; } let z3 = { p3: 10 }; let z4 = { p4: z1 } }

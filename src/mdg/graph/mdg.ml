@@ -50,22 +50,15 @@ let has_property (mdg : t) (node : Node.t) (prop : string option) : bool =
 
 let get_property (mdg : t) (node : Node.t) (prp : string option) : Node.t list =
   edges mdg node.uid
-  |> Edge.Set.elements
-  |> List.find_all (Edge.is_property ~prop:(Some prp))
-  |> List.map Edge.tar
+  |> Edge.Set.filter (Edge.is_property ~prop:(Some prp))
+  |> Edge.Set.map_list Edge.tar
 
 let get_properties (mdg : t) (node : Node.t) : (Node.t * string option) list =
   edges mdg node.uid
   |> Edge.Set.filter Edge.is_property
   |> Edge.Set.map_list (fun edge -> (Edge.tar edge, Edge.property edge))
 
-let get_dynamic_properties (mdg : t) (node : Node.t) : Node.t list =
-  edges mdg node.uid
-  |> Edge.Set.filter (Edge.is_property ~prop:(Some None))
-  |> Edge.Set.map_list (fun edge -> Edge.tar edge)
-
 let get_versions (mdg : t) (node : Node.t) : (Node.t * string option) list =
-  if node.uid == 8 then Log.debug "node: %a" Node.pp node;
   edges mdg node.uid
   |> Edge.Set.filter Edge.is_ref_parent
   |> Edge.Set.map_list (fun edge -> (Edge.tar edge, Edge.property edge))
@@ -85,29 +78,31 @@ let lub (mdg1 : t) (mdg2 : t) : unit =
       Hashtbl.replace mdg1.edges loc (Edge.Set.union edges_1' edges_2) )
 
 let object_orig_versions (mdg : t) (node : Node.t) : Node.Set.t =
-  let rec orig unprocessed visited result =
-    match unprocessed with
-    | [] -> result
-    | node :: nodes when List.mem node visited -> orig nodes visited result
-    | node :: nodes ->
-      let (parent_nodes, _) = List.split (get_versions mdg node) in
-      let visited' = node :: visited in
-      if parent_nodes == [] then orig nodes visited' (Node.Set.add node result)
-      else orig (parent_nodes @ nodes) visited' result in
-  orig [ node ] [] Node.Set.empty
+  let rec orig visited node =
+    let (parent_nodes, _) = List.split (get_versions mdg node) in
+    let result =
+      if List.is_empty parent_nodes then Node.Set.singleton node
+      else Node.Set.empty in
+    Fun.flip2 List.fold_left result parent_nodes (fun acc parent_node ->
+        if not (Node.Set.mem parent_node visited) then
+          let visited' = Node.Set.add parent_node visited in
+          Node.Set.union acc (orig visited' parent_node)
+        else acc ) in
+  orig (Node.Set.singleton node) node
 
 let object_static_lookup (mdg : t) (node : Node.t) (prp : string) : Node.Set.t =
   let rec lookup visited node =
-    let dynamic_props = Node.Set.of_list (get_dynamic_properties mdg node) in
-    match get_property mdg node (Some prp) with
-    | [] ->
+    let dynamic_props = Node.Set.of_list (get_property mdg node None) in
+    let props = get_property mdg node (Some prp) in
+    match List.is_empty props with
+    | false -> Node.Set.union dynamic_props (Node.Set.of_list props)
+    | true ->
       Fun.flip2 List.fold_left dynamic_props (get_versions mdg node)
         (fun acc (parent_node, _) ->
           if not (Node.Set.mem parent_node visited) then
             let visited' = Node.Set.add parent_node visited in
             Node.Set.union acc (lookup visited' parent_node)
-          else acc )
-    | props -> Node.Set.union dynamic_props (Node.Set.of_list props) in
+          else acc ) in
   lookup (Node.Set.singleton node) node
 
 let object_dynamic_lookup (mdg : t) (node : Node.t) : Node.Set.t =

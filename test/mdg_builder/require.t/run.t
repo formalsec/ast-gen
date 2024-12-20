@@ -13,8 +13,8 @@
 
   $ graphjs mdg --no-svg --mode=multi-file main.js
   [[literal]] --< Arg(1) >--> require(...)[l_3]
-  require[f_1] -
-  require(...)[l_3] --< Call >--> require[f_1]
+  require[f_2] -
+  require(...)[l_3] --< Call >--> require[f_2]
   require(...)[l_3] --< Ret >--> dep[l_4]
   dep[l_4] --< P(foo) >--> dep.foo[l_6]
   dep[l_4] --< Arg(0) >--> dep.foo(...)[l_7]

@@ -32,7 +32,7 @@ type t =
   ; store : Store.t
   ; literal_node : Node.t
   ; code_cache : CodeCache.t
-  ; stdlib_funcs : (Node.t, func_handler) Hashtbl.t
+  ; func_handlers : (Location.t, func_handler) Hashtbl.t
   ; curr_func : Node.t option
   }
 
@@ -51,27 +51,27 @@ let create () : t =
   let store = Store.create () in
   let literal_node = Node.create_literal () in
   let code_cache = CodeCache.create () in
-  let stdlib_funcs = Hashtbl.create Config.(!dflt_htbl_sz) in
+  let func_handlers = Hashtbl.create Config.(!dflt_htbl_sz) in
   let curr_func = None in
-  { mdg; store; literal_node; code_cache; stdlib_funcs; curr_func }
+  { mdg; store; literal_node; code_cache; func_handlers; curr_func }
 
 let extend (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
   let literal_node = state.literal_node in
   let code_cache = CodeCache.copy state.code_cache in
-  let stdlib_funcs = state.stdlib_funcs in
+  let func_handlers = state.func_handlers in
   let curr_func = None in
-  { mdg; store; literal_node; code_cache; stdlib_funcs; curr_func }
+  { mdg; store; literal_node; code_cache; func_handlers; curr_func }
 
 let copy (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
   let literal_node = state.literal_node in
   let code_cache = CodeCache.copy state.code_cache in
-  let stdlib_funcs = state.stdlib_funcs in
+  let func_handlers = state.func_handlers in
   let curr_func = state.curr_func in
-  { mdg; store; literal_node; code_cache; stdlib_funcs; curr_func }
+  { mdg; store; literal_node; code_cache; func_handlers; curr_func }
 
 let lub (state1 : t) (state2 : t) : t =
   Mdg.lub state1.mdg state2.mdg;
@@ -148,5 +148,15 @@ let add_ref_return_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
 let add_call_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state (Edge.create_call ()) src tar
 
-let is_stdlib_func (state : t) (func : Node.t) : bool =
-  Hashtbl.mem state.stdlib_funcs func
+let concretize_node (state : t) (id : string) (node : Node.t) : Node.t =
+  let node' = Node.concretize node in
+  Mdg.add_node state.mdg node';
+  Store.replace state.store id (Node.Set.singleton node');
+  node'
+
+let has_custom_func_handler (state : t) (func : Node.t) : func_handler option =
+  Hashtbl.find_opt state.func_handlers func.uid
+
+let set_custom_func_handler (state : t) (func : Node.t) (handler : func_handler)
+    : unit =
+  Hashtbl.replace state.func_handlers func.uid handler

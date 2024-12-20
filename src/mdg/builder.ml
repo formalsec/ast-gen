@@ -18,10 +18,7 @@ let object_property_name (ls_obj : Node.Set.t) (obj : 'm Expression.t)
     (prop : string option) : string =
   let obj_name = object_name ls_obj obj in
   let prop_name = Option.value ~default:"*" prop in
-  match String.split_on_char '=' obj_name with
-  | [ obj_name' ] -> Fmt.str "%s.%s" obj_name' prop_name
-  | [ _; obj_name' ] -> Fmt.str "%s.%s" obj_name' prop_name
-  | _ -> Log.fail "unexpected object name' %S" obj_name
+  Fmt.str "%s.%s" obj_name prop_name
 
 let lookup_property (state : State.t) (ls_obj : Node.Set.t)
     (prop : string option) : Node.Set.t =
@@ -35,14 +32,14 @@ let update_property_wrapper (state : State.t) (cid : cid)
     (ls_right : Node.Set.t) (right : 'm Expression.t) : Node.Set.t =
   (* this function prevents new versions from being created from the literal object *)
   if Builder_config.(!wrap_literal_property_updates) then
-    Fun.flip2 Node.Set.fold ls_right Node.Set.empty @@ fun node acc ->
-    match node.kind with
+    Fun.flip2 Node.Set.fold ls_right Node.Set.empty @@ fun l_right acc ->
+    match l_right.kind with
     | Literal ->
       let cid' = offset cid (Node.Set.cardinal acc + 1) in
       let l_wrapper = State.add_literal_node state cid' (Expression.str right) in
-      State.add_dependency_edge state node l_wrapper;
+      State.add_dependency_edge state l_right l_wrapper;
       Node.Set.add l_wrapper acc
-    | _ -> Node.Set.add node acc
+    | _ -> Node.Set.add l_right acc
   else ls_right
 
 let update_scope (state : State.t) (left : 'm LeftValue.t) (nodes : Node.Set.t)
@@ -127,7 +124,7 @@ let add_dynamic_object_version (state : State.t) (cid : cid) (name : string)
   | 1 -> dynamic_nv_strong_update state cid name (get_obj_f ls_obj) ls_prop
   | _ -> dynamic_nv_weak_update state cid name ls_obj ls_prop
 
-let add_caller (state : State.t) (call_cid : cid) (retn_cid : cid)
+let add_call (state : State.t) (call_cid : cid) (retn_cid : cid)
     (call_name : string) (retn_name : string) (ls_this : Node.Set.t option)
     (ls_args : Node.Set.t list) : Node.t * Node.t =
   let add_arg_f = Fun.flip2 (State.add_argument_edge state) in
@@ -140,7 +137,7 @@ let add_caller (state : State.t) (call_cid : cid) (retn_cid : cid)
       Node.Set.iter (add_arg_f l_call idx') ls_arg );
   (l_call, l_retn)
 
-and add_argument_connections (state : State.t) (l_params : (int * Node.t) list)
+and add_arguments (state : State.t) (l_params : (int * Node.t) list)
     (ls_args : Node.Set.t option list) : unit =
   Fun.flip List.iter l_params (fun (idx, l_param) ->
       match List.nth_opt ls_args idx with
@@ -151,10 +148,19 @@ and add_argument_connections (state : State.t) (l_params : (int * Node.t) list)
 let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   let exprs_f acc expr = Node.Set.union acc (eval_expr state expr) in
   match expr.el with
-  | `Literal _ -> Node.Set.singleton state.literal_node
+  | `Literal _ -> eval_literal_expr state
   | `TemplateLiteral { exprs; _ } -> List.fold_left exprs_f Node.Set.empty exprs
-  | `Identifier id -> Store.find state.store (Identifier.name' id)
-  | `This _ -> Store.find state.store "this"
+  | `Identifier id -> eval_store_expr state (Identifier.name' id)
+  | `This _ -> eval_store_expr state "this"
+
+and eval_literal_expr (state : State.t) : Node.Set.t =
+  Node.Set.singleton state.literal_node
+
+and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
+  let nodes = Store.find state.store id in
+  Fun.flip Node.Set.map nodes (fun node ->
+      if Node.is_candidate node then State.concretize_node state id node
+      else node )
 
 let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
     State.t =
@@ -274,14 +280,13 @@ and build_function_call (state : State.t) (left : 'm LeftValue.t)
     State.t =
   let call = Identifier.name callee in
   let retn = LeftValue.name left in
-  let ls_funcs = Store.find state.store call in
-  Function.set_stdlib_functions state ls_funcs;
+  let ls_funcs = eval_store_expr state call in
   let ls_this = None in
   let ls_args = List.map (eval_expr state) args in
   let cid1 = offset cid 1 in
   let cid2 = offset cid 2 in
-  let (l_call, l_retn) = add_caller state cid cid1 call retn ls_this ls_args in
-  Function.set_call state cid2 ls_funcs l_call l_retn ls_this ls_args args;
+  let (l_call, l_retn) = add_call state cid cid1 call retn ls_this ls_args in
+  Function.add_call state cid2 ls_funcs l_call l_retn ls_this ls_args args;
   update_scope state left (Node.Set.singleton l_retn);
   state
 
@@ -296,12 +301,11 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
   let retn = LeftValue.name left in
   add_static_orig_object_property state cid call ls_obj prop';
   let ls_mthds = lookup_property state ls_obj prop' in
-  Function.set_stdlib_functions state ls_mthds;
   let cid1 = offset cid 1 in
   let cid2 = offset cid 2 in
   let cid3 = offset cid 3 in
-  let (l_call, l_retn) = add_caller state cid1 cid2 call retn ls_this ls_args in
-  Function.set_call state cid3 ls_mthds l_call l_retn ls_this ls_args args;
+  let (l_call, l_retn) = add_call state cid1 cid2 call retn ls_this ls_args in
+  Function.add_call state cid3 ls_mthds l_call l_retn ls_this ls_args args;
   update_scope state left (Node.Set.singleton l_retn);
   state
 
@@ -316,12 +320,11 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let retn = LeftValue.name left in
   add_dynamic_orig_object_property state cid call ls_obj ls_prop;
   let ls_mthds = lookup_property state ls_obj None in
-  Function.set_stdlib_functions state ls_mthds;
   let cid1 = offset cid 1 in
   let cid2 = offset cid 2 in
   let cid3 = offset cid 3 in
-  let (l_call, l_retn) = add_caller state cid1 cid2 call retn ls_this ls_args in
-  Function.set_call state cid3 ls_mthds l_call l_retn ls_this ls_args args;
+  let (l_call, l_retn) = add_call state cid1 cid2 call retn ls_this ls_args in
+  Function.add_call state cid3 ls_mthds l_call l_retn ls_this ls_args args;
   update_scope state left (Node.Set.singleton l_retn);
   state
 
@@ -477,6 +480,6 @@ let build_file (state : State.t) (file : 'm File.t) : Mdg.t =
   state''.mdg
 
 let initialize_builder (taint_config : Taint_config.t) : State.t =
-  Node.reset ();
+  Node.reset_generators ();
   let state = State.create () in
   Function.initialize_stdlib state taint_config
