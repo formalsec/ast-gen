@@ -45,9 +45,9 @@ let pp_opt : (t -> 'a -> unit) -> t -> 'a option -> unit = pp_print_option
 let pp_iter (iter_f : ('a -> unit) -> 'b -> unit) (pp_sep : t -> unit)
     (pp_v : t -> 'a -> unit) (ppf : t) : 'b -> unit =
   let is_fst = ref true in
-  iter_f @@ fun v ->
-  if !is_fst then is_fst := false else pp_sep ppf;
-  pp_v ppf v
+  iter_f (fun v ->
+      if !is_fst then is_fst := false else pp_sep ppf;
+      pp_v ppf v )
 
 let pp_lst (pp_sep : t -> unit) (pp_v : t -> 'a -> unit) (ppf : t)
     (lst : 'a list) : unit =

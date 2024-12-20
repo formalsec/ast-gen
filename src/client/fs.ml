@@ -52,7 +52,7 @@ let output (path : t) (output_f : t -> unit Exec.status) : unit Exec.status =
   output_f path
 
 let write (path : t) (fmt : Fmt.t -> unit) : unit Exec.status =
-  output path @@ fun path -> Exec.bos (Bos.OS.File.writef path "%t" fmt)
+  output path (fun path -> Exec.bos (Bos.OS.File.writef path "%t" fmt))
 
 let mkdir_noerr (path : t) : unit = handle_error mkdir path
 

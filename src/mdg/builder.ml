@@ -70,9 +70,8 @@ let add_dynamic_orig_object_property (state : State.t) (cid : cid)
     let l_node = State.add_object_node state cid name in
     State.add_property_edge state l_orig l_node None;
     Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop
-  | l_node :: [] ->
+  | l_node :: _ ->
     Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop
-  | _ -> Log.fail "unexpected multiple dynamic properties in orig node"
 
 let static_nv_strong_update (state : State.t) (cid : cid) (name : string)
     (l_obj : Node.t) (prop : string option) : Node.Set.t =
@@ -84,10 +83,10 @@ let static_nv_strong_update (state : State.t) (cid : cid) (name : string)
 let static_nv_weak_update (state : State.t) (cid : cid) (name : string)
     (ls_obj : Node.Set.t) (prop : string option) : Node.Set.t =
   let l_node = State.add_object_node state cid name in
-  ( Fun.flip Node.Set.iter ls_obj @@ fun l_obj ->
-    let new' = Node.Set.of_list [ l_obj; l_node ] in
-    State.add_version_edge state l_obj l_node prop;
-    Store.weak_update state.store l_obj new' );
+  Fun.flip Node.Set.iter ls_obj (fun l_obj ->
+      let new' = Node.Set.of_list [ l_obj; l_node ] in
+      State.add_version_edge state l_obj l_node prop;
+      Store.weak_update state.store l_obj new' );
   let ls_nodes = Node.Set.singleton l_node in
   Store.replace state.store name ls_nodes;
   ls_nodes
@@ -103,10 +102,10 @@ let dynamic_nv_strong_update (state : State.t) (cid : cid) (name : string)
 let dynamic_nv_weak_update (state : State.t) (cid : cid) (name : string)
     (ls_obj : Node.Set.t) (ls_prop : Node.Set.t) : Node.Set.t =
   let l_node = State.add_object_node state cid name in
-  ( Fun.flip Node.Set.iter ls_obj @@ fun l_obj ->
-    let new' = Node.Set.of_list [ l_obj; l_node ] in
-    State.add_version_edge state l_obj l_node None;
-    Store.weak_update state.store l_obj new' );
+  Fun.flip Node.Set.iter ls_obj (fun l_obj ->
+      let new' = Node.Set.of_list [ l_obj; l_node ] in
+      State.add_version_edge state l_obj l_node None;
+      Store.weak_update state.store l_obj new' );
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop;
   let ls_nodes = Node.Set.singleton l_node in
   Store.replace state.store name ls_nodes;
@@ -136,18 +135,18 @@ let add_caller (state : State.t) (call_cid : cid) (retn_cid : cid)
   let l_retn = State.add_return_node state retn_cid retn_name in
   State.add_return_edge state l_call l_retn;
   Option.iter (Node.Set.iter (add_arg_f l_call 0)) ls_this;
-  ( Fun.flip List.iteri ls_args @@ fun idx ls_arg ->
-    let idx' = idx + 1 in
-    Node.Set.iter (add_arg_f l_call idx') ls_arg );
+  Fun.flip List.iteri ls_args (fun idx ls_arg ->
+      let idx' = idx + 1 in
+      Node.Set.iter (add_arg_f l_call idx') ls_arg );
   (l_call, l_retn)
 
 and add_argument_connections (state : State.t) (l_params : (int * Node.t) list)
     (ls_args : Node.Set.t option list) : unit =
-  Fun.flip List.iter l_params @@ fun (idx, l_param) ->
-  match List.nth_opt ls_args idx with
-  | Some (Some ls_arg) ->
-    Node.Set.iter (State.add_ref_argument_edge state l_param) ls_arg
-  | _ -> ()
+  Fun.flip List.iter l_params (fun (idx, l_param) ->
+      match List.nth_opt ls_args idx with
+      | Some (Some ls_arg) ->
+        Node.Set.iter (State.add_ref_argument_edge state l_param) ls_arg
+      | _ -> () )
 
 let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   let exprs_f acc expr = Node.Set.union acc (eval_expr state expr) in
@@ -240,9 +239,9 @@ and build_static_update (state : State.t) (obj : 'm Expression.t)
   let ls_right' = update_property_wrapper state cid ls_right right in
   let name = object_name ls_obj obj in
   let ls_new = add_static_object_version state cid name ls_obj prop' in
-  ( Fun.flip Node.Set.iter ls_new @@ fun l_new ->
-    Fun.flip Node.Set.iter ls_right' @@ fun l_right ->
-    State.add_property_edge state l_new l_right prop' );
+  Fun.flip Node.Set.iter ls_new (fun l_new ->
+      Fun.flip Node.Set.iter ls_right' (fun l_right ->
+          State.add_property_edge state l_new l_right prop' ) );
   state
 
 and build_dynamic_update (state : State.t) (obj : 'm Expression.t)
@@ -253,9 +252,9 @@ and build_dynamic_update (state : State.t) (obj : 'm Expression.t)
   let name = object_name ls_obj obj in
   let ls_right' = update_property_wrapper state cid ls_right right in
   let ls_new = add_dynamic_object_version state cid name ls_obj ls_prop in
-  ( Fun.flip Node.Set.iter ls_new @@ fun l_new ->
-    Fun.flip Node.Set.iter ls_right' @@ fun l_right ->
-    State.add_property_edge state l_new l_right None );
+  Fun.flip Node.Set.iter ls_new (fun l_new ->
+      Fun.flip Node.Set.iter ls_right' (fun l_right ->
+          State.add_property_edge state l_new l_right None ) );
   state
 
 and build_static_delete (state : State.t) (_left : 'm LeftValue.t)
@@ -273,8 +272,6 @@ and build_dynamic_delete (state : State.t) (_left : 'm LeftValue.t)
 and build_function_call (state : State.t) (left : 'm LeftValue.t)
     (callee : 'm Identifier.t) (args : 'm Expression.t list) (cid : cid) :
     State.t =
-  (* TODO: implement dynamic function calls by calling every function available in the scope *)
-  (* the callee identifier evaluates to the literal object in dynamic function calls *)
   let call = Identifier.name callee in
   let retn = LeftValue.name left in
   let ls_funcs = Store.find state.store call in
@@ -365,13 +362,13 @@ and build_assign_function_definition (state : State.t) (left : 'm LeftValue.t)
   let l_this = State.add_parameter_node state' cid' 0 "this" in
   State.add_parameter_edge state' l_func l_this 0;
   Store.replace state'.store "this" (Node.Set.singleton l_this);
-  ( Fun.flip List.iteri params @@ fun idx param ->
-    let idx' = idx + 1 in
-    let cid' = offset cid idx' in
-    let param_name = Identifier.name param in
-    let l_param = State.add_parameter_node state' cid' idx' param_name in
-    State.add_parameter_edge state' l_func l_param idx';
-    Store.replace state'.store param_name (Node.Set.singleton l_param) );
+  Fun.flip List.iteri params (fun idx param ->
+      let idx' = idx + 1 in
+      let cid' = offset cid idx' in
+      let param_name = Identifier.name param in
+      let l_param = State.add_parameter_node state' cid' idx' param_name in
+      State.add_parameter_edge state' l_func l_param idx';
+      Store.replace state'.store param_name (Node.Set.singleton l_param) );
   let _state'' = build_sequence state' body in
   state
 
@@ -480,5 +477,6 @@ let build_file (state : State.t) (file : 'm File.t) : Mdg.t =
   state''.mdg
 
 let initialize_builder (taint_config : Taint_config.t) : State.t =
+  Node.reset ();
   let state = State.create () in
   Function.initialize_stdlib state taint_config

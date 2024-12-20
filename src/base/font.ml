@@ -119,13 +119,13 @@ open struct
   let make_font (fg : Code.color option) (bg : Code.color option)
       (effect : Code.effect option) (bold : bool option) (italic : bool option)
       (underline : bool option) (strike : bool option) =
-    set_foreground fg
-    @@ set_background bg
-    @@ set_effect effect
-    @@ set_style (`Bold, bold)
-    @@ set_style (`Italic, italic)
-    @@ set_style (`Underline, underline)
-    @@ set_style (`Strike, strike) []
+    set_foreground fg []
+    |> set_background bg
+    |> set_effect effect
+    |> set_style (`Bold, bold)
+    |> set_style (`Italic, italic)
+    |> set_style (`Underline, underline)
+    |> set_style (`Strike, strike)
 end
 
 type t = font

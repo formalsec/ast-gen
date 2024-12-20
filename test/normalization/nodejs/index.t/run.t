@@ -1,5 +1,5 @@
   $ graphjs parse --mode=multi-file --verbose .
-  [info] Workspace "" prepared successfully.
+  [info] Workspace "" generated successfully.
   [info] Dependency tree "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/index.t/main/index.js" generated successfully.
   {
     "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/index.t/main/index.js": {

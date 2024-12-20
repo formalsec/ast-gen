@@ -39,10 +39,10 @@ include M
 
 let rec create_deps (root : Fpath.t) : Json.t -> DepSet.t = function
   | `Assoc structure ->
-    Fun.flip2 List.fold_left DepSet.empty structure @@ fun acc (abs, deps) ->
-    let path = Fpath.v abs in
-    let mrel = Option.get (Fpath.relativize ~root path) in
-    DepSet.add { path; mrel; deps = create_deps root deps } acc
+    Fun.flip2 List.fold_left DepSet.empty structure (fun acc (abs, deps) ->
+        let path = Fpath.v abs in
+        let mrel = Option.get (Fpath.relativize ~root path) in
+        DepSet.add { path; mrel; deps = create_deps root deps } acc )
   | structure -> Log.fail "unexpected dependency tree: %a" Json.pp structure
 
 let create : Json.t -> t = function

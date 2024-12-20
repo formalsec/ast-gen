@@ -21,20 +21,20 @@ let replace (store : t) (key : string) (values : Node.Set.t) : unit =
   Hashtbl.replace store key values
 
 let strong_update (store : t) (old : Node.t) (new' : Node.t) : unit =
-  Fun.flip Hashtbl.iter store @@ fun key values ->
-  let replace_f value = if Node.equal value old then new' else value in
-  let values' = Node.Set.map replace_f values in
-  replace store key values'
+  Fun.flip Hashtbl.iter store (fun key values ->
+      let replace_f value = if Node.equal value old then new' else value in
+      let values' = Node.Set.map replace_f values in
+      replace store key values' )
 
 let weak_update (store : t) (old : Node.t) (new' : Node.Set.t) : unit =
-  Fun.flip Hashtbl.iter store @@ fun key values ->
-  let replace_f value acc =
-    if Node.equal value old then Node.Set.union new' acc
-    else Node.Set.add value acc in
-  let values' = Node.Set.fold replace_f values Node.Set.empty in
-  replace store key values'
+  Fun.flip Hashtbl.iter store (fun key values ->
+      let replace_f value acc =
+        if Node.equal value old then Node.Set.union new' acc
+        else Node.Set.add value acc in
+      let values' = Node.Set.fold replace_f values Node.Set.empty in
+      replace store key values' )
 
 let lub (store1 : t) (store2 : t) : unit =
-  Fun.flip Hashtbl.iter store2 @@ fun key values_2 ->
-  let values_1 = find store1 key in
-  replace store1 key (Node.Set.union values_1 values_2)
+  Fun.flip Hashtbl.iter store2 (fun key values_2 ->
+      let values_1 = find store1 key in
+      replace store1 key (Node.Set.union values_1 values_2) )

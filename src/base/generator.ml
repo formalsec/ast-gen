@@ -16,7 +16,7 @@ let of_numbers ?(init : int = 0) ?(step : int = 1) () : int t =
   let counter = ref init in
   { next = next counter step; reset = reset counter init }
 
-let of_strings ?(init : int = 0) (base : string) : string t =
-  let gen = of_numbers ~init () in
+let of_strings ?(init : int = 0) ?(step : int = 1) (base : string) : string t =
+  let gen = of_numbers ~init ~step () in
   let next' () = base ^ string_of_int (gen.next ()) in
   { gen with next = next' }

@@ -18,18 +18,18 @@ homepage: "https://github.com/formalsec/ast-gen"
 doc: "https://github.com/formalsec/ast-gen/"
 bug-reports: "https://github.com/formalsec/ast-gen/issues"
 depends: [
-  "ocaml" {>= "4.14.1"}
-  "ocamlformat"
-  "ocaml-lsp-server"
-  "ocamlgraph"
-  "dune" {>= "3.2"}
-  "dune-site"
-  "ppx_inline_test" {with-test}
-  "yojson"
   "bos"
   "cmdliner"
   "conf-npm"
-  "flow_parser"
+  "dune" {>= "3.2"}
+  "dune-site"
+  "flow_parser" {>= "0.257.0"}
+  "ocaml" {>= "5.2.1"}
+  "ocamlformat"
+  "ocamlgraph"
+  "ocaml-lsp-server"
+  "ppx_inline_test" {with-test}
+  "yojson"
   "odoc" {with-doc}
 ]
 build: [

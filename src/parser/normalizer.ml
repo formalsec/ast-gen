@@ -127,66 +127,66 @@ let get_property_identifier_expr : prop -> Region.t Expression.t' = function
   | Dynamic prop -> prop.el
 
 and get_stmts_leftvalues (n_stmts : n_stmt) : lval list =
-  Fun.flip List.filter_map n_stmts @@ function
-  | { el = `VarDecl vdecl; md } -> Some (vdecl @> md)
-  | { el = `AssignSimple assign; _ } -> Some assign.left
-  | { el = `AssignNewObject obj; _ } -> Some obj.left
-  | { el = `AssignNewArray arr; _ } -> Some arr.left
-  | { el = `AssignUnopt unopt; _ } -> Some unopt.left
-  | { el = `AssignBinopt binopt; _ } -> Some binopt.left
-  | { el = `AssignYield yield; _ } -> Some yield.left
-  | { el = `StaticLookup lookup; _ } -> Some lookup.left
-  | { el = `DynamicLookup lookup; _ } -> Some lookup.left
-  | { el = `StaticDelete delete; _ } -> Some delete.left
-  | { el = `DynamicDelete delete; _ } -> Some delete.left
-  | { el = `AssignNewCall newcall; _ } -> Some newcall.left
-  | { el = `AssignFunctionCall funcall; _ } -> Some funcall.left
-  | { el = `AssignStaticMethodCall metcall; _ } -> Some metcall.left
-  | { el = `AssignDynamicMethodCall metcall; _ } -> Some metcall.left
-  | { el = `AssignFunctionDefinition fundef; _ } -> Some fundef.left
-  | { el = `AssignDynamicImport import; _ } -> Some import.left
-  | _ -> None
+  Fun.flip List.filter_map n_stmts (function
+    | { el = `VarDecl vdecl; md } -> Some (vdecl @> md)
+    | { el = `AssignSimple assign; _ } -> Some assign.left
+    | { el = `AssignNewObject obj; _ } -> Some obj.left
+    | { el = `AssignNewArray arr; _ } -> Some arr.left
+    | { el = `AssignUnopt unopt; _ } -> Some unopt.left
+    | { el = `AssignBinopt binopt; _ } -> Some binopt.left
+    | { el = `AssignYield yield; _ } -> Some yield.left
+    | { el = `StaticLookup lookup; _ } -> Some lookup.left
+    | { el = `DynamicLookup lookup; _ } -> Some lookup.left
+    | { el = `StaticDelete delete; _ } -> Some delete.left
+    | { el = `DynamicDelete delete; _ } -> Some delete.left
+    | { el = `AssignNewCall newcall; _ } -> Some newcall.left
+    | { el = `AssignFunctionCall funcall; _ } -> Some funcall.left
+    | { el = `AssignStaticMethodCall metcall; _ } -> Some metcall.left
+    | { el = `AssignDynamicMethodCall metcall; _ } -> Some metcall.left
+    | { el = `AssignFunctionDefinition fundef; _ } -> Some fundef.left
+    | { el = `AssignDynamicImport import; _ } -> Some import.left
+    | _ -> None )
 
 and initialize_stmts_leftvalues (n_stmts : n_stmt) : n_stmt =
   let f = LeftValue.initialize in
   let ( @> ) el md = [ el @> md ] in
-  Fun.(List.flatten << flip List.map n_stmts) @@ function
-  | { el = `VarDecl _; _ } -> []
-  | { el = `AssignSimple el; md } ->
-    `AssignSimple { el with left = f el.left } @> md
-  | { el = `AssignNewObject el; md } ->
-    AssignNewObject.create_stmt (f el.left) @> md
-  | { el = `AssignNewArray el; md } ->
-    AssignNewArray.create_stmt (f el.left) @> md
-  | { el = `AssignUnopt el; md } ->
-    `AssignUnopt { el with left = f el.left } @> md
-  | { el = `AssignBinopt el; md } ->
-    `AssignBinopt { el with left = f el.left } @> md
-  | { el = `AssignYield el; md } ->
-    `AssignYield { el with left = f el.left } @> md
-  | { el = `StaticLookup el; md } ->
-    `StaticLookup { el with left = f el.left } @> md
-  | { el = `DynamicLookup el; md } ->
-    `DynamicLookup { el with left = f el.left } @> md
-  | { el = `StaticUpdate _; _ } -> []
-  | { el = `DynamicUpdate _; _ } -> []
-  | { el = `StaticDelete el; md } ->
-    `StaticDelete { el with left = f el.left } @> md
-  | { el = `DynamicDelete el; md } ->
-    `DynamicDelete { el with left = f el.left } @> md
-  | { el = `AssignNewCall el; md } ->
-    `AssignNewCall { el with left = f el.left } @> md
-  | { el = `AssignFunctionCall el; md } ->
-    `AssignFunctionCall { el with left = f el.left } @> md
-  | { el = `AssignStaticMethodCall el; md } ->
-    `AssignStaticMethodCall { el with left = f el.left } @> md
-  | { el = `AssignDynamicMethodCall el; md } ->
-    `AssignDynamicMethodCall { el with left = f el.left } @> md
-  | { el = `AssignFunctionDefinition el; md } ->
-    `AssignFunctionDefinition { el with left = f el.left } @> md
-  | { el = `AssignDynamicImport el; md } ->
-    `AssignDynamicImport { el with left = f el.left } @> md
-  | n_stmt -> [ n_stmt ]
+  Fun.(List.flatten << flip List.map n_stmts) (function
+    | { el = `VarDecl _; _ } -> []
+    | { el = `AssignSimple el; md } ->
+      `AssignSimple { el with left = f el.left } @> md
+    | { el = `AssignNewObject el; md } ->
+      AssignNewObject.create_stmt (f el.left) @> md
+    | { el = `AssignNewArray el; md } ->
+      AssignNewArray.create_stmt (f el.left) @> md
+    | { el = `AssignUnopt el; md } ->
+      `AssignUnopt { el with left = f el.left } @> md
+    | { el = `AssignBinopt el; md } ->
+      `AssignBinopt { el with left = f el.left } @> md
+    | { el = `AssignYield el; md } ->
+      `AssignYield { el with left = f el.left } @> md
+    | { el = `StaticLookup el; md } ->
+      `StaticLookup { el with left = f el.left } @> md
+    | { el = `DynamicLookup el; md } ->
+      `DynamicLookup { el with left = f el.left } @> md
+    | { el = `StaticUpdate _; _ } -> []
+    | { el = `DynamicUpdate _; _ } -> []
+    | { el = `StaticDelete el; md } ->
+      `StaticDelete { el with left = f el.left } @> md
+    | { el = `DynamicDelete el; md } ->
+      `DynamicDelete { el with left = f el.left } @> md
+    | { el = `AssignNewCall el; md } ->
+      `AssignNewCall { el with left = f el.left } @> md
+    | { el = `AssignFunctionCall el; md } ->
+      `AssignFunctionCall { el with left = f el.left } @> md
+    | { el = `AssignStaticMethodCall el; md } ->
+      `AssignStaticMethodCall { el with left = f el.left } @> md
+    | { el = `AssignDynamicMethodCall el; md } ->
+      `AssignDynamicMethodCall { el with left = f el.left } @> md
+    | { el = `AssignFunctionDefinition el; md } ->
+      `AssignFunctionDefinition { el with left = f el.left } @> md
+    | { el = `AssignDynamicImport el; md } ->
+      `AssignDynamicImport { el with left = f el.left } @> md
+    | n_stmt -> [ n_stmt ] )
 
 let normalize_location (loc : Loc.t) : Region.t =
   let file = Option.fold ~none:"" ~some:File_key.to_string loc.source in
@@ -332,7 +332,9 @@ and normalize_obj_property (ctx : Ctx.t) (n_obj : expr) :
     normalize_getter_setter_property ctx loc "get" n_obj key value
   | Property (loc, Set { key; value; _ }) ->
     normalize_getter_setter_property ctx loc "set" n_obj key value
-  | SpreadProperty (_, _) -> Log.fail "[not implemented]: spread property"
+  (* TODO: Implement the normalization of the spread property *)
+  (* | SpreadProperty (_, _) -> Log.fail "[not implemented]: spread property" *)
+  | SpreadProperty (_, _) -> []
 
 and normalize_init_property (ctx : Ctx.t) (loc : Loc.t) (n_obj : expr)
     (key : (Loc.t, Loc.t) Flow.Expression.Object.Property.key)
@@ -397,7 +399,9 @@ and normalize_arr_element (ctx : Ctx.t) (n_arr : expr) (idx : int) :
   | Hole _ -> []
   | Expression ((loc, _) as expr) ->
     normalize_expr_element ctx loc n_arr idx expr
-  | Spread _ -> Log.fail "[not implemented]: spread element"
+  (* TODO: implement the normalization of the spread element *)
+  (* | Spread _ -> Log.fail "[not implemented]: spread element" *)
+  | Spread _ -> []
 
 and normalize_expr_element (_ : Ctx.t) (loc : Loc.t) (n_arr : expr) (idx : int)
     (expr : (Loc.t, Loc.t) Flow.Expression.t) : n_stmt =
@@ -511,40 +515,44 @@ and normalize_assignment_with_identifier (ctx : Ctx.t) (loc : Loc.t)
 and normalize_assignment_with_object (ctx : Ctx.t) (_ : Loc.t)
     (props : (Loc.t, Loc.t) Flow.Pattern.Object.property list) (n_right : expr)
     : n_stmt =
-  Fun.(List.flatten << flip List.map props) @@ function
-  | Flow.Pattern.Object.Property (loc, { key; pattern; default = dflt; _ }) ->
-    let ctx' = { ctx with curr_lval = leftvalue_ctx ctx pattern } in
-    let n_loc = normalize_location loc in
-    let key' = translate_property_key key in
-    let (n_key_s, n_key) = normalize_property_key ctx key' in
-    let normalize_assignment_arg_f = normalize_assignment_arg ctx' n_loc in
-    let (n_arg_s, n_arg) = normalize_assignment_arg_f n_key n_right dflt in
-    if not (LeftValue.generated n_arg) then n_key_s @ n_arg_s
-    else
-      let n_arg' = LeftValue.to_expr n_arg @> n_loc in
-      let n_pattern_s = normalize_assignment_pattern ctx' n_arg' pattern in
-      n_key_s @ n_arg_s @ n_pattern_s
-  | Flow.Pattern.Object.RestElement (_loc, _) ->
-    Log.fail "[not implemented]: rest element"
+  Fun.(List.flatten << flip List.map props) (function
+    | Flow.Pattern.Object.Property (loc, { key; pattern; default = dflt; _ }) ->
+      let ctx' = { ctx with curr_lval = leftvalue_ctx ctx pattern } in
+      let n_loc = normalize_location loc in
+      let key' = translate_property_key key in
+      let (n_key_s, n_key) = normalize_property_key ctx key' in
+      let normalize_assignment_arg_f = normalize_assignment_arg ctx' n_loc in
+      let (n_arg_s, n_arg) = normalize_assignment_arg_f n_key n_right dflt in
+      if not (LeftValue.generated n_arg) then n_key_s @ n_arg_s
+      else
+        let n_arg' = LeftValue.to_expr n_arg @> n_loc in
+        let n_pattern_s = normalize_assignment_pattern ctx' n_arg' pattern in
+        n_key_s @ n_arg_s @ n_pattern_s
+    | Flow.Pattern.Object.RestElement (_loc, _) ->
+      (* TODO: implement the normalization of the rest element *)
+      (* Log.fail "[not implemented]: rest element" ) *)
+      [] )
 
 and normalize_assignment_with_array (ctx : Ctx.t) (_ : Loc.t)
     (elements : (Loc.t, Loc.t) Flow.Pattern.Array.element list) (n_right : expr)
     : n_stmt =
-  Fun.(List.flatten << flip List.mapi elements) @@ fun idx -> function
-  | Flow.Pattern.Array.Hole _ -> []
-  | Flow.Pattern.Array.Element (loc, { argument; default = dflt; _ }) ->
-    let ctx' = { ctx with curr_lval = leftvalue_ctx ctx argument } in
-    let n_loc = normalize_location loc in
-    let p_idx = Static (Prop.LProp (Literal.integer idx) @> n_loc) in
-    let normalize_assignment_arg_f = normalize_assignment_arg ctx' n_loc in
-    let (n_arg_s, n_arg) = normalize_assignment_arg_f p_idx n_right dflt in
-    if not (LeftValue.generated n_arg) then n_arg_s
-    else
-      let n_arg' = LeftValue.to_expr n_arg @> n_loc in
-      let n_pattern_s = normalize_assignment_pattern ctx' n_arg' argument in
-      n_arg_s @ n_pattern_s
-  | Flow.Pattern.Array.RestElement (_loc, _) ->
-    Log.fail "[not implemented]: rest element"
+  Fun.(List.flatten << flip List.mapi elements) (fun idx -> function
+    | Flow.Pattern.Array.Hole _ -> []
+    | Flow.Pattern.Array.Element (loc, { argument; default = dflt; _ }) ->
+      let ctx' = { ctx with curr_lval = leftvalue_ctx ctx argument } in
+      let n_loc = normalize_location loc in
+      let p_idx = Static (Prop.LProp (Literal.integer idx) @> n_loc) in
+      let normalize_assignment_arg_f = normalize_assignment_arg ctx' n_loc in
+      let (n_arg_s, n_arg) = normalize_assignment_arg_f p_idx n_right dflt in
+      if not (LeftValue.generated n_arg) then n_arg_s
+      else
+        let n_arg' = LeftValue.to_expr n_arg @> n_loc in
+        let n_pattern_s = normalize_assignment_pattern ctx' n_arg' argument in
+        n_arg_s @ n_pattern_s
+    | Flow.Pattern.Array.RestElement (_loc, _) ->
+      (* TODO: implement the normalization of the rest element *)
+      (* Log.fail "[not implemented]: rest element" ) *)
+      [] )
 
 and normalize_assignment_with_member (ctx : Ctx.t) (loc : Loc.t)
     (obj : (Loc.t, Loc.t) Flow.Expression.t)
@@ -835,9 +843,14 @@ and normalize_opt_call_expr (ctx : Ctx.t) (loc : Loc.t)
 and normalize_argument_list (_ : Ctx.t)
     ((_, args) : (Loc.t, Loc.t) Flow.Expression.ArgList.t) :
     n_stmt list * expr list =
-  Fun.(List.split << flip List.map args.arguments) @@ function
-  | Expression expr -> normalize_expr expr
-  | Spread _ -> Log.fail "[not implemented]: spread argument"
+  (* TODO: Implement the normalization of the spread argument *)
+  let args =
+    Fun.flip List.filter args.arguments (function
+      | Expression _ -> true
+      | _ -> false ) in
+  Fun.(List.split << flip List.map args) (function
+    | Expression expr -> normalize_expr expr
+    | Spread _ -> Log.fail "[not implemented]: spread argument" )
 
 and normalize_tagged_template (ctx : Ctx.t) (loc : Loc.t)
     (ttagged : (Loc.t, Loc.t) Flow.Expression.TaggedTemplate.t) : n_expr =
@@ -1189,15 +1202,15 @@ and normalize_import_spec (ctx : Ctx.t) (n_loc : Region.t) (n_source : string) :
   | ImportNamespaceSpecifier (_, namespace) ->
     let n_namespace = normalize_identifier ctx namespace in
     [ ImportDecl.create_stmt (Batch n_namespace) n_source @> n_loc ]
-  | ImportNamedSpecifiers specifiers -> (
-    Fun.flip List.map specifiers @@ function
-    | { local = None; remote; _ } ->
-      let n_prop = normalize_identifier ctx remote in
-      ImportDecl.create_stmt (Property n_prop) n_source @> n_loc
-    | { local = Some local'; remote; _ } ->
-      let n_prop = normalize_identifier ctx remote in
-      let n_alias = normalize_identifier ctx local' in
-      ImportDecl.create_stmt (Alias (n_prop, n_alias)) n_source @> n_loc )
+  | ImportNamedSpecifiers specifiers ->
+    Fun.flip List.map specifiers (function
+      | { local = None; remote; _ } ->
+        let n_prop = normalize_identifier ctx remote in
+        ImportDecl.create_stmt (Property n_prop) n_source @> n_loc
+      | { local = Some local'; remote; _ } ->
+        let n_prop = normalize_identifier ctx remote in
+        let n_alias = normalize_identifier ctx local' in
+        ImportDecl.create_stmt (Alias (n_prop, n_alias)) n_source @> n_loc )
 
 and normalize_default_export (ctx : Ctx.t) (loc : Loc.t)
     (export : (Loc.t, Loc.t) Flow.Statement.ExportDefaultDeclaration.t) : n_stmt
@@ -1221,9 +1234,9 @@ and normalize_named_export_decl (ctx : Ctx.t) (n_loc : Region.t)
     (n_source : string option) (decl : (Loc.t, Loc.t) Flow.Statement.t) : n_stmt
     =
   let (n_decl_s, n_decls) = normalize_export_decl_stmt ctx decl in
-  Fun.(List.append n_decl_s << flip List.filter_map n_decls) @@ fun n_decl ->
-  if Identifier.generated n_decl then None
-  else Some (ExportDecl.create_stmt (Property n_decl) n_source @> n_loc)
+  Fun.(List.append n_decl_s << flip List.filter_map n_decls) (fun n_decl ->
+      if Identifier.generated n_decl then None
+      else Some (ExportDecl.create_stmt (Property n_decl) n_source @> n_loc) )
 
 and normalize_named_export_spec (ctx : Ctx.t) (n_loc : Region.t)
     (n_source : string option) :
@@ -1232,15 +1245,15 @@ and normalize_named_export_spec (ctx : Ctx.t) (n_loc : Region.t)
   | ExportBatchSpecifier (_, namespace) ->
     let n_namespace = Option.map (normalize_identifier ctx) namespace in
     [ ExportDecl.create_stmt (Batch n_namespace) n_source @> n_loc ]
-  | ExportSpecifiers specifiers -> (
-    Fun.flip List.map specifiers @@ function
-    | (_, { local; exported = None }) ->
-      let n_prop = normalize_identifier ctx local in
-      ExportDecl.create_stmt (Property n_prop) n_source @> n_loc
-    | (_, { local; exported = Some exported' }) ->
-      let n_prop = normalize_identifier ctx local in
-      let n_alias = normalize_identifier ctx exported' in
-      ExportDecl.create_stmt (Alias (n_prop, n_alias)) n_source @> n_loc )
+  | ExportSpecifiers specifiers ->
+    Fun.flip List.map specifiers (function
+      | (_, { local; exported = None }) ->
+        let n_prop = normalize_identifier ctx local in
+        ExportDecl.create_stmt (Property n_prop) n_source @> n_loc
+      | (_, { local; exported = Some exported' }) ->
+        let n_prop = normalize_identifier ctx local in
+        let n_alias = normalize_identifier ctx exported' in
+        ExportDecl.create_stmt (Alias (n_prop, n_alias)) n_source @> n_loc )
 
 and normalize_module_source (_ : Ctx.t)
     ((_, source) : Loc.t * Loc.t Flow.StringLiteral.t) : string =
@@ -1352,7 +1365,9 @@ and normalize_function_param_list (ctx : Ctx.t)
     ((_, params) : (Loc.t, Loc.t) Flow.Function.Params.t) :
     n_stmt list * id list =
   let n_params = List.map (normalize_function_param ctx) params.params in
-  let n_rest = Option.map (normalize_function_rest_param ctx) params.rest in
+  (* TODO: implement normalization of the rest parameter *)
+  (* let n_rest = Option.map (normalize_function_rest_param ctx) params.rest in *)
+  let n_rest = None in
   List.split (n_params @ Option.to_list n_rest)
 
 and normalize_function_param (ctx : Ctx.t)
@@ -1412,17 +1427,17 @@ and normalize_class_extends (ctx : Ctx.t)
 
 and normalize_class_body (ctx : Ctx.t)
     ((_, body) : (Loc.t, Loc.t) Flow.Class.Body.t) : n_stmt =
-  Fun.(List.flatten << flip List.map body.body) @@ function
-  | Method (_, { kind = Constructor; _ }) -> [] (* handled seperatly *)
-  | Method (loc, { kind = Method; static; key; value = func; _ }) ->
-    normalize_class_method ctx loc static key func
-  | Method (loc, { kind = Get; static; key; value; _ }) ->
-    normalize_class_getter_setter ctx loc "get" static key value
-  | Method (loc, { kind = Set; static; key; value; _ }) ->
-    normalize_class_getter_setter ctx loc "set" static key value
-  | Property (loc, { static; key; value; _ }) ->
-    normalize_class_property ctx loc static key value
-  | PrivateField _ -> Log.fail "[not implemented]: private class element"
+  Fun.(List.flatten << flip List.map body.body) (function
+    | Method (_, { kind = Constructor; _ }) -> [] (* handled seperatly *)
+    | Method (loc, { kind = Method; static; key; value = func; _ }) ->
+      normalize_class_method ctx loc static key func
+    | Method (loc, { kind = Get; static; key; value; _ }) ->
+      normalize_class_getter_setter ctx loc "get" static key value
+    | Method (loc, { kind = Set; static; key; value; _ }) ->
+      normalize_class_getter_setter ctx loc "set" static key value
+    | Property (loc, { static; key; value; _ }) ->
+      normalize_class_property ctx loc static key value
+    | PrivateField _ -> Log.fail "[not implemented]: private class element" )
 
 and process_class_constructor (ctx : Ctx.t) (n_loc : Region.t) (ext : bool)
     ((_, body) : (Loc.t, Loc.t) Flow.Class.Body.t) : n_lval =

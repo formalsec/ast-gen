@@ -25,19 +25,20 @@
  (description
   "MDG-based static vulnerability scanner specialized in analyzing npm packages and detecting taint-style and prototype pollution vulnerabilities.")
  (depends
-  (ocaml
-   (>= "4.14.1"))
-  ocamlformat
-  ocaml-lsp-server
-  ocamlgraph
-  dune
-  dune-site
-  (ppx_inline_test :with-test)
-  yojson
   bos
   cmdliner
   conf-npm
-  flow_parser)
+  dune
+  dune-site
+  (flow_parser
+   (>= 0.257.0))
+  (ocaml
+   (>= "5.2.1"))
+  ocamlformat
+  ocamlgraph
+  ocaml-lsp-server
+  (ppx_inline_test :with-test)
+  yojson)
  (tags
   ("JavaScript"
    "Node.js"

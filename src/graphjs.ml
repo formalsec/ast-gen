@@ -5,13 +5,13 @@ open Cmdliner
 type status = (unit Exec.status Cmd.eval_ok, Cmd.eval_error) Result.t
 
 let set_copts (colorless : bool) (lvl : Enums.DebugLvl.t) (verbose : bool)
-    (output_override : bool) : unit =
+    (override' : bool) : unit =
   Font.Config.(colored $= not colorless);
   Log.Config.(log_warns $= (lvl >= Warn));
   Log.Config.(log_infos $= (verbose || lvl >= Info));
   Log.Config.(log_debugs $= (lvl >= All));
   Log.Config.(log_verbose $= verbose);
-  Workspace.Config.(override $= output_override)
+  Workspace.Config.(override $= override')
 
 let copts : unit Term.t =
   let open Term in
@@ -19,7 +19,7 @@ let copts : unit Term.t =
   $ Docs.CommonOpts.colorless
   $ Docs.CommonOpts.debug
   $ Docs.CommonOpts.verbose
-  $ Docs.CommonOpts.output_override
+  $ Docs.CommonOpts.override
 
 let set_shared_opts (mode' : Enums.AnalysisMode.t) () : unit =
   let open Graphjs_shared in
@@ -78,6 +78,8 @@ let eval_cmd : status -> int = function
   | Ok (`Ok (Error (`BuildMDG _))) -> Docs.ExitCodes.build_mdg
   | Ok (`Ok (Error (`ExportMDG _))) -> Docs.ExitCodes.export_mdg
   | Ok (`Ok (Error (`Generic _))) -> Docs.ExitCodes.generic
+  | Ok (`Ok (Error (`Failure _))) -> Docs.ExitCodes.internal
+  | Ok (`Ok (Error `Timeout)) -> Docs.ExitCodes.timeout
   | Error `Term -> Docs.ExitCodes.term
   | Error `Parse -> Docs.ExitCodes.client
   | Error `Exn -> Docs.ExitCodes.internal

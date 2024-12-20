@@ -12,7 +12,7 @@ open struct
   let uid_gen : Location.t Generator.t = Location.make_generator ()
   let obj_lid_gen : Location.t Generator.t = Location.make_generator ()
   let func_lid_gen : Location.t Generator.t = Location.make_generator ()
-  let std_lid_gen : Location.t Generator.t = Location.make_generator ()
+  let sink_lid_gen : Location.t Generator.t = Location.make_generator ()
 end
 
 type kind =
@@ -38,6 +38,12 @@ let default : unit -> t =
   let id = Config.(!invalid_loc) in
   let dflt = { uid = id; lid = id; kind = Literal; parent = None; at } in
   fun () -> dflt
+
+let reset () : unit =
+  Location.reset uid_gen;
+  Location.reset obj_lid_gen;
+  Location.reset func_lid_gen;
+  Location.reset sink_lid_gen
 
 let create (uid : Location.t) (lid : Location.t) (kind : kind)
     (parent : t option) (at : Region.t) : t =
@@ -102,15 +108,9 @@ let create_function (name : string) : t option -> Region.t -> t =
   let lid = Location.create func_lid_gen in
   create uid lid (Function name) parent at
 
-let create_std_function (name : string) : t =
+let create_sink (sink : Tainted.sink) : t =
   let uid = Location.create uid_gen in
-  let lid = Location.create std_lid_gen in
-  let at = Region.default () in
-  create uid lid (Function name) None at
-
-let create_std_sink (sink : Tainted.sink) : t =
-  let uid = Location.create uid_gen in
-  let lid = Location.create std_lid_gen in
+  let lid = Location.create sink_lid_gen in
   let at = Region.default () in
   create uid lid (TaintSink sink) None at
 

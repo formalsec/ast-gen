@@ -32,6 +32,7 @@ module Identifier = struct
   and of_expr (expr : 'm Ast.Expression.t) : 'm t =
     match expr.el with
     | `Identifier id -> Metadata.(id @> expr.md)
+    | `This () -> Metadata.(create "this" @> expr.md)
     | _ -> Log.fail "unexpected non-identifier expression"
 
   let create_expr (name : string) : 'm Ast.Expression.t' =

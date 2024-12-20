@@ -1,5 +1,6 @@
 open Graphjs_base
 
+exception Timeout
 exception Exn of (Fmt.t -> unit)
 
 open struct
@@ -136,8 +137,10 @@ let output_dot (path : string) (graph : GraphBuilder.t) : unit =
   close_out_noerr dot_file
 
 let output_svg (path : string) (dot_path : string) : unit =
-  if Sys.command ("dot -Tsvg " ^ dot_path ^ " -o " ^ path) != 0 then
-    raise "Unable to generate the %S file." path
+  try
+    if Sys.command ("timeout 20 dot -Tsvg " ^ dot_path ^ " -o " ^ path) != 0
+    then raise "Unable to generate the %S file." path
+  with _ -> Stdlib.raise Timeout
 
 let export_dot (path : Fpath.t) (mdg : Mdg.t) : unit =
   let graph = build_graph mdg in

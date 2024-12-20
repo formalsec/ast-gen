@@ -22,9 +22,9 @@ module CodeCache = struct
     Hashtbl.replace cache id node
 
   let lub (cache1 : t) (cache2 : t) : unit =
-    Fun.flip Hashtbl.iter cache2 @@ fun stmt node_2 ->
-    let node_1 = Hashtbl.find_opt cache1 stmt in
-    if Option.is_none node_1 then Hashtbl.replace cache1 stmt node_2
+    Fun.flip Hashtbl.iter cache2 (fun stmt node_2 ->
+        let node_1 = Hashtbl.find_opt cache1 stmt in
+        if Option.is_none node_1 then Hashtbl.replace cache1 stmt node_2 )
 end
 
 type t =

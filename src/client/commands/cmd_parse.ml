@@ -41,29 +41,33 @@ module Output = struct
     Workspace.log w (Fmt.dly "%a@." pp_prog p)
 end
 
-let js_parser (path : Fpath.t) () : (Loc.t, Loc.t) Flow_ast.Program.t =
-  Javascript_parser.parse path
-
 let dep_tree (w : Workspace.t) (path : Fpath.t) () : Dependency_tree.t =
   let dt = Dependency_tree.generate path in
   Output.dep_tree w dt;
   dt
 
+let js_parser (path : Fpath.t) () : (Loc.t, Loc.t) Flow_ast.Program.t =
+  Flow_parser.parse path
+
+let js_normalizer (file : (Loc.t, Loc.t) Flow_ast.Program.t) () :
+    Normalizer.n_stmt =
+  Normalizer.normalize_file file
+
 let normalized_files (w : Workspace.t) (dt : Dependency_tree.t) :
     (Fpath.t * 'm File.t) Exec.status list =
-  Fun.flip Dependency_tree.bottom_up_visit dt @@ fun (path, mrel) ->
-  let* js_file = Exec.graphjs (js_parser path) in
-  let file = Normalizer.normalize_file js_file in
-  Output.source_file w path mrel;
-  Output.normalized_file w path mrel file;
-  Ok (path, file)
+  Fun.flip Dependency_tree.bottom_up_visit dt (fun (path, mrel) ->
+      Output.source_file w path mrel;
+      let* js_file = Exec.graphjs (js_parser path) in
+      let* file = Exec.graphjs (js_normalizer js_file) in
+      Output.normalized_file w path mrel file;
+      Ok (path, file) )
 
 let normalized_prog (w : Workspace.t) (dt : Dependency_tree.t) :
     'm Prog.t Exec.status =
   let* files = Result.extract (normalized_files w dt) in
   Ok (Prog.create files)
 
-let run ((w, input) : Workspace.t * Fpath.t) :
+let run (input : Fpath.t) (w : Workspace.t) :
     (Dependency_tree.t * 'm Prog.t) Exec.status =
   let* _ = Workspace.mkdir Side w in
   let* dt = Exec.graphjs (dep_tree w input) in
@@ -71,8 +75,27 @@ let run ((w, input) : Workspace.t * Fpath.t) :
   Output.main w dt prog;
   Ok (dt, prog)
 
+let outcome (result : (Dependency_tree.t * 'm Prog.t) Exec.status) :
+    Bulk.Instance.outcome =
+  match result with
+  | Ok _ -> Success
+  | Error (`DepTree _) -> Failure
+  | Error (`ParseJS _) -> Failure
+  | Error _ -> Anomaly
+
+let bulk_interface () : (module Bulk.CmdInterface) =
+  ( module struct
+    type t = Dependency_tree.t * Region.t Prog.t
+
+    let cmd = "parse"
+    let run = run
+    let outcome = outcome
+  end )
+
 let main (opts : Options.t) () : unit Exec.status =
   let w = Workspace.create ~default:`Bundle opts.inputs opts.output in
   let* () = Workspace.clean w in
-  let* workpairs = Workspace.prepare w opts.inputs in
-  Workspace.run run workpairs
+  let* ipairs = Bulk.InputTree.generate opts.inputs in
+  let module Interface = (val bulk_interface ()) in
+  let module Executor = Bulk.Executor (Interface) in
+  Executor.execute w ipairs

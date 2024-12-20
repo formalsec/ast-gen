@@ -6,6 +6,7 @@ module ExitCodes = struct
   let parsejs = 3
   let build_mdg = 4
   let export_mdg = 5
+  let timeout = 110
   let term = 122
   let generic = Cmd.Exit.some_error
   let client = Cmd.Exit.cli_error
@@ -15,7 +16,10 @@ end
 module Exits = struct
   open Cmd.Exit
 
-  let common = info ~doc:"on terminal error" ExitCodes.term :: defaults
+  let common =
+    info ~doc:"on timeout error" ExitCodes.timeout
+    :: info ~doc:"on terminal error" ExitCodes.term
+    :: defaults
 
   let parse =
     [ info ~doc:"on Dependency Tree generation error" ExitCodes.deptree
@@ -50,9 +54,9 @@ module CommonOpts = struct
     let doc = "Run in verbose mode, printing all information available." in
     Arg.(value & flag & info [ "v"; "verbose" ] ~doc)
 
-  let output_override =
+  let override =
     let doc = "Override existing files when outputing to the provided path." in
-    Arg.(value & flag & info [ "output-override" ] ~doc)
+    Arg.(value & flag & info [ "override" ] ~doc)
 end
 
 module FileOpts = struct

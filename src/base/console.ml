@@ -72,7 +72,15 @@ let attributes (fd : Unix.file_descr) : int option * int option * bool =
   if is_console fd then (width fd, height fd, colored fd)
   else (None, None, false)
 
-let url (url : string) : string =
-  match Config.(!system) with
-  | Unknown | Linux | MacOS -> "file:/" ^ url
-  | WSL -> execute (Fmt.str "echo \"file:`wslpath -m %s`\"" url)
+let url ?(anchor : string option) (url : string) : string =
+  let pp_url ppf url = Fmt.fmt ppf "file:/%s" url in
+  let pp_wsl ppf url = Fmt.fmt ppf "file:`wslpath -m %s`" url in
+  let pp_anchor pp_url ppf (url, anchor) =
+    Fmt.fmt ppf "\\e]8;;%a\\a%s\\e]8;;\\a" pp_url url anchor in
+  match (Config.(!system), anchor) with
+  | ((Unknown | Linux | MacOS), None) -> Fmt.str "%a" pp_url url
+  | (WSL, None) -> execute (Fmt.str "echo \"%a\"" pp_wsl url)
+  | ((Unknown | Linux | MacOS), Some anchor') ->
+    execute (Fmt.str "echo \"%a\"" (pp_anchor pp_url) (url, anchor'))
+  | (WSL, Some anchor') ->
+    execute (Fmt.str "echo \"%a\"" (pp_anchor pp_wsl) (url, anchor'))

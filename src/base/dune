@@ -3,6 +3,7 @@
 (library
  (name graphjs_base)
  (modules
+  string
   set
   list
   hashtbl
@@ -16,5 +17,6 @@
   fmt
   writer
   font
-  log)
+  log
+  time)
  (libraries unix fpath yojson))

@@ -14,17 +14,19 @@ type t =
   }
 
 open struct
-  module Registry = Map.Make (struct
-    type t = formatter
+  let reg : t list ref = ref []
 
-    let compare (ppf1 : t) (ppf2 : t) : int = if ppf1 == ppf2 then 0 else 1
-    [@@inline]
-  end)
+  let reg_find (ppf : formatter) : t option =
+    List.find_opt (fun w -> w.ppf == ppf) !reg
 
-  let reg : t Registry.t ref = ref Registry.empty
-  let reg_add (writer : t) : unit = reg := Registry.add writer.ppf writer !reg
-  let reg_remove (writer : t) : unit = reg := Registry.remove writer.ppf !reg
-  let reg_find_opt (ppf : formatter) : t option = Registry.find_opt ppf !reg
+  let reg_add (w : t) : unit = reg := w :: !reg
+
+  let reg_remove (w : t) : unit =
+    let rec reg_remove' = function
+      | [] -> []
+      | w' :: reg' when w'.ppf == w.ppf -> reg'
+      | w' :: reg' -> w' :: reg_remove' reg' in
+    reg := reg_remove' !reg
 end
 
 let stream (writer : t) : stream = writer.stream [@@inline]
@@ -53,13 +55,7 @@ let remove ?(close : bool = true) (writer : t) : unit =
   | _ -> ()
 
 let find (ppf : formatter) : t =
-  match reg_find_opt ppf with
-  | None -> generate Unknown ppf
-  | Some writer -> writer
-
-let stdout : t = create (Channel Stdlib.stdout) std_formatter
-let stderr : t = create (Channel Stdlib.stderr) err_formatter
-let stdbuf : t = create (Buffer stdbuf) str_formatter
+  match reg_find ppf with None -> generate Unknown ppf | Some writer -> writer
 
 let to_buffer (buffer : Buffer.t) : t =
   create (Buffer buffer) (formatter_of_buffer buffer)
@@ -74,3 +70,11 @@ let to_new_buffer () : t = to_buffer (Buffer.create Config.(!dflt_buf_sz))
 
 let to_file (filename : string) : t = to_out_channel (open_out filename)
 [@@inline]
+
+module Config = struct
+  include Config
+
+  let stdout = flexible (create (Channel Stdlib.stdout) std_formatter)
+  let stderr = flexible (create (Channel Stdlib.stderr) err_formatter)
+  let stdbuf = constant (create (Buffer stdbuf) str_formatter)
+end
