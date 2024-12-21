@@ -22,8 +22,8 @@ let copts : unit Term.t =
   $ Docs.CommonOpts.override
 
 let set_shared_opts (mode' : Enums.AnalysisMode.t) () : unit =
-  let open Graphjs_shared in
-  Shared_config.(mode $= Enums.AnalysisMode.conv mode')
+  let open Graphjs_share in
+  Share_config.(mode $= Enums.AnalysisMode.conv mode')
 
 let shared_opts : unit Term.t =
   Term.(const set_shared_opts $ Docs.SharedOpts.mode $ copts)

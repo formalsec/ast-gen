@@ -14,4 +14,4 @@
   builder_config
   builder
   svg_exporter)
- (libraries graphjs_base graphjs_shared graphjs_ast ocamlgraph))
+ (libraries graphjs_base graphjs_share graphjs_ast ocamlgraph))

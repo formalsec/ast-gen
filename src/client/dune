@@ -5,7 +5,7 @@
  (modules fs workspace bulk exec enums docs share cmd_parse cmd_mdg)
  (libraries
   graphjs_base
-  graphjs_shared
+  graphjs_share
   graphjs_parser
   graphjs_ast
   graphjs_mdg

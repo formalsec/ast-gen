@@ -1,4 +1,4 @@
-open Graphjs_shared
+open Graphjs_share
 
 open struct
   type package_source = Taint_config.package_source

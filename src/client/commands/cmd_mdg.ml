@@ -1,5 +1,5 @@
 open Graphjs_base
-open Graphjs_shared
+open Graphjs_share
 open Graphjs_parser
 open Graphjs_ast
 open Graphjs_mdg

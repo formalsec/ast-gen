@@ -1,5 +1,5 @@
 open Graphjs_base
-open Graphjs_shared
+open Graphjs_share
 
 exception Exn of (Fmt.t -> unit)
 
@@ -113,7 +113,7 @@ let generate_with_mode (mode : Mode.t) (path : string) : t =
   create (Json.from_string structure)
 
 let generate (path : Fpath.t) : t =
-  let mode = Shared_config.(!mode) in
+  let mode = Share_config.(!mode) in
   generate_with_mode mode (Fpath.to_string path)
 
 let multi_file (dt : t) : bool = DepSet.cardinal dt.deps > 0

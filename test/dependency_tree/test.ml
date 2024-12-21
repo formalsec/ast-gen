@@ -1,5 +1,5 @@
 open Graphjs_base
-open Graphjs_shared
+open Graphjs_share
 open Graphjs_parser.Dependency_tree
 
 open struct

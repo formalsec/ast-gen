@@ -1,8 +1,8 @@
 (include_subdirs unqualified)
 
 (library
- (name graphjs_shared)
- (modules mode vulnerability taint_config shared_config site)
+ (name graphjs_share)
+ (modules mode vulnerability taint_config share_config site)
  (libraries graphjs_base dune-site))
 
 (generate_sites_module
