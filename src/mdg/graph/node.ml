@@ -1,13 +1,6 @@
 open Graphjs_base
 open Graphjs_ast
 
-module Config = struct
-  include Config
-
-  let invalid_loc : Location.t t = constant (-1)
-  let literal_loc : Location.t t = constant 0
-end
-
 open struct
   let uid_gen : Location.t Generator.t = Location.make_generator ()
   let obj_lid_gen : Location.t Generator.t = Location.make_generator ()
@@ -41,7 +34,7 @@ type t =
 
 let default : unit -> t =
   let at = Region.default () in
-  let id = Config.(!invalid_loc) in
+  let id = Location.invalid_loc () in
   let dflt = { uid = id; lid = id; kind = Literal; parent = None; at } in
   fun () -> dflt
 
@@ -86,14 +79,14 @@ end
 
 let create_literal () : t =
   let uid = Location.create uid_gen in
-  let lid = Config.(!literal_loc) in
+  let lid = Location.literal_loc () in
   let at = Region.default () in
   create uid lid Literal None at
 
 let create_literal_object (name : string) : t option -> Region.t -> t =
  fun parent at ->
   let uid = Location.create uid_gen in
-  let lid = Config.(!literal_loc) in
+  let lid = Location.literal_loc () in
   create uid lid (Object name) parent at
 
 let create_object (name : string) : t option -> Region.t -> t =
@@ -133,12 +126,12 @@ let create_module (name : string) : t option -> Region.t -> t =
 
 let create_candidate_function (name : string) : t =
   let uid = Location.create uid_gen in
-  let lid = Config.(!invalid_loc) in
+  let lid = Location.invalid_loc () in
   create uid lid (Function name) None (Region.default ())
 
 let create_candidate_sink (sink : Tainted.sink) : t =
   let uid = Location.create uid_gen in
-  let lid = Config.(!invalid_loc) in
+  let lid = Location.invalid_loc () in
   create uid lid (TaintSink sink) None (Region.default ())
 
 let concretize (node : t) : t =
@@ -147,19 +140,19 @@ let concretize (node : t) : t =
   | TaintSink _ -> { node with lid = Location.create sink_lid_gen }
   | _ -> Log.fail "unexpected candidate node kind"
 
-let is_candidate (node : t) : bool = node.lid == Config.(!invalid_loc)
+let is_candidate (node : t) : bool = node.lid == Location.invalid_loc ()
 
 let is_literal (node : t) : bool =
   match node.kind with Literal -> true | _ -> false
 
 let is_object (node : t) : bool =
   match node.kind with
-  | Object _ -> node.lid != Config.(!literal_loc)
+  | Object _ -> node.lid != Location.literal_loc ()
   | _ -> false
 
 let is_literal_object (node : t) : bool =
   match node.kind with
-  | Object _ -> node.lid == Config.(!literal_loc)
+  | Object _ -> node.lid == Location.literal_loc ()
   | _ -> false
 
 let is_function (node : t) : bool =

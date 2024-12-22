@@ -82,12 +82,12 @@ let copy (p : perm) (w : t) (src : Fpath.t) : unit Exec.status =
 let copy_noerr (p : perm) (w : t) (src : Fpath.t) : unit =
   execute_noerr p w (Fun.flip Fs.copy_noerr src)
 
-let output (p : perm) (w : t) (f : Fpath.t -> unit Exec.status) :
+let output (p : perm) (w : t) (pp : Fmt.t -> 'a -> unit) (v : 'a) :
     unit Exec.status =
-  execute p w (Fun.flip Fs.output f)
+  execute p w (Fun.flip2 Fs.output pp v)
 
-let output_noerr (p : perm) (w : t) (f : Fpath.t -> unit Exec.status) : unit =
-  execute_noerr p w (Fun.flip Fs.output_noerr f)
+let output_noerr (p : perm) (w : t) (pp : Fmt.t -> 'a -> unit) (v : 'a) : unit =
+  execute_noerr p w (Fun.flip2 Fs.output_noerr pp v)
 
 let write (p : perm) (w : t) (fmt : Fmt.t -> unit) : unit Exec.status =
   execute p w (Fun.flip Fs.write fmt)

@@ -1,4 +1,4 @@
-  $ graphjs parse --mode=multi-file --verbose main.js
+  $ graphjs parse --mode=multifile --verbose main.js
   [info] Workspace "" generated successfully.
   [info] Dependency tree "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/main.t/main.js" generated successfully.
   {

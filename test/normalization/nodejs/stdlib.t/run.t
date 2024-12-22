@@ -1,4 +1,4 @@
-  $ graphjs parse --mode=multi-file --verbose stdlib.js
+  $ graphjs parse --mode=multifile --verbose stdlib.js
   [info] Workspace "" generated successfully.
   [info] Dependency tree "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/stdlib.t/stdlib.js" generated successfully.
   {

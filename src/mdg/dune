@@ -13,5 +13,6 @@
   function
   builder_config
   builder
+  merger
   svg_exporter)
  (libraries graphjs_base graphjs_share graphjs_ast ocamlgraph))

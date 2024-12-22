@@ -44,7 +44,7 @@ module Res = struct
     Error (err "Unable to find the provided path %S." path)
 
   let invalid_directory (path : string) : (t, string) Result.t =
-    Error (err "Unable to perform Single-file analysis in directory %S." path)
+    Error (err "Unable to perform singlefile analysis in directory %S." path)
 
   let bad_directory (path : string) : (t, string) Result.t =
     Error (err "Unable to find main module of directory %S." path)

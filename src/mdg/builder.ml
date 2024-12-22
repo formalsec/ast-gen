@@ -162,6 +162,11 @@ and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
       if Node.is_candidate node then State.concretize_node state id node
       else node )
 
+let initialize_builder (taint_config : Taint_config.t) : State.t =
+  Node.reset_generators ();
+  let state = State.create () in
+  Function.initialize_stdlib state taint_config
+
 let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
     State.t =
   let state' = State.extend state in
@@ -478,8 +483,3 @@ let build_file (state : State.t) (file : 'm File.t) : Mdg.t =
   let state' = initialize_state state file in
   let state'' = build_sequence state' file in
   state''.mdg
-
-let initialize_builder (taint_config : Taint_config.t) : State.t =
-  Node.reset_generators ();
-  let state = State.create () in
-  Function.initialize_stdlib state taint_config

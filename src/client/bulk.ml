@@ -248,20 +248,18 @@ module Executor (CmdInterface : CmdInterface) = struct
     | (None, _) | (_, Skipped) | (Single _, Success) -> ()
     | (Single _, Failure) | (Single _, Timeout) | (Single _, Anomaly) ->
       let w' = Workspace.(w -+ "log") in
-      Workspace.write_noerr Main w' (fun ppf ->
-          Log.Redirect.pp_captured ppf instance.streams )
+      Workspace.output_noerr Main w' Log.Redirect.pp_captured instance.streams
     | (Bundle _, _) ->
       let w' = Workspace.(w / "log.txt") in
-      Workspace.write_noerr Side w' (fun ppf ->
-          Log.Redirect.pp_captured ppf instance.streams )
+      Workspace.output_noerr Side w' Log.Redirect.pp_captured instance.streams
 
   let rec dump_execution_report (tree : 'm InstanceTree.t) : unit =
     Fun.flip Hashtbl.iter tree.items (fun _ -> function
       | Directory tree' -> dump_execution_report tree'
       | _ -> () );
     let w' = Workspace.(tree.workspace / "report.graphjs") in
-    Workspace.write_noerr Main w'
-      (Fmt.dly "%a" (InstanceTree.pp_report CmdInterface.cmd) tree)
+    let pp_tree = InstanceTree.pp_report CmdInterface.cmd in
+    Workspace.output_noerr Main w' pp_tree tree
 
   let store_instance (tree : CmdInterface.t InstanceTree.t) (name : string)
       (instance : 'm Instance.t) : unit =

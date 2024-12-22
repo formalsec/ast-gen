@@ -137,18 +137,3 @@
   $v4[l_8] -
   baz(...)[l_9] --< Ret >--> $v5[l_10]
   $v5[l_10] -
-
-  $ graphjs mdg --no-svg sink.js
-  [[literal]] --< Arg(1) >--> eval(...)[l_3]
-  eval[s_1] --< [[RefArg]] >--> [[literal]]
-  eval[s_1] --< [[RefArg]] >--> x1[p_1]
-  foo[f_1] --< Param(0) >--> this[p_0]
-  foo[f_1] --< Param(1) >--> x1[p_1]
-  this[p_0] -
-  x1[p_1] --< Arg(1) >--> eval(...)[l_1]
-  eval(...)[l_1] --< Call >--> eval[s_1]
-  eval(...)[l_1] --< Ret >--> $v1[l_2]
-  $v1[l_2] -
-  eval(...)[l_3] --< Call >--> eval[s_1]
-  eval(...)[l_3] --< Ret >--> $v2[l_4]
-  $v2[l_4] -

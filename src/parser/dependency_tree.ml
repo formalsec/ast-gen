@@ -98,7 +98,7 @@ open struct
     | (false, _) -> Unix.realpath path
     | (true, MultiFile) -> find_main_of_module path
     | (true, (Basic | SingleFile)) ->
-      raise "Unable to perform Single-file analysis in directory %S." path
+      raise "Unable to perform singlefile analysis in directory %S." path
     | exception Sys_error _ -> raise "Unable to find the provided path %S." path
 
   let generate_structure (mode : Mode.t) (main_file : string) : string =

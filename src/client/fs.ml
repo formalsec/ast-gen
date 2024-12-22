@@ -48,19 +48,19 @@ let copy (path : t) (src : t) : unit Exec.status =
   let* data = Exec.bos (Bos.OS.File.read src) in
   Exec.bos (Bos.OS.File.write path data)
 
-let output (path : t) (output_f : t -> unit Exec.status) : unit Exec.status =
-  output_f path
+let output (path : t) (pp_v : Fmt.t -> 'a -> unit) (v : 'a) : unit Exec.status =
+  Exec.bos (Bos.OS.File.writef path "%a" pp_v v)
 
 let write (path : t) (fmt : Fmt.t -> unit) : unit Exec.status =
-  output path (fun path -> Exec.bos (Bos.OS.File.writef path "%t" fmt))
+  Exec.bos (Bos.OS.File.writef path "%t" fmt)
 
 let mkdir_noerr (path : t) : unit = handle_error mkdir path
 
 let copy_noerr (path : t) (src : t) : unit =
   handle_error (Fun.flip copy src) path
 
-let output_noerr (path : t) (output_f : t -> unit Exec.status) : unit =
-  handle_error (Fun.flip output output_f) path
+let output_noerr (path : t) (pp_v : Fmt.t -> 'a -> unit) (v : 'a) : unit =
+  handle_error (Fun.flip2 output pp_v v) path
 
 let write_noerr (path : t) (fmt : Fmt.t -> unit) : unit =
   handle_error (Fun.flip write fmt) path

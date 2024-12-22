@@ -7,7 +7,7 @@ module Output = struct
     let w' = Workspace.(w / "taint_config.conf") in
     Log.info "Tainted config \"%a\" read successfully." Fpath.pp path;
     Log.verbose "%a" Taint_config.pp tc;
-    Workspace.write_noerr Side w' (Fmt.dly "%a" Taint_config.pp tc)
+    Workspace.output_noerr Side w' Taint_config.pp tc
 end
 
 let parse_taint_config = function

@@ -91,8 +91,8 @@ module SharedOpts = struct
     let doc =
       "Analysis mode used in a Graph.js execution. Options include (1) 'basic' \
        where the attacker controlls all the parameters from all the functions; \
-       (2): 'single-file' where the attacker controlls the functions exported \
-       by the input file; and (3) 'multi-file' where the attacker controlls \
+       (2): 'singlefile' where the attacker controlls the functions exported \
+       by the input file; and (3) 'multifile' where the attacker controlls \
        the functions that were exported by the 'main' file of the module." in
     let modes = Arg.enum Enums.AnalysisMode.(args all) in
     Arg.(value & opt modes SingleFile & info [ "m"; "mode" ] ~docv ~doc)

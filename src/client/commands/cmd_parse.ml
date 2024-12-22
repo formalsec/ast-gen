@@ -21,7 +21,7 @@ module Output = struct
     let w' = Workspace.(w / "dep_tree.json") in
     Log.info "Dependency tree \"%a\" generated successfully." Fpath.pp dt.path;
     Log.verbose "%a" Dependency_tree.pp dt;
-    Workspace.write_noerr Side w' (Fmt.dly "%a" Dependency_tree.pp dt)
+    Workspace.output_noerr Side w' Dependency_tree.pp dt
 
   let source_file (w : Workspace.t) (path : Fpath.t) (mrel : Fpath.t) : unit =
     let w' = Workspace.(w / "input" // mrel) in
@@ -34,7 +34,7 @@ module Output = struct
     Log.info "File \"%a\" normalized successfully." Fpath.pp path;
     Log.verbose "%a" File.pp file;
     Workspace.mkdir_noerr Side w';
-    Workspace.write_noerr Side w' (Fmt.dly "%a" File.pp file)
+    Workspace.output_noerr Side w' File.pp file
 
   let main (w : Workspace.t) (dt : Dependency_tree.t) (p : 'm Prog.t) : unit =
     let pp_prog = Prog.pp ~filename:(Dependency_tree.multi_file dt) in

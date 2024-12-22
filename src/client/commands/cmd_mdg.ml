@@ -25,100 +25,106 @@ end
 module Workspace = struct
   include Workspace
 
-  let builder (w : t) (multifile : bool) (rel : Fpath.t) : t =
+  let mdg (w : t) (rel : Fpath.t) (main : bool) : t =
     let temp_f rel = Filename.temp_file "graphjs" (Fpath.to_string rel) in
     let dir_f w = Fs.mkdir_noerr (Fpath.parent (path w)) |> fun () -> w in
     let rel' = Fpath.rem_ext rel in
-    match (multifile, w.out, Builder_config.(!export_svg)) with
-    | (false, None, true) -> single ~w Fpath.(v (temp_f rel') + "svg")
-    | (false, None, false) -> w
-    | (false, Single _, _) -> w
-    | (false, Bundle _, _) -> dir_f ((w / "mdg" // rel') + "svg")
-    | (true, Bundle _, _) -> dir_f ((w / "mdg" // rel' // rel') + "svg")
-    | (true, _, _) -> none
+    match (main, w.out, Builder_config.(!export_svg)) with
+    | (true, None, true) -> single ~w Fpath.(v (temp_f rel') + "svg")
+    | (true, None, false) -> w
+    | (true, Single _, _) -> w
+    | (true, Bundle _, _) -> dir_f ((w / "mdg" // rel') + "svg")
+    | (false, Bundle _, _) -> dir_f ((w / "mdg" // rel' // rel') + "svg")
+    | (false, _, _) -> none
 end
 
 module Output = struct
-  let svg_url (url : Fpath.t) : string =
-    (* FIXME: add url text *)
-    Console.url (Fpath.to_string url)
+  let svg_url (url : Fpath.t) : string = Console.url (Fpath.to_string url)
 
   let mdg (w : Workspace.t) (path : Fpath.t) (mdg : Mdg.t) : unit =
     let w' = Workspace.(w -+ "mdg") in
     Log.info "MDG \"%a\" built successfully." Fpath.pp path;
     Log.verbose "%a" Mdg.pp mdg;
-    match (w'.out, Builder_config.(!export_svg)) with
-    | (Bundle _, _) -> Workspace.write_noerr Side w' (Fmt.dly "%a" Mdg.pp mdg)
-    | (_, false) -> Workspace.write_noerr Main w (Fmt.dly "%a" Mdg.pp mdg)
-    | _ -> ()
+    Workspace.output_noerr Side w' Mdg.pp mdg
 
   let dot (w : Workspace.t) (mdg : Mdg.t) : unit =
     if Builder_config.(!export_svg) then
       let w' = Workspace.(w -+ "dot") in
       Workspace.execute_noerr Side w' (Fun.flip Svg_exporter.export_dot mdg)
 
-  let svg (w : Workspace.t) (path : Fpath.t) (mdg : Mdg.t) : unit Exec.status =
-    if Builder_config.(!export_svg) then (
-      Log.info "MDG \"%a\" exported successfully." Fpath.pp path;
-      match w.out with
-      | Single path' ->
-        let export_f path = Svg_exporter.export_svg path (`Mdg mdg) in
-        let export_f' path = Exec.graphjs (fun () -> export_f path) in
-        let* res = Workspace.execute Main w export_f' in
-        Log.verbose "%s" (svg_url path');
-        Ok res
-      | Bundle path' ->
-        let dot_path = Fpath.(path' -+ "dot") in
-        let export_f path = Svg_exporter.export_svg path (`Dot dot_path) in
-        let export_f' path = Exec.graphjs (fun () -> export_f path) in
-        Workspace.execute_noerr Side w export_f';
-        let* res = Workspace.execute Main w export_f' in
-        Log.verbose "%s" (svg_url path');
-        Ok res
-      | _ -> Ok () )
-    else Ok ()
-
-  let main (w : Workspace.t) (mdg : Mdg.t) : unit =
+  let svg (w : Workspace.t) (path : Fpath.t) : unit =
     match (Builder_config.(!export_svg), w.out) with
-    | (false, _) -> Workspace.log w (Fmt.dly "%a@." Mdg.pp mdg)
-    | (true, Single path) | (true, Bundle path) ->
-      Workspace.log w (Fmt.dly "%s@." (svg_url path))
+    | (true, Bundle svg_path) ->
+      Log.info "MDG \"%a\" exported successfully." Fpath.pp path;
+      let dot_path = Fpath.(svg_path -+ "dot") in
+      let export_f path = Svg_exporter.export_svg path (`Dot dot_path) in
+      let export_f' path = Exec.graphjs (fun () -> export_f path) in
+      Workspace.execute_noerr Side w export_f';
+      Log.verbose "%s" (svg_url svg_path)
     | _ -> ()
-end
 
-type mdg_res = Fpath.t * Workspace.t * Mdg.t
+  let main (w : Workspace.t) (mdg : Mdg.t) : unit Exec.status =
+    let w' = Workspace.(w -+ "mdg") in
+    Log.info "MDGs merged successfully.";
+    Log.verbose "%a" Mdg.pp mdg;
+    match (Builder_config.(!export_svg), w.out) with
+    | (false, _) ->
+      Workspace.output_noerr Main w' Mdg.pp mdg;
+      Workspace.log w (Fmt.dly "%a@." Mdg.pp mdg);
+      Ok ()
+    | (true, Single path') ->
+      let export_f path = Svg_exporter.export_svg path (`Mdg mdg) in
+      let export_f' path = Exec.graphjs (fun () -> export_f path) in
+      let* res = Workspace.execute Main w export_f' in
+      Workspace.log w (Fmt.dly "%s@." (svg_url path'));
+      Ok res
+    | (true, Bundle path') ->
+      let w'' = Workspace.(w -+ "dot") in
+      let dot_path = Workspace.path w'' in
+      let export_f path = Svg_exporter.export_svg path (`Dot dot_path) in
+      let export_f' path = Exec.graphjs (fun () -> export_f path) in
+      Workspace.execute_noerr Side w'' (Fun.flip Svg_exporter.export_dot mdg);
+      let* res = Workspace.execute Main w export_f' in
+      Workspace.log w (Fmt.dly "%s@." (svg_url path'));
+      Ok res
+    | _ -> Ok ()
+end
 
 let mdg_builder (builder : State.t) (file : 'm File.t) () : Mdg.t =
   Builder.build_file builder file
 
-let mdgs_files (workspace : Workspace.t) (builder : State.t)
-    (dt : Dependency_tree.t) (prog : 'm Prog.t) : mdg_res Exec.status list =
-  let multifile = Dependency_tree.multi_file dt in
+let mdg_merger (entries : Merger.t) (main_entry : Merger.entry) () : Mdg.t =
+  Merger.merge_entries entries main_entry
+
+let mdgs_files (w : Workspace.t) (builder : State.t) (dt : Dependency_tree.t)
+    (prog : 'm Prog.t) : (Fpath.t * Mdg.t) Exec.status list =
   Fun.flip Dependency_tree.bottom_up_visit dt (fun (path, mrel) ->
       let file = Prog.find prog path in
       let* mdg = Exec.graphjs (mdg_builder builder file) in
-      let w' = Workspace.builder workspace multifile mrel in
-      let () = Output.mdg w' path mdg in
-      let () = Output.dot w' mdg in
-      let* _ = Output.svg w' path mdg in
-      Ok (path, w', mdg) )
+      let w' = Workspace.mdg w mrel false in
+      Output.mdg w' path mdg;
+      Output.dot w' mdg;
+      Output.svg w' path;
+      Ok (mrel, mdg) )
 
-let merge_mdgs (_w : Workspace.t) (_mdgs : mdg_res list)
-    ((_, w', mdg) as main : mdg_res) : mdg_res Exec.status =
-  (* TODO: merge the mdgs and add the JavaScript standard functions *)
-  Output.main w' mdg;
-  Ok main
+let merge_mdgs (w : Workspace.t) (entries : Merger.t) (main_path : Fpath.t) :
+    Mdg.t Exec.status =
+  let main_entry = Merger.find entries main_path in
+  let* mdg = Exec.graphjs (mdg_merger entries main_entry) in
+  let w' = Workspace.mdg w main_path true in
+  let* _ = Output.main w' mdg in
+  Ok mdg
 
 let run (tc : Taint_config.t) (input : Fpath.t) (w : Workspace.t) :
-    mdg_res Exec.status =
+    Mdg.t Exec.status =
   let* _ = Workspace.mkdir Side w in
   let* (dt, prog) = Cmd_parse.run input (Workspace.side w) in
   let builder = Builder.initialize_builder tc in
   let* mdgs = Result.extract (mdgs_files w builder dt prog) in
-  merge_mdgs w mdgs
-    (List.find (fun (path, _, _) -> Fpath.equal path dt.path) mdgs)
+  let entries = Merger.create mdgs in
+  merge_mdgs w entries dt.mrel
 
-let outcome (result : mdg_res Exec.status) : Bulk.Instance.outcome =
+let outcome (result : Mdg.t Exec.status) : Bulk.Instance.outcome =
   match result with
   | Ok _ -> Success
   | Error (`DepTree _) -> Failure
@@ -129,7 +135,7 @@ let outcome (result : mdg_res Exec.status) : Bulk.Instance.outcome =
 
 let bulk_interface (tc : Taint_config.t) : (module Bulk.CmdInterface) =
   ( module struct
-    type t = mdg_res
+    type t = Mdg.t
 
     let cmd = "mdg"
     let run = run tc

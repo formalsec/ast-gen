@@ -34,8 +34,8 @@ module AnalysisMode = struct
 
   let pp (ppf : Fmt.t) : t -> unit = function
     | Basic -> Fmt.pp_str ppf "basic"
-    | SingleFile -> Fmt.pp_str ppf "single-file"
-    | MultiFile -> Fmt.pp_str ppf "multi-file"
+    | SingleFile -> Fmt.pp_str ppf "singlefile"
+    | MultiFile -> Fmt.pp_str ppf "multifile"
 
   let str : t -> string = Fmt.str "%a" pp
 

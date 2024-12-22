@@ -2,6 +2,9 @@ open Graphjs_base
 
 type t = int
 
+let invalid_loc : unit -> t = fun () -> -1
+let literal_loc : unit -> t = fun () -> 0
+
 let make_generator () : t Generator.t = Generator.of_numbers ~init:1 ()
 [@@inline]
 
