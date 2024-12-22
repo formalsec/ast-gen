@@ -15,18 +15,18 @@ let copy (mdg : t) : t =
   let edges = Hashtbl.copy mdg.edges in
   { nodes; edges }
 
-let node (mdg : t) (loc : Location.t) : Node.t =
+let get_node (mdg : t) (loc : Location.t) : Node.t =
   match Hashtbl.find_opt mdg.nodes loc with
   | None -> Log.fail "expecting node with location '%a' in mdg" Location.pp loc
   | Some node -> node
 
-let edges (mdg : t) (loc : Location.t) : Edge.Set.t =
+let get_edges (mdg : t) (loc : Location.t) : Edge.Set.t =
   match Hashtbl.find_opt mdg.edges loc with
   | None -> Log.fail "expecting edge from location '%a' in mdg" Location.pp loc
   | Some edges -> edges
 
 let pp_node (mdg : t) (ppf : Fmt.t) (node : Node.t) : unit =
-  let edges = edges mdg node.uid in
+  let edges = get_edges mdg node.uid in
   if Edge.Set.is_empty edges then Fmt.fmt ppf "%a -" Node.pp node
   else Edge.Set.pp ppf edges
 
@@ -41,36 +41,36 @@ let add_node (mdg : t) (node : Node.t) : unit =
   Hashtbl.replace mdg.nodes node.uid node;
   Hashtbl.replace mdg.edges node.uid Edge.Set.empty
 
-let add_edge (mdg : t) (src : Node.t) (edge : Edge.t) : unit =
-  let edges = edges mdg src.uid in
-  Hashtbl.replace mdg.edges src.uid (Edge.Set.add edge edges)
+let add_edge (mdg : t) (node : Node.t) (edge : Edge.t) : unit =
+  let edges = get_edges mdg node.uid in
+  Hashtbl.replace mdg.edges node.uid (Edge.Set.add edge edges)
 
 let has_property (mdg : t) (node : Node.t) (prop : string option) : bool =
-  edges mdg node.uid |> Edge.Set.exists (Edge.is_property ~prop:(Some prop))
+  get_edges mdg node.uid |> Edge.Set.exists (Edge.is_property ~prop:(Some prop))
 
 let get_property (mdg : t) (node : Node.t) (prp : string option) : Node.t list =
-  edges mdg node.uid
+  get_edges mdg node.uid
   |> Edge.Set.filter (Edge.is_property ~prop:(Some prp))
   |> Edge.Set.map_list Edge.tar
 
-let get_properties (mdg : t) (node : Node.t) : (Node.t * string option) list =
-  edges mdg node.uid
+let get_properties (mdg : t) (node : Node.t) : (string option * Node.t) list =
+  get_edges mdg node.uid
   |> Edge.Set.filter Edge.is_property
-  |> Edge.Set.map_list (fun edge -> (Edge.tar edge, Edge.property edge))
+  |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
-let get_versions (mdg : t) (node : Node.t) : (Node.t * string option) list =
-  edges mdg node.uid
+let get_versions (m : t) (node : Node.t) : (string option * Node.t) list =
+  get_edges m node.uid
   |> Edge.Set.filter Edge.is_ref_parent
-  |> Edge.Set.map_list (fun edge -> (Edge.tar edge, Edge.property edge))
+  |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
 let get_parameters (mdg : t) (node : Node.t) : (int * Node.t) list =
-  edges mdg node.uid
+  get_edges mdg node.uid
   |> Edge.Set.filter Edge.is_parameter
   |> Edge.Set.map_list (fun edge -> (Edge.argument edge, Edge.tar edge))
 
 let lub (mdg1 : t) (mdg2 : t) : unit =
   Fun.flip Hashtbl.iter mdg2.edges (fun loc edges_2 ->
-      let node_2 = node mdg2 loc in
+      let node_2 = get_node mdg2 loc in
       let node_1 = Hashtbl.find_opt mdg1.nodes loc in
       let edges_1 = Hashtbl.find_opt mdg1.edges loc in
       let edges_1' = Option.value ~default:Edge.Set.empty edges_1 in
@@ -78,48 +78,48 @@ let lub (mdg1 : t) (mdg2 : t) : unit =
       Hashtbl.replace mdg1.edges loc (Edge.Set.union edges_1' edges_2) )
 
 let object_orig_versions (mdg : t) (node : Node.t) : Node.Set.t =
-  let rec orig visited node =
-    let (parent_nodes, _) = List.split (get_versions mdg node) in
-    let result =
-      if List.is_empty parent_nodes then Node.Set.singleton node
+  let rec orig ls_visited node =
+    let (_, ls_parent) = List.split (get_versions mdg node) in
+    let ls_version =
+      if List.is_empty ls_parent then Node.Set.singleton node
       else Node.Set.empty in
-    Fun.flip2 List.fold_left result parent_nodes (fun acc parent_node ->
-        if not (Node.Set.mem parent_node visited) then
-          let visited' = Node.Set.add parent_node visited in
-          Node.Set.union acc (orig visited' parent_node)
-        else acc ) in
+    Fun.flip2 List.fold_left ls_version ls_parent (fun acc l_parent ->
+        if Node.Set.mem l_parent ls_visited then acc
+        else
+          let ls_visited' = Node.Set.add l_parent ls_visited in
+          Node.Set.union acc (orig ls_visited' l_parent) ) in
   orig (Node.Set.singleton node) node
 
 let object_static_lookup (mdg : t) (node : Node.t) (prp : string) : Node.Set.t =
-  let rec lookup visited node =
-    let dynamic_props = Node.Set.of_list (get_property mdg node None) in
-    let props = get_property mdg node (Some prp) in
-    match List.is_empty props with
-    | false -> Node.Set.union dynamic_props (Node.Set.of_list props)
+  let rec lookup ls_visited node =
+    let ls_dynamic = Node.Set.of_list (get_property mdg node None) in
+    let ls_prop = get_property mdg node (Some prp) in
+    match List.is_empty ls_prop with
+    | false -> Node.Set.union ls_dynamic (Node.Set.of_list ls_prop)
     | true ->
-      Fun.flip2 List.fold_left dynamic_props (get_versions mdg node)
-        (fun acc (parent_node, _) ->
-          if not (Node.Set.mem parent_node visited) then
-            let visited' = Node.Set.add parent_node visited in
-            Node.Set.union acc (lookup visited' parent_node)
-          else acc ) in
+      Fun.flip2 List.fold_left ls_dynamic (get_versions mdg node)
+        (fun acc (_, l_parent) ->
+          if Node.Set.mem l_parent ls_visited then acc
+          else
+            let ls_visited' = Node.Set.add l_parent ls_visited in
+            Node.Set.union acc (lookup ls_visited' l_parent) ) in
   lookup (Node.Set.singleton node) node
 
 let object_dynamic_lookup (mdg : t) (node : Node.t) : Node.Set.t =
-  let rec lookup seen_props visited node =
-    let check_unseen_prop_f (_, prop) = not (List.mem prop seen_props) in
+  let rec lookup seen ls_visited node =
+    let check_unseen_prop_f (prop, _) = not (List.mem prop seen) in
     let props = get_properties mdg node in
-    let (dynamic, static) = List.partition Fun.(Option.is_none << snd) props in
-    let (dynamic_prop_nodes, _) = List.split dynamic in
-    let static_props = List.map (fun (n, p) -> (n, Option.get p)) static in
-    let unseen_props = List.filter check_unseen_prop_f static_props in
-    let (unseen_prop_nodes, unseen_prop_names) = List.split unseen_props in
-    let seen_props' = seen_props @ unseen_prop_names in
-    let prop_nodes = Node.Set.of_list (dynamic_prop_nodes @ unseen_prop_nodes) in
-    Fun.flip2 List.fold_left prop_nodes (get_versions mdg node)
-      (fun acc (parent_node, _) ->
-        if not (Node.Set.mem parent_node visited) then
-          let visited' = Node.Set.add parent_node visited in
-          Node.Set.union acc (lookup seen_props' visited' parent_node)
-        else acc ) in
+    let (dynamic, static) = List.partition Fun.(Option.is_none << fst) props in
+    let (_, ls_dynamic) = List.split dynamic in
+    let static' = List.map (fun (p, n) -> (Option.get p, n)) static in
+    let unseen = List.filter check_unseen_prop_f static' in
+    let (unseen', ls_unseen) = List.split unseen in
+    let seen' = seen @ unseen' in
+    let ls_prop = Node.Set.of_list (ls_dynamic @ ls_unseen) in
+    Fun.flip2 List.fold_left ls_prop (get_versions mdg node)
+      (fun acc (_, l_parent) ->
+        if Node.Set.mem l_parent ls_visited then acc
+        else
+          let ls_visited' = Node.Set.add l_parent ls_visited in
+          Node.Set.union acc (lookup seen' ls_visited' l_parent) ) in
   lookup [] (Node.Set.singleton node) node

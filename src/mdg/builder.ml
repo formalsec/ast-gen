@@ -165,7 +165,7 @@ and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
 let initialize_builder (taint_config : Taint_config.t) : State.t =
   Node.reset_generators ();
   let state = State.create () in
-  Function.initialize_stdlib state taint_config
+  Jslib.initialize state taint_config
 
 let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
     State.t =

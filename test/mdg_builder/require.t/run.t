@@ -1,15 +1,18 @@
   $ graphjs mdg --no-svg --mode=singlefile dependency.js
   [[literal]] -
+  JS::module[l_3] --< V(exports) >--> JS::module[l_4]
   foo[f_1] --< Param(0) >--> this[p_0]
   this[p_0] -
   $v1[l_1] --< V(foo) >--> $v1[l_2]
   $v1[l_2] --< P(foo) >--> foo[f_1]
   $v1[l_2] --< [[RefParent(foo)]] >--> $v1[l_1]
+  JS::module[l_4] --< [[RefParent(exports)]] >--> JS::module[l_3]
+  JS::module[l_4] --< P(exports) >--> $v1[l_2]
 
   $ graphjs mdg --no-svg --mode=singlefile main.js
   [[literal]] --< Arg(1) >--> require(...)[l_1]
-  require[f_1] -
-  require(...)[l_1] --< Call >--> require[f_1]
+  JS::require[f_1] -
+  require(...)[l_1] --< Call >--> JS::require[f_1]
   require(...)[l_1] --< Ret >--> dep[l_2]
   dep[l_2] --< P(foo) >--> dep.foo[l_4]
   dep[l_2] --< Arg(0) >--> dep.foo(...)[l_5]
@@ -21,21 +24,24 @@
 
   $ graphjs mdg --no-svg --mode=multifile dependency.js
   [[literal]] -
+  JS::module[l_3] --< V(exports) >--> JS::module[l_4]
   foo[f_1] --< Param(0) >--> this[p_0]
   this[p_0] -
   $v1[l_1] --< V(foo) >--> $v1[l_2]
   $v1[l_2] --< P(foo) >--> foo[f_1]
   $v1[l_2] --< [[RefParent(foo)]] >--> $v1[l_1]
+  JS::module[l_4] --< [[RefParent(exports)]] >--> JS::module[l_3]
+  JS::module[l_4] --< P(exports) >--> $v1[l_2]
 
   $ graphjs mdg --no-svg --mode=multifile main.js
-  [[literal]] --< Arg(1) >--> require(...)[l_3]
-  require[f_2] -
-  require(...)[l_3] --< Call >--> require[f_2]
-  require(...)[l_3] --< Ret >--> dep[l_4]
-  dep[l_4] --< P(foo) >--> dep.foo[l_6]
-  dep[l_4] --< Arg(0) >--> dep.foo(...)[l_7]
-  require(dependency.js)[l_5] --< D >--> dep[l_4]
-  dep.foo[l_6] -
-  dep.foo(...)[l_7] --< Call >--> dep.foo[l_6]
-  dep.foo(...)[l_7] --< Ret >--> $v2[l_8]
-  $v2[l_8] -
+  [[literal]] --< Arg(1) >--> require(...)[l_5]
+  JS::require[f_2] -
+  require(...)[l_5] --< Call >--> JS::require[f_2]
+  require(...)[l_5] --< Ret >--> dep[l_6]
+  dep[l_6] --< P(foo) >--> dep.foo[l_8]
+  dep[l_6] --< Arg(0) >--> dep.foo(...)[l_9]
+  require(dependency.js)[l_7] --< D >--> dep[l_6]
+  dep.foo[l_8] -
+  dep.foo(...)[l_9] --< Call >--> dep.foo[l_8]
+  dep.foo(...)[l_9] --< Ret >--> $v2[l_10]
+  $v2[l_10] -

@@ -124,6 +124,11 @@ let create_module (name : string) : t option -> Region.t -> t =
   let lid = Location.create obj_lid_gen in
   create uid lid (Module name) parent at
 
+let create_candidate_object (name : string) : t =
+  let uid = Location.create uid_gen in
+  let lid = Location.invalid_loc () in
+  create uid lid (Object name) None (Region.default ())
+
 let create_candidate_function (name : string) : t =
   let uid = Location.create uid_gen in
   let lid = Location.invalid_loc () in
@@ -136,6 +141,7 @@ let create_candidate_sink (sink : Tainted.sink) : t =
 
 let concretize (node : t) : t =
   match node.kind with
+  | Object _ -> { node with lid = Location.create obj_lid_gen }
   | Function _ -> { node with lid = Location.create func_lid_gen }
   | TaintSink _ -> { node with lid = Location.create sink_lid_gen }
   | _ -> Log.fail "unexpected candidate node kind"

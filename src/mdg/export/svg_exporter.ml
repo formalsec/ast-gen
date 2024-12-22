@@ -123,7 +123,7 @@ open struct
   let build_graph_nodes_f (mdg : Mdg.t) (loc : Location.t) (node : Node.t)
       (graph : GraphBuilder.t) : GraphBuilder.t =
     let graph' = GraphBuilder.add_vertex graph node in
-    let edges = Mdg.edges mdg loc in
+    let edges = Mdg.get_edges mdg loc in
     Edge.Set.fold build_graph_edges_f edges graph'
 end
 

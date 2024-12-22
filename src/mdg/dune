@@ -11,8 +11,9 @@
   store
   state
   function
+  svg_exporter
   builder_config
   builder
   merger
-  svg_exporter)
+  jslib)
  (libraries graphjs_base graphjs_share graphjs_ast ocamlgraph))
