@@ -31,7 +31,7 @@
   dune
   dune-site
   (flow_parser
-   (>= 0.257.0))
+   (>= 0.246.0))
   (ocaml
    (>= "5.2.1"))
   ocamlformat
