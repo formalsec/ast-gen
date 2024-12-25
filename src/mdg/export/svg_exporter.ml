@@ -33,7 +33,6 @@ module Dot = struct
   let ( ! ) (mdg : Mdg.t option ref) : Mdg.t = Option.get !mdg
 
   let node_label (node : Node.t) : string =
-    (* TODO[flag]: show the graph local identifiers in the labels *)
     match node.kind with
     | Literal -> Fmt.str "{ Literal Object }"
     | Object name -> Fmt.str "%s" (String.escaped name)

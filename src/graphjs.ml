@@ -48,6 +48,7 @@ let mdg_opts : unit Term.t =
   const Cmd_mdg.Options.set
   $ Docs.MdgOpts.no_svg
   $ Docs.MdgOpts.wrap_literal_property_updates
+  $ parse_opts
 
 let mdg_cmd_opts : Cmd_mdg.Options.t Term.t =
   let open Term in
@@ -62,7 +63,24 @@ let mdg_cmd : unit Exec.status Cmd.t =
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
   Cmd.v info Term.(const Cmd_mdg.main $ mdg_cmd_opts $ shared_opts)
 
-let cmd_list : unit Exec.status Cmd.t list = [ parse_cmd; mdg_cmd ]
+let analyze_opts : unit Term.t =
+  let open Term in
+  const Cmd_analyze.Options.set $ mdg_opts
+
+let analyze_cmd_opts : Cmd_analyze.Options.t Term.t =
+  let open Term in
+  const Cmd_analyze.Options.set_cmd
+  $ Docs.FileOpts.inputs
+  $ Docs.FileOpts.output
+  $ Docs.SharedOpts.taint_config
+  $ analyze_opts
+
+let analyze_cmd : unit Exec.status Cmd.t =
+  let open Docs.AnalyzeCmd in
+  let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
+  Cmd.v info Term.(const Cmd_analyze.main $ analyze_cmd_opts $ shared_opts)
+
+let cmd_list : unit Exec.status Cmd.t list = [ parse_cmd; mdg_cmd; analyze_cmd ]
 
 let main_cmd : unit Exec.status Cmd.t =
   let open Docs.Application in

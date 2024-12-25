@@ -92,8 +92,8 @@ module SharedOpts = struct
       "Analysis mode used in a Graph.js execution. Options include (1) 'basic' \
        where the attacker controlls all the parameters from all the functions; \
        (2): 'singlefile' where the attacker controlls the functions exported \
-       by the input file; and (3) 'multifile' where the attacker controlls \
-       the functions that were exported by the 'main' file of the module." in
+       by the input file; and (3) 'multifile' where the attacker controlls the \
+       functions that were exported by the 'main' file of the module." in
     let modes = Arg.enum Enums.AnalysisMode.(args all) in
     Arg.(value & opt modes SingleFile & info [ "m"; "mode" ] ~docv ~doc)
 
@@ -147,9 +147,27 @@ module MdgCmd = struct
 
   let description =
     [| "Given a Node.js package, generates the Multiversion Dependency Graph \
-        (MDG) of the package, including the graph for each dependency \
-        individually and the complete graph of the package. This command is \
-        always preceded by the 'parse' command." |]
+        (MDG) of the package. The command generates the MDGs of each module of \
+        the package, as well as the combined MDG." |]
+
+  let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
+  let man_xrefs = []
+  let exits = Exits.common @ Exits.parse @ Exits.mdg
+end
+
+module AnalyzeOpts = struct end
+
+module AnalyzeCmd = struct
+  let name = "analyze"
+  let sdocs = Manpage.s_common_options
+  let doc = "Searches for vulnerabilities in a Node.js package"
+
+  let description =
+    [| "Given a Multiversion Dependency Graph (MDG) of a Node.js package, \
+        analyzes the package in search of vulnerabilities. Currently, the \
+        system supports two type of vulnerabilities: taint-style (code \
+        injection, command injection, and path traversal) and prototype \
+        pollution." |]
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []

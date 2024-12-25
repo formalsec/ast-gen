@@ -1,0 +1,6 @@
+(include_subdirs unqualified)
+
+(library
+ (name graphjs_queries)
+ (modules vulnerability local_flow query_engine analyzer)
+ (libraries graphjs_base graphjs_share graphjs_mdg))

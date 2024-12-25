@@ -19,19 +19,19 @@ type package_source =
   }
 
 type package_sink =
-  { vuln : Vulnerability.t
+  { kind : Sink_kind.t
   ; sink : string
   ; packages : package list
   }
 
 type function_sink =
-  { vuln : Vulnerability.t
+  { kind : Sink_kind.t
   ; sink : string
   ; args : int list
   }
 
 type new_sink =
-  { vuln : Vulnerability.t
+  { kind : Sink_kind.t
   ; sink : string
   ; args : int list
   }
@@ -65,20 +65,19 @@ let pp_package_source (ppf : Fmt.t) (package_source : package_source) : unit =
     (pp_indent pp_package) package_source.packages
 
 let pp_package_sink (ppf : Fmt.t) (package_sink : package_sink) : unit =
-  Fmt.fmt ppf "{ vulnerability: \"%a\", source: %S, packages: [...] }%a"
-    Vulnerability.pp package_sink.vuln package_sink.sink (pp_indent pp_package)
+  Fmt.fmt ppf "{ kind: \"%a\", source: %S, packages: [...] }%a" Sink_kind.pp
+    package_sink.kind package_sink.sink (pp_indent pp_package)
     package_sink.packages
 
 let pp_function_sink (ppf : Fmt.t) (function_sink : function_sink) : unit =
   let pp_args = Fmt.(pp_lst !>", " pp_int) in
-  Fmt.fmt ppf "{ vulnerability: \"%a\", source: %S, args: [%a] }"
-    Vulnerability.pp function_sink.vuln function_sink.sink pp_args
-    function_sink.args
+  Fmt.fmt ppf "{ kind: \"%a\", source: %S, args: [%a] }" Sink_kind.pp
+    function_sink.kind function_sink.sink pp_args function_sink.args
 
 let pp_new_sink (ppf : Fmt.t) (new_sink : new_sink) : unit =
   let pp_args = Fmt.(pp_lst !>", " pp_int) in
-  Fmt.fmt ppf "{ vulnerability: \"%a\", source: %S, args: [%a] }"
-    Vulnerability.pp new_sink.vuln new_sink.sink pp_args new_sink.args
+  Fmt.fmt ppf "{ kind: \"%a\", source: %S, args: [%a] }" Sink_kind.pp
+    new_sink.kind new_sink.sink pp_args new_sink.args
 
 let pp (ppf : Fmt.t) (tconf : t) : unit =
   let pp_pckg_srcs = pp_indent pp_package_source in
@@ -96,7 +95,7 @@ open struct
   type sources = package_source list
   type sinks = package_sink list * function_sink list * new_sink list
 
-  let read_vuln : string -> Vulnerability.t = function
+  let read_vuln : string -> Sink_kind.t = function
     | "code-injection" -> CodeInjection
     | "command-injection" -> CommandInjection
     | "path-traversal" -> PathTraversal
@@ -119,7 +118,7 @@ open struct
       package_source :: package_sources
     | _ -> raise "Unsupported source type '%s' in taint config." source_type
 
-  let read_sink (vuln : Vulnerability.t) (sink : Json.t)
+  let read_sink (kind : Sink_kind.t) (sink : Json.t)
       ((package_sinks, function_sinks, new_sinks) : sinks) : sinks =
     let sink_name = sink |> Json.member "sink" |> Json.to_string in
     let sink_type = sink |> Json.member "type" |> Json.to_string in
@@ -127,17 +126,17 @@ open struct
     | "package" ->
       let packages' = sink |> Json.member "packages" |> Json.to_list in
       let packages = List.map read_package packages' in
-      let package_sink : package_sink = { vuln; sink = sink_name; packages } in
+      let package_sink : package_sink = { kind; sink = sink_name; packages } in
       (package_sink :: package_sinks, function_sinks, new_sinks)
     | "function" ->
       let args' = sink |> Json.member "args" |> Json.to_list in
       let args = List.map Json.to_int args' in
-      let function_sink : function_sink = { vuln; sink = sink_name; args } in
+      let function_sink : function_sink = { kind; sink = sink_name; args } in
       (package_sinks, function_sink :: function_sinks, new_sinks)
     | "new" ->
       let args' = sink |> Json.member "args" |> Json.to_list in
       let args = List.map Json.to_int args' in
-      let new_sink : new_sink = { vuln; sink = sink_name; args } in
+      let new_sink : new_sink = { kind; sink = sink_name; args } in
       (package_sinks, function_sinks, new_sink :: new_sinks)
     | _ -> raise "Unsupported sink type '%s' in taint config." sink_type
 

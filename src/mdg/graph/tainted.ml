@@ -27,3 +27,8 @@ let name : t -> string = function
   | `PackageSink package_sink -> package_sink.sink
   | `FunctionSink function_sink -> function_sink.sink
   | `NewSink new_sink -> new_sink.sink
+
+let kind : sink -> Sink_kind.t = function
+  | `PackageSink package_sink -> package_sink.kind
+  | `FunctionSink function_sink -> function_sink.kind
+  | `NewSink new_sink -> new_sink.kind

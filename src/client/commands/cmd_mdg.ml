@@ -12,7 +12,7 @@ module Options = struct
     ; taint_config : Fpath.t
     }
 
-  let set (no_svg : bool) (wrap_prop_updates : bool) : unit =
+  let set (no_svg : bool) (wrap_prop_updates : bool) () : unit =
     Builder_config.(export_svg $= not no_svg);
     Builder_config.(wrap_literal_property_updates $= wrap_prop_updates)
 
@@ -41,27 +41,25 @@ end
 module Output = struct
   let svg_url (url : Fpath.t) : string = Console.url (Fpath.to_string url)
 
+  let export_svg (kind : [ `Dot of Fpath.t | `Mdg of Mdg.t ]) (path : Fpath.t) :
+      unit Exec.status =
+    Exec.graphjs (fun () -> Svg_exporter.export_svg path kind)
+
   let mdg (w : Workspace.t) (path : Fpath.t) (mdg : Mdg.t) : unit =
     let w' = Workspace.(w -+ "mdg") in
     Log.info "MDG \"%a\" built successfully." Fpath.pp path;
     Log.verbose "%a" Mdg.pp mdg;
-    Workspace.output_noerr Side w' Mdg.pp mdg
-
-  let dot (w : Workspace.t) (mdg : Mdg.t) : unit =
-    if Builder_config.(!export_svg) then
-      let w' = Workspace.(w -+ "dot") in
-      Workspace.execute_noerr Side w' (Fun.flip Svg_exporter.export_dot mdg)
-
-  let svg (w : Workspace.t) (path : Fpath.t) : unit =
-    match (Builder_config.(!export_svg), w.out) with
-    | (true, Bundle svg_path) ->
-      Log.info "MDG \"%a\" exported successfully." Fpath.pp path;
-      let dot_path = Fpath.(svg_path -+ "dot") in
-      let export_f path = Svg_exporter.export_svg path (`Dot dot_path) in
-      let export_f' path = Exec.graphjs (fun () -> export_f path) in
-      Workspace.execute_noerr Side w export_f';
-      Log.verbose "%s" (svg_url svg_path)
-    | _ -> ()
+    Workspace.output_noerr Side w' Mdg.pp mdg;
+    if Builder_config.(!export_svg) then (
+      let w'' = Workspace.(w -+ "dot") in
+      Workspace.execute_noerr Side w'' (Fun.flip Svg_exporter.export_dot mdg);
+      match w.out with
+      | Bundle svg_path ->
+        let dot_path = Workspace.path w'' in
+        Log.info "MDG \"%a\" exported successfully." Fpath.pp path;
+        Workspace.execute_noerr Side w (export_svg (`Dot dot_path));
+        Log.verbose "%s" (svg_url svg_path)
+      | _ -> () )
 
   let main (w : Workspace.t) (mdg : Mdg.t) : unit Exec.status =
     let w' = Workspace.(w -+ "mdg") in
@@ -73,18 +71,14 @@ module Output = struct
       Workspace.log w (Fmt.dly "%a@." Mdg.pp mdg);
       Ok ()
     | (true, Single path') ->
-      let export_f path = Svg_exporter.export_svg path (`Mdg mdg) in
-      let export_f' path = Exec.graphjs (fun () -> export_f path) in
-      let* res = Workspace.execute Main w export_f' in
+      let* res = Workspace.execute Main w (export_svg (`Mdg mdg)) in
       Workspace.log w (Fmt.dly "%s@." (svg_url path'));
       Ok res
     | (true, Bundle path') ->
       let w'' = Workspace.(w -+ "dot") in
       let dot_path = Workspace.path w'' in
-      let export_f path = Svg_exporter.export_svg path (`Dot dot_path) in
-      let export_f' path = Exec.graphjs (fun () -> export_f path) in
       Workspace.execute_noerr Side w'' (Fun.flip Svg_exporter.export_dot mdg);
-      let* res = Workspace.execute Main w export_f' in
+      let* res = Workspace.execute Main w (export_svg (`Dot dot_path)) in
       Workspace.log w (Fmt.dly "%s@." (svg_url path'));
       Ok res
     | _ -> Ok ()
@@ -103,8 +97,6 @@ let mdgs_files (w : Workspace.t) (builder : State.t) (dt : Dependency_tree.t)
       let* mdg = Exec.graphjs (mdg_builder builder file) in
       let w' = Workspace.mdg w mrel false in
       Output.mdg w' path mdg;
-      Output.dot w' mdg;
-      Output.svg w' path;
       Ok (mrel, mdg) )
 
 let merge_mdgs (w : Workspace.t) (entries : Merger.t) (main_path : Fpath.t) :
@@ -117,7 +109,6 @@ let merge_mdgs (w : Workspace.t) (entries : Merger.t) (main_path : Fpath.t) :
 
 let run (tc : Taint_config.t) (input : Fpath.t) (w : Workspace.t) :
     Mdg.t Exec.status =
-  let* _ = Workspace.mkdir Side w in
   let* (dt, prog) = Cmd_parse.run input (Workspace.side w) in
   let builder = Builder.initialize_builder tc in
   let* mdgs = Result.extract (mdgs_files w builder dt prog) in
