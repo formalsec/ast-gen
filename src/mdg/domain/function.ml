@@ -38,7 +38,7 @@ let add_call (state : State.t) (cid : State.CodeCache.id)
     (args : 'm Expression.t list) : unit =
   let ls_args' = l_this :: List.map Option.some ls_args in
   Fun.flip Node.Set.iter ls_funcs @@ fun l_func ->
-  match State.has_custom_func_handler state l_func with
+  match State.has_fun_handler state l_func with
   | None -> function_call state cid l_func l_call l_retn ls_args' args
   | Some func_handler_f ->
     func_handler_f state cid l_func l_call l_retn ls_args' args

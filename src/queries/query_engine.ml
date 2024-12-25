@@ -3,14 +3,14 @@ open Graphjs_mdg
 
 type t =
   { mdg : Mdg.t
-  ; local_flow : Local_flow.t
+  ; reachability : Reachability.t
   }
 
 let initialize (mdg : Mdg.t) : t =
-  let local_flow = Hashtbl.create Config.(!dflt_htbl_sz) in
-  { mdg; local_flow }
+  let reachability = Reachability.create () in
+  { mdg; reachability }
 
-let local_sources (engine : t) (node : Node.t) : Local_flow.Set.t =
-  match Hashtbl.find_opt engine.local_flow node.uid with
-  | None -> Local_flow.compute engine.mdg engine.local_flow node
+let reachable (engine : t) (node : Node.t) : Reachability.Set.t =
+  match Hashtbl.find_opt engine.reachability node.uid with
+  | None -> Reachability.compute engine.mdg engine.reachability node
   | Some reaching -> reaching

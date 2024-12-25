@@ -154,7 +154,7 @@ let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   | `This _ -> eval_store_expr state "this"
 
 and eval_literal_expr (state : State.t) : Node.Set.t =
-  Node.Set.singleton state.literal_node
+  Node.Set.singleton state.mdg.literal
 
 and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
   let nodes = Store.find state.store id in
@@ -165,17 +165,13 @@ and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
 let initialize_builder (taint_config : Taint_config.t) : State.t =
   Node.reset_generators ();
   let state = State.create () in
+  Mdg.add_node state.mdg state.mdg.literal;
   Jslib.initialize state taint_config
 
 let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
     State.t =
   let state' = State.extend state in
-  Mdg.add_node state'.mdg state'.literal_node;
-  initialize_hoisted_functions state' stmts
-
-and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
-    : State.t =
-  List.fold_left initialize_hoisted_function state stmts
+  List.fold_left initialize_hoisted_function state' stmts
 
 and initialize_hoisted_function (state : State.t) (stmt : 'm Statement.t) :
     State.t =

@@ -1,18 +1,18 @@
   $ graphjs mdg --no-svg --mode=singlefile dependency.js
   [[literal]] -
-  JS::module[l_3] --< V(exports) >--> JS::module[l_4]
+  module[l_3] --< V(exports) >--> module[l_4]
   foo[f_1] --< Param(0) >--> this[p_0]
   this[p_0] -
   $v1[l_1] --< V(foo) >--> $v1[l_2]
   $v1[l_2] --< P(foo) >--> foo[f_1]
   $v1[l_2] --< [[RefParent(foo)]] >--> $v1[l_1]
-  JS::module[l_4] --< [[RefParent(exports)]] >--> JS::module[l_3]
-  JS::module[l_4] --< P(exports) >--> $v1[l_2]
+  module[l_4] --< [[RefParent(exports)]] >--> module[l_3]
+  module[l_4] --< P(exports) >--> $v1[l_2]
 
   $ graphjs mdg --no-svg --mode=singlefile main.js
   [[literal]] --< Arg(1) >--> require(...)[l_1]
-  JS::require[f_1] -
-  require(...)[l_1] --< Call >--> JS::require[f_1]
+  require[f_1] -
+  require(...)[l_1] --< Call >--> require[f_1]
   require(...)[l_1] --< Ret >--> dep[l_2]
   dep[l_2] --< P(foo) >--> dep.foo[l_4]
   dep[l_2] --< Arg(0) >--> dep.foo(...)[l_5]
@@ -24,19 +24,19 @@
 
   $ graphjs mdg --no-svg --mode=multifile dependency.js
   [[literal]] -
-  JS::module[l_3] --< V(exports) >--> JS::module[l_4]
+  module[l_3] --< V(exports) >--> module[l_4]
   foo[f_1] --< Param(0) >--> this[p_0]
   this[p_0] -
   $v1[l_1] --< V(foo) >--> $v1[l_2]
   $v1[l_2] --< P(foo) >--> foo[f_1]
   $v1[l_2] --< [[RefParent(foo)]] >--> $v1[l_1]
-  JS::module[l_4] --< [[RefParent(exports)]] >--> JS::module[l_3]
-  JS::module[l_4] --< P(exports) >--> $v1[l_2]
+  module[l_4] --< [[RefParent(exports)]] >--> module[l_3]
+  module[l_4] --< P(exports) >--> $v1[l_2]
 
   $ graphjs mdg --no-svg --mode=multifile main.js
   [[literal]] --< Arg(1) >--> require(...)[l_5]
-  JS::require[f_2] -
-  require(...)[l_5] --< Call >--> JS::require[f_2]
+  require[f_2] -
+  require(...)[l_5] --< Call >--> require[f_2]
   require(...)[l_5] --< Ret >--> dep[l_6]
   dep[l_6] --< P(foo) >--> dep.foo[l_8]
   dep[l_6] --< Arg(0) >--> dep.foo(...)[l_9]

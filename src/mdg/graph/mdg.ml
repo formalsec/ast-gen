@@ -3,17 +3,23 @@ open Graphjs_base
 type t =
   { nodes : (Location.t, Node.t) Hashtbl.t
   ; edges : (Location.t, Edge.Set.t) Hashtbl.t
+  ; literal : Node.t
+  ; exported : Node.t
   }
 
 let create () : t =
   let nodes = Hashtbl.create Config.(!dflt_htbl_sz) in
   let edges = Hashtbl.create Config.(!dflt_htbl_sz) in
-  { nodes; edges }
+  let literal = Node.create_literal () in
+  let exported = Node.create_invalid () in
+  { nodes; edges; literal; exported }
 
 let copy (mdg : t) : t =
   let nodes = Hashtbl.copy mdg.nodes in
   let edges = Hashtbl.copy mdg.edges in
-  { nodes; edges }
+  let literal = mdg.literal in
+  let exported = mdg.exported in
+  { nodes; edges; literal; exported }
 
 let get_node (mdg : t) (loc : Location.t) : Node.t =
   match Hashtbl.find_opt mdg.nodes loc with

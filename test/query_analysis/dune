@@ -1,0 +1,12 @@
+(library
+ (name graphjs_tests_query_analysis)
+ (modules test test_reachability)
+ (inline_tests)
+ (preprocess
+  (pps ppx_inline_test))
+ (libraries graphjs_base graphjs_share graphjs_parser graphjs_mdg))
+
+(alias
+ (name runtest)
+ (deps
+  (package graphjs)))

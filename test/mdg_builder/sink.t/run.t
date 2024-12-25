@@ -16,8 +16,8 @@
   $ graphjs mdg --no-svg stdlib.js
   [[literal]] --< Arg(1) >--> require(...)[l_1]
   [[literal]] --< Arg(1) >--> dep.exec(...)[l_5]
-  JS::require[f_1] -
-  require(...)[l_1] --< Call >--> JS::require[f_1]
+  require[f_1] -
+  require(...)[l_1] --< Call >--> require[f_1]
   require(...)[l_1] --< Ret >--> dep[l_2]
   dep[l_2] --< P(exec) >--> dep.exec[l_4]
   dep[l_2] --< Arg(0) >--> dep.exec(...)[l_5]

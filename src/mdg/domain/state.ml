@@ -30,13 +30,12 @@ end
 type t =
   { mdg : Mdg.t
   ; store : Store.t
-  ; literal_node : Node.t
   ; code_cache : CodeCache.t
-  ; func_handlers : (Location.t, func_handler) Hashtbl.t
+  ; fun_handlers : (Location.t, fun_handler) Hashtbl.t
   ; curr_func : Node.t option
   }
 
-and func_handler =
+and fun_handler =
      t
   -> CodeCache.id
   -> Node.t
@@ -49,29 +48,26 @@ and func_handler =
 let create () : t =
   let mdg = Mdg.create () in
   let store = Store.create () in
-  let literal_node = Node.create_literal () in
   let code_cache = CodeCache.create () in
-  let func_handlers = Hashtbl.create Config.(!dflt_htbl_sz) in
+  let fun_handlers = Hashtbl.create Config.(!dflt_htbl_sz) in
   let curr_func = None in
-  { mdg; store; literal_node; code_cache; func_handlers; curr_func }
+  { mdg; store; code_cache; fun_handlers; curr_func }
 
 let extend (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
-  let literal_node = state.literal_node in
   let code_cache = CodeCache.copy state.code_cache in
-  let func_handlers = state.func_handlers in
+  let fun_handlers = state.fun_handlers in
   let curr_func = None in
-  { mdg; store; literal_node; code_cache; func_handlers; curr_func }
+  { mdg; store; code_cache; fun_handlers; curr_func }
 
 let copy (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
-  let literal_node = state.literal_node in
   let code_cache = CodeCache.copy state.code_cache in
-  let func_handlers = state.func_handlers in
+  let fun_handlers = state.fun_handlers in
   let curr_func = state.curr_func in
-  { mdg; store; literal_node; code_cache; func_handlers; curr_func }
+  { mdg; store; code_cache; fun_handlers; curr_func }
 
 let lub (state1 : t) (state2 : t) : t =
   Mdg.lub state1.mdg state2.mdg;
@@ -154,9 +150,8 @@ let concretize_node (state : t) (id : string) (node : Node.t) : Node.t =
   Store.replace state.store id (Node.Set.singleton node');
   node'
 
-let has_custom_func_handler (state : t) (func : Node.t) : func_handler option =
-  Hashtbl.find_opt state.func_handlers func.uid
+let has_fun_handler (state : t) (func : Node.t) : fun_handler option =
+  Hashtbl.find_opt state.fun_handlers func.uid
 
-let set_custom_func_handler (state : t) (func : Node.t) (handler : func_handler)
-    : unit =
-  Hashtbl.replace state.func_handlers func.uid handler
+let set_fun_handler (state : t) (func : Node.t) (handler : fun_handler) : unit =
+  Hashtbl.replace state.fun_handlers func.uid handler
