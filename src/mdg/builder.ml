@@ -154,18 +154,17 @@ let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   | `This _ -> eval_store_expr state "this"
 
 and eval_literal_expr (state : State.t) : Node.Set.t =
-  Node.Set.singleton state.mdg.literal
+  Node.Set.singleton state.literal_node
 
 and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
   let nodes = Store.find state.store id in
   Fun.flip Node.Set.map nodes (fun node ->
-      if Node.is_candidate node then State.concretize_node state id node
-      else node )
+      if Node.is_invalid node then State.concretize_node state id node else node )
 
 let initialize_builder (taint_config : Taint_config.t) : State.t =
   Node.reset_generators ();
   let state = State.create () in
-  Mdg.add_node state.mdg state.mdg.literal;
+  Mdg.add_node state.mdg state.literal_node;
   Jslib.initialize state taint_config
 
 let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
@@ -177,8 +176,7 @@ and initialize_hoisted_function (state : State.t) (stmt : 'm Statement.t) :
     State.t =
   match stmt.el with
   | `AssignFunctionDefinition fundef when fundef.hoisted ->
-    build_assign_function_definition state fundef.left fundef.params fundef.body
-      (cid stmt)
+    build_assign_function_header state fundef.left fundef.params (cid stmt)
   | _ -> state
 
 and build_assign_simple (state : State.t) (left : 'm LeftValue.t)
@@ -287,9 +285,8 @@ and build_function_call (state : State.t) (left : 'm LeftValue.t)
   let cid1 = offset cid 1 in
   let cid2 = offset cid 2 in
   let (l_call, l_retn) = add_call state cid cid1 call retn ls_this ls_args in
-  Function.add_call state cid2 ls_funcs l_call l_retn ls_this ls_args args;
   update_scope state left (Node.Set.singleton l_retn);
-  state
+  Function.add_call state cid2 ls_funcs l_call l_retn ls_this ls_args args
 
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
@@ -306,9 +303,8 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
   let cid2 = offset cid 2 in
   let cid3 = offset cid 3 in
   let (l_call, l_retn) = add_call state cid1 cid2 call retn ls_this ls_args in
-  Function.add_call state cid3 ls_mthds l_call l_retn ls_this ls_args args;
   update_scope state left (Node.Set.singleton l_retn);
-  state
+  Function.add_call state cid3 ls_mthds l_call l_retn ls_this ls_args args
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
@@ -325,9 +321,8 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let cid2 = offset cid 2 in
   let cid3 = offset cid 3 in
   let (l_call, l_retn) = add_call state cid1 cid2 call retn ls_this ls_args in
-  Function.add_call state cid3 ls_mthds l_call l_retn ls_this ls_args args;
   update_scope state left (Node.Set.singleton l_retn);
-  state
+  Function.add_call state cid3 ls_mthds l_call l_retn ls_this ls_args args
 
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =
@@ -354,6 +349,23 @@ and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
   Store.lub state'.store store';
   if Store.equal state'.store store' then state' else build_loop state' body
 
+and build_assign_function_header (state : State.t) (left : 'm LeftValue.t)
+    (params : 'm Identifier.t list) (cid : cid) : State.t =
+  let func_name = LeftValue.name left in
+  let l_func = State.add_function_node state cid func_name in
+  Store.replace state.store func_name (Node.Set.singleton l_func);
+  let state' = { state with curr_func = Some l_func } in
+  let cid' = offset cid (List.length params + 1) in
+  let l_this = State.add_parameter_node state' cid' 0 "this" in
+  State.add_parameter_edge state' l_func l_this 0;
+  Fun.flip List.iteri params (fun idx param ->
+      let idx' = idx + 1 in
+      let cid' = offset cid idx' in
+      let param_name = Identifier.name param in
+      let l_param = State.add_parameter_node state' cid' idx' param_name in
+      State.add_parameter_edge state' l_func l_param idx' );
+  state
+
 and build_assign_function_definition (state : State.t) (left : 'm LeftValue.t)
     (params : 'm Identifier.t list) (body : 'm Statement.t list) (cid : cid) :
     State.t =
@@ -373,7 +385,7 @@ and build_assign_function_definition (state : State.t) (left : 'm LeftValue.t)
       let l_param = State.add_parameter_node state' cid' idx' param_name in
       State.add_parameter_edge state' l_func l_param idx';
       Store.replace state'.store param_name (Node.Set.singleton l_param) );
-  let _state'' = build_sequence state' body in
+  let _ = build_sequence state' body in
   state
 
 and build_loop_break (state : State.t) (_label : 'm Identifier.t option) :
@@ -450,8 +462,6 @@ and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
     build_static_method_call state left obj prop args (cid stmt)
   | `AssignDynamicMethodCall { left; obj; prop; args } ->
     build_dynamic_method_call state left obj prop args (cid stmt)
-  (* hoisted functions are handled during scope initialization *)
-  | `AssignFunctionDefinition { hoisted; _ } when hoisted -> state
   | `AssignFunctionDefinition { left; params; body; _ } ->
     build_assign_function_definition state left params body (cid stmt)
   | `If { consequent; alternate; _ } -> build_if state consequent alternate

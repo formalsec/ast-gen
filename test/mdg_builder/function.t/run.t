@@ -100,6 +100,16 @@
   foo[f_1] --< Param(1) >--> x[p_1]
   this[p_0] -
   x[p_1] -
+  bar[f_2] --< Param(0) >--> this[p_0]
+  bar[f_2] --< Param(1) >--> y[p_1]
+  this[p_0] -
+  y[p_1] -
+  $v1[l_1] --< V(p1) >--> $v1[l_2]
+  $v1[l_2] --< P(p1) >--> x[p_1]
+  $v1[l_2] --< [[RefParent(p1)]] >--> $v1[l_1]
+  $v1[l_2] --< V(p2) >--> $v1[l_3]
+  $v1[l_3] --< P(p2) >--> y[p_1]
+  $v1[l_3] --< [[RefParent(p2)]] >--> $v1[l_2]
 
   $ graphjs mdg --no-svg call.js
   [[literal]] --< Arg(1) >--> foo(...)[l_1]
