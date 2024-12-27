@@ -31,6 +31,7 @@ type t =
   { mdg : Mdg.t
   ; store : Store.t
   ; code_cache : CodeCache.t
+  ; literal_node : Node.t
   ; fun_handlers : (Location.t, fun_handler) Hashtbl.t
   ; curr_func : Node.t option
   }
@@ -43,31 +44,34 @@ and fun_handler =
   -> Node.t
   -> Node.Set.t option list
   -> Region.t Expression.t list
-  -> unit
+  -> t
 
 let create () : t =
   let mdg = Mdg.create () in
   let store = Store.create () in
   let code_cache = CodeCache.create () in
+  let literal_node = Node.create_literal () in
   let fun_handlers = Hashtbl.create Config.(!dflt_htbl_sz) in
   let curr_func = None in
-  { mdg; store; code_cache; fun_handlers; curr_func }
+  { mdg; store; code_cache; literal_node; fun_handlers; curr_func }
 
 let extend (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
   let code_cache = CodeCache.copy state.code_cache in
+  let literal_node = state.literal_node in
   let fun_handlers = state.fun_handlers in
   let curr_func = None in
-  { mdg; store; code_cache; fun_handlers; curr_func }
+  { mdg; store; code_cache; literal_node; fun_handlers; curr_func }
 
 let copy (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
   let code_cache = CodeCache.copy state.code_cache in
+  let literal_node = state.literal_node in
   let fun_handlers = state.fun_handlers in
   let curr_func = state.curr_func in
-  { mdg; store; code_cache; fun_handlers; curr_func }
+  { mdg; store; code_cache; literal_node; fun_handlers; curr_func }
 
 let lub (state1 : t) (state2 : t) : t =
   Mdg.lub state1.mdg state2.mdg;
@@ -88,7 +92,7 @@ let add_node (state : t) (create_node_f : Node.t option -> Region.t -> Node.t)
 let add_edge (state : t) (create_edge_f : Node.t -> Node.t -> Edge.t)
     (src : Node.t) (tar : Node.t) : unit =
   let edge = create_edge_f src tar in
-  Mdg.add_edge state.mdg src edge
+  Mdg.add_edge state.mdg edge
 
 let add_literal_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
   add_node state (Node.create_literal_object name) id
@@ -109,8 +113,9 @@ let add_call_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
 let add_return_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
   add_node state (Node.create_return name) id
 
-let add_module_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
-  add_node state (Node.create_module name) id
+let add_module_node (state : t) (id : CodeCache.id) (m : string) : t * Node.t =
+  let node = add_node state (Node.create_module m) id in
+  ({ state with mdg = Mdg.add_requires state.mdg node }, node)
 
 let add_dependency_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state (Edge.create_dependency ()) src tar

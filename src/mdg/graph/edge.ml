@@ -5,12 +5,12 @@ type kind =
   | Property of string option
   | Version of string option
   | RefParent of string option
+  | Call
+  | Return
+  | RefReturn
   | Parameter of int
   | Argument of int
   | RefArgument
-  | Return
-  | RefReturn
-  | Call
 
 let kind_id : kind -> int = function
   | Dependency -> 1
@@ -78,6 +78,7 @@ let default : unit -> t =
   fun () -> dflt
 
 let create (src : Node.t) (tar : Node.t) (kind : kind) : t = { src; tar; kind }
+let transpose (edge : t) : t = { edge with src = edge.tar; tar = edge.src }
 let src (edge : t) : Node.t = edge.src [@@inline]
 let tar (edge : t) : Node.t = edge.tar [@@inline]
 let kind (edge : t) : kind = edge.kind [@@inline]

@@ -1,6 +1,6 @@
 (library
  (name graphjs_tests_query_analysis)
- (modules test test_reachability)
+ (modules test test_reachability test_interactability)
  (inline_tests)
  (preprocess
   (pps ppx_inline_test))

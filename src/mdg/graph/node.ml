@@ -77,12 +77,6 @@ module Set = struct
   let str (nodes : t) : string = Fmt.str "%a" pp nodes [@@inline]
 end
 
-let create_invalid () : t =
-  let uid = Location.invalid_loc () in
-  let lid = Location.invalid_loc () in
-  let at = Region.default () in
-  create uid lid Literal None at
-
 let create_literal () : t =
   let uid = Location.create uid_gen in
   let lid = Location.literal_loc () in
@@ -151,7 +145,7 @@ let concretize (node : t) : t =
   | TaintSink _ -> { node with lid = Location.create sink_lid_gen }
   | _ -> Log.fail "unexpected kind for the candidate node"
 
-let is_candidate (node : t) : bool = node.lid == Location.invalid_loc ()
+let is_invalid (node : t) : bool = node.lid == Location.invalid_loc ()
 
 let is_literal (node : t) : bool =
   match node.kind with Literal -> true | _ -> false

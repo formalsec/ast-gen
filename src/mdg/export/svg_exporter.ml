@@ -56,7 +56,7 @@ module Dot = struct
     | Argument idx -> Fmt.str "Arg:%d" idx
     | RefArgument -> Fmt.str "[[RefArg]]"
     | Return -> Fmt.str "Ret"
-    | RefReturn -> Fmt.str "[[RefRet]]"
+    | RefReturn -> Fmt.str "Return"
     | Call -> Fmt.str "Call"
 
   include Graph.Graphviz.Dot (struct
@@ -86,16 +86,13 @@ module Dot = struct
       `Label (edge_label edge)
       ::
       ( match edge.kind with
-      | RefParent _ -> [ `Style `Invis ]
-      | Argument 0 -> [ `Style `Invis ]
-      | RefArgument -> [ `Style `Invis ]
-      | RefReturn -> [ `Style `Invis ]
       | (Dependency | Argument _) when Node.is_literal edge.src ->
         [ `Style `Dotted; `Color 26214; `Fontcolor 26214 ]
       | Dependency when Node.is_module edge.src ->
         [ `Style `Dotted; `Color 3342438; `Fontcolor 3342438 ]
       | Parameter 0 -> [ `Color 6684774; `Fontcolor 6684774 ]
       | Parameter _ -> [ `Color 26112; `Fontcolor 26112 ]
+      | RefReturn -> [ `Color 26112; `Fontcolor 26112 ]
       | Return -> [ `Color 6697728; `Fontcolor 6697728 ]
       | Call -> [ `Color 6697728; `Fontcolor 6697728 ]
       | _ -> [ `Color 2105376 ] )
@@ -114,7 +111,6 @@ open struct
     | RefParent _ -> graph
     | Argument 0 -> graph
     | RefArgument -> graph
-    | RefReturn -> graph
     | _ ->
       let e = GraphBuilder.E.create edge.src edge edge.tar in
       GraphBuilder.add_edge_e graph e

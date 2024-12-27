@@ -2,5 +2,5 @@
 
 (library
  (name graphjs_queries)
- (modules vulnerability reachability query_engine analyzer)
+ (modules vulnerability reachability interactability query_engine analyzer)
  (libraries graphjs_base graphjs_share graphjs_mdg))

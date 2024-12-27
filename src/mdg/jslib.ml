@@ -24,7 +24,7 @@ let initialize_require (state : State.t) : unit =
 let initialize_module (state : State.t) : State.t =
   let module_name = "module" in
   let module_node = Node.create_candidate_object module_name in
-  let mdg = { state.mdg with exported = module_node } in
+  let mdg = { state.mdg with exported = module_node.uid } in
   Store.replace state.store module_name (Node.Set.singleton module_node);
   { state with mdg }
 
