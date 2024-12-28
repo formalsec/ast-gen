@@ -1,8 +1,8 @@
-// binary operator applied to a primitive values
+// binary operator applied to multiple literal values
 10 + "abc";
-// binary operator applied to a single location
+// binary operator applied to a literal value and a location value
 10 + ({});
-// binary operator applied to multiple locations
+// binary operator applied to multiple location values
 ({}) + ({});
-// multiple binary operators applied to multiple locations consecutively
+// multiple binary operators applied to multiple location values consecutively
 ({}) + ({}) + ({});

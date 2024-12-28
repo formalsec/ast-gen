@@ -1,5 +1,5 @@
-// variable declaration with an object initialization
-let obj = {};
+// variable declaration with a weak object initialization 
+let obj = true ? {} : {};
 // static update on a non-exiting identifier property
 obj.foo = 10;
 // static update on a non-exiting identifier property with a dependent right value
@@ -12,5 +12,3 @@ obj[10] = 10;
 obj["abc"] = 10;
 // static lookup on a non-existing null literal property
 obj[null] = 10;
-// static update on an undefined object expression
-undef.foo = 10;

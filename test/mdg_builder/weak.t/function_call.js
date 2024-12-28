@@ -1,10 +1,6 @@
-// function declaration with a single parameter
-let foo = function (x1) { }
-// function declaration with multiple parameters
-let bar = function (y1, y2, y3) { }
 // variable declaration with a weak function assignment
-let baz = true ? foo : bar;
-// function call with a single argument on a weak function
-baz(10);
-// function call with multiple arguments on a weak function
-baz(10, "abc", true);
+let foo = true ? function (x1) { } : function (y1, y2, y3) { };
+// function call on a weak function identifier (single-argument)
+foo(10);
+// function call on a weak function identifier (multi-argument)
+foo(10, "abc", true);

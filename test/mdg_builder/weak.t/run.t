@@ -1,23 +1,23 @@
-  $ graphjs mdg --no-svg static_property_lookup.js
+  $ graphjs mdg --no-svg property_lookup.js
   [[literal]] -
   $v1[l_1] --< P(foo) >--> obj.foo[l_3]
   $v1[l_1] --< P(bar) >--> obj.bar[l_4]
-  $v1[l_1] --< P(null) >--> obj.null[l_6]
+  $v1[l_1] --< P(10) >--> obj.10[l_6]
   $v1[l_1] --< P(abc) >--> obj.abc[l_7]
-  $v1[l_1] --< P(10) >--> obj.10[l_8]
+  $v1[l_1] --< P(null) >--> obj.null[l_8]
   $v2[l_2] --< P(foo) >--> obj.foo[l_3]
   $v2[l_2] --< P(bar) >--> obj.bar[l_4]
-  $v2[l_2] --< P(null) >--> obj.null[l_6]
+  $v2[l_2] --< P(10) >--> obj.10[l_6]
   $v2[l_2] --< P(abc) >--> obj.abc[l_7]
-  $v2[l_2] --< P(10) >--> obj.10[l_8]
+  $v2[l_2] --< P(null) >--> obj.null[l_8]
   obj.foo[l_3] -
   obj.bar[l_4] --< P(baz) >--> obj.bar.baz[l_5]
   obj.bar.baz[l_5] -
-  obj.null[l_6] -
+  obj.10[l_6] -
   obj.abc[l_7] -
-  obj.10[l_8] -
+  obj.null[l_8] -
 
-  $ graphjs mdg --no-svg static_property_update.js
+  $ graphjs mdg --no-svg property_update.js
   [[literal]] -
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(bar) >--> obj.bar[l_6]
@@ -27,43 +27,100 @@
   obj[l_3] --< [[RefParent(foo)]] >--> $v1[l_1]
   obj[l_3] --< [[RefParent(foo)]] >--> $v2[l_2]
   obj[l_3] --< V(bar) >--> obj[l_5]
-  dep[l_4] --< V(baz) >--> dep[l_7]
+  $v3[l_4] --< V(baz) >--> $v3[l_7]
   obj[l_5] --< [[RefParent(bar)]] >--> obj[l_3]
-  obj[l_5] --< P(bar) >--> dep[l_4]
-  obj[l_5] --< V(null) >--> obj[l_8]
+  obj[l_5] --< P(bar) >--> $v3[l_4]
+  obj[l_5] --< V(10) >--> obj[l_8]
   obj.bar[l_6] -
-  dep[l_7] --< P(baz) >--> [[literal]]
-  dep[l_7] --< [[RefParent(baz)]] >--> dep[l_4]
-  obj[l_8] --< P(null) >--> [[literal]]
-  obj[l_8] --< [[RefParent(null)]] >--> obj[l_5]
+  $v3[l_7] --< P(baz) >--> [[literal]]
+  $v3[l_7] --< [[RefParent(baz)]] >--> $v3[l_4]
+  obj[l_8] --< P(10) >--> [[literal]]
+  obj[l_8] --< [[RefParent(10)]] >--> obj[l_5]
   obj[l_8] --< V(abc) >--> obj[l_9]
   obj[l_9] --< P(abc) >--> [[literal]]
   obj[l_9] --< [[RefParent(abc)]] >--> obj[l_8]
-  obj[l_9] --< V(10) >--> obj[l_10]
-  obj[l_10] --< P(10) >--> [[literal]]
-  obj[l_10] --< [[RefParent(10)]] >--> obj[l_9]
+  obj[l_9] --< V(null) >--> obj[l_10]
+  obj[l_10] --< P(null) >--> [[literal]]
+  obj[l_10] --< [[RefParent(null)]] >--> obj[l_9]
 
-  $ graphjs mdg --no-svg static_property_access.js
+  $ graphjs mdg --no-svg property_access.js
   [[literal]] -
   $v1[l_1] --< V(foo) >--> obj[l_3]
-  $v1[l_1] --< P(foo) >--> obj.foo[l_4]
-  $v1[l_1] --< P(bar) >--> obj.bar[l_5]
+  $v1[l_1] --< P(foo) >--> obj.foo[l_6]
+  $v1[l_1] --< P(bar) >--> obj.bar[l_8]
   $v2[l_2] --< V(foo) >--> obj[l_3]
-  $v2[l_2] --< P(foo) >--> obj.foo[l_4]
-  $v2[l_2] --< P(bar) >--> obj.bar[l_5]
+  $v2[l_2] --< P(foo) >--> obj.foo[l_6]
+  $v2[l_2] --< P(bar) >--> obj.bar[l_8]
   obj[l_3] --< P(foo) >--> [[literal]]
   obj[l_3] --< [[RefParent(foo)]] >--> $v1[l_1]
   obj[l_3] --< [[RefParent(foo)]] >--> $v2[l_2]
-  obj[l_3] --< V(foo) >--> obj[l_6]
-  obj.foo[l_4] -
-  obj.bar[l_5] -
-  obj[l_6] --< P(foo) >--> [[literal]]
-  obj[l_6] --< [[RefParent(foo)]] >--> obj[l_3]
-  obj[l_6] --< V(bar) >--> obj[l_7]
-  obj[l_7] --< P(bar) >--> [[literal]]
-  obj[l_7] --< [[RefParent(bar)]] >--> obj[l_6]
+  obj[l_3] --< V(bar) >--> obj[l_5]
+  $v3[l_4] -
+  obj[l_5] --< [[RefParent(bar)]] >--> obj[l_3]
+  obj[l_5] --< P(bar) >--> $v3[l_4]
+  obj[l_5] --< V(baz) >--> obj[l_7]
+  obj.foo[l_6] -
+  obj[l_7] --< P(baz) >--> [[literal]]
+  obj[l_7] --< [[RefParent(baz)]] >--> obj[l_5]
+  obj[l_7] --< V(baz) >--> obj[l_9]
+  obj.bar[l_8] -
+  obj[l_9] --< P(baz) >--> $v3[l_4]
+  obj[l_9] --< [[RefParent(baz)]] >--> obj[l_7]
 
-  $ graphjs mdg --no-svg static_property_value.js
+  $ graphjs mdg --no-svg method_call.js
+  [[literal]] --< Arg(1) >--> obj.foo(...)[l_6]
+  [[literal]] --< Arg(1) >--> obj.bar(...)[l_9]
+  [[literal]] --< Arg(2) >--> obj.bar(...)[l_9]
+  [[literal]] --< Arg(3) >--> obj.bar(...)[l_9]
+  [[literal]] --< Arg(1) >--> obj.baz(...)[l_12]
+  $v1[l_1] --< V(foo) >--> $v1[l_2]
+  $v1[l_1] --< P(foo) >--> obj.foo[l_5]
+  $v1[l_1] --< P(bar) >--> obj.bar[l_8]
+  $v1[l_1] --< P(baz) >--> obj.baz[l_11]
+  $v2[f_1] --< Param(0) >--> this[p_0]
+  $v2[f_1] --< Param(1) >--> x1[p_1]
+  this[p_0] --< [[RefArg]] >--> $v1[l_2]
+  this[p_0] --< [[RefArg]] >--> $v3[l_4]
+  x1[p_1] --< [[RefArg]] >--> [[literal]]
+  $v1[l_2] --< [[RefParent(foo)]] >--> $v1[l_1]
+  $v1[l_2] --< P(foo) >--> $v2[f_1]
+  $v1[l_2] --< Arg(0) >--> obj.foo(...)[l_6]
+  $v1[l_2] --< Arg(0) >--> obj.bar(...)[l_9]
+  $v1[l_2] --< Arg(0) >--> obj.baz(...)[l_12]
+  $v3[l_3] --< V(bar) >--> $v3[l_4]
+  $v3[l_3] --< P(foo) >--> obj.foo[l_5]
+  $v3[l_3] --< P(bar) >--> obj.bar[l_8]
+  $v3[l_3] --< P(baz) >--> obj.baz[l_11]
+  $v4[f_2] --< Param(0) >--> this[p_0]
+  $v4[f_2] --< Param(1) >--> y1[p_1]
+  $v4[f_2] --< Param(2) >--> y2[p_2]
+  $v4[f_2] --< Param(3) >--> y3[p_3]
+  this[p_0] --< [[RefArg]] >--> $v1[l_2]
+  this[p_0] --< [[RefArg]] >--> $v3[l_4]
+  y1[p_1] --< [[RefArg]] >--> [[literal]]
+  y2[p_2] --< [[RefArg]] >--> [[literal]]
+  y3[p_3] --< [[RefArg]] >--> [[literal]]
+  $v3[l_4] --< [[RefParent(bar)]] >--> $v3[l_3]
+  $v3[l_4] --< P(bar) >--> $v4[f_2]
+  $v3[l_4] --< Arg(0) >--> obj.foo(...)[l_6]
+  $v3[l_4] --< Arg(0) >--> obj.bar(...)[l_9]
+  $v3[l_4] --< Arg(0) >--> obj.baz(...)[l_12]
+  obj.foo[l_5] -
+  obj.foo(...)[l_6] --< Call >--> $v2[f_1]
+  obj.foo(...)[l_6] --< Call >--> obj.foo[l_5]
+  obj.foo(...)[l_6] --< Ret >--> $v5[l_7]
+  $v5[l_7] -
+  obj.bar[l_8] -
+  obj.bar(...)[l_9] --< Call >--> $v4[f_2]
+  obj.bar(...)[l_9] --< Call >--> obj.bar[l_8]
+  obj.bar(...)[l_9] --< Ret >--> $v6[l_10]
+  $v6[l_10] -
+  obj.baz[l_11] -
+  obj.baz(...)[l_12] --< Call >--> obj.baz[l_11]
+  obj.baz(...)[l_12] --< Ret >--> $v7[l_13]
+  $v7[l_13] -
+
+  $ graphjs mdg --no-svg property_value.js
   [[literal]] -
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(foo) >--> obj.foo[l_8]
@@ -85,27 +142,27 @@
   obj2[l_9] --< [[RefParent(bar)]] >--> obj2[l_7]
 
   $ graphjs mdg --no-svg function_call.js
-  [[literal]] --< Arg(1) >--> baz(...)[l_1]
-  [[literal]] --< Arg(1) >--> baz(...)[l_3]
-  [[literal]] --< Arg(2) >--> baz(...)[l_3]
-  [[literal]] --< Arg(3) >--> baz(...)[l_3]
-  foo[f_1] --< Param(0) >--> this[p_0]
-  foo[f_1] --< Param(1) >--> x1[p_1]
+  [[literal]] --< Arg(1) >--> foo(...)[l_1]
+  [[literal]] --< Arg(1) >--> foo(...)[l_3]
+  [[literal]] --< Arg(2) >--> foo(...)[l_3]
+  [[literal]] --< Arg(3) >--> foo(...)[l_3]
+  $v1[f_1] --< Param(0) >--> this[p_0]
+  $v1[f_1] --< Param(1) >--> x1[p_1]
   this[p_0] -
   x1[p_1] --< [[RefArg]] >--> [[literal]]
-  bar[f_2] --< Param(0) >--> this[p_0]
-  bar[f_2] --< Param(1) >--> y1[p_1]
-  bar[f_2] --< Param(2) >--> y2[p_2]
-  bar[f_2] --< Param(3) >--> y3[p_3]
+  $v2[f_2] --< Param(0) >--> this[p_0]
+  $v2[f_2] --< Param(1) >--> y1[p_1]
+  $v2[f_2] --< Param(2) >--> y2[p_2]
+  $v2[f_2] --< Param(3) >--> y3[p_3]
   this[p_0] -
   y1[p_1] --< [[RefArg]] >--> [[literal]]
   y2[p_2] --< [[RefArg]] >--> [[literal]]
   y3[p_3] --< [[RefArg]] >--> [[literal]]
-  baz(...)[l_1] --< Call >--> foo[f_1]
-  baz(...)[l_1] --< Call >--> bar[f_2]
-  baz(...)[l_1] --< Ret >--> $v1[l_2]
-  $v1[l_2] -
-  baz(...)[l_3] --< Call >--> foo[f_1]
-  baz(...)[l_3] --< Call >--> bar[f_2]
-  baz(...)[l_3] --< Ret >--> $v2[l_4]
-  $v2[l_4] -
+  foo(...)[l_1] --< Call >--> $v1[f_1]
+  foo(...)[l_1] --< Call >--> $v2[f_2]
+  foo(...)[l_1] --< Ret >--> $v3[l_2]
+  $v3[l_2] -
+  foo(...)[l_3] --< Call >--> $v1[f_1]
+  foo(...)[l_3] --< Call >--> $v2[f_2]
+  foo(...)[l_3] --< Ret >--> $v4[l_4]
+  $v4[l_4] -

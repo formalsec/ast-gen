@@ -176,7 +176,7 @@ and initialize_hoisted_function (state : State.t) (stmt : 'm Statement.t) :
     State.t =
   match stmt.el with
   | `AssignFunctionDefinition fundef when fundef.hoisted ->
-    build_assign_function_header state fundef.left fundef.params (cid stmt)
+    build_hoisted_function_header state fundef.left fundef.params (cid stmt)
   | _ -> state
 
 and build_assign_simple (state : State.t) (left : 'm LeftValue.t)
@@ -349,7 +349,7 @@ and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
   Store.lub state'.store store';
   if Store.equal state'.store store' then state' else build_loop state' body
 
-and build_assign_function_header (state : State.t) (left : 'm LeftValue.t)
+and build_hoisted_function_header (state : State.t) (left : 'm LeftValue.t)
     (params : 'm Identifier.t list) (cid : cid) : State.t =
   let func_name = LeftValue.name left in
   let l_func = State.add_function_node state cid func_name in
@@ -367,11 +367,12 @@ and build_assign_function_header (state : State.t) (left : 'm LeftValue.t)
   state
 
 and build_assign_function_definition (state : State.t) (left : 'm LeftValue.t)
-    (params : 'm Identifier.t list) (body : 'm Statement.t list) (cid : cid) :
-    State.t =
+    (params : 'm Identifier.t list) (body : 'm Statement.t list)
+    (hoisted : bool) (cid : cid) : State.t =
   let func_name = LeftValue.name left in
   let l_func = State.add_function_node state cid func_name in
-  Store.replace state.store func_name (Node.Set.singleton l_func);
+  if not hoisted then (* hoisted functions do not replace the current left *)
+    Store.replace state.store func_name (Node.Set.singleton l_func);
   let store' = Store.copy state.store in
   let state' = { state with store = store'; curr_func = Some l_func } in
   let cid' = offset cid (List.length params + 1) in
@@ -462,8 +463,8 @@ and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
     build_static_method_call state left obj prop args (cid stmt)
   | `AssignDynamicMethodCall { left; obj; prop; args } ->
     build_dynamic_method_call state left obj prop args (cid stmt)
-  | `AssignFunctionDefinition { left; params; body; _ } ->
-    build_assign_function_definition state left params body (cid stmt)
+  | `AssignFunctionDefinition { left; params; body; hoisted; _ } ->
+    build_assign_function_definition state left params body hoisted (cid stmt)
   | `If { consequent; alternate; _ } -> build_if state consequent alternate
   | `Switch { cases; _ } -> build_switch state cases
   | `While { body; _ } | `ForIn { body; _ } | `ForOf { body; _ } ->

@@ -1,13 +1,12 @@
-// variable declaration with an object initialization 
+// variable declaration with an object initialization
 let obj = {};
-// dynamic lookup with a non-exiting computed identifier property
+// dynamic lookup on a non-exiting dynamic identifier property
 obj[foo];
-// dynamic lookup with a non-exiting computed identifier property (dependency)
-let bar = {}
-obj[bar];
-// dynamic lookup with a non-exiting computed literal property
+// dynamic lookup on a non-exiting dependent property
+obj[{}];
+// dynamic lookup on a non-exiting computed property
 obj[10 + "abc"];
-// dynamic lookup with non-exiting computed identifier and literal properties
-obj[bar][10 + "abc"];
-// dynamic lookup with an undefined object expression
+// dynamic lookup on non-exiting nested dynamic identifier and dependent properties
+obj[bar][{}];
+// dynamic lookup on an undefined object expression
 undef[bar];

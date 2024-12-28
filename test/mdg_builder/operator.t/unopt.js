@@ -1,6 +1,6 @@
-// unary operator applied to a primitive value
+// unary operator applied to a literal value
 +(10);
-// unary operator applied to a single location
+// unary operator applied to a location value
 +({});
-// multiple unary operators applied to multiple locations consecutively
+// multiple unary operators applied to a location value consecutively
 +(+({}));

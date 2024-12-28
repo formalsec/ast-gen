@@ -4,4 +4,4 @@ let foo = function (x1) {
     eval(x1);
     // sink call with a literal argument
     eval(10);
- }
+}

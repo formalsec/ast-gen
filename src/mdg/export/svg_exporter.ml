@@ -92,7 +92,7 @@ module Dot = struct
         [ `Style `Dotted; `Color 3342438; `Fontcolor 3342438 ]
       | Parameter 0 -> [ `Color 6684774; `Fontcolor 6684774 ]
       | Parameter _ -> [ `Color 26112; `Fontcolor 26112 ]
-      | RefReturn -> [ `Color 26112; `Fontcolor 26112 ]
+      | RefReturn -> [ `Style `Dotted; `Color 26112; `Fontcolor 26112 ]
       | Return -> [ `Color 6697728; `Fontcolor 6697728 ]
       | Call -> [ `Color 6697728; `Fontcolor 6697728 ]
       | _ -> [ `Color 2105376 ] )
