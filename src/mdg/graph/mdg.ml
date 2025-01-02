@@ -3,48 +3,28 @@ open Graphjs_base
 type t =
   { nodes : (Location.t, Node.t) Hashtbl.t
   ; edges : (Location.t, Edge.Set.t) Hashtbl.t
+  ; trans : (Location.t, Edge.Set.t) Hashtbl.t
   ; literal : Node.t
-  ; exported : Location.t
-  ; requires : Node.Set.t
   ; jslib : Node.Set.t
+  ; requires : Node.Set.t
+  ; exported : Location.t
   }
 
 let create () : t =
   let nodes = Hashtbl.create Config.(!dflt_htbl_sz) in
   let edges = Hashtbl.create Config.(!dflt_htbl_sz) in
+  let trans = Hashtbl.create Config.(!dflt_htbl_sz) in
   let literal = Node.create_literal () in
-  let exported = Location.invalid_loc () in
-  let requires = Node.Set.empty in
   let jslib = Node.Set.empty in
-  { nodes; edges; literal; exported; requires; jslib }
+  let requires = Node.Set.empty in
+  let exported = Location.invalid_loc () in
+  { nodes; edges; trans; literal; exported; requires; jslib }
 
 let copy (mdg : t) : t =
   let nodes = Hashtbl.copy mdg.nodes in
   let edges = Hashtbl.copy mdg.edges in
-  let literal = mdg.literal in
-  let exported = mdg.exported in
-  let requires = mdg.requires in
-  let jslib = mdg.jslib in
-  { nodes; edges; literal; exported; requires; jslib }
-
-let rec transpose (mdg : t) : t =
-  let nodes = Hashtbl.copy mdg.nodes in
-  let edges = Hashtbl.create Config.(!dflt_htbl_sz) in
-  let literal = mdg.literal in
-  let exported = mdg.exported in
-  let requires = mdg.requires in
-  let jslib = mdg.jslib in
-  transpose_edges mdg.edges edges;
-  { nodes; edges; literal; exported; requires; jslib }
-
-and transpose_edges (edges : (Location.t, Edge.Set.t) Hashtbl.t)
-    (edges' : (Location.t, Edge.Set.t) Hashtbl.t) : unit =
-  Hashtbl.iter (fun loc _ -> Hashtbl.replace edges' loc Edge.Set.empty) edges;
-  Fun.flip Hashtbl.iter edges (fun _ edge_set ->
-      Fun.flip Edge.Set.iter edge_set (fun edge ->
-          Hashtbl.find edges' edge.tar.uid
-          |> Edge.Set.add (Edge.transpose edge)
-          |> Hashtbl.replace edges' edge.tar.uid ) )
+  let trans = Hashtbl.copy mdg.trans in
+  { mdg with nodes; edges; trans }
 
 let get_node (mdg : t) (loc : Location.t) : Node.t =
   match Hashtbl.find_opt mdg.nodes loc with
@@ -54,6 +34,11 @@ let get_node (mdg : t) (loc : Location.t) : Node.t =
 let get_edges (mdg : t) (loc : Location.t) : Edge.Set.t =
   match Hashtbl.find_opt mdg.edges loc with
   | None -> Log.fail "expecting edge from location '%a' in mdg" Location.pp loc
+  | Some edges -> edges
+
+let get_trans (mdg : t) (loc : Location.t) : Edge.Set.t =
+  match Hashtbl.find_opt mdg.trans loc with
+  | None -> Log.fail "expecting edge to location '%a' in mdg" Location.pp loc
   | Some edges -> edges
 
 let pp_node (mdg : t) (ppf : Fmt.t) (node : Node.t) : unit =
@@ -70,50 +55,66 @@ let str (mdg : t) : string = Fmt.str "%a" pp mdg [@@inline]
 
 let add_node (mdg : t) (node : Node.t) : unit =
   Hashtbl.replace mdg.nodes node.uid node;
-  Hashtbl.replace mdg.edges node.uid Edge.Set.empty
+  Hashtbl.replace mdg.edges node.uid Edge.Set.empty;
+  Hashtbl.replace mdg.trans node.uid Edge.Set.empty
 
 let add_edge (mdg : t) (edge : Edge.t) : unit =
+  let tran = Edge.transpose edge in
   let edges = get_edges mdg edge.src.uid in
-  Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.add edge edges)
-
-let add_exported (mdg : t) (node : Node.t) : t =
-  { mdg with exported = node.uid }
-
-let add_requires (mdg : t) (node : Node.t) : t =
-  { mdg with requires = Node.Set.add node mdg.requires }
+  let trans = get_trans mdg edge.tar.uid in
+  Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.add edge edges);
+  Hashtbl.replace mdg.trans edge.tar.uid (Edge.Set.add tran trans)
 
 let add_jslib (mdg : t) (node : Node.t) : t =
   { mdg with jslib = Node.Set.add node mdg.jslib }
 
+let add_requires (mdg : t) (node : Node.t) : t =
+  { mdg with requires = Node.Set.add node mdg.requires }
+
+let set_exported (mdg : t) (node : Node.t) : t =
+  { mdg with exported = node.uid }
+
 let remove_node (mdg : t) (node : Node.t) : unit =
-  (* requires all the incoming edges to be previously removed *)
+  let edges = get_edges mdg node.uid in
+  let trans = get_trans mdg node.uid in
+  Fun.flip Edge.Set.iter edges (fun edge ->
+      let edge' = Edge.transpose edge in
+      let trans = get_trans mdg edge'.src.uid in
+      Hashtbl.replace mdg.trans edge'.src.uid (Edge.Set.remove edge' trans) );
+  Fun.flip Edge.Set.iter trans (fun edge ->
+      let edge' = Edge.transpose edge in
+      let edges = get_edges mdg edge'.src.uid in
+      Hashtbl.replace mdg.edges edge'.src.uid (Edge.Set.remove edge' edges) );
   Hashtbl.remove mdg.nodes node.uid;
-  Hashtbl.remove mdg.edges node.uid
+  Hashtbl.remove mdg.edges node.uid;
+  Hashtbl.remove mdg.trans node.uid
 
 let remove_edge (mdg : t) (edge : Edge.t) : unit =
+  let tran = Edge.transpose edge in
   let edges = get_edges mdg edge.src.uid in
-  Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.remove edge edges)
+  let trans = get_trans mdg tran.src.uid in
+  Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.remove edge edges);
+  Hashtbl.replace mdg.trans tran.src.uid (Edge.Set.remove tran trans)
 
 let lub (mdg1 : t) (mdg2 : t) : t =
-  let requires = Node.Set.union mdg1.requires mdg2.requires in
   let jslib = Node.Set.union mdg1.jslib mdg2.jslib in
-  Fun.flip Hashtbl.iter mdg2.edges (fun loc edges_2 ->
-      let node_2 = get_node mdg2 loc in
-      let node_1 = Hashtbl.find_opt mdg1.nodes loc in
-      let edges_1 = Hashtbl.find_opt mdg1.edges loc in
-      let edges_1' = Option.value ~default:Edge.Set.empty edges_1 in
-      if Option.is_none node_1 then Hashtbl.replace mdg1.nodes loc node_2;
-      Hashtbl.replace mdg1.edges loc (Edge.Set.union edges_1' edges_2) );
+  let requires = Node.Set.union mdg1.requires mdg2.requires in
+  Fun.flip Hashtbl.iter mdg2.edges (fun loc edges2 ->
+      let node2 = get_node mdg2 loc in
+      let trans2 = get_trans mdg2 loc in
+      let node1 = Hashtbl.find_opt mdg1.nodes loc in
+      let edges1 = Hashtbl.find_opt mdg1.edges loc in
+      let trans1 = Hashtbl.find_opt mdg1.trans loc in
+      let edges1' = Option.value ~default:Edge.Set.empty edges1 in
+      let trans1' = Option.value ~default:Edge.Set.empty trans1 in
+      if Option.is_none node1 then Hashtbl.replace mdg1.nodes loc node2;
+      Hashtbl.replace mdg1.edges loc (Edge.Set.union edges1' edges2);
+      Hashtbl.replace mdg1.trans loc (Edge.Set.union trans1' trans2) );
   { mdg1 with requires; jslib }
 
 let get_dependencies (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.uid
   |> Edge.Set.filter Edge.is_dependency
-  |> Edge.Set.map_list Edge.tar
-
-let get_call_return (mdg : t) (node : Node.t) : Node.t list =
-  get_edges mdg node.uid
-  |> Edge.Set.filter Edge.is_return
   |> Edge.Set.map_list Edge.tar
 
 let has_property (mdg : t) (node : Node.t) (prop : string option) : bool =
@@ -123,9 +124,6 @@ let get_property (mdg : t) (node : Node.t) (prp : string option) : Node.t list =
   get_edges mdg node.uid
   |> Edge.Set.filter (Edge.is_property ~prop:(Some prp))
   |> Edge.Set.map_list Edge.tar
-
-let get_properties' (mdg : t) (node : Node.t) : Edge.Set.t =
-  get_edges mdg node.uid |> Edge.Set.filter Edge.is_property
 
 let get_properties (mdg : t) (node : Node.t) : (string option * Node.t) list =
   get_edges mdg node.uid
@@ -138,8 +136,8 @@ let get_versions (mdg : t) (node : Node.t) : (string option * Node.t) list =
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
 let get_parents (mdg : t) (node : Node.t) : (string option * Node.t) list =
-  get_edges mdg node.uid
-  |> Edge.Set.filter Edge.is_ref_parent
+  get_trans mdg node.uid
+  |> Edge.Set.filter Edge.is_version
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
 let get_parameters (mdg : t) (node : Node.t) : (int * Node.t) list =
@@ -147,9 +145,26 @@ let get_parameters (mdg : t) (node : Node.t) : (int * Node.t) list =
   |> Edge.Set.filter Edge.is_parameter
   |> Edge.Set.map_list (fun edge -> (Edge.argument edge, Edge.tar edge))
 
+let get_arguments (mdg : t) (node : Node.t) : (int * Node.t) list =
+  get_trans mdg node.uid
+  |> Edge.Set.filter Edge.is_argument
+  |> Edge.Set.map_list (fun edge -> (Edge.argument edge, Edge.tar edge))
+
+let get_call_return (mdg : t) (node : Node.t) : Node.t =
+  get_edges mdg node.uid
+  |> Edge.Set.filter Edge.is_return
+  |> Edge.Set.choose
+  |> Edge.tar
+
+let get_call_of_return (mdg : t) (node : Node.t) : Node.t =
+  get_trans mdg node.uid
+  |> Edge.Set.filter Edge.is_return
+  |> Edge.Set.choose
+  |> Edge.tar
+
 let get_function_returns (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.uid
-  |> Edge.Set.filter Edge.is_ref_return
+  |> Edge.Set.filter Edge.is_returns
   |> Edge.Set.map_list Edge.tar
 
 let object_parents_traversal (f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
@@ -180,16 +195,15 @@ let object_tail_versions (mdg : t) (node : Node.t) : Node.Set.t =
   object_lineage_traversal Node.Set.add mdg get_versions
     (Node.Set.singleton node) node Node.Set.empty
 
-let object_final_traversal (final : bool)
-    (traverse_f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
-    (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
+let object_final_traversal (final : bool) (f : Node.Set.t -> Node.t -> 'a -> 'a)
+    (mdg : t) (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
   if final then
     let ls_final = object_tail_versions mdg node in
     let ls_visited' = Node.Set.union ls_visited ls_final in
-    Node.Set.fold (traverse_f ls_visited') ls_final acc
+    Node.Set.fold (f ls_visited') ls_final acc
   else
     let ls_visited' = Node.Set.add node ls_visited in
-    traverse_f ls_visited' node acc
+    f ls_visited' node acc
 
 let object_static_traversal ?(final : bool = true) (f : Node.t -> 'a -> 'a)
     (mdg : t) (ls_visited : Node.Set.t) (node : Node.t) (prop : string)
@@ -222,7 +236,6 @@ let object_dynamic_traversal ?(final : bool = true)
 let object_nested_traversal ?(final : bool = true)
     (f : string option list * Node.t -> 'a -> 'a) (mdg : t) (node : Node.t)
     (acc : 'a) : 'a =
-  (* TODO: Implement a way of reaching every single property *)
   let f' el found = el :: found in
   let rec traverse ls_visited nodes acc =
     match nodes with

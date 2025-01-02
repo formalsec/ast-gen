@@ -49,14 +49,12 @@ module Dot = struct
     | Dependency -> Fmt.str "D"
     | Property prop -> Fmt.str "P(%s)" (prop_f prop)
     | Version prop -> Fmt.str "V(%s)" (prop_f prop)
-    | RefParent prop -> Fmt.str "[[RefParent(%s)]]" (prop_f prop)
     | Parameter 0 -> Fmt.str "this"
     | Parameter idx -> Fmt.str "Param:%d" idx
     | Argument 0 -> Fmt.str "[[this]]"
     | Argument idx -> Fmt.str "Arg:%d" idx
-    | RefArgument -> Fmt.str "[[RefArg]]"
     | Return -> Fmt.str "Ret"
-    | RefReturn -> Fmt.str "Return"
+    | Returns -> Fmt.str "Returns"
     | Call -> Fmt.str "Call"
 
   include Graph.Graphviz.Dot (struct
@@ -92,7 +90,7 @@ module Dot = struct
         [ `Style `Dotted; `Color 3342438; `Fontcolor 3342438 ]
       | Parameter 0 -> [ `Color 6684774; `Fontcolor 6684774 ]
       | Parameter _ -> [ `Color 26112; `Fontcolor 26112 ]
-      | RefReturn -> [ `Style `Dotted; `Color 26112; `Fontcolor 26112 ]
+      | Returns -> [ `Style `Dotted; `Color 26112; `Fontcolor 26112 ]
       | Return -> [ `Color 6697728; `Fontcolor 6697728 ]
       | Call -> [ `Color 6697728; `Fontcolor 6697728 ]
       | _ -> [ `Color 2105376 ] )
@@ -108,9 +106,7 @@ open struct
   let build_graph_edges_f (edge : Edge.t) (graph : GraphBuilder.t) :
       GraphBuilder.t =
     match edge.kind with
-    | RefParent _ -> graph
     | Argument 0 -> graph
-    | RefArgument -> graph
     | _ ->
       let e = GraphBuilder.E.create edge.src edge edge.tar in
       GraphBuilder.add_edge_e graph e

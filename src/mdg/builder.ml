@@ -35,8 +35,9 @@ let update_property_wrapper (state : State.t) (cid : cid)
     Fun.flip2 Node.Set.fold ls_right Node.Set.empty @@ fun l_right acc ->
     match l_right.kind with
     | Literal ->
+      let name = Expression.str right in
       let cid' = offset cid (Node.Set.cardinal acc + 1) in
-      let l_wrapper = State.add_literal_node state cid' (Expression.str right) in
+      let l_wrapper = State.add_literal_object_node state cid' name in
       State.add_dependency_edge state l_right l_wrapper;
       Node.Set.add l_wrapper acc
     | _ -> Node.Set.add l_right acc
@@ -136,14 +137,6 @@ let add_call (state : State.t) (call_cid : cid) (retn_cid : cid)
       let idx' = idx + 1 in
       Node.Set.iter (add_arg_f l_call idx') ls_arg );
   (l_call, l_retn)
-
-and add_arguments (state : State.t) (l_params : (int * Node.t) list)
-    (ls_args : Node.Set.t option list) : unit =
-  Fun.flip List.iter l_params (fun (idx, l_param) ->
-      match List.nth_opt ls_args idx with
-      | Some (Some ls_arg) ->
-        Node.Set.iter (State.add_ref_argument_edge state l_param) ls_arg
-      | _ -> () )
 
 let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   let exprs_f acc expr = Node.Set.union acc (eval_expr state expr) in
@@ -287,7 +280,7 @@ and build_function_call (state : State.t) (left : 'm LeftValue.t)
   let cid2 = offset cid 2 in
   let (l_call, l_retn) = add_call state cid cid1 call retn ls_this ls_args in
   update_scope state left (Node.Set.singleton l_retn);
-  Function.add_call state cid2 ls_funcs l_call ls_this ls_args args
+  State.FunHandler.call state cid2 ls_funcs l_call l_retn ls_this ls_args args
 
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
@@ -305,7 +298,7 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
   let cid3 = offset cid 3 in
   let (l_call, l_retn) = add_call state cid1 cid2 call retn ls_this ls_args in
   update_scope state left (Node.Set.singleton l_retn);
-  Function.add_call state cid3 ls_mthds l_call ls_this ls_args args
+  State.FunHandler.call state cid3 ls_mthds l_call l_retn ls_this ls_args args
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
@@ -323,7 +316,7 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let cid3 = offset cid 3 in
   let (l_call, l_retn) = add_call state cid1 cid2 call retn ls_this ls_args in
   update_scope state left (Node.Set.singleton l_retn);
-  Function.add_call state cid3 ls_mthds l_call ls_this ls_args args
+  State.FunHandler.call state cid3 ls_mthds l_call l_retn ls_this ls_args args
 
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =
@@ -426,7 +419,7 @@ and build_return (state : State.t) (arg : 'm Expression.t option) : State.t =
   match (state.curr_func, ls_arg) with
   | (None, _) | (Some _, None) -> state
   | (Some l_func, Some ls_arg') ->
-    Node.Set.iter (State.add_ref_return_edge state l_func) ls_arg';
+    Node.Set.iter (State.add_returns_edge state l_func) ls_arg';
     state
 
 and build_throw (state : State.t) (_arg : 'm Expression.t) : State.t =
