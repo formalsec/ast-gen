@@ -21,17 +21,17 @@ module CodeCache = struct
   let add (cache : t) (id : id) (node : Node.t) : unit =
     Hashtbl.replace cache id node
 
-  let lub (cache1 : t) (cache2 : t) : unit =
+  let lub (cache1 : t) (cache2 : t) : t =
     Fun.flip Hashtbl.iter cache2 (fun stmt node_2 ->
         let node_1 = Hashtbl.find_opt cache1 stmt in
-        if Option.is_none node_1 then Hashtbl.replace cache1 stmt node_2 )
+        if Option.is_none node_1 then Hashtbl.replace cache1 stmt node_2 );
+    cache1
 end
 
 type t =
   { mdg : Mdg.t
   ; store : Store.t
   ; code_cache : CodeCache.t
-  ; literal_node : Node.t
   ; fun_handlers : (Location.t, fun_handler) Hashtbl.t
   ; curr_func : Node.t option
   }
@@ -39,7 +39,6 @@ type t =
 and fun_handler =
      t
   -> CodeCache.id
-  -> Node.t
   -> Node.t
   -> Node.t
   -> Node.Set.t option list
@@ -50,34 +49,31 @@ let create () : t =
   let mdg = Mdg.create () in
   let store = Store.create () in
   let code_cache = CodeCache.create () in
-  let literal_node = Node.create_literal () in
   let fun_handlers = Hashtbl.create Config.(!dflt_htbl_sz) in
   let curr_func = None in
-  { mdg; store; code_cache; literal_node; fun_handlers; curr_func }
+  { mdg; store; code_cache; fun_handlers; curr_func }
 
 let extend (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
   let code_cache = CodeCache.copy state.code_cache in
-  let literal_node = state.literal_node in
   let fun_handlers = state.fun_handlers in
   let curr_func = None in
-  { mdg; store; code_cache; literal_node; fun_handlers; curr_func }
+  { mdg; store; code_cache; fun_handlers; curr_func }
 
 let copy (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
   let code_cache = CodeCache.copy state.code_cache in
-  let literal_node = state.literal_node in
   let fun_handlers = state.fun_handlers in
   let curr_func = state.curr_func in
-  { mdg; store; code_cache; literal_node; fun_handlers; curr_func }
+  { mdg; store; code_cache; fun_handlers; curr_func }
 
 let lub (state1 : t) (state2 : t) : t =
-  Mdg.lub state1.mdg state2.mdg;
-  Store.lub state1.store state2.store;
-  CodeCache.lub state1.code_cache state2.code_cache;
-  state1
+  let mdg = Mdg.lub state1.mdg state2.mdg in
+  let store = Store.lub state1.store state2.store in
+  let code_cache = CodeCache.lub state1.code_cache state2.code_cache in
+  { state1 with mdg; store; code_cache }
 
 let add_node (state : t) (create_node_f : Node.t option -> Region.t -> Node.t)
     (id : CodeCache.id) : Node.t =

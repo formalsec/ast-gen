@@ -87,8 +87,7 @@ end
 let mdg_builder (builder : State.t) (file : 'm File.t) () : Mdg.t =
   Builder.build_file builder file
 
-let mdg_merger (entries : Merger.t) (main_entry : Merger.entry) () : Mdg.t =
-  Merger.merge_entries entries main_entry
+let mdg_merger (merger : Merger.t) () : Mdg.t = Merger.merge_entries merger
 
 let mdgs_files (w : Workspace.t) (builder : State.t) (dt : Dependency_tree.t)
     (prog : 'm Prog.t) : (Fpath.t * Mdg.t) Exec.status list =
@@ -99,10 +98,9 @@ let mdgs_files (w : Workspace.t) (builder : State.t) (dt : Dependency_tree.t)
       Output.mdg w' path mdg;
       Ok (mrel, mdg) )
 
-let merge_mdgs (w : Workspace.t) (entries : Merger.t) (main_path : Fpath.t) :
+let merge_mdgs (w : Workspace.t) (merger : Merger.t) (main_path : Fpath.t) :
     Mdg.t Exec.status =
-  let main_entry = Merger.find entries main_path in
-  let* mdg = Exec.graphjs (mdg_merger entries main_entry) in
+  let* mdg = Exec.graphjs (mdg_merger merger) in
   let w' = Workspace.mdg w main_path true in
   let* _ = Output.main w' mdg in
   Ok mdg
@@ -112,8 +110,8 @@ let run (tc : Taint_config.t) (input : Fpath.t) (w : Workspace.t) :
   let* (dt, prog) = Cmd_parse.run input (Workspace.side w) in
   let builder = Builder.initialize_builder tc in
   let* mdgs = Result.extract (mdgs_files w builder dt prog) in
-  let entries = Merger.create mdgs in
-  merge_mdgs w entries dt.mrel
+  let merger = Merger.create tc mdgs in
+  merge_mdgs w merger dt.mrel
 
 let outcome (result : Mdg.t Exec.status) : Bulk.Instance.outcome =
   match result with

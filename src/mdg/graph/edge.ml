@@ -5,12 +5,12 @@ type kind =
   | Property of string option
   | Version of string option
   | RefParent of string option
-  | Call
-  | Return
-  | RefReturn
   | Parameter of int
   | Argument of int
   | RefArgument
+  | Return
+  | RefReturn
+  | Call
 
 let kind_id : kind -> int = function
   | Dependency -> 1

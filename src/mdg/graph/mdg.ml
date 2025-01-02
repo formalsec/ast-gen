@@ -3,40 +3,48 @@ open Graphjs_base
 type t =
   { nodes : (Location.t, Node.t) Hashtbl.t
   ; edges : (Location.t, Edge.Set.t) Hashtbl.t
+  ; literal : Node.t
   ; exported : Location.t
   ; requires : Node.Set.t
+  ; jslib : Node.Set.t
   }
 
 let create () : t =
   let nodes = Hashtbl.create Config.(!dflt_htbl_sz) in
   let edges = Hashtbl.create Config.(!dflt_htbl_sz) in
+  let literal = Node.create_literal () in
   let exported = Location.invalid_loc () in
   let requires = Node.Set.empty in
-  { nodes; edges; exported; requires }
+  let jslib = Node.Set.empty in
+  { nodes; edges; literal; exported; requires; jslib }
 
 let copy (mdg : t) : t =
   let nodes = Hashtbl.copy mdg.nodes in
   let edges = Hashtbl.copy mdg.edges in
+  let literal = mdg.literal in
   let exported = mdg.exported in
   let requires = mdg.requires in
-  { nodes; edges; exported; requires }
+  let jslib = mdg.jslib in
+  { nodes; edges; literal; exported; requires; jslib }
 
 let rec transpose (mdg : t) : t =
   let nodes = Hashtbl.copy mdg.nodes in
   let edges = Hashtbl.create Config.(!dflt_htbl_sz) in
+  let literal = mdg.literal in
   let exported = mdg.exported in
   let requires = mdg.requires in
+  let jslib = mdg.jslib in
   transpose_edges mdg.edges edges;
-  { nodes; edges; exported; requires }
+  { nodes; edges; literal; exported; requires; jslib }
 
 and transpose_edges (edges : (Location.t, Edge.Set.t) Hashtbl.t)
     (edges' : (Location.t, Edge.Set.t) Hashtbl.t) : unit =
-  Fun.flip Hashtbl.iter edges (fun loc edge_set ->
+  Hashtbl.iter (fun loc _ -> Hashtbl.replace edges' loc Edge.Set.empty) edges;
+  Fun.flip Hashtbl.iter edges (fun _ edge_set ->
       Fun.flip Edge.Set.iter edge_set (fun edge ->
-          Hashtbl.find_opt edges' loc
-          |> Option.value ~default:Edge.Set.empty
+          Hashtbl.find edges' edge.tar.uid
           |> Edge.Set.add (Edge.transpose edge)
-          |> Hashtbl.replace edges' loc ) )
+          |> Hashtbl.replace edges' edge.tar.uid ) )
 
 let get_node (mdg : t) (loc : Location.t) : Node.t =
   match Hashtbl.find_opt mdg.nodes loc with
@@ -68,11 +76,17 @@ let add_edge (mdg : t) (edge : Edge.t) : unit =
   let edges = get_edges mdg edge.src.uid in
   Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.add edge edges)
 
+let add_exported (mdg : t) (node : Node.t) : t =
+  { mdg with exported = node.uid }
+
 let add_requires (mdg : t) (node : Node.t) : t =
   { mdg with requires = Node.Set.add node mdg.requires }
 
+let add_jslib (mdg : t) (node : Node.t) : t =
+  { mdg with jslib = Node.Set.add node mdg.jslib }
+
 let remove_node (mdg : t) (node : Node.t) : unit =
-  (* ensure that all the incoming edges are also remove to avoid problems *)
+  (* requires all the incoming edges to be previously removed *)
   Hashtbl.remove mdg.nodes node.uid;
   Hashtbl.remove mdg.edges node.uid
 
@@ -80,14 +94,27 @@ let remove_edge (mdg : t) (edge : Edge.t) : unit =
   let edges = get_edges mdg edge.src.uid in
   Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.remove edge edges)
 
-let lub (mdg1 : t) (mdg2 : t) : unit =
+let lub (mdg1 : t) (mdg2 : t) : t =
+  let requires = Node.Set.union mdg1.requires mdg2.requires in
+  let jslib = Node.Set.union mdg1.jslib mdg2.jslib in
   Fun.flip Hashtbl.iter mdg2.edges (fun loc edges_2 ->
       let node_2 = get_node mdg2 loc in
       let node_1 = Hashtbl.find_opt mdg1.nodes loc in
       let edges_1 = Hashtbl.find_opt mdg1.edges loc in
       let edges_1' = Option.value ~default:Edge.Set.empty edges_1 in
       if Option.is_none node_1 then Hashtbl.replace mdg1.nodes loc node_2;
-      Hashtbl.replace mdg1.edges loc (Edge.Set.union edges_1' edges_2) )
+      Hashtbl.replace mdg1.edges loc (Edge.Set.union edges_1' edges_2) );
+  { mdg1 with requires; jslib }
+
+let get_dependencies (mdg : t) (node : Node.t) : Node.t list =
+  get_edges mdg node.uid
+  |> Edge.Set.filter Edge.is_dependency
+  |> Edge.Set.map_list Edge.tar
+
+let get_call_return (mdg : t) (node : Node.t) : Node.t list =
+  get_edges mdg node.uid
+  |> Edge.Set.filter Edge.is_return
+  |> Edge.Set.map_list Edge.tar
 
 let has_property (mdg : t) (node : Node.t) (prop : string option) : bool =
   get_edges mdg node.uid |> Edge.Set.exists (Edge.is_property ~prop:(Some prop))
@@ -125,11 +152,11 @@ let get_function_returns (mdg : t) (node : Node.t) : Node.t list =
   |> Edge.Set.filter Edge.is_ref_return
   |> Edge.Set.map_list Edge.tar
 
-let object_traverse_parents (traverse_f : Node.Set.t -> Node.t -> 'a -> 'a)
-    (mdg : t) (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
+let object_parents_traversal (f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
+    (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
   Fun.flip2 List.fold_left acc (get_parents mdg node) (fun acc (_, l_parent) ->
       if Node.Set.mem l_parent ls_visited then acc
-      else traverse_f (Node.Set.add l_parent ls_visited) l_parent acc )
+      else f (Node.Set.add l_parent ls_visited) l_parent acc )
 
 let object_lineage_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
     (lineage_f : t -> Node.t -> (string option * Node.t) list)
@@ -145,19 +172,40 @@ let object_lineage_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
         else traverse (Node.Set.add l_lineage ls_visited) l_lineage acc ) in
   traverse ls_visited node acc
 
-let object_static_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
-    (ls_visited : Node.Set.t) (node : Node.t) (prop : string) (acc : 'a) : 'a =
+let object_orig_versions (mdg : t) (node : Node.t) : Node.Set.t =
+  object_lineage_traversal Node.Set.add mdg get_parents
+    (Node.Set.singleton node) node Node.Set.empty
+
+let object_tail_versions (mdg : t) (node : Node.t) : Node.Set.t =
+  object_lineage_traversal Node.Set.add mdg get_versions
+    (Node.Set.singleton node) node Node.Set.empty
+
+let object_final_traversal (final : bool)
+    (traverse_f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
+    (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
+  if final then
+    let ls_final = object_tail_versions mdg node in
+    let ls_visited' = Node.Set.union ls_visited ls_final in
+    Node.Set.fold (traverse_f ls_visited') ls_final acc
+  else
+    let ls_visited' = Node.Set.add node ls_visited in
+    traverse_f ls_visited' node acc
+
+let object_static_traversal ?(final : bool = true) (f : Node.t -> 'a -> 'a)
+    (mdg : t) (ls_visited : Node.Set.t) (node : Node.t) (prop : string)
+    (acc : 'a) : 'a =
   let prop' = Some prop in
   let rec traverse ls_visited node acc =
     let ls_dynamic = get_property mdg node None in
     let ls_prop = get_property mdg node prop' in
     let acc' = List.fold_right f ls_dynamic acc in
     if not (List.is_empty ls_prop) then List.fold_right f ls_prop acc'
-    else object_traverse_parents traverse mdg ls_visited node acc' in
-  traverse ls_visited node acc
+    else object_parents_traversal traverse mdg ls_visited node acc' in
+  object_final_traversal final traverse mdg ls_visited node acc
 
-let object_dynamic_traversal (f : string option * Node.t -> 'a -> 'a) (mdg : t)
-    (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
+let object_dynamic_traversal ?(final : bool = true)
+    (f : string option * Node.t -> 'a -> 'a) (mdg : t) (ls_visited : Node.Set.t)
+    (node : Node.t) (acc : 'a) : 'a =
   let rec traverse seen_props ls_visited node acc =
     let dynamic_f (prop, _) = Option.is_none prop in
     let unseen_f (prop, _) = not (List.mem prop seen_props) in
@@ -167,19 +215,20 @@ let object_dynamic_traversal (f : string option * Node.t -> 'a -> 'a) (mdg : t)
     let unseen = List.filter unseen_f static' in
     let seen_props' = seen_props @ List.map fst unseen in
     let acc' = List.fold_right f (dynamic @ static) acc in
-    object_traverse_parents (traverse seen_props') mdg ls_visited node acc'
+    object_parents_traversal (traverse seen_props') mdg ls_visited node acc'
   in
-  traverse [] ls_visited node acc
+  object_final_traversal final (traverse []) mdg ls_visited node acc
 
-let object_nested_traversal (f : string option list * Node.t -> 'a -> 'a)
-    (mdg : t) (node : Node.t) (acc : 'a) : 'a =
+let object_nested_traversal ?(final : bool = true)
+    (f : string option list * Node.t -> 'a -> 'a) (mdg : t) (node : Node.t)
+    (acc : 'a) : 'a =
   (* TODO: Implement a way of reaching every single property *)
   let f' el found = el :: found in
   let rec traverse ls_visited nodes acc =
     match nodes with
     | [] -> acc
     | (prev, node) :: nodes' ->
-      let found = object_dynamic_traversal f' mdg ls_visited node [] in
+      let found = object_dynamic_traversal ~final f' mdg ls_visited node [] in
       let found' = List.map (fun (p, n) -> (prev @ [ p ], n)) found in
       let (_, ls_props) = List.split found' in
       let ls_visited' = Node.Set.union ls_visited (Node.Set.of_list ls_props) in
@@ -187,14 +236,6 @@ let object_nested_traversal (f : string option list * Node.t -> 'a -> 'a)
       let acc' = List.fold_right f found' acc in
       traverse ls_visited' nodes'' acc' in
   traverse (Node.Set.singleton node) [ ([], node) ] (f ([], node) acc)
-
-let object_orig_versions (mdg : t) (node : Node.t) : Node.Set.t =
-  object_lineage_traversal Node.Set.add mdg get_parents
-    (Node.Set.singleton node) node Node.Set.empty
-
-let object_tail_versions (mdg : t) (node : Node.t) : Node.Set.t =
-  object_lineage_traversal Node.Set.add mdg get_versions
-    (Node.Set.singleton node) node Node.Set.empty
 
 let object_static_lookup (mdg : t) (node : Node.t) (p : string) : Node.Set.t =
   let f node acc = Node.Set.add node acc in
@@ -204,10 +245,12 @@ let object_dynamic_lookup (mdg : t) (node : Node.t) : Node.Set.t =
   let f (_, node) acc = Node.Set.add node acc in
   object_dynamic_traversal f mdg (Node.Set.singleton node) node Node.Set.empty
 
+let object_lookup (mdg : t) (node : Node.t) : string option -> Node.Set.t =
+  function
+  | Some prop' -> object_static_lookup mdg node prop'
+  | None -> object_dynamic_lookup mdg node
+
 let exported_object (mdg : t) : Node.Set.t =
   match Hashtbl.find_opt mdg.nodes mdg.exported with
   | None -> Node.Set.empty
-  | Some l_module ->
-    let ls_module = object_tail_versions mdg l_module in
-    Fun.flip2 Node.Set.fold ls_module Node.Set.empty (fun l_module acc ->
-        Node.Set.union acc (object_static_lookup mdg l_module "exports") )
+  | Some l_module -> object_static_lookup mdg l_module "exports"

@@ -34,7 +34,8 @@ let weak_update (store : t) (old : Node.t) (new' : Node.Set.t) : unit =
       let values' = Node.Set.fold replace_f values Node.Set.empty in
       replace store key values' )
 
-let lub (store1 : t) (store2 : t) : unit =
+let lub (store1 : t) (store2 : t) : t =
   Fun.flip Hashtbl.iter store2 (fun key values_2 ->
       let values_1 = find store1 key in
-      replace store1 key (Node.Set.union values_1 values_2) )
+      replace store1 key (Node.Set.union values_1 values_2) );
+  store1

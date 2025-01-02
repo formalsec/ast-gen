@@ -22,7 +22,7 @@
   dep[l_2] --< P(exec) >--> dep.exec[l_4]
   dep[l_2] --< Arg(0) >--> dep.exec(...)[l_5]
   dep[l_2] --< Arg(0) >--> dep.exec(...)[l_7]
-  require(child_process)[l_3] --< D >--> dep[l_2]
+  require(child_process)[l_3] --< D >--> require(...)[l_1]
   foo[f_2] --< Param(0) >--> this[p_0]
   foo[f_2] --< Param(1) >--> x1[p_1]
   this[p_0] -

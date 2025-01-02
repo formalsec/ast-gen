@@ -154,7 +154,7 @@ let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   | `This _ -> eval_store_expr state "this"
 
 and eval_literal_expr (state : State.t) : Node.Set.t =
-  Node.Set.singleton state.literal_node
+  Node.Set.singleton state.mdg.literal
 
 and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
   let nodes = Store.find state.store id in
@@ -164,13 +164,14 @@ and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
 let initialize_builder (taint_config : Taint_config.t) : State.t =
   Node.reset_generators ();
   let state = State.create () in
-  Mdg.add_node state.mdg state.literal_node;
-  Jslib.initialize state taint_config
+  Mdg.add_node state.mdg state.mdg.literal;
+  Jslib.initialize_builder state taint_config
 
 let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
     State.t =
   let state' = State.extend state in
-  List.fold_left initialize_hoisted_function state' stmts
+  let state'' = Jslib.initialize_state state' in
+  List.fold_left initialize_hoisted_function state'' stmts
 
 and initialize_hoisted_function (state : State.t) (stmt : 'm Statement.t) :
     State.t =
@@ -286,7 +287,7 @@ and build_function_call (state : State.t) (left : 'm LeftValue.t)
   let cid2 = offset cid 2 in
   let (l_call, l_retn) = add_call state cid cid1 call retn ls_this ls_args in
   update_scope state left (Node.Set.singleton l_retn);
-  Function.add_call state cid2 ls_funcs l_call l_retn ls_this ls_args args
+  Function.add_call state cid2 ls_funcs l_call ls_this ls_args args
 
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
@@ -304,7 +305,7 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
   let cid3 = offset cid 3 in
   let (l_call, l_retn) = add_call state cid1 cid2 call retn ls_this ls_args in
   update_scope state left (Node.Set.singleton l_retn);
-  Function.add_call state cid3 ls_mthds l_call l_retn ls_this ls_args args
+  Function.add_call state cid3 ls_mthds l_call ls_this ls_args args
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
@@ -322,7 +323,7 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let cid3 = offset cid 3 in
   let (l_call, l_retn) = add_call state cid1 cid2 call retn ls_this ls_args in
   update_scope state left (Node.Set.singleton l_retn);
-  Function.add_call state cid3 ls_mthds l_call l_retn ls_this ls_args args
+  Function.add_call state cid3 ls_mthds l_call ls_this ls_args args
 
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =
@@ -344,10 +345,10 @@ and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
   (* TODO: model the assignment in the forin and forof statement *)
   (* we treat this assignment as a lookup on all properties of the expression *)
   (* the left value should depend of all the properties of the right value *)
-  let store' = Store.copy state.store in
+  let store = Store.copy state.store in
   let state' = build_sequence state body in
-  Store.lub state'.store store';
-  if Store.equal state'.store store' then state' else build_loop state' body
+  let store' = Store.lub state'.store store in
+  if Store.equal store' store then state' else build_loop state' body
 
 and build_hoisted_function_header (state : State.t) (left : 'm LeftValue.t)
     (params : 'm Identifier.t list) (cid : cid) : State.t =
