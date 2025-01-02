@@ -21,7 +21,7 @@ type kind =
   | Parameter of string
   | Call of string
   | Return of string
-  | Module of string
+  | Require of string
   | TaintSink of Tainted.sink
 
 type t =
@@ -57,7 +57,7 @@ let pp (ppf : Fmt.t) (node : t) : unit =
   | Parameter name -> Fmt.fmt ppf "%s[p_%a]" name Location.pp node.lid
   | Call name -> Fmt.fmt ppf "%s(...)[l_%a]" name Location.pp node.lid
   | Return name -> Fmt.fmt ppf "%s[l_%a]" name Location.pp node.lid
-  | Module name -> Fmt.fmt ppf "require(%s)[l_%a]" name Location.pp node.lid
+  | Require name -> Fmt.fmt ppf "require(%s)[l_%a]" name Location.pp node.lid
   | TaintSink sink ->
     Fmt.fmt ppf "%s[s_%a]" Tainted.(name !sink) Location.pp node.lid
 
@@ -117,11 +117,11 @@ let create_return (name : string) : t option -> Region.t -> t =
   let lid = Location.create obj_lid_gen in
   create uid lid (Return name) parent at
 
-let create_module (name : string) : t option -> Region.t -> t =
+let create_require (name : string) : t option -> Region.t -> t =
  fun parent at ->
   let uid = Location.create uid_gen in
   let lid = Location.create obj_lid_gen in
-  create uid lid (Module name) parent at
+  create uid lid (Require name) parent at
 
 let create_candidate_object (name : string) : t =
   let uid = Location.create uid_gen in
@@ -172,8 +172,8 @@ let is_call (node : t) : bool =
 let is_return (node : t) : bool =
   match node.kind with Return _ -> true | _ -> false
 
-let is_module (node : t) : bool =
-  match node.kind with Module _ -> true | _ -> false
+let is_require (node : t) : bool =
+  match node.kind with Require _ -> true | _ -> false
 
 let is_taint_sink (node : t) : bool =
   match node.kind with TaintSink _ -> true | _ -> false

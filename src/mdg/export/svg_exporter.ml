@@ -40,7 +40,7 @@ module Dot = struct
     | Parameter name -> Fmt.str "%s" (String.escaped name)
     | Call name -> Fmt.str "%s(...)" (String.escaped name)
     | Return name -> Fmt.str "%s" (String.escaped name)
-    | Module name -> Fmt.str "module %s" (String.escaped name)
+    | Require name -> Fmt.str "require '%s'" (String.escaped name)
     | TaintSink sink -> Fmt.str "%s sink" Tainted.(name !sink)
 
   let edge_label (edge : Edge.t) : string =
@@ -77,7 +77,7 @@ module Dot = struct
       | Parameter _ -> [ `Color 26112; `Fillcolor 13434828 ]
       | Call _ -> [ `Color 6697728; `Fillcolor 13395456 ]
       | Return _ -> [ `Color 6697728; `Fillcolor 16770508 ]
-      | Module _ -> [ `Color 3342438; `Fillcolor 15060223 ]
+      | Require _ -> [ `Color 3342438; `Fillcolor 15060223 ]
       | TaintSink _ -> [ `Color 6684672; `Fillcolor 16724787 ] )
 
     let edge_attributes ((_, edge, _) : Node.t * Edge.t * Node.t) : 'a list =
@@ -86,7 +86,7 @@ module Dot = struct
       ( match edge.kind with
       | (Dependency | Argument _) when Node.is_literal edge.src ->
         [ `Style `Dotted; `Color 26214; `Fontcolor 26214 ]
-      | Dependency when Node.is_module edge.src ->
+      | Dependency when Node.is_require edge.src ->
         [ `Style `Dotted; `Color 3342438; `Fontcolor 3342438 ]
       | Parameter 0 -> [ `Color 6684774; `Fontcolor 6684774 ]
       | Parameter _ -> [ `Color 26112; `Fontcolor 26112 ]

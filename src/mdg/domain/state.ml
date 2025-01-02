@@ -103,14 +103,15 @@ let add_parameter_node (state : t) (id : CodeCache.id) (idx : int)
     (name : string) : Node.t =
   add_node state (Node.create_parameter idx name) id
 
-let add_call_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
-  add_node state (Node.create_call name) id
+let add_call_node (state : t) (id : CodeCache.id) (name : string) : t * Node.t =
+  let node = add_node state (Node.create_call name) id in
+  ({ state with mdg = Mdg.add_call state.mdg node }, node)
 
 let add_return_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
   add_node state (Node.create_return name) id
 
 let add_module_node (state : t) (id : CodeCache.id) (m : string) : t * Node.t =
-  let node = add_node state (Node.create_module m) id in
+  let node = add_node state (Node.create_require m) id in
   ({ state with mdg = Mdg.add_requires state.mdg node }, node)
 
 let add_dependency_edge (state : t) (src : Node.t) (tar : Node.t) : unit =

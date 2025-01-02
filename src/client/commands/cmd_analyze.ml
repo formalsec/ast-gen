@@ -1,6 +1,6 @@
 open Graphjs_base
 open Graphjs_share
-open Graphjs_queries
+open Graphjs_analyzer
 open Result
 
 module Options = struct
@@ -28,7 +28,7 @@ end
 let run (tc : Taint_config.t) (input : Fpath.t) (w : Workspace.t) :
     Vulnerability.t list Exec.status =
   let* mdg = Cmd_mdg.run tc input (Workspace.side w) in
-  let engine = Query_engine.initialize mdg in
+  let engine = Analysis_engine.initialize mdg in
   let vulns = Analyzer.run engine in
   Output.main w vulns;
   Ok vulns

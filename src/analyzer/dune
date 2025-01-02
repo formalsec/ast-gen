@@ -1,0 +1,12 @@
+(include_subdirs unqualified)
+
+(library
+ (name graphjs_analyzer)
+ (modules
+  vulnerability
+  callers
+  reachability
+  interactability
+  analysis_engine
+  analyzer)
+ (libraries graphjs_base graphjs_share graphjs_mdg))

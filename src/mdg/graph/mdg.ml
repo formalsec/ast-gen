@@ -6,6 +6,7 @@ type t =
   ; trans : (Location.t, Edge.Set.t) Hashtbl.t
   ; literal : Node.t
   ; jslib : Node.Set.t
+  ; calls : Node.Set.t
   ; requires : Node.Set.t
   ; exported : Location.t
   }
@@ -16,9 +17,10 @@ let create () : t =
   let trans = Hashtbl.create Config.(!dflt_htbl_sz) in
   let literal = Node.create_literal () in
   let jslib = Node.Set.empty in
+  let calls = Node.Set.empty in
   let requires = Node.Set.empty in
   let exported = Location.invalid_loc () in
-  { nodes; edges; trans; literal; exported; requires; jslib }
+  { nodes; edges; trans; literal; jslib; calls; requires; exported }
 
 let copy (mdg : t) : t =
   let nodes = Hashtbl.copy mdg.nodes in
@@ -68,13 +70,22 @@ let add_edge (mdg : t) (edge : Edge.t) : unit =
 let add_jslib (mdg : t) (node : Node.t) : t =
   { mdg with jslib = Node.Set.add node mdg.jslib }
 
+let add_call (mdg : t) (node : Node.t) : t =
+  { mdg with calls = Node.Set.add node mdg.calls }
+
 let add_requires (mdg : t) (node : Node.t) : t =
   { mdg with requires = Node.Set.add node mdg.requires }
 
 let set_exported (mdg : t) (node : Node.t) : t =
   { mdg with exported = node.uid }
 
-let remove_node (mdg : t) (node : Node.t) : unit =
+let remove_node_meta (mdg : t) (node : Node.t) : t =
+  match node.kind with
+  | Call _ -> { mdg with calls = Node.Set.remove node mdg.calls }
+  | Require _ -> { mdg with requires = Node.Set.remove node mdg.requires }
+  | _ -> mdg
+
+let remove_node (mdg : t) (node : Node.t) : t =
   let edges = get_edges mdg node.uid in
   let trans = get_trans mdg node.uid in
   Fun.flip Edge.Set.iter edges (fun edge ->
@@ -87,7 +98,8 @@ let remove_node (mdg : t) (node : Node.t) : unit =
       Hashtbl.replace mdg.edges edge'.src.uid (Edge.Set.remove edge' edges) );
   Hashtbl.remove mdg.nodes node.uid;
   Hashtbl.remove mdg.edges node.uid;
-  Hashtbl.remove mdg.trans node.uid
+  Hashtbl.remove mdg.trans node.uid;
+  remove_node_meta mdg node
 
 let remove_edge (mdg : t) (edge : Edge.t) : unit =
   let tran = Edge.transpose edge in
@@ -149,6 +161,11 @@ let get_arguments (mdg : t) (node : Node.t) : (int * Node.t) list =
   get_trans mdg node.uid
   |> Edge.Set.filter Edge.is_argument
   |> Edge.Set.map_list (fun edge -> (Edge.argument edge, Edge.tar edge))
+
+let get_call_function (mdg : t) (node : Node.t) : Node.t list =
+  get_edges mdg node.uid
+  |> Edge.Set.filter Edge.is_call
+  |> Edge.Set.map_list Edge.tar
 
 let get_call_return (mdg : t) (node : Node.t) : Node.t =
   get_edges mdg node.uid

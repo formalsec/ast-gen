@@ -19,6 +19,6 @@
   graphjs_parser
   graphjs_ast
   graphjs_mdg
-  graphjs_queries
+  graphjs_analyzer
   bos
   cmdliner))
