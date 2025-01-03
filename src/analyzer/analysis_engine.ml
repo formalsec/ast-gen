@@ -28,5 +28,5 @@ let callers (engine : t) (node : Node.t) : Node.Set.t =
 
 let reachable (engine : t) (node : Node.t) : Reachability.Set.t =
   match Hashtbl.find_opt engine.reachability node.uid with
-  | None -> Reachability.compute engine.mdg engine.reachability node
+  | None -> Reachability.compute engine.reachability engine.mdg node
   | Some reaching -> reaching

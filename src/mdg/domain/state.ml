@@ -67,6 +67,11 @@ let copy (state : t) : t =
   let code_cache = CodeCache.copy state.code_cache in
   { state with mdg; store; code_cache }
 
+let join (state1 : t) (state2 : t) : t =
+  let mdg = Mdg.join state1.mdg state2.mdg in
+  let code_cache = CodeCache.lub state1.code_cache state2.code_cache in
+  { state1 with mdg; code_cache }
+
 let lub (state1 : t) (state2 : t) : t =
   let mdg = Mdg.lub state1.mdg state2.mdg in
   let store = Store.lub state1.store state2.store in
@@ -103,9 +108,8 @@ let add_parameter_node (state : t) (id : CodeCache.id) (idx : int)
     (name : string) : Node.t =
   add_node state (Node.create_parameter idx name) id
 
-let add_call_node (state : t) (id : CodeCache.id) (name : string) : t * Node.t =
-  let node = add_node state (Node.create_call name) id in
-  ({ state with mdg = Mdg.add_call state.mdg node }, node)
+let add_call_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
+  add_node state (Node.create_call name) id
 
 let add_return_node (state : t) (id : CodeCache.id) (name : string) : Node.t =
   add_node state (Node.create_return name) id
@@ -159,7 +163,7 @@ module FunHandler = struct
       (l_call : Node.t) (_ : Node.t) (_ : Node.Set.t option list)
       (_ : 'm Expression.t list) : t =
     add_call_edge state l_call l_func;
-    state
+    { state with mdg = Mdg.add_call state.mdg l_call }
 
   let call (state : t) (cid : CodeCache.id) (ls_funcs : Node.Set.t)
       (l_call : Node.t) (l_retn : Node.t) (l_this : Node.Set.t option)

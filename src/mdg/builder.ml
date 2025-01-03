@@ -127,16 +127,16 @@ let add_dynamic_object_version (state : State.t) (cid : cid) (name : string)
 
 let add_call (state : State.t) (call_cid : cid) (retn_cid : cid)
     (call_name : string) (retn_name : string) (ls_this : Node.Set.t option)
-    (ls_args : Node.Set.t list) : State.t * Node.t * Node.t =
+    (ls_args : Node.Set.t list) : Node.t * Node.t =
   let add_arg_f = Fun.flip2 (State.add_argument_edge state) in
-  let (state', l_call) = State.add_call_node state call_cid call_name in
+  let l_call = State.add_call_node state call_cid call_name in
   let l_retn = State.add_return_node state retn_cid retn_name in
   State.add_return_edge state l_call l_retn;
   Option.iter (Node.Set.iter (add_arg_f l_call 0)) ls_this;
   Fun.flip List.iteri ls_args (fun idx ls_arg ->
       let idx' = idx + 1 in
       Node.Set.iter (add_arg_f l_call idx') ls_arg );
-  (state', l_call, l_retn)
+  (l_call, l_retn)
 
 let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   let exprs_f acc expr = Node.Set.union acc (eval_expr state expr) in
@@ -278,10 +278,9 @@ and build_function_call (state : State.t) (left : 'm LeftValue.t)
   let ls_args = List.map (eval_expr state) args in
   let cid1 = offset cid 1 in
   let cid2 = offset cid 2 in
-  let (state', l_call, l_retn) =
-    add_call state cid cid1 call retn ls_this ls_args in
-  update_scope state' left (Node.Set.singleton l_retn);
-  State.FunHandler.call state' cid2 ls_funcs l_call l_retn ls_this ls_args args
+  let (l_call, l_retn) = add_call state cid cid1 call retn ls_this ls_args in
+  update_scope state left (Node.Set.singleton l_retn);
+  State.FunHandler.call state cid2 ls_funcs l_call l_retn ls_this ls_args args
 
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
@@ -297,10 +296,9 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
   let cid1 = offset cid 1 in
   let cid2 = offset cid 2 in
   let cid3 = offset cid 3 in
-  let (state', l_call, l_retn) =
-    add_call state cid1 cid2 call retn ls_this ls_args in
-  update_scope state' left (Node.Set.singleton l_retn);
-  State.FunHandler.call state' cid3 ls_mthds l_call l_retn ls_this ls_args args
+  let (l_call, l_retn) = add_call state cid1 cid2 call retn ls_this ls_args in
+  update_scope state left (Node.Set.singleton l_retn);
+  State.FunHandler.call state cid3 ls_mthds l_call l_retn ls_this ls_args args
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
@@ -316,10 +314,9 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let cid1 = offset cid 1 in
   let cid2 = offset cid 2 in
   let cid3 = offset cid 3 in
-  let (state', l_call, l_retn) =
-    add_call state cid1 cid2 call retn ls_this ls_args in
-  update_scope state' left (Node.Set.singleton l_retn);
-  State.FunHandler.call state' cid3 ls_mthds l_call l_retn ls_this ls_args args
+  let (l_call, l_retn) = add_call state cid1 cid2 call retn ls_this ls_args in
+  update_scope state left (Node.Set.singleton l_retn);
+  State.FunHandler.call state cid3 ls_mthds l_call l_retn ls_this ls_args args
 
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =
@@ -383,8 +380,8 @@ and build_assign_function_definition (state : State.t) (left : 'm LeftValue.t)
       let l_param = State.add_parameter_node state' cid' idx' param_name in
       State.add_parameter_edge state' l_func l_param idx';
       Store.replace state'.store param_name (Node.Set.singleton l_param) );
-  let _ = build_sequence state' body in
-  state
+  let state'' = build_sequence state' body in
+  State.join state state''
 
 and build_loop_break (state : State.t) (_label : 'm Identifier.t option) :
     State.t =
@@ -396,7 +393,7 @@ and build_try (state : State.t) (body : 'm Statement.t list)
     (handler : 'm Catch.t option) (finalizer : 'm Statement.t list option) :
     State.t =
   (* TODO: implement the try construct *)
-  (* the catch body should only be analysed if an exception is thrown *)
+  (* the catch body should only be analyzed if an exception is thrown *)
   let handler' = Option.map Catch.body handler in
   let state' = build_sequence state body in
   let state'' = build_sequence_opt state' handler' in
@@ -417,7 +414,7 @@ and build_labeled (state : State.t) (_label : 'm Identifier.t)
 
 and build_return (state : State.t) (arg : 'm Expression.t option) : State.t =
   (* TODO: implement flow control to the builder *)
-  (* the return statement should prevent all code afterwards from being analysed *)
+  (* the return statement should prevent all code afterwards from being analyzed *)
   let ls_arg = Option.map (eval_expr state) arg in
   match (state.curr_func, ls_arg) with
   | (None, _) | (Some _, None) -> state

@@ -70,23 +70,22 @@ let compute_edge (reach : t) (queue : Node.t Queue.t) (edge : Edge.t) : unit =
     get reach edge.src |> Set.map (Source.extend prop) |> set reach queue edge
   | _ -> ()
 
-let rec compute_node (mdg : Mdg.t) (reach : t) (queue : Node.t Queue.t) : unit =
+let rec compute_node (reach : t) (mdg : Mdg.t) (queue : Node.t Queue.t) : unit =
   Fun.flip Option.iter (Queue.take_opt queue) (fun node ->
       let edges = Mdg.get_edges mdg node.uid in
       Edge.Set.iter (compute_edge reach queue) edges;
-      compute_node mdg reach queue )
+      compute_node reach mdg queue )
 
-let compute_function (mdg : Mdg.t) (reach : t) (node : Node.t) : unit =
+let compute_function (reach : t) (mdg : Mdg.t) (node : Node.t) : unit =
   if Option.is_none (find reach node) then (
     let queue = Queue.create () in
     Queue.add node queue;
-    compute_node mdg reach queue )
+    compute_node reach mdg queue )
 
-let compute (mdg : Mdg.t) (reach : t) (node : Node.t) : Set.t =
-  (* TODO: compute the reachability of global nodes (without parent) *)
+let compute (reach : t) (mdg : Mdg.t) (node : Node.t) : Set.t =
   match node.parent with
   | None -> Set.empty
   | Some parent ->
     replace reach node Set.empty;
-    compute_function mdg reach parent;
+    compute_function reach mdg parent;
     get reach node

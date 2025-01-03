@@ -4,6 +4,7 @@
  (name graphjs_analyzer)
  (modules
   vulnerability
+  properties
   callers
   reachability
   interactability

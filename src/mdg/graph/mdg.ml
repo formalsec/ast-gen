@@ -108,9 +108,16 @@ let remove_edge (mdg : t) (edge : Edge.t) : unit =
   Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.remove edge edges);
   Hashtbl.replace mdg.trans tran.src.uid (Edge.Set.remove tran trans)
 
-let lub (mdg1 : t) (mdg2 : t) : t =
+let join (mdg1 : t) (mdg2 : t) : t =
   let jslib = Node.Set.union mdg1.jslib mdg2.jslib in
+  let calls = Node.Set.union mdg1.calls mdg2.calls in
   let requires = Node.Set.union mdg1.requires mdg2.requires in
+  let exported =
+    if mdg1.exported == Location.invalid_loc () then mdg2.exported
+    else mdg1.exported in
+  { mdg1 with jslib; calls; requires; exported }
+
+let lub (mdg1 : t) (mdg2 : t) : t =
   Fun.flip Hashtbl.iter mdg2.edges (fun loc edges2 ->
       let node2 = get_node mdg2 loc in
       let trans2 = get_trans mdg2 loc in
@@ -122,7 +129,7 @@ let lub (mdg1 : t) (mdg2 : t) : t =
       if Option.is_none node1 then Hashtbl.replace mdg1.nodes loc node2;
       Hashtbl.replace mdg1.edges loc (Edge.Set.union edges1' edges2);
       Hashtbl.replace mdg1.trans loc (Edge.Set.union trans1' trans2) );
-  { mdg1 with requires; jslib }
+  join mdg1 mdg2
 
 let get_dependencies (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.uid
