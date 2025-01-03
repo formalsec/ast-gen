@@ -16,6 +16,7 @@ let reset_generators () : unit =
 
 type kind =
   | Literal
+  | TaintSource
   | Object of string
   | Function of string
   | Parameter of string
@@ -45,13 +46,14 @@ let create (uid : Location.t) (lid : Location.t) (kind : kind)
 let kind (node : t) : kind = node.kind [@@inline]
 let parent (node : t) : t option = node.parent [@@inline]
 let at (node : t) : Region.t = node.at [@@inline]
-let hash (node : t) : int = Location.hash node.uid [@@inline]
+let hash (node : t) : int = node.uid [@@inline]
 let equal (node1 : t) (node2 : t) : bool = Location.equal node1.uid node2.uid
 let compare (node1 : t) (node2 : t) : int = Location.compare node1.uid node2.uid
 
 let pp (ppf : Fmt.t) (node : t) : unit =
   match node.kind with
   | Literal -> Fmt.pp_str ppf "[[literal]]"
+  | TaintSource -> Fmt.pp_str ppf "[[taint]]"
   | Object name -> Fmt.fmt ppf "%s[l_%a]" name Location.pp node.lid
   | Function name -> Fmt.fmt ppf "%s[f_%a]" name Location.pp node.lid
   | Parameter name -> Fmt.fmt ppf "%s[p_%a]" name Location.pp node.lid
@@ -81,6 +83,11 @@ let create_literal () : t =
   let uid = Location.create uid_gen in
   let lid = Location.literal_loc () in
   create uid lid Literal None (Region.default ())
+
+let create_taint_source () : t =
+  let uid = Location.create uid_gen in
+  let lid = Location.taint_source_loc () in
+  create uid lid TaintSource None (Region.default ())
 
 let create_literal_object (name : string) : t option -> Region.t -> t =
  fun parent at ->
@@ -149,6 +156,9 @@ let is_invalid (node : t) : bool = node.lid == Location.invalid_loc ()
 
 let is_literal (node : t) : bool =
   match node.kind with Literal -> true | _ -> false
+
+let is_taint_source (node : t) : bool =
+  match node.kind with TaintSource -> true | _ -> false
 
 let is_object (node : t) : bool =
   match node.kind with

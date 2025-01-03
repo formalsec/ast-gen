@@ -1,5 +1,6 @@
 open Graphjs_base
 open Graphjs_share
+open Graphjs_mdg
 open Graphjs_analyzer
 open Result
 
@@ -19,16 +20,29 @@ module Options = struct
 end
 
 module Output = struct
+  let tainted (w : Workspace.t) (engine : Analysis_engine.t) : unit =
+    let w' = Workspace.(w / "tainted.svg") in
+    Log.info "Analysis engine initialized successfully";
+    Workspace.execute_noerr Side w'
+      (Fun.flip Svg_exporter.export_svg (`Mdg engine.mdg))
+
   let main (w : Workspace.t) (vulns : Vulnerability.t list) : unit =
     Log.info "Vulnerability queries runned successfully.";
     Workspace.log w Fmt.(dly "%a@." (pp_lst !>"@\n" Vulnerability.pp) vulns);
-    Workspace.output_noerr Side w Fmt.(pp_lst !>"@\n" Vulnerability.pp) vulns
+    match w.out with
+    | Single _ ->
+      Workspace.output_noerr Main w Fmt.(pp_lst !>"@\n" Vulnerability.pp) vulns
+    | Bundle _ ->
+      let w' = Workspace.(w / "vulns.txt") in
+      Workspace.output_noerr Side w' Fmt.(pp_lst !>"@\n" Vulnerability.pp) vulns
+    | _ -> ()
 end
 
 let run (tc : Taint_config.t) (input : Fpath.t) (w : Workspace.t) :
     Vulnerability.t list Exec.status =
   let* mdg = Cmd_mdg.run tc input (Workspace.side w) in
   let engine = Analysis_engine.initialize mdg in
+  Output.tainted w engine;
   let vulns = Analyzer.run engine in
   Output.main w vulns;
   Ok vulns

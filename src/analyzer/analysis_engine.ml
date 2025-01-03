@@ -1,4 +1,4 @@
-open Graphjs_base
+(* open Graphjs_base *)
 open Graphjs_mdg
 
 type t =
@@ -26,7 +26,5 @@ let nested_lookup (engine : t) (node : Node.t) (props : string option list) :
 let callers (engine : t) (node : Node.t) : Node.Set.t =
   Callers.find engine.callers node
 
-let reachable (engine : t) (node : Node.t) : Reachability.Set.t =
-  match Hashtbl.find_opt engine.reachability node.uid with
-  | None -> Reachability.compute engine.reachability engine.mdg node
-  | Some reaching -> reaching
+let reaching (engine : t) (node : Node.t) : Reachability.Set.t =
+  Reachability.compute engine.reachability engine.mdg node

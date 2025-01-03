@@ -36,7 +36,8 @@ let run_injection (_engine : Analysis_engine.t) : Vulnerability.t list = []
 let run_prototype (_engine : Analysis_engine.t) : Vulnerability.t list = []
 
 let run (engine : Analysis_engine.t) : Vulnerability.t list =
-  Log.debug "Callers:@\n%a" Callers.pp engine.callers;
+  Log.debug "Interactability:@\n%a@." Interactability.pp engine.interactability;
+  Log.debug "Tainted:@\n%a" Mdg.pp engine.mdg;
   let injection_vulns = run_injection engine in
   let prototype_vulns = run_injection engine in
   injection_vulns @ prototype_vulns

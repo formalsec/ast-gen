@@ -35,6 +35,7 @@ module Dot = struct
   let node_label (node : Node.t) : string =
     match node.kind with
     | Literal -> Fmt.str "{ Literal Object }"
+    | TaintSource -> Fmt.str "{ Taint Source }"
     | Object name -> Fmt.str "%s" (String.escaped name)
     | Function name -> Fmt.str "function %s" (String.escaped name)
     | Parameter name -> Fmt.str "%s" (String.escaped name)
@@ -61,14 +62,20 @@ module Dot = struct
     include GraphBuilder
 
     let graph_attributes (_ : t) = []
-    let default_vertex_attributes (_ : t) = [ `Shape `Box; `Style `Filled ]
-    let default_edge_attributes (_ : t) = [ `Arrowhead `Normal ]
+
+    let default_vertex_attributes (_ : t) =
+      [ `Shape `Box; `Style `Rounded; `Style `Filled; `Penwidth 1.3
+      ; `Fontsize 18; `Fontname "Garamond" ]
+
+    let default_edge_attributes (_ : t) =
+      [ `Arrowhead `Normal; `Fontsize 16; `Fontname "Times-Roman" ]
 
     let vertex_attributes (node : V.t) : 'a list =
       `Label (node_label node)
       ::
       ( match node.kind with
       | Literal -> [ `Color 26214; `Fillcolor 13434879 ]
+      | TaintSource -> [ `Color 6684672; `Fillcolor 16764108 ]
       | Object _ when Node.is_literal_object node ->
         [ `Color 26214; `Fillcolor 13434879 ]
       | Object _ -> [ `Color 2105376; `Fillcolor 14737632 ]
@@ -86,6 +93,8 @@ module Dot = struct
       ( match edge.kind with
       | (Dependency | Argument _) when Node.is_literal edge.src ->
         [ `Style `Dotted; `Color 26214; `Fontcolor 26214 ]
+      | Dependency when Node.is_taint_source edge.src ->
+        [ `Style `Dotted; `Color 6684672; `Fontcolor 6684672 ]
       | Dependency when Node.is_require edge.src ->
         [ `Style `Dotted; `Color 3342438; `Fontcolor 3342438 ]
       | Parameter 0 -> [ `Color 6684774; `Fontcolor 6684774 ]
@@ -106,6 +115,7 @@ open struct
   let build_graph_edges_f (edge : Edge.t) (graph : GraphBuilder.t) :
       GraphBuilder.t =
     match edge.kind with
+    | Dependency when Node.is_parameter edge.tar -> graph
     | Argument 0 -> graph
     | _ ->
       let e = GraphBuilder.E.create edge.src edge edge.tar in

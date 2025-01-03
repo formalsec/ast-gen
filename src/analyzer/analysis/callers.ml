@@ -41,7 +41,6 @@ let compute_call (callers : t) (mdg : Mdg.t) (l_call : Node.t) : unit =
       compute_call_arguments callers mdg l_func' l_call )
 
 let compute (mdg : Mdg.t) : t =
-  Log.debug "test = %a" Node.Set.pp mdg.calls;
   let callers = create () in
   Node.Set.iter (compute_call callers mdg) mdg.calls;
   callers

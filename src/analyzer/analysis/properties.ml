@@ -13,7 +13,7 @@ let find_opt (summary : t) (node : Node.t) (prop : string option) :
   Option.map snd (Hashtbl.find_opt summary (node.uid, prop))
 
 let find (summary : t) (node : Node.t) (prop : string option) : Node.Set.t =
-  find_opt summary node prop |> Option.value ~default:Node.Set.empty
+  Option.value ~default:Node.Set.empty (find_opt summary node prop)
 
 let replace (summary : t) (node : Node.t) (prop : string option)
     (sites : Node.Set.t) : unit =
