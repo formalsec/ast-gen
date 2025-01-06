@@ -10,6 +10,7 @@
 
   $ graphjs mdg --no-svg this.js
   [[literal]] --< Arg(1) >--> this.bar(...)[l_3]
+  [[literal]] --< D >--> 10[l_0]
   [[literal]] --< Arg(1) >--> bar(...)[l_8]
   [[literal]] --< Arg(1) >--> obj.bar(...)[l_11]
   bar[f_1] --< Param(0) >--> this[p_0]
@@ -25,7 +26,8 @@
   y[l_4] -
   obj[l_5] --< V(foo) >--> obj[l_6]
   obj[l_5] --< P(bar) >--> obj.bar[l_10]
-  obj[l_6] --< P(foo) >--> [[literal]]
+  10[l_0] -
+  obj[l_6] --< P(foo) >--> 10[l_0]
   obj[l_6] --< V(bar) >--> obj[l_7]
   obj[l_7] --< P(bar) >--> bar[f_1]
   obj[l_7] --< Arg(0) >--> obj.bar(...)[l_11]

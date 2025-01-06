@@ -13,34 +13,46 @@
   obj.null[l_7] -
 
   $ graphjs mdg --no-svg static_update.js
-  [[literal]] -
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
   obj[l_1] --< V(foo) >--> obj[l_2]
   obj[l_1] --< P(bar) >--> obj.bar[l_5]
-  obj[l_2] --< P(foo) >--> [[literal]]
+  10[l_0] -
+  obj[l_2] --< P(foo) >--> 10[l_0]
   obj[l_2] --< V(bar) >--> obj[l_4]
   $v1[l_3] --< V(baz) >--> $v1[l_6]
   obj[l_4] --< P(bar) >--> $v1[l_3]
   obj[l_4] --< V(10) >--> obj[l_7]
   obj.bar[l_5] -
-  $v1[l_6] --< P(baz) >--> [[literal]]
-  obj[l_7] --< P(10) >--> [[literal]]
+  10[l_0] -
+  $v1[l_6] --< P(baz) >--> 10[l_0]
+  10[l_0] -
+  obj[l_7] --< P(10) >--> 10[l_0]
   obj[l_7] --< V(abc) >--> obj[l_8]
-  obj[l_8] --< P(abc) >--> [[literal]]
+  10[l_0] -
+  obj[l_8] --< P(abc) >--> 10[l_0]
   obj[l_8] --< V(null) >--> obj[l_9]
-  obj[l_9] --< P(null) >--> [[literal]]
+  10[l_0] -
+  obj[l_9] --< P(null) >--> 10[l_0]
+  10[l_0] -
 
   $ graphjs mdg --no-svg static_access.js
-  [[literal]] -
+  [[literal]] --< D >--> 10[l_0]
   obj[l_1] --< V(foo) >--> obj[l_2]
   obj[l_1] --< P(foo) >--> obj.foo[l_5]
   obj[l_1] --< P(bar) >--> obj.bar[l_7]
-  obj[l_2] --< P(foo) >--> [[literal]]
+  10[l_0] -
+  obj[l_2] --< P(foo) >--> 10[l_0]
   obj[l_2] --< V(bar) >--> obj[l_4]
   $v1[l_3] -
   obj[l_4] --< P(bar) >--> $v1[l_3]
   obj[l_4] --< V(baz) >--> obj[l_6]
   obj.foo[l_5] -
-  obj[l_6] --< P(baz) >--> [[literal]]
+  obj[l_6] --< P(baz) >--> 10[l_0]
   obj[l_6] --< V(baz) >--> obj[l_8]
   obj.bar[l_7] -
   obj[l_8] --< P(baz) >--> $v1[l_3]
@@ -96,39 +108,49 @@
   obj.*.*[l_6] -
 
   $ graphjs mdg --no-svg dynamic_update.js
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> $v3[l_7]
-  [[literal]] --< V(*) >--> $v4[l_11]
+  [[literal]] --< D >--> true[l_0]
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
   obj[l_1] --< V(*) >--> obj[l_2]
   obj[l_1] --< P(*) >--> obj.*[l_9]
-  obj[l_2] --< P(*) >--> [[literal]]
+  10[l_0] --< V(*) >--> $v4[l_11]
+  obj[l_2] --< P(*) >--> 10[l_0]
   obj[l_2] --< V(*) >--> obj[l_4]
   $v1[l_3] --< V(*) >--> $v4[l_11]
   obj[l_4] --< P(*) >--> $v1[l_3]
   obj[l_4] --< V(*) >--> obj[l_6]
   $v2[l_5] --< D >--> obj[l_6]
-  obj[l_6] --< P(*) >--> [[literal]]
+  10[l_0] --< V(*) >--> $v4[l_11]
+  obj[l_6] --< P(*) >--> 10[l_0]
   obj[l_6] --< V(*) >--> obj[l_8]
   $v3[l_7] --< D >--> obj[l_8]
-  obj[l_8] --< P(*) >--> [[literal]]
+  true[l_0] --< V(*) >--> $v4[l_11]
+  obj[l_8] --< P(*) >--> true[l_0]
   obj.*[l_9] --< V(*) >--> $v4[l_11]
   $v5[l_10] --< D >--> $v4[l_11]
-  $v4[l_11] --< P(*) >--> [[literal]]
+  10[l_0] -
+  $v4[l_11] --< P(*) >--> 10[l_0]
+  10[l_0] -
 
   $ graphjs mdg --no-svg dynamic_access.js
-  [[literal]] -
+  [[literal]] --< D >--> 10[l_0]
   obj[l_1] --< V(*) >--> obj[l_2]
   obj[l_1] --< P(*) >--> obj.*[l_5]
-  obj[l_2] --< P(*) >--> [[literal]]
+  10[l_0] -
+  obj[l_2] --< P(*) >--> 10[l_0]
   obj[l_2] --< V(*) >--> obj[l_4]
   $v1[l_3] -
   obj[l_4] --< P(*) >--> $v1[l_3]
   obj[l_4] --< V(*) >--> obj[l_6]
   obj.*[l_5] -
-  obj[l_6] --< P(*) >--> [[literal]]
+  obj[l_6] --< P(*) >--> 10[l_0]
   obj[l_6] --< P(*) >--> $v1[l_3]
   obj[l_6] --< P(*) >--> obj.*[l_5]
   obj[l_6] --< V(*) >--> obj[l_7]
-  obj[l_7] --< P(*) >--> [[literal]]
+  obj[l_7] --< P(*) >--> 10[l_0]
   obj[l_7] --< P(*) >--> $v1[l_3]
   obj[l_7] --< P(*) >--> obj.*[l_5]
 

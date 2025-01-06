@@ -18,39 +18,49 @@
   obj.null[l_8] -
 
   $ graphjs mdg --no-svg property_update.js
-  [[literal]] -
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
+  [[literal]] --< D >--> 10[l_0]
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(bar) >--> obj.bar[l_6]
   $v2[l_2] --< V(foo) >--> obj[l_3]
   $v2[l_2] --< P(bar) >--> obj.bar[l_6]
-  obj[l_3] --< P(foo) >--> [[literal]]
+  10[l_0] -
+  obj[l_3] --< P(foo) >--> 10[l_0]
   obj[l_3] --< V(bar) >--> obj[l_5]
   $v3[l_4] --< V(baz) >--> $v3[l_7]
   obj[l_5] --< P(bar) >--> $v3[l_4]
   obj[l_5] --< V(10) >--> obj[l_8]
   obj.bar[l_6] -
-  $v3[l_7] --< P(baz) >--> [[literal]]
-  obj[l_8] --< P(10) >--> [[literal]]
+  10[l_0] -
+  $v3[l_7] --< P(baz) >--> 10[l_0]
+  10[l_0] -
+  obj[l_8] --< P(10) >--> 10[l_0]
   obj[l_8] --< V(abc) >--> obj[l_9]
-  obj[l_9] --< P(abc) >--> [[literal]]
+  10[l_0] -
+  obj[l_9] --< P(abc) >--> 10[l_0]
   obj[l_9] --< V(null) >--> obj[l_10]
-  obj[l_10] --< P(null) >--> [[literal]]
+  10[l_0] -
+  obj[l_10] --< P(null) >--> 10[l_0]
 
   $ graphjs mdg --no-svg property_access.js
-  [[literal]] -
+  [[literal]] --< D >--> 10[l_0]
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(foo) >--> obj.foo[l_6]
   $v1[l_1] --< P(bar) >--> obj.bar[l_8]
   $v2[l_2] --< V(foo) >--> obj[l_3]
   $v2[l_2] --< P(foo) >--> obj.foo[l_6]
   $v2[l_2] --< P(bar) >--> obj.bar[l_8]
-  obj[l_3] --< P(foo) >--> [[literal]]
+  10[l_0] -
+  obj[l_3] --< P(foo) >--> 10[l_0]
   obj[l_3] --< V(bar) >--> obj[l_5]
   $v3[l_4] -
   obj[l_5] --< P(bar) >--> $v3[l_4]
   obj[l_5] --< V(baz) >--> obj[l_7]
   obj.foo[l_6] -
-  obj[l_7] --< P(baz) >--> [[literal]]
+  obj[l_7] --< P(baz) >--> 10[l_0]
   obj[l_7] --< V(baz) >--> obj[l_9]
   obj.bar[l_8] -
   obj[l_9] --< P(baz) >--> $v3[l_4]
@@ -105,12 +115,13 @@
   $v7[l_13] -
 
   $ graphjs mdg --no-svg property_value.js
-  [[literal]] -
+  [[literal]] --< D >--> 10[l_0]
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(foo) >--> obj.foo[l_8]
   $v2[l_2] --< V(foo) >--> obj[l_3]
   $v2[l_2] --< P(foo) >--> obj.foo[l_8]
-  obj[l_3] --< P(foo) >--> [[literal]]
+  10[l_0] -
+  obj[l_3] --< P(foo) >--> 10[l_0]
   obj[l_3] --< V(foo) >--> obj[l_6]
   $v4[l_4] -
   $v5[l_5] -

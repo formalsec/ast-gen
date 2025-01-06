@@ -12,9 +12,9 @@ module Options = struct
     ; taint_config : Fpath.t
     }
 
-  let set (no_svg : bool) (wrap_prop_updates : bool) () : unit =
+  let set (no_svg : bool) (no_literal_wrapping : bool) () : unit =
     Builder_config.(export_svg $= not no_svg);
-    Builder_config.(wrap_literal_property_updates $= wrap_prop_updates)
+    Builder_config.(wrap_literal_property_updates $= not no_literal_wrapping)
 
   let set_cmd (inputs : Fpath.t list) (output : Fpath.t option)
       (taint_config' : Fpath.t option) () : t =

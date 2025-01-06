@@ -40,14 +40,15 @@
   $v9[l_22] -
 
   $ graphjs mdg --no-svg --mode=multifile main.js
-  [[literal]] -
+  [[literal]] --< D >--> 10[l_0]
   module[l_8] --< V(exports) >--> module[l_9]
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x[p_1]
   this[p_0] -
   x[p_1] -
   obj[l_1] --< V(foo) >--> obj[l_2]
-  obj[l_2] --< P(foo) >--> [[literal]]
+  10[l_0] -
+  obj[l_2] --< P(foo) >--> 10[l_0]
   obj[l_2] --< Arg(1) >--> foo.foo(...)[l_48]
   obj[l_2] --< Arg(1) >--> bar.bar1.p(...)[l_52]
   $v1[l_3] --< V(p) >--> $v1[l_4]

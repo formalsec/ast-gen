@@ -135,10 +135,13 @@ module MdgOpts = struct
     let doc = "Run without generating the .svg graph representation." in
     Arg.(value & flag & info [ "no-svg" ] ~doc)
 
-  let wrap_literal_property_updates =
-    let doc = "Wrap property updates on literal values in a new object node." in
-    Arg.(value & flag & info [ "wrap-literal-property-updates" ] ~doc)
-end
+  let no_literal_property_wrapping =
+    let doc =
+      "Builds the MDG without wrapping property updates on literal values in a \
+       new object node. Using this flag may increase construction speed, but \
+       introduce errors in the graph and subsequent analysis." in
+    Arg.(value & flag & info [ "no-literal-property-wrapping" ] ~doc)
+end 
 
 module MdgCmd = struct
   let name = "mdg"

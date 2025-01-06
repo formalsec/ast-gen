@@ -47,7 +47,7 @@ let mdg_opts : unit Term.t =
   let open Term in
   const Cmd_mdg.Options.set
   $ Docs.MdgOpts.no_svg
-  $ Docs.MdgOpts.wrap_literal_property_updates
+  $ Docs.MdgOpts.no_literal_property_wrapping
   $ parse_opts
 
 let mdg_cmd_opts : Cmd_mdg.Options.t Term.t =
