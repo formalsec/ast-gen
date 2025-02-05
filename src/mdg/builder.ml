@@ -164,14 +164,15 @@ let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
     State.t =
   let state' = State.extend state in
   let state'' = Jslib.initialize_state state' in
-  List.fold_left initialize_hoisted_function state'' stmts
+  initialize_hoisted_functions state'' stmts
 
-and initialize_hoisted_function (state : State.t) (stmt : 'm Statement.t) :
-    State.t =
-  match stmt.el with
-  | `AssignFunctionDefinition fundef when fundef.hoisted ->
-    build_hoisted_function_header state fundef.left fundef.params (cid stmt)
-  | _ -> state
+and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
+    : State.t =
+  Fun.flip2 List.fold_left state stmts (fun state stmt ->
+      match stmt.el with
+      | `AssignFunctionDefinition fundef when fundef.hoisted ->
+        build_hoisted_function_header state fundef.left fundef.params (cid stmt)
+      | _ -> state )
 
 and build_assign_simple (state : State.t) (left : 'm LeftValue.t)
     (right : 'm Expression.t) : State.t =
@@ -369,19 +370,20 @@ and build_assign_function_definition (state : State.t) (left : 'm LeftValue.t)
     Store.replace state.store func_name (Node.Set.singleton l_func);
   let store' = Store.copy state.store in
   let state' = { state with store = store'; curr_func = Some l_func } in
+  let state'' = initialize_hoisted_functions state' body in
   let cid' = offset cid (List.length params + 1) in
-  let l_this = State.add_parameter_node state' cid' 0 "this" in
-  State.add_parameter_edge state' l_func l_this 0;
-  Store.replace state'.store "this" (Node.Set.singleton l_this);
+  let l_this = State.add_parameter_node state'' cid' 0 "this" in
+  State.add_parameter_edge state'' l_func l_this 0;
+  Store.replace state''.store "this" (Node.Set.singleton l_this);
   Fun.flip List.iteri params (fun idx param ->
       let idx' = idx + 1 in
       let cid' = offset cid idx' in
       let param_name = Identifier.name param in
-      let l_param = State.add_parameter_node state' cid' idx' param_name in
-      State.add_parameter_edge state' l_func l_param idx';
-      Store.replace state'.store param_name (Node.Set.singleton l_param) );
-  let state'' = build_sequence state' body in
-  State.join state state''
+      let l_param = State.add_parameter_node state'' cid' idx' param_name in
+      State.add_parameter_edge state'' l_func l_param idx';
+      Store.replace state''.store param_name (Node.Set.singleton l_param) );
+  let state''' = build_sequence state'' body in
+  State.join state state'''
 
 and build_loop_break (state : State.t) (_label : 'm Identifier.t option) :
     State.t =

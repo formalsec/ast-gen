@@ -32,6 +32,9 @@ let mem (interactability : t) (node : Node.t) : bool =
 let find_opt (interactability : t) (node : Node.t) : Interaction.t option =
   Option.map snd (Hashtbl.find_opt interactability node.uid)
 
+let find (interactability : t) (node : Node.t) : Interaction.t =
+  Option.value ~default:[] (find_opt interactability node)
+
 let replace (interactability : t) (node : Node.t) (interaction : Interaction.t)
     : unit =
   Hashtbl.replace interactability node.uid (node, interaction)
@@ -83,7 +86,7 @@ let rec compute_object (interactability : t) (mdg : Mdg.t)
 
 let set_taint (mdg : Mdg.t) (l_taint : Node.t) (node : Node.t) : unit =
   match node.kind with
-  | Object _ | Function _ | Parameter _ ->
+  | Object _ | Function _ | Parameter _ | TaintSink _ ->
     Mdg.add_edge mdg (Edge.create_dependency () l_taint node)
   | _ -> ()
 

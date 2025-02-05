@@ -149,6 +149,11 @@ let get_properties (mdg : t) (node : Node.t) : (string option * Node.t) list =
   |> Edge.Set.filter Edge.is_property
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
+let object_of_property (mdg : t) (node : Node.t) : Node.t list =
+  get_trans mdg node.uid
+  |> Edge.Set.filter Edge.is_property
+  |> Edge.Set.map_list Edge.tar
+
 let get_versions (mdg : t) (node : Node.t) : (string option * Node.t) list =
   get_edges mdg node.uid
   |> Edge.Set.filter Edge.is_version
@@ -159,22 +164,33 @@ let get_parents (mdg : t) (node : Node.t) : (string option * Node.t) list =
   |> Edge.Set.filter Edge.is_version
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
+let get_parameter (mdg : t) (node : Node.t) (idx : int) : Node.t =
+  get_edges mdg node.uid
+  |> Edge.Set.filter (Edge.is_parameter ~idx:(Some idx))
+  |> Edge.Set.choose
+  |> Edge.tar
+
 let get_parameters (mdg : t) (node : Node.t) : (int * Node.t) list =
   get_edges mdg node.uid
   |> Edge.Set.filter Edge.is_parameter
   |> Edge.Set.map_list (fun edge -> (Edge.argument edge, Edge.tar edge))
+
+let get_argument (mdg : t) (node : Node.t) (idx : int) : Node.t list =
+  get_trans mdg node.uid
+  |> Edge.Set.filter (Edge.is_argument ~idx:(Some idx))
+  |> Edge.Set.map_list Edge.tar
 
 let get_arguments (mdg : t) (node : Node.t) : (int * Node.t) list =
   get_trans mdg node.uid
   |> Edge.Set.filter Edge.is_argument
   |> Edge.Set.map_list (fun edge -> (Edge.argument edge, Edge.tar edge))
 
-let get_call_function (mdg : t) (node : Node.t) : Node.t list =
+let get_called_functions (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.uid
   |> Edge.Set.filter Edge.is_call
   |> Edge.Set.map_list Edge.tar
 
-let get_call_return (mdg : t) (node : Node.t) : Node.t =
+let get_return_of_call (mdg : t) (node : Node.t) : Node.t =
   get_edges mdg node.uid
   |> Edge.Set.filter Edge.is_return
   |> Edge.Set.choose

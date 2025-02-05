@@ -35,10 +35,10 @@ let compute_call_arguments (callers : t) (mdg : Mdg.t) (l_func : Node.t)
       ls_args |> List.filter_map f |> List.iter (add callers l_param) )
 
 let compute_call (callers : t) (mdg : Mdg.t) (l_call : Node.t) : unit =
-  let l_func = Mdg.get_call_function mdg l_call in
-  Fun.flip List.iter l_func (fun l_func' ->
-      add callers l_func' l_call;
-      compute_call_arguments callers mdg l_func' l_call )
+  let ls_func = Mdg.get_called_functions mdg l_call in
+  Fun.flip List.iter ls_func (fun l_func ->
+      add callers l_func l_call;
+      compute_call_arguments callers mdg l_func l_call )
 
 let compute (mdg : Mdg.t) : t =
   let callers = create () in

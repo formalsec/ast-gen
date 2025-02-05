@@ -197,3 +197,8 @@ let name (node : t) : string =
   | Return name -> name
   | TaintSink sink -> Tainted.(name !sink)
   | _ -> Log.fail "unexpected node without an associated name"
+
+let sink (node : t) : Tainted.sink =
+  match node.kind with
+  | TaintSink sink -> sink
+  | _ -> Log.fail "unexpected node without an associated tainted sink"

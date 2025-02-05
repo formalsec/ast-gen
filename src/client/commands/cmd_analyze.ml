@@ -20,22 +20,26 @@ module Options = struct
 end
 
 module Output = struct
+  let pp_vulns (p : Fpath.t) (ppf : Fmt.t) (vs : Vulnerability.t list) : unit =
+    if List.length vs > 0 then Fmt.(pp_lst !>"@\n" Vulnerability.pp) ppf vs
+    else Fmt.fmt ppf "No vulnerabilities detected in \"%a\"." Fpath.pp p
+
   let tainted (w : Workspace.t) (engine : Analysis_engine.t) : unit =
     let w' = Workspace.(w / "tainted.svg") in
     Log.info "Analysis engine initialized successfully";
     Workspace.execute_noerr Side w'
       (Fun.flip Svg_exporter.export_svg (`Mdg engine.mdg))
 
-  let main (w : Workspace.t) (vulns : Vulnerability.t list) : unit =
+  let main (w : Workspace.t) (path : Fpath.t) (vulns : Vulnerability.t list) :
+      unit =
     Log.info "Vulnerability queries runned successfully.";
-    Workspace.log w Fmt.(dly "%a@." (pp_lst !>"@\n" Vulnerability.pp) vulns);
+    Log.stdout "%a@." (pp_vulns path) vulns;
     match w.out with
-    | Single _ ->
-      Workspace.output_noerr Main w Fmt.(pp_lst !>"@\n" Vulnerability.pp) vulns
+    | None -> ()
+    | Single _ -> Workspace.output_noerr Main w (pp_vulns path) vulns
     | Bundle _ ->
       let w' = Workspace.(w / "vulns.txt") in
-      Workspace.output_noerr Side w' Fmt.(pp_lst !>"@\n" Vulnerability.pp) vulns
-    | _ -> ()
+      Workspace.output_noerr Side w' (pp_vulns path) vulns
 end
 
 let run (tc : Taint_config.t) (input : Fpath.t) (w : Workspace.t) :
@@ -44,7 +48,7 @@ let run (tc : Taint_config.t) (input : Fpath.t) (w : Workspace.t) :
   let engine = Analysis_engine.initialize mdg in
   Output.tainted w engine;
   let vulns = Analyzer.run engine in
-  Output.main w vulns;
+  Output.main w input vulns;
   Ok vulns
 
 let outcome (result : 'a Exec.status) : Bulk.Instance.outcome =

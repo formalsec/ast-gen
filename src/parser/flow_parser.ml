@@ -30,8 +30,9 @@ open struct
       (Loc.t, Loc.t) Flow_ast.Program.t =
     let ic_sz = in_channel_length ic in
     let prog_text = really_input_string ic ic_sz in
-    let (flow_ast, flow_errors) = Parser_flow.program ~fail:false prog_text in
-    match flow_errors with [] -> flow_ast | _ -> raise path flow_errors
+    match Parser_flow.program ~fail:false prog_text with
+    | (flow_ast, []) -> flow_ast
+    | (_, flow_errors) -> raise path flow_errors
 end
 
 let parse (path : Fpath.t) : (Loc.t, Loc.t) Flow_ast.Program.t =

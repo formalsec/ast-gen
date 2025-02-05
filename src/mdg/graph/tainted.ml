@@ -1,3 +1,4 @@
+open Graphjs_base
 open Graphjs_share
 
 open struct
@@ -22,13 +23,18 @@ type t =
 
 let ( ! ) tainted : t = (tainted :> t) [@@inline]
 
+let kind : sink -> Sink_kind.t = function
+  | `PackageSink package_sink -> package_sink.kind
+  | `FunctionSink function_sink -> function_sink.kind
+  | `NewSink new_sink -> new_sink.kind
+
 let name : t -> string = function
   | `PackageSource package_source -> package_source.source
   | `PackageSink package_sink -> package_sink.sink
   | `FunctionSink function_sink -> function_sink.sink
   | `NewSink new_sink -> new_sink.sink
 
-let kind : sink -> Sink_kind.t = function
-  | `PackageSink package_sink -> package_sink.kind
-  | `FunctionSink function_sink -> function_sink.kind
-  | `NewSink new_sink -> new_sink.kind
+let args : sink -> int list = function
+  | `PackageSink _ -> Log.fail "unexpected sink kind"
+  | `FunctionSink function_sink -> function_sink.args
+  | `NewSink new_sink -> new_sink.args

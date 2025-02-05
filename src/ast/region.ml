@@ -11,8 +11,10 @@ type t =
   ; rpos : pos
   }
 
+let invalid : int = -1
+
 let default_pos : unit -> pos =
-  let dflt = { line = -1; col = -1 } in
+  let dflt = { line = invalid; col = invalid } in
   fun () -> dflt
 
 let default : unit -> t =
