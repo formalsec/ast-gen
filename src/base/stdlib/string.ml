@@ -1,5 +1,6 @@
 include Stdlib.String
 
+(* FIXME: currently unhappy with this function *)
 let truncate (limit : int) (text : string) : string * bool =
   let truncate_line line text =
     try if length line > limit then (sub line 0 limit, true) else (line, text)

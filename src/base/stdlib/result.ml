@@ -1,12 +1,11 @@
 include Stdlib.Result
 
-let ( let* ) v f = bind v f
-let ( let+ ) v f = map f v
+let ( let* ) (v : ('a, 'e) t) (f : 'a -> ('b, 'e) t) : ('b, 'e) t = bind v f
+let ( let+ ) (f : 'a -> 'b) (v : ('a, 'e) t) : ('b, 'e) t = map f v
 
-let extract (results : ('a, 'b) t list) : ('a list, 'b) t =
-  let extract_f result acc =
-    match (acc, result) with
-    | ((Error _ as err), _) -> err
-    | (Ok _, (Error _ as err)) -> err
-    | (Ok results, Ok result') -> Ok (result' :: results) in
-  List.fold_right extract_f results (Ok [])
+let extract (vs : ('a, 'b) t list) : ('a list, 'b) t =
+  Fun.flip2 List.fold_right vs (Ok []) (fun v acc ->
+      match (acc, v) with
+      | ((Error _ as err), _) -> err
+      | (Ok _, (Error _ as err)) -> err
+      | (Ok vs, Ok v) -> Ok (v :: vs) )
