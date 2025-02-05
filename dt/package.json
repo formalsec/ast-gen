@@ -16,12 +16,12 @@
       "url": "https://github.com/andreffnascimento"
     },
     {
-      "name": "Tomás Tavares",
-      "url": "https://github.com/Th0mz"
-    },
-    {
       "name": "Filipe Marques",
       "url": "https://github.com/filipeom"
+    },
+    {
+      "name": "Tomás Tavares",
+      "url": "https://github.com/Th0mz"
     }
   ],
   "main": "index.js",

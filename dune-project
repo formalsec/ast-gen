@@ -21,7 +21,7 @@
 
 (package
  (name graphjs)
- (synopsis "MDG-based vulnarability detection for JavaScript")
+ (synopsis "MDG-based vulnerability detection for JavaScript")
  (description
   "MDG-based static vulnerability scanner specialized in analyzing npm packages and detecting taint-style and prototype pollution vulnerabilities.")
  (depends
@@ -33,7 +33,7 @@
   (flow_parser
    (>= 0.246.0))
   (ocaml
-   (>= "5.2.1"))
+   (>= "5.2.0"))
   ocamlformat
   ocamlgraph
   ocaml-lsp-server
@@ -43,7 +43,6 @@
   ("JavaScript"
    "Node.js"
    "Multiversion Dependency Graph"
-   "Vulnerability"
-   "Detection"))
+   "Vulnerability Detection"))
  (sites
   (share config)))
