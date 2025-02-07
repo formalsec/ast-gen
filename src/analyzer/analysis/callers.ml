@@ -21,8 +21,7 @@ let add (callers : t) (node : Node.t) (site : Node.t) : unit =
 let pp (ppf : Fmt.t) (callers : t) : unit =
   let pp_sites ppf (node, sites) =
     Fmt.fmt ppf "%a -> %a" Node.pp node Node.Set.pp sites in
-  Fmt.(pp_hashtbl !>"@\n" (fun ppf (_, sites) -> pp_sites ppf sites))
-    ppf callers
+  Fmt.(pp_htbl !>"@\n" (fun ppf (_, sites) -> pp_sites ppf sites)) ppf callers
 
 let str (callers : t) : string = Fmt.str "%a" pp callers [@@inline]
 

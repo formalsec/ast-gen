@@ -52,16 +52,16 @@ let fmt_verbose (ppf : Fmt.t) (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
   if Config.(!log_verbose) then Fmt.kdly (Fmt.fmt ppf "%a@." pp_content) fmt
   else (Fmt.ignore ppf [@inlined]) fmt
 
+let writer (writer : Writer.t) (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
+  Fmt.fmt writer.ppf fmt
+
 let stdout (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
   Fmt.fmt Writer.Config.(!stdout).ppf fmt
-[@@inline]
 
 let stderr (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
   Fmt.fmt Writer.Config.(!stderr).ppf fmt
-[@@inline]
 
 let fail (fmt : ('a, Fmt.t, unit, 'b) format4) : 'a = Fmt.ksstr failwith fmt
-[@@inline]
 
 let app (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
   (fmt_app Writer.Config.(!stdout).ppf [@inlined]) fmt

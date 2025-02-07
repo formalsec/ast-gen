@@ -10,7 +10,7 @@ let equal (store1 : t) (store2 : t) = Hashtbl.equal Node.Set.equal store1 store2
 let pp (ppf : Fmt.t) (store : t) : unit =
   let pp_bind ppf (key, values) =
     Fmt.fmt ppf "%s -> %a" key Node.Set.pp values in
-  Fmt.(pp_hashtbl !>"@\n" pp_bind) ppf store
+  Fmt.(pp_htbl !>"@\n" pp_bind) ppf store
 
 let str (store : t) : string = Fmt.str "%a" pp store [@@inline]
 

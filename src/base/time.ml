@@ -1,19 +1,27 @@
 type t = float
-type formatted = int * int * int * int
+
+type ftime =
+  { hours : int
+  ; mins : int
+  ; secs : int
+  ; ms : int
+  }
 
 let start () : t = Unix.gettimeofday ()
 let finish (time : t) : t = start () -. time
 
-let time (f : unit -> 'a) : t * 'a =
+let compute (f : unit -> 'a) : t * 'a =
   let time = start () in
   let res = f () in
   let time' = finish time in
   (time', res)
 
-let format (time : t) : formatted =
-  let total_secs = int_of_float (floor time) in
-  let hours = total_secs / 3600 in
-  let minutes = (total_secs - (hours * 3600)) / 60 in
-  let seconds = total_secs - ((hours * 3600) + (minutes * 60)) in
-  let millis = int_of_float (Float.round ((time -. floor time) *. 1000.0)) in
-  (hours, minutes, seconds, millis)
+let format (time : t) : ftime =
+  let total_ms = int_of_float (time *. 1000.) in
+  let ms = total_ms mod 1000 in
+  let total_sec = total_ms / 1000 in
+  let secs = total_sec mod 60 in
+  let total_min = total_sec / 60 in
+  let mins = total_min mod 60 in
+  let hours = total_min / 60 in
+  { hours; mins; secs; ms }

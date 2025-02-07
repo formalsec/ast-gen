@@ -3,7 +3,7 @@ open Graphjs_base
 module Config = struct
   include Config
 
-  let time_font_f font = Font.update font ~effect:`Faint
+  let time_font_f font = Font.update font ~eff:`Faint
   let main_font : Font.t t = constant (Font.create ~fg:`White ())
   let path_font : Font.t t = constant (Font.create ~fg:`DarkGray ())
   let success_font : Font.t t = constant (Font.create ~fg:`LightGreen ())
@@ -118,11 +118,11 @@ module Instance = struct
 
   let pp_simple (ppf : Fmt.t) (instance : 'm t) : unit =
     let limit = width ppf - 18 in
-    let (_, _, secs, millis) = Time.format instance.time in
+    let time = Time.format instance.time in
     Font.fmt Config.(!path_font) ppf "%a" (pp_path limit) instance.input;
     Fmt.fmt ppf " %a" pp_outcome instance.outcome;
     if not (skipped instance) then
-      Font.fmt (time_font instance.outcome) ppf "[%02d.%03ds]" secs millis
+      Font.fmt (time_font instance.outcome) ppf "[%02d.%03ds]" time.secs time.ms
 end
 
 module InstanceTree = struct
@@ -214,9 +214,9 @@ module InstanceTree = struct
   let pp_summary_totals (ppf : Fmt.t) (tree : 'm t) : unit =
     let total = total tree in
     let ratio = float_of_int tree.success *. 100.0 /. float_of_int total in
-    let (_, mins, secs, millis) = Time.format tree.time in
+    let time = Time.format tree.time in
     Fmt.fmt ppf "Tests Successful: %d / %d (%.2f%%) | " tree.success total ratio;
-    Fmt.fmt ppf "Time elapsed: %dm %ds %dms@\n" mins secs millis;
+    Fmt.fmt ppf "Time elapsed: %dm %ds %dms@\n" time.mins time.secs time.ms;
     Fmt.fmt ppf "Failures: %d, Timeouts: %d, Anomalies: %d, Skipped: %d"
       tree.failure tree.timeout tree.anomaly tree.skipped
 
@@ -280,7 +280,7 @@ module Executor (CmdInterface : CmdInterface) = struct
     Fun.flip2 List.fold_left (Ok ()) inputs (fun acc (offset, input) ->
         let (tree', w', name) = InstanceTree.extend tree offset in
         let streams = Log.Redirect.capture Shared in
-        let (time, (result, outcome)) = Time.time (run_instance input w') in
+        let (time, (result, outcome)) = Time.compute (run_instance input w') in
         Log.Redirect.restore streams;
         let instance = Instance.create input w' result outcome time streams in
         store_instance tree' name instance;

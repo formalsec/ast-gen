@@ -361,4 +361,4 @@ let pp_prog_file ?(filename : bool = false) (ppf : Fmt.t)
 
 let pp_prog ?(filename : bool = false) (ppf : Fmt.t) (prog : 'm Ast.Prog.t) :
     unit =
-  Fmt.(pp_hashtbl !>"@\n@\n" (pp_prog_file ~filename)) ppf prog
+  Fmt.(pp_htbl !>"@\n@\n" (pp_prog_file ~filename)) ppf prog

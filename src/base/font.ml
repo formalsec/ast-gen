@@ -4,11 +4,7 @@ module Config = struct
   let colored : bool t = static true
 end
 
-let colored (writer : Writer.t) : bool =
-  Config.(!colored) && Writer.colored writer
-[@@inline]
-
-module Code = struct
+module Attr = struct
   type color =
     [ `Black
     | `Red
@@ -51,8 +47,8 @@ module Code = struct
     | `Style of style
     ]
 
-  let ( ! ) (code : t) : int =
-    let attr_to_int = function
+  let code (attr : t) : int =
+    let to_code = function
       | `Bold -> 1
       | `Faint -> 2
       | `Italic -> 3
@@ -78,89 +74,83 @@ module Code = struct
       | `LightPurple -> 95
       | `LightCyan -> 96
       | `White -> 97 in
-    match code with
+    match attr with
     | `Reset -> 0
-    | `Foreground fg -> attr_to_int fg
-    | `Background bg -> attr_to_int bg + 10
-    | `Effect effect -> attr_to_int effect
-    | `Style style -> attr_to_int style
+    | `Foreground fg -> to_code fg
+    | `Background bg -> to_code bg + 10
+    | `Effect eff -> to_code eff
+    | `Style sty -> to_code sty
 end
+
+type t = Attr.t list
 
 open struct
-  type font = Code.t list
+  let make_foreground (fg : Attr.color option) (font : t) : t =
+    Option.fold ~none:font ~some:(fun fg -> `Foreground fg :: font) fg
 
-  let get_foreground : font -> Code.color option =
-    List.find_map (function `Foreground fg' -> Some fg' | _ -> None)
+  let make_background (bg : Attr.color option) (font : t) : t =
+    Option.fold ~none:font ~some:(fun bg -> `Background bg :: font) bg
 
-  let get_background : font -> Code.color option =
-    List.find_map (function `Background bg' -> Some bg' | _ -> None)
+  let make_effect (eff : Attr.effect option) (font : t) : t =
+    Option.fold ~none:font ~some:(fun eff -> `Effect eff :: font) eff
 
-  let get_effect : font -> Code.effect option =
-    List.find_map (function `Effect effect' -> Some effect' | _ -> None)
-
-  let get_style (style : Code.style) : font -> bool option =
-    List.find_map (function
-      | `Style style' when style == style' -> Some true
-      | _ -> None )
-
-  let set_foreground (fg : Code.color option) (font : font) : font =
-    Option.fold ~none:font ~some:(fun color' -> `Foreground color' :: font) fg
-
-  let set_background (bg : Code.color option) (font : font) : font =
-    Option.fold ~none:font ~some:(fun color' -> `Background color' :: font) bg
-
-  let set_effect (effect : Code.effect option) (font : font) : font =
-    Option.fold ~none:font ~some:(fun effect' -> `Effect effect' :: font) effect
-
-  let set_style ((style, on) : Code.style * bool option) (font : font) : font =
-    let style_f = function true -> `Style style :: font | false -> font in
+  let make_style ((sty, on) : Attr.style * bool option) (font : t) : t =
+    let style_f = function true -> `Style sty :: font | false -> font in
     Option.fold ~none:font ~some:style_f on
 
-  let make_font (fg : Code.color option) (bg : Code.color option)
-      (effect : Code.effect option) (bold : bool option) (italic : bool option)
+  let make_font (fg : Attr.color option) (bg : Attr.color option)
+      (eff : Attr.effect option) (bold : bool option) (italic : bool option)
       (underline : bool option) (strike : bool option) =
-    set_foreground fg []
-    |> set_background bg
-    |> set_effect effect
-    |> set_style (`Bold, bold)
-    |> set_style (`Italic, italic)
-    |> set_style (`Underline, underline)
-    |> set_style (`Strike, strike)
+    make_foreground fg []
+    |> make_background bg
+    |> make_effect eff
+    |> make_style (`Bold, bold)
+    |> make_style (`Italic, italic)
+    |> make_style (`Underline, underline)
+    |> make_style (`Strike, strike)
 end
 
-type t = font
+let colored (writer : Writer.t) : bool =
+  Config.(!colored) && Writer.colored writer
 
-let create ?(fg : Code.color option) ?(bg : Code.color option)
-    ?(effect : Code.effect option) ?(bold : bool option) ?(italic : bool option)
+let foreground (font : t) : Attr.color option =
+  List.find_map (function `Foreground fg -> Some fg | _ -> None) font
+
+let background (font : t) : Attr.color option =
+  List.find_map (function `Background bg -> Some bg | _ -> None) font
+
+let effect (font : t) : Attr.effect option =
+  List.find_map (function `Effect eff -> Some eff | _ -> None) font
+
+let style (sty : Attr.style) (font : t) : bool option =
+  Fun.flip List.find_map font (function
+    | `Style sty' when sty == sty' -> Some true
+    | _ -> None )
+
+let create ?(fg : Attr.color option) ?(bg : Attr.color option)
+    ?(eff : Attr.effect option) ?(bold : bool option) ?(italic : bool option)
     ?(underline : bool option) ?(strike : bool option) () : t =
-  make_font fg bg effect bold italic underline strike
+  make_font fg bg eff bold italic underline strike
 
-let update ?(fg : Code.color option) ?(bg : Code.color option)
-    ?(effect : Code.effect option) ?(bold : bool option) ?(italic : bool option)
+let update ?(fg : Attr.color option) ?(bg : Attr.color option)
+    ?(eff : Attr.effect option) ?(bold : bool option) ?(italic : bool option)
     ?(underline : bool option) ?(strike : bool option) (font : t) : t =
-  let fg = Option.map_none ~value:(get_foreground font) fg in
-  let bg = Option.map_none ~value:(get_background font) bg in
-  let effect = Option.map_none ~value:(get_effect font) effect in
-  let bold = Option.map_none ~value:(get_style `Bold font) bold in
-  let italic = Option.map_none ~value:(get_style `Italic font) italic in
-  let underline = Option.map_none ~value:(get_style `Underline font) underline in
-  let strike = Option.map_none ~value:(get_style `Strike font) strike in
+  let fg = Option.map_none ~value:(foreground font) fg in
+  let bg = Option.map_none ~value:(background font) bg in
+  let effect = Option.map_none ~value:(effect font) eff in
+  let bold = Option.map_none ~value:(style `Bold font) bold in
+  let italic = Option.map_none ~value:(style `Italic font) italic in
+  let underline = Option.map_none ~value:(style `Underline font) underline in
+  let strike = Option.map_none ~value:(style `Strike font) strike in
   make_font fg bg effect bold italic underline strike
 
 let pp_font (ppf : Fmt.t) (font : t) : unit =
-  let pp_code ppf code = Fmt.pp_int ppf Code.(!code) in
-  Fmt.fmt ppf "\027[%am" Fmt.(pp_lst !>";" pp_code) font
+  let pp_attr ppf attr = Fmt.pp_int ppf (Attr.code attr) in
+  Fmt.fmt ppf "\027[%am" Fmt.(pp_lst !>";" pp_attr) font
 
 let pp (font : t) (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (v : 'a) : unit =
   if not (colored (Writer.find ppf)) then pp_v ppf v
   else Fmt.fmt ppf "%a%a%a" pp_font font pp_v v pp_font [ `Reset ]
-
-let pp_int (font : t) : Fmt.t -> int -> unit = pp font Fmt.pp_int
-let pp_float (font : t) : Fmt.t -> float -> unit = pp font Fmt.pp_float
-let pp_char (font : t) : Fmt.t -> char -> unit = pp font Fmt.pp_char
-let pp_str (font : t) : Fmt.t -> string -> unit = pp font Fmt.pp_str
-let pp_bool (font : t) : Fmt.t -> bool -> unit = pp font Fmt.pp_bool
-let pp_bytes (font : t) : Fmt.t -> bytes -> unit = pp font Fmt.pp_bytes
 
 let kfmt (font : t) (k : Fmt.t -> 'a) (ppf : Fmt.t) :
     ('b, Fmt.t, unit, 'a) format4 -> 'b =

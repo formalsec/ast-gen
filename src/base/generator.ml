@@ -4,17 +4,17 @@ type 'a t =
   }
 
 open struct
-  let next (counter : int ref) (step : int) () =
-    let n = !counter in
-    counter := n + step;
-    n
+  let next (gen : int ref) (step : int) () =
+    let counter = !gen in
+    gen := counter + step;
+    counter
 
   let reset (counter : int ref) (init : int) () = counter := init
 end
 
 let of_numbers ?(init : int = 0) ?(step : int = 1) () : int t =
-  let counter = ref init in
-  { next = next counter step; reset = reset counter init }
+  let gen = ref init in
+  { next = next gen step; reset = reset gen init }
 
 let of_strings ?(init : int = 0) ?(step : int = 1) (base : string) : string t =
   let gen = of_numbers ~init ~step () in

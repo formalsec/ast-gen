@@ -27,7 +27,7 @@ let pp (ppf : Fmt.t) (summary : t) : unit =
   let pp_prop ppf prop = Fmt.pp_str ppf (Option.value ~default:"*" prop) in
   let pp_sites ppf (_, prop) (node, sites) =
     Fmt.fmt ppf "%a.%a -> %a" Node.pp node pp_prop prop Node.Set.pp sites in
-  Fmt.(pp_hashtbl !>"@\n" (fun ppf (key, sites) -> pp_sites ppf key sites))
+  Fmt.(pp_htbl !>"@\n" (fun ppf (key, sites) -> pp_sites ppf key sites))
     ppf summary
 
 let str (summary : t) : string = Fmt.str "%a" pp summary [@@inline]

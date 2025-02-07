@@ -29,13 +29,14 @@ open struct
     reg := reg_remove' !reg
 end
 
-let stream (writer : t) : stream = writer.stream [@@inline]
-let ppf (writer : t) : formatter = writer.ppf [@@inline]
-let width (writer : t) : int option = writer.width [@@inline]
-let height (writer : t) : int option = writer.height [@@inline]
-let colored (writer : t) : bool = writer.colored [@@inline]
+let stream (writer : t) : stream = writer.stream
+let ppf (writer : t) : formatter = writer.ppf
+let width (writer : t) : int option = writer.width
+let height (writer : t) : int option = writer.height
+let colored (writer : t) : bool = writer.colored
 
-let stream_attributes : stream -> int option * int option * bool = function
+let stream_attributes (stream : stream) : int option * int option * bool =
+  match stream with
   | Unknown | Buffer _ -> (None, None, false)
   | Channel oc -> Console.attributes (Unix.descr_of_out_channel oc)
 
@@ -57,24 +58,19 @@ let remove ?(close : bool = true) (writer : t) : unit =
 let find (ppf : formatter) : t =
   match reg_find ppf with None -> generate Unknown ppf | Some writer -> writer
 
-let to_buffer (buffer : Buffer.t) : t =
-  create (Buffer buffer) (formatter_of_buffer buffer)
-[@@inline]
+let to_buffer (buf : Buffer.t) : t =
+  create (Buffer buf) (formatter_of_buffer buf)
 
-let to_out_channel (oc : out_channel) : t =
+let to_channel (oc : out_channel) : t =
   create (Channel oc) (formatter_of_out_channel oc)
-[@@inline]
 
 let to_new_buffer () : t = to_buffer (Buffer.create Config.(!dflt_buf_sz))
-[@@inline]
-
-let to_file (filename : string) : t = to_out_channel (open_out filename)
-[@@inline]
+let to_file (filename : string) : t = to_channel (open_out filename)
 
 module Config = struct
   include Config
 
-  let stdout = flexible (create (Channel Stdlib.stdout) std_formatter)
-  let stderr = flexible (create (Channel Stdlib.stderr) err_formatter)
+  let stdout = dynamic (create (Channel Stdlib.stdout) std_formatter)
+  let stderr = dynamic (create (Channel Stdlib.stderr) err_formatter)
   let stdbuf = constant (create (Buffer stdbuf) str_formatter)
 end

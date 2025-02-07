@@ -42,7 +42,7 @@ let replace (interactability : t) (node : Node.t) (interaction : Interaction.t)
 let pp (ppf : Fmt.t) (interactability : t) : unit =
   let pp' ppf (_, (node, interaction)) =
     Fmt.fmt ppf "%a -> %a" Node.pp node Interaction.pp interaction in
-  Fmt.(pp_hashtbl !>"@\n" pp') ppf interactability
+  Fmt.(pp_htbl !>"@\n" pp') ppf interactability
 
 let str (interactability : t) : string = Fmt.str "%a" pp interactability
 [@@inline]
