@@ -3,9 +3,9 @@ open Graphjs_base
 open struct
   let taint_config_site : string list = Site.Sites.config
 
-  let search (locations : string list) (file : string) : string option =
+  let search (locations : string list) (filename : string) : string option =
     Fun.flip List.find_map locations (fun dir ->
-        let path = Filename.concat dir file in
+        let path = Filename.concat dir filename in
         if Sys.file_exists path then Some path else None )
 end
 
@@ -16,4 +16,4 @@ let default_taint_config () =
 
 include Config
 
-let mode : Mode.t t = static Mode.SingleFile
+let mode = static Mode.SingleFile

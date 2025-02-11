@@ -43,7 +43,7 @@ type t =
   ; new_sinks : new_sink list
   }
 
-let default : unit -> t =
+let default =
   let dflt =
     { package_sources = []
     ; package_sinks = []
@@ -145,14 +145,14 @@ open struct
     let vuln = read_vuln vuln_type in
     List.fold_right (read_sink vuln) (Json.to_list vuln_sinks) sinks
 
-  let read_sources (config_json : Json.t) : package_source list =
-    let sources = config_json |> Json.member "sources" in
+  let read_sources (config : Json.t) : package_source list =
+    let sources = config |> Json.member "sources" in
     if sources == `Null then []
     else List.fold_right read_source (Json.to_list sources) []
 
-  let read_sinks (config_json : Json.t) :
+  let read_sinks (config : Json.t) :
       package_sink list * function_sink list * new_sink list =
-    let sinks = config_json |> Json.member "sinks" in
+    let sinks = config |> Json.member "sinks" in
     if sinks == `Null then ([], [], [])
     else List.fold_right read_vuln_sink (Json.to_assoc sinks) ([], [], [])
 end
