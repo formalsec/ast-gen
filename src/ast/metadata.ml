@@ -3,7 +3,7 @@ type ('m, 'e) t =
   ; el : 'e
   }
 
-let ( @> ) (el : 'e) (md : 'm) : ('m, 'e) t = { el; md } [@@inline]
-let el (x : ('m, 'e) t) : 'e = x.el [@@inline]
-let md (x : ('m, 'e) t) : 'm = x.md [@@inline]
-let map (f : 'e -> 'f) (x : ('m, 'e) t) : ('m, 'f) t = f x.el @> x.md [@@inline]
+let ( @> ) (el : 'e) (md : 'm) : ('m, 'e) t = { el; md }
+let el (x : ('m, 'e) t) : 'e = x.el
+let md (x : ('m, 'e) t) : 'm = x.md
+let map (f : 'e -> 'f) (x : ('m, 'e) t) : ('m, 'f) t = f x.el @> x.md

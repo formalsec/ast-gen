@@ -13,11 +13,11 @@ type t =
 
 let invalid : int = -1
 
-let default_pos : unit -> pos =
+let default_pos =
   let dflt = { line = invalid; col = invalid } in
   fun () -> dflt
 
-let default : unit -> t =
+let default =
   let dflt = { file = ""; lpos = default_pos (); rpos = default_pos () } in
   fun () -> dflt
 
@@ -31,4 +31,4 @@ let pp_pos (ppf : Fmt.t) (pos : pos) : unit =
 let pp (ppf : Fmt.t) (at : t) : unit =
   Fmt.fmt ppf "%S:%a-%a" at.file pp_pos at.lpos pp_pos at.rpos
 
-let str (at : t) : string = Fmt.str "%a" pp at [@@inline]
+let str (at : t) : string = Fmt.str "%a" pp at

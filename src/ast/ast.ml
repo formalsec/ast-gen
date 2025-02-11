@@ -97,39 +97,39 @@ end =
   Expression
 
 and Statement : sig
-  module AssignSimple : sig
+  module Assignment : sig
     type 'm t =
       { left : 'm LeftValue.t
       ; right : 'm Expression.t
       }
   end
 
-  module AssignNewObject : sig
+  module NewObject : sig
     type 'm t = { left : 'm LeftValue.t }
   end
 
-  module AssignNewArray : sig
+  module NewArray : sig
     type 'm t = { left : 'm LeftValue.t }
   end
 
-  module AssignUnopt : sig
+  module Unopt : sig
     type 'm t =
       { left : 'm LeftValue.t
-      ; op : Operator.Unary.t
+      ; op : Operator.unary
       ; arg : 'm Expression.t
       }
   end
 
-  module AssignBinopt : sig
+  module Binopt : sig
     type 'm t =
       { left : 'm LeftValue.t
-      ; op : Operator.Binary.t
+      ; op : Operator.binary
       ; arg1 : 'm Expression.t
       ; arg2 : 'm Expression.t
       }
   end
 
-  module AssignYield : sig
+  module Yield : sig
     type 'm t =
       { left : 'm LeftValue.t
       ; arg : 'm Expression.t option
@@ -185,7 +185,7 @@ and Statement : sig
       }
   end
 
-  module AssignNewCall : sig
+  module NewCall : sig
     type 'm t =
       { left : 'm LeftValue.t
       ; callee : 'm Identifier.t
@@ -193,7 +193,7 @@ and Statement : sig
       }
   end
 
-  module AssignFunctionCall : sig
+  module FunctionCall : sig
     type 'm t =
       { left : 'm LeftValue.t
       ; callee : 'm Identifier.t
@@ -201,7 +201,7 @@ and Statement : sig
       }
   end
 
-  module AssignStaticMethodCall : sig
+  module StaticMethodCall : sig
     type 'm t =
       { left : 'm LeftValue.t
       ; obj : 'm Expression.t
@@ -210,7 +210,7 @@ and Statement : sig
       }
   end
 
-  module AssignDynamicMethodCall : sig
+  module DynamicMethodCall : sig
     type 'm t =
       { left : 'm LeftValue.t
       ; obj : 'm Expression.t
@@ -219,7 +219,7 @@ and Statement : sig
       }
   end
 
-  module AssignFunctionDefinition : sig
+  module FunctionDefinition : sig
     type 'm t =
       { left : 'm LeftValue.t
       ; params : 'm Identifier.t list
@@ -230,7 +230,7 @@ and Statement : sig
       }
   end
 
-  module AssignDynamicImport : sig
+  module DynamicImport : sig
     type 'm t =
       { left : 'm LeftValue.t
       ; arg : 'm Expression.t
@@ -372,24 +372,24 @@ and Statement : sig
   and 'm t' =
     [ `ExprStmt of 'm Expression.t'
     | `VarDecl of LeftValue.t'
-    | `AssignSimple of 'm AssignSimple.t
-    | `AssignNewObject of 'm AssignNewObject.t
-    | `AssignNewArray of 'm AssignNewArray.t
-    | `AssignUnopt of 'm AssignUnopt.t
-    | `AssignBinopt of 'm AssignBinopt.t
-    | `AssignYield of 'm AssignYield.t
+    | `Assignment of 'm Assignment.t
+    | `NewObject of 'm NewObject.t
+    | `NewArray of 'm NewArray.t
+    | `Unopt of 'm Unopt.t
+    | `Binopt of 'm Binopt.t
+    | `Yield of 'm Yield.t
     | `StaticLookup of 'm StaticLookup.t
     | `DynamicLookup of 'm DynamicLookup.t
     | `StaticUpdate of 'm StaticUpdate.t
     | `DynamicUpdate of 'm DynamicUpdate.t
     | `StaticDelete of 'm StaticDelete.t
     | `DynamicDelete of 'm DynamicDelete.t
-    | `AssignNewCall of 'm AssignNewCall.t
-    | `AssignFunctionCall of 'm AssignFunctionCall.t
-    | `AssignStaticMethodCall of 'm AssignStaticMethodCall.t
-    | `AssignDynamicMethodCall of 'm AssignDynamicMethodCall.t
-    | `AssignFunctionDefinition of 'm AssignFunctionDefinition.t
-    | `AssignDynamicImport of 'm AssignDynamicImport.t
+    | `NewCall of 'm NewCall.t
+    | `FunctionCall of 'm FunctionCall.t
+    | `StaticMethodCall of 'm StaticMethodCall.t
+    | `DynamicMethodCall of 'm DynamicMethodCall.t
+    | `FunctionDefinition of 'm FunctionDefinition.t
+    | `DynamicImport of 'm DynamicImport.t
     | `If of 'm If.t
     | `Switch of 'm Switch.t
     | `While of 'm While.t
@@ -410,46 +410,42 @@ end =
   Statement
 
 and Operator : sig
-  module Unary : sig
-    type t =
-      | Plus
-      | Minus
-      | BitwiseNot
-      | LogicalNot
-      | Typeof
-      | Void
-      | Await
-      | Delete
-  end
+  type unary =
+    | Plus
+    | Minus
+    | BitwiseNot
+    | LogicalNot
+    | Typeof
+    | Void
+    | Await
+    | Delete
 
-  module Binary : sig
-    type t =
-      | Plus
-      | Minus
-      | Mult
-      | Div
-      | Mod
-      | Exp
-      | BitwiseAnd
-      | BitwiseOr
-      | BitwiseXor
-      | ShiftLeft
-      | ShiftRight
-      | ShiftRightLogical
-      | LogicalAnd
-      | LogicalOr
-      | NullishCoalesce
-      | Equal
-      | NotEqual
-      | StrictEqual
-      | StrictNotEqual
-      | LessThan
-      | LessThanEqual
-      | GreaterThan
-      | GreaterThanEqual
-      | Instanceof
-      | In
-  end
+  type binary =
+    | Plus
+    | Minus
+    | Mult
+    | Div
+    | Mod
+    | Exp
+    | BitwiseAnd
+    | BitwiseOr
+    | BitwiseXor
+    | ShiftLeft
+    | ShiftRight
+    | ShiftRightLogical
+    | LogicalAnd
+    | LogicalOr
+    | NullishCoalesce
+    | Equal
+    | NotEqual
+    | StrictEqual
+    | StrictNotEqual
+    | LessThan
+    | LessThanEqual
+    | GreaterThan
+    | GreaterThanEqual
+    | Instanceof
+    | In
 end =
   Operator
 

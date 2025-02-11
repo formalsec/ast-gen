@@ -170,23 +170,22 @@ and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
     : State.t =
   Fun.flip2 List.fold_left state stmts (fun state stmt ->
       match stmt.el with
-      | `AssignFunctionDefinition fundef when fundef.hoisted ->
+      | `FunctionDefinition fundef when fundef.hoisted ->
         build_hoisted_function_header state fundef.left fundef.params (cid stmt)
       | _ -> state )
 
-and build_assign_simple (state : State.t) (left : 'm LeftValue.t)
+and build_assignment (state : State.t) (left : 'm LeftValue.t)
     (right : 'm Expression.t) : State.t =
   let ls_right = eval_expr state right in
   update_scope state left ls_right;
   state
 
-and build_assign_new (state : State.t) (left : 'm LeftValue.t) (cid : cid) :
-    State.t =
+and build_new (state : State.t) (left : 'm LeftValue.t) (cid : cid) : State.t =
   let l_node = State.add_object_node state cid (LeftValue.name left) in
   update_scope state left (Node.Set.singleton l_node);
   state
 
-and build_assign_unopt (state : State.t) (left : 'm LeftValue.t)
+and build_unopt (state : State.t) (left : 'm LeftValue.t)
     (arg : 'm Expression.t) (cid : cid) : State.t =
   let ls_arg = eval_expr state arg in
   let l_node = State.add_object_node state cid (LeftValue.name left) in
@@ -194,7 +193,7 @@ and build_assign_unopt (state : State.t) (left : 'm LeftValue.t)
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg;
   state
 
-and build_assign_binopt (state : State.t) (left : 'm LeftValue.t)
+and build_binopt (state : State.t) (left : 'm LeftValue.t)
     (arg1 : 'm Expression.t) (arg2 : 'm Expression.t) (cid : cid) : State.t =
   let ls_arg1 = eval_expr state arg1 in
   let ls_arg2 = eval_expr state arg2 in
@@ -204,7 +203,7 @@ and build_assign_binopt (state : State.t) (left : 'm LeftValue.t)
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg2;
   state
 
-and build_assign_yield (state : State.t) (_left : 'm LeftValue.t)
+and build_yield (state : State.t) (_left : 'm LeftValue.t)
     (_arg : 'm Expression.t option) (_delegate : bool) (_cid : cid) : State.t =
   (* TODO: implement the yield construct *)
   (* similar to the return, but does not stop the analysis of the remainder of the body *)
@@ -361,7 +360,7 @@ and build_hoisted_function_header (state : State.t) (left : 'm LeftValue.t)
       State.add_parameter_edge state' l_func l_param idx' );
   state
 
-and build_assign_function_definition (state : State.t) (left : 'm LeftValue.t)
+and build_function_definition (state : State.t) (left : 'm LeftValue.t)
     (params : 'm Identifier.t list) (body : 'm Statement.t list)
     (hoisted : bool) (cid : cid) : State.t =
   let func_name = LeftValue.name left in
@@ -431,15 +430,15 @@ and build_throw (state : State.t) (_arg : 'm Expression.t) : State.t =
 
 and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
   match stmt.el with
-  | `AssignSimple { left; right } -> build_assign_simple state left right
-  | `AssignNewObject { left } | `AssignNewArray { left } ->
-    build_assign_new state left (cid stmt)
-  | `AssignUnopt { left; arg; _ } ->
-    build_assign_unopt state left arg (cid stmt)
-  | `AssignBinopt { left; arg1; arg2; _ } ->
-    build_assign_binopt state left arg1 arg2 (cid stmt)
-  | `AssignYield { left; arg; delegate } ->
-    build_assign_yield state left arg delegate (cid stmt)
+  | `ExprStmt _ -> state
+  | `VarDecl _ -> state
+  | `Assignment { left; right } -> build_assignment state left right
+  | `NewObject { left } | `NewArray { left } -> build_new state left (cid stmt)
+  | `Unopt { left; arg; _ } -> build_unopt state left arg (cid stmt)
+  | `Binopt { left; arg1; arg2; _ } ->
+    build_binopt state left arg1 arg2 (cid stmt)
+  | `Yield { left; arg; delegate } ->
+    build_yield state left arg delegate (cid stmt)
   | `StaticLookup { left; obj; prop } ->
     build_static_lookup state left obj prop (cid stmt)
   | `DynamicLookup { left; obj; prop } ->
@@ -452,15 +451,15 @@ and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
     build_static_delete state left obj prop (cid stmt)
   | `DynamicDelete { left; obj; prop } ->
     build_dynamic_delete state left obj prop (cid stmt)
-  | `AssignNewCall { left; callee; args }
-  | `AssignFunctionCall { left; callee; args } ->
+  | `NewCall { left; callee; args } | `FunctionCall { left; callee; args } ->
     build_function_call state left callee args (cid stmt)
-  | `AssignStaticMethodCall { left; obj; prop; args } ->
+  | `StaticMethodCall { left; obj; prop; args } ->
     build_static_method_call state left obj prop args (cid stmt)
-  | `AssignDynamicMethodCall { left; obj; prop; args } ->
+  | `DynamicMethodCall { left; obj; prop; args } ->
     build_dynamic_method_call state left obj prop args (cid stmt)
-  | `AssignFunctionDefinition { left; params; body; hoisted; _ } ->
-    build_assign_function_definition state left params body hoisted (cid stmt)
+  | `FunctionDefinition { left; params; body; hoisted; _ } ->
+    build_function_definition state left params body hoisted (cid stmt)
+  | `DynamicImport _ -> state
   | `If { consequent; alternate; _ } -> build_if state consequent alternate
   | `Switch { cases; _ } -> build_switch state cases
   | `While { body; _ } | `ForIn { body; _ } | `ForOf { body; _ } ->
@@ -471,9 +470,9 @@ and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
   | `Try { body; handler; finalizer } -> build_try state body handler finalizer
   | `With { expr; body } -> build_with state expr body
   | `Labeled { label; body } -> build_labeled state label body
-  | `VarDecl _ | `ExprStmt _ | `AssignDynamicImport _ | `Debugger _
-  | `ImportDecl _ | `ExportDecl _ ->
-    state
+  | `Debugger _ -> state
+  | `ImportDecl _ -> state
+  | `ExportDecl _ -> state
 
 and build_sequence (state : State.t) (stmts : 'm Statement.t list) : State.t =
   List.fold_left build_statement state stmts

@@ -6,12 +6,12 @@ module Config = struct
   let test262_conform_hoisted : bool t = Printer.Config.test262_conform_hoisted
 end
 
-module Metadata = struct
-  include Metadata
-end
-
 module Region = struct
   include Region
+end
+
+module Metadata = struct
+  include Metadata
 end
 
 module Identifier = struct
@@ -210,77 +210,77 @@ module VarDecl = struct
   let str (vdecl : t') : string = Fmt.str "%a" pp vdecl
 end
 
-module AssignSimple = struct
-  type 'm t = 'm Ast.Statement.AssignSimple.t
+module Assignment = struct
+  type 'm t = 'm Ast.Statement.Assignment.t
 
   let create (left : 'm Ast.LeftValue.t) (right : 'm Ast.Expression.t) : 'm t =
     { left; right }
 
   let create_stmt (left : 'm Ast.LeftValue.t) (right : 'm Ast.Expression.t) :
       'm Ast.Statement.t' =
-    `AssignSimple (create left right)
+    `Assignment (create left right)
 
-  let pp (ppf : Fmt.t) (assign : 'm t) : unit = Printer.pp_assign ppf assign
+  let pp (ppf : Fmt.t) (assign : 'm t) : unit = Printer.pp_assignment ppf assign
   let str (assign : 'm t) : string = Fmt.str "%a" pp assign
 end
 
-module AssignNewObject = struct
-  type 'm t = 'm Ast.Statement.AssignNewObject.t
+module NewObject = struct
+  type 'm t = 'm Ast.Statement.NewObject.t
 
   let create (left : 'm Ast.LeftValue.t) : 'm t = { left }
 
   let create_stmt (left : 'm Ast.LeftValue.t) : 'm Ast.Statement.t' =
-    `AssignNewObject (create left)
+    `NewObject (create left)
 
   let pp (ppf : Fmt.t) (obj : 'm t) : unit = Printer.pp_newobj ppf obj
   let str (newobj : 'm t) : string = Fmt.str "%a" pp newobj
 end
 
-module AssignNewArray = struct
-  type 'm t = 'm Ast.Statement.AssignNewArray.t
+module NewArray = struct
+  type 'm t = 'm Ast.Statement.NewArray.t
 
   let create (left : 'm Ast.LeftValue.t) : 'm t = { left }
 
   let create_stmt (left : 'm Ast.LeftValue.t) : 'm Ast.Statement.t' =
-    `AssignNewArray (create left)
+    `NewArray (create left)
 
   let pp (ppf : Fmt.t) (arr : 'm t) : unit = Printer.pp_newarray ppf arr
   let str (newarray : 'm t) : string = Fmt.str "%a" pp newarray
 end
 
-module AssignUnopt = struct
-  type 'm t = 'm Ast.Statement.AssignUnopt.t
+module Unopt = struct
+  type 'm t = 'm Ast.Statement.Unopt.t
 
-  let create (left : 'm Ast.LeftValue.t) (op : Ast.Operator.Unary.t)
+  let create (left : 'm Ast.LeftValue.t) (op : Ast.Operator.unary)
       (arg : 'm Ast.Expression.t) : 'm t =
     { left; op; arg }
 
-  let create_stmt (left : 'm Ast.LeftValue.t) (op : Ast.Operator.Unary.t)
+  let create_stmt (left : 'm Ast.LeftValue.t) (op : Ast.Operator.unary)
       (arg : 'm Ast.Expression.t) : 'm Ast.Statement.t' =
-    `AssignUnopt (create left op arg)
+    `Unopt (create left op arg)
 
   let pp (ppf : Fmt.t) (unopt : 'm t) : unit = Printer.pp_unopt ppf unopt
   let str (unopt : 'm t) : string = Fmt.str "%a" pp unopt
 end
 
-module AssignBinopt = struct
-  type 'm t = 'm Ast.Statement.AssignBinopt.t
+module Binopt = struct
+  type 'm t = 'm Ast.Statement.Binopt.t
 
-  let create (left : 'm Ast.LeftValue.t) (op : Ast.Operator.Binary.t)
+  let create (left : 'm Ast.LeftValue.t) (op : Ast.Operator.binary)
       (arg1 : 'm Ast.Expression.t) (arg2 : 'm Ast.Expression.t) : 'm t =
     { left; op; arg1; arg2 }
 
-  let create_stmt (left : 'm Ast.LeftValue.t) (op : Ast.Operator.Binary.t)
+  let create_stmt (left : 'm Ast.LeftValue.t) (op : Ast.Operator.binary)
       (arg1 : 'm Ast.Expression.t) (arg2 : 'm Ast.Expression.t) :
       'm Ast.Statement.t' =
-    `AssignBinopt (create left op arg1 arg2)
+    `Binopt (create left op arg1 arg2)
 
   let pp (ppf : Fmt.t) (binopt : 'm t) : unit = Printer.pp_binopt ppf binopt
   let str (binopt : 'm t) : string = Fmt.str "%a" pp binopt
 end
 
-module AssignYield = struct
-  type 'm t = 'm Ast.Statement.AssignYield.t
+module Yield = struct
+  type 'm t = 'm Ast.Statement.Yield.t
 
   let create (left : 'm Ast.LeftValue.t) (arg : 'm Ast.Expression.t option)
       (delegate : bool) : 'm t =
@@ -288,7 +288,7 @@ module AssignYield = struct
 
   let create_stmt (left : 'm Ast.LeftValue.t) (arg : 'm Ast.Expression.t option)
       (delegate : bool) : 'm Ast.Statement.t' =
-    `AssignYield (create left arg delegate)
+    `Yield (create left arg delegate)
 
   let pp (ppf : Fmt.t) (yield : 'm t) : unit = Printer.pp_yield ppf yield
   let str (yield : 'm t) : string = Fmt.str "%a" pp yield
@@ -384,8 +384,8 @@ module DynamicDelete = struct
   let str (delete : 'm t) : string = Fmt.str "%a" pp delete
 end
 
-module AssignNewCall = struct
-  type 'm t = 'm Ast.Statement.AssignNewCall.t
+module NewCall = struct
+  type 'm t = 'm Ast.Statement.NewCall.t
 
   let create (left : 'm Ast.LeftValue.t) (callee : 'm Ast.Identifier.t)
       (args : 'm Ast.Expression.t list) : 'm t =
@@ -393,14 +393,14 @@ module AssignNewCall = struct
 
   let create_stmt (left : 'm Ast.LeftValue.t) (callee : 'm Ast.Identifier.t)
       (args : 'm Ast.Expression.t list) : 'm Ast.Statement.t' =
-    `AssignNewCall (create left callee args)
+    `NewCall (create left callee args)
 
   let pp (ppf : Fmt.t) (newcall : 'm t) : unit = Printer.pp_newcall ppf newcall
   let str (newcall : 'm t) : string = Fmt.str "%a" pp newcall
 end
 
-module AssignFunctionCall = struct
-  type 'm t = 'm Ast.Statement.AssignFunctionCall.t
+module FunctionCall = struct
+  type 'm t = 'm Ast.Statement.FunctionCall.t
 
   let create (left : 'm Ast.LeftValue.t) (callee : 'm Ast.Identifier.t)
       (args : 'm Ast.Expression.t list) : 'm t =
@@ -408,14 +408,14 @@ module AssignFunctionCall = struct
 
   let create_stmt (left : 'm Ast.LeftValue.t) (callee : 'm Ast.Identifier.t)
       (args : 'm Ast.Expression.t list) : 'm Ast.Statement.t' =
-    `AssignFunctionCall (create left callee args)
+    `FunctionCall (create left callee args)
 
   let pp (ppf : Fmt.t) (funcall : 'm t) : unit = Printer.pp_funcall ppf funcall
   let str (funcall : 'm t) : string = Fmt.str "%a" pp funcall
 end
 
-module AssignStaticMethodCall = struct
-  type 'm t = 'm Ast.Statement.AssignStaticMethodCall.t
+module StaticMethodCall = struct
+  type 'm t = 'm Ast.Statement.StaticMethodCall.t
 
   let create (left : 'm Ast.LeftValue.t) (obj : 'm Ast.Expression.t)
       (prop : 'm Ast.Prop.t) (args : 'm Ast.Expression.t list) : 'm t =
@@ -424,14 +424,14 @@ module AssignStaticMethodCall = struct
   let create_stmt (left : 'm Ast.LeftValue.t) (obj : 'm Ast.Expression.t)
       (prop : 'm Ast.Prop.t) (args : 'm Ast.Expression.t list) :
       'm Ast.Statement.t' =
-    `AssignStaticMethodCall (create left obj prop args)
+    `StaticMethodCall (create left obj prop args)
 
   let pp (ppf : Fmt.t) (metcall : 'm t) : unit = Printer.pp_smetcall ppf metcall
   let str (methcall : 'm t) : string = Fmt.str "%a" pp methcall
 end
 
-module AssignDynamicMethodCall = struct
-  type 'm t = 'm Ast.Statement.AssignDynamicMethodCall.t
+module DynamicMethodCall = struct
+  type 'm t = 'm Ast.Statement.DynamicMethodCall.t
 
   let create (left : 'm Ast.LeftValue.t) (obj : 'm Ast.Expression.t)
       (prop : 'm Ast.Expression.t) (args : 'm Ast.Expression.t list) : 'm t =
@@ -440,14 +440,14 @@ module AssignDynamicMethodCall = struct
   let create_stmt (left : 'm Ast.LeftValue.t) (obj : 'm Ast.Expression.t)
       (prop : 'm Ast.Expression.t) (args : 'm Ast.Expression.t list) :
       'm Ast.Statement.t' =
-    `AssignDynamicMethodCall (create left obj prop args)
+    `DynamicMethodCall (create left obj prop args)
 
   let pp (ppf : Fmt.t) (metcall : 'm t) : unit = Printer.pp_dmetcall ppf metcall
   let str (metcall : 'm t) : string = Fmt.str "%a" pp metcall
 end
 
-module AssignFunctionDefinition = struct
-  type 'm t = 'm Ast.Statement.AssignFunctionDefinition.t
+module FunctionDefinition = struct
+  type 'm t = 'm Ast.Statement.FunctionDefinition.t
 
   let create (left : 'm Ast.LeftValue.t) (params : 'm Identifier.t list)
       (body : 'm Ast.Statement.t list) (async : bool) (generator : bool)
@@ -457,21 +457,21 @@ module AssignFunctionDefinition = struct
   let create_stmt (left : 'm Ast.LeftValue.t) (params : 'm Identifier.t list)
       (body : 'm Ast.Statement.t list) (async : bool) (generator : bool)
       (hoisted : bool) : 'm Ast.Statement.t' =
-    `AssignFunctionDefinition (create left params body async generator hoisted)
+    `FunctionDefinition (create left params body async generator hoisted)
 
   let pp (ppf : Fmt.t) (fundef : 'm t) : unit = Printer.pp_fundef ppf fundef
   let str (fundef : 'm t) : string = Fmt.str "%a" pp fundef
 end
 
-module AssignDynamicImport = struct
-  type 'm t = 'm Ast.Statement.AssignDynamicImport.t
+module DynamicImport = struct
+  type 'm t = 'm Ast.Statement.DynamicImport.t
 
   let create (left : 'm Ast.LeftValue.t) (arg : 'm Ast.Expression.t) : 'm t =
     { left; arg }
 
   let create_stmt (left : 'm Ast.LeftValue.t) (arg : 'm Ast.Expression.t) :
       'm Ast.Statement.t' =
-    `AssignDynamicImport (create left arg)
+    `DynamicImport (create left arg)
 
   let pp (ppf : Fmt.t) (import : 'm t) : unit = Printer.pp_dimport ppf import
   let str (import : 'm t) : string = Fmt.str "%a" pp import
@@ -725,18 +725,17 @@ module Statement = struct
   let str (stmt : 'm t) : string = Fmt.str "%a" pp stmt
 end
 
-module Unopt = struct
-  include Ast.Operator.Unary
+module Operator = struct
+  include Ast.Operator
 
-  let pp (ppf : Fmt.t) (unopt : t) : unit = Printer.pp_unopt_op ppf unopt
-  let str (unopt : t) : string = Fmt.str "%a" pp unopt
-end
+  let pp_unopt (ppf : Fmt.t) (unopt : unary) : unit =
+    Printer.pp_unopt_op ppf unopt
 
-module Binopt = struct
-  include Ast.Operator.Binary
+  let pp_binopt (ppf : Fmt.t) (binopt : binary) : unit =
+    Printer.pp_binopt_op ppf binopt
 
-  let pp (ppf : Fmt.t) (binopt : t) : unit = Printer.pp_binopt_op ppf binopt
-  let str (binopt : t) : string = Fmt.str "%a" pp binopt
+  let str_unopt (unopt : unary) : string = Fmt.str "%a" pp_unopt unopt
+  let str_binopt (binopt : binary) : string = Fmt.str "%a" pp_binopt binopt
 end
 
 module File = struct

@@ -4,28 +4,25 @@ open Ast
 module Config = struct
   include Config
 
-  let path_font : Font.t t =
-    constant (Font.create ~fg:`DarkGray ~italic:true ())
-
-  let test262_conform_hoisted : bool t = static false
+  let path_font = constant (Font.create ~fg:`DarkGray ~italic:true ())
+  let test262_conform_hoisted = static false
 end
 
-let pp_indent (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (vs : 'a list) : unit =
+let pp_indent (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (vs : 'a list) =
   Fmt.fmt ppf "@\n@[<v 2>  %a@]" Fmt.(pp_lst !>"@\n" pp_v) vs
 
-let pp_block (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (vs : 'a list) : unit =
+let pp_block (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (vs : 'a list) =
   Fmt.fmt ppf "{%a@\n}" (pp_indent pp_v) vs
 
-let rec pp_identifier (ppf : Fmt.t) (id : 'm Identifier.t) : unit =
+let rec pp_identifier (ppf : Fmt.t) (id : 'm Identifier.t) =
   pp_identifier' ppf id.el
 
-and pp_identifier' (ppf : Fmt.t) (id : Identifier.t') : unit =
-  Fmt.pp_str ppf id.name
+and pp_identifier' (ppf : Fmt.t) (id : Identifier.t') = Fmt.pp_str ppf id.name
 
-and pp_leftvalue (ppf : Fmt.t) (lval : 'm LeftValue.t) : unit =
+and pp_leftvalue (ppf : Fmt.t) (lval : 'm LeftValue.t) =
   pp_leftvalue' ppf lval.el
 
-and pp_leftvalue' (ppf : Fmt.t) (lval : LeftValue.t') : unit =
+and pp_leftvalue' (ppf : Fmt.t) (lval : LeftValue.t') =
   match lval.kind with
   | None -> Fmt.fmt ppf "%a" pp_identifier' lval.id
   | _ -> Fmt.fmt ppf "%a %a" pp_leftvalue_kind lval.kind pp_identifier' lval.id
@@ -36,24 +33,24 @@ and pp_leftvalue_kind (ppf : Fmt.t) : LeftValue.Kind.t -> unit = function
   | Const -> Fmt.pp_str ppf "const"
   | None -> ()
 
-and pp_prop (ppf : Fmt.t) (prop : 'm Prop.t) : unit =
+and pp_prop (ppf : Fmt.t) (prop : 'm Prop.t) =
   match prop.el with
   | IProp id -> pp_identifier' ppf id
   | LProp lit -> pp_literal ppf lit
 
-and pp_prop_access (ppf : Fmt.t) (prop : 'm Prop.t) : unit =
+and pp_prop_access (ppf : Fmt.t) (prop : 'm Prop.t) =
   match prop.el with
   | IProp id -> Fmt.fmt ppf ".%a" pp_identifier' id
   | LProp lit -> Fmt.fmt ppf "[%a]" pp_literal lit
 
-and pp_literal (ppf : Fmt.t) (literal : Expression.Literal.t) : unit =
+and pp_literal (ppf : Fmt.t) (literal : Expression.Literal.t) =
   Fmt.pp_str ppf literal.raw
 
-and pp_regex (ppf : Fmt.t) (regex : Expression.Literal.Regex.t) : unit =
+and pp_regex (ppf : Fmt.t) (regex : Expression.Literal.Regex.t) =
   Fmt.fmt ppf "/%s/%s" regex.pattern regex.flags
 
 and pp_template_literal (ppf : Fmt.t)
-    (tliteral : 'm Expression.TemplateLiteral.t) : unit =
+    (tliteral : 'm Expression.TemplateLiteral.t) =
   let exprs = List.map Option.some tliteral.exprs @ [ None ] in
   let quasi_exprs = List.combine tliteral.quasis exprs in
   let pp_quasi ppf = pp_template_element ppf in
@@ -63,14 +60,14 @@ and pp_template_literal (ppf : Fmt.t)
   Fmt.fmt ppf "`%a`" Fmt.(pp_lst !>"" pp_quasi_expr) quasi_exprs
 
 and pp_template_element (ppf : Fmt.t)
-    (telement : 'm Expression.TemplateLiteral.Element.t) : unit =
+    (telement : 'm Expression.TemplateLiteral.Element.t) =
   Fmt.fmt ppf "%a" pp_template_value telement.el.value
 
 and pp_template_value (ppf : Fmt.t)
-    (tvalue : Expression.TemplateLiteral.Element.Value.t) : unit =
+    (tvalue : Expression.TemplateLiteral.Element.Value.t) =
   Fmt.pp_str ppf tvalue.raw
 
-and pp_this (ppf : Fmt.t) () : unit = Fmt.pp_str ppf "this"
+and pp_this (ppf : Fmt.t) () = Fmt.pp_str ppf "this"
 
 and pp_expr' (ppf : Fmt.t) : 'm Expression.t' -> unit = function
   | `Literal literal -> pp_literal ppf literal
@@ -78,24 +75,24 @@ and pp_expr' (ppf : Fmt.t) : 'm Expression.t' -> unit = function
   | `Identifier id -> pp_identifier' ppf id
   | `This () -> pp_this ppf ()
 
-and pp_expr (ppf : Fmt.t) (expr : 'm Expression.t) : unit = pp_expr' ppf expr.el
+and pp_expr (ppf : Fmt.t) (expr : 'm Expression.t) = pp_expr' ppf expr.el
 
-and pp_expr_stmt (ppf : Fmt.t) (expr : 'm Expression.t') : unit =
+and pp_expr_stmt (ppf : Fmt.t) (expr : 'm Expression.t') =
   Fmt.fmt ppf "%a;" pp_expr' expr
 
-and pp_vdecl (ppf : Fmt.t) (vdecl : LeftValue.t') : unit =
+and pp_vdecl (ppf : Fmt.t) (vdecl : LeftValue.t') =
   Fmt.fmt ppf "%a;" pp_leftvalue' vdecl
 
-and pp_assign (ppf : Fmt.t) (assign : 'm Statement.AssignSimple.t) : unit =
+and pp_assignment (ppf : Fmt.t) (assign : 'm Statement.Assignment.t) =
   Fmt.fmt ppf "%a = %a;" pp_leftvalue assign.left pp_expr assign.right
 
-and pp_newobj (ppf : Fmt.t) (obj : 'm Statement.AssignNewObject.t) : unit =
+and pp_newobj (ppf : Fmt.t) (obj : 'm Statement.NewObject.t) =
   Fmt.fmt ppf "%a = {};" pp_leftvalue obj.left
 
-and pp_newarray (ppf : Fmt.t) (arr : 'm Statement.AssignNewArray.t) : unit =
+and pp_newarray (ppf : Fmt.t) (arr : 'm Statement.NewArray.t) =
   Fmt.fmt ppf "%a = [];" pp_leftvalue arr.left
 
-and pp_unopt (ppf : Fmt.t) (unopt : 'm Statement.AssignUnopt.t) : unit =
+and pp_unopt (ppf : Fmt.t) (unopt : 'm Statement.Unopt.t) =
   let pp_space ppf () =
     match unopt.op with
     | Plus | Minus | BitwiseNot | LogicalNot -> ()
@@ -103,71 +100,66 @@ and pp_unopt (ppf : Fmt.t) (unopt : 'm Statement.AssignUnopt.t) : unit =
   Fmt.fmt ppf "%a = %a%a%a;" pp_leftvalue unopt.left pp_unopt_op unopt.op
     pp_space () pp_expr unopt.arg
 
-and pp_binopt (ppf : Fmt.t) (binopt : 'm Statement.AssignBinopt.t) : unit =
+and pp_binopt (ppf : Fmt.t) (binopt : 'm Statement.Binopt.t) =
   Fmt.fmt ppf "%a = %a %a %a;" pp_leftvalue binopt.left pp_expr binopt.arg1
     pp_binopt_op binopt.op pp_expr binopt.arg2
 
-and pp_yield (ppf : Fmt.t) (yield : 'm Statement.AssignYield.t) : unit =
+and pp_yield (ppf : Fmt.t) (yield : 'm Statement.Yield.t) =
   let pp_delegate ppf delegate = if delegate then Fmt.pp_str ppf "*" else () in
   let pp_arg ppf = Fmt.fmt ppf " %a" pp_expr in
   Fmt.fmt ppf "%a = yield%a%a;" pp_leftvalue yield.left pp_delegate
     yield.delegate (Fmt.pp_opt pp_arg) yield.arg
 
-and pp_slookup (ppf : Fmt.t) (lookup : 'm Statement.StaticLookup.t) : unit =
+and pp_slookup (ppf : Fmt.t) (lookup : 'm Statement.StaticLookup.t) =
   Fmt.fmt ppf "%a = %a%a;" pp_leftvalue lookup.left pp_expr lookup.obj
     pp_prop_access lookup.prop
 
-and pp_dlookup (ppf : Fmt.t) (lookup : 'm Statement.DynamicLookup.t) : unit =
+and pp_dlookup (ppf : Fmt.t) (lookup : 'm Statement.DynamicLookup.t) =
   Fmt.fmt ppf "%a = %a[%a];" pp_leftvalue lookup.left pp_expr lookup.obj pp_expr
     lookup.prop
 
-and pp_supdate (ppf : Fmt.t) (update : 'm Statement.StaticUpdate.t) : unit =
+and pp_supdate (ppf : Fmt.t) (update : 'm Statement.StaticUpdate.t) =
   Fmt.fmt ppf "%a%a = %a;" pp_expr update.obj pp_prop_access update.prop pp_expr
     update.right
 
-and pp_dupdate (ppf : Fmt.t) (update : 'm Statement.DynamicUpdate.t) : unit =
+and pp_dupdate (ppf : Fmt.t) (update : 'm Statement.DynamicUpdate.t) =
   Fmt.fmt ppf "%a[%a] = %a;" pp_expr update.obj pp_expr update.prop pp_expr
     update.right
 
-and pp_sdelete (ppf : Fmt.t) (delete : 'm Statement.StaticDelete.t) : unit =
+and pp_sdelete (ppf : Fmt.t) (delete : 'm Statement.StaticDelete.t) =
   Fmt.fmt ppf "%a = delete %a%a;" pp_leftvalue delete.left pp_expr delete.obj
     pp_prop_access delete.prop
 
-and pp_ddelete (ppf : Fmt.t) (delete : 'm Statement.DynamicDelete.t) : unit =
+and pp_ddelete (ppf : Fmt.t) (delete : 'm Statement.DynamicDelete.t) =
   Fmt.fmt ppf "%a = delete %a[%a];" pp_leftvalue delete.left pp_expr delete.obj
     pp_expr delete.prop
 
-and pp_newcall (ppf : Fmt.t) (newcall : 'm Statement.AssignNewCall.t) : unit =
+and pp_newcall (ppf : Fmt.t) (newcall : 'm Statement.NewCall.t) =
   let pp_args = Fmt.(pp_lst !>", " pp_expr) in
   Fmt.fmt ppf "%a = new %a(%a);" pp_leftvalue newcall.left pp_identifier
     newcall.callee pp_args newcall.args
 
-and pp_funcall (ppf : Fmt.t) (funcall : 'm Statement.AssignFunctionCall.t) :
-    unit =
+and pp_funcall (ppf : Fmt.t) (funcall : 'm Statement.FunctionCall.t) =
   let pp_args = Fmt.(pp_lst !>", " pp_expr) in
   Fmt.fmt ppf "%a = %a(%a);" pp_leftvalue funcall.left pp_identifier
     funcall.callee pp_args funcall.args
 
-and pp_smetcall (ppf : Fmt.t) (metcall : 'm Statement.AssignStaticMethodCall.t)
-    : unit =
+and pp_smetcall (ppf : Fmt.t) (metcall : 'm Statement.StaticMethodCall.t) =
   let pp_args = Fmt.(pp_lst !>", " pp_expr) in
   Fmt.fmt ppf "%a = %a%a(%a);" pp_leftvalue metcall.left pp_expr metcall.obj
     pp_prop_access metcall.prop pp_args metcall.args
 
-and pp_dmetcall (ppf : Fmt.t) (metcall : 'm Statement.AssignDynamicMethodCall.t)
-    : unit =
+and pp_dmetcall (ppf : Fmt.t) (metcall : 'm Statement.DynamicMethodCall.t) =
   let pp_args = Fmt.(pp_lst !>", " pp_expr) in
   Fmt.fmt ppf "%a = %a[%a](%a);" pp_leftvalue metcall.left pp_expr metcall.obj
     pp_expr metcall.prop pp_args metcall.args
 
-and pp_fundef (ppf : Fmt.t) (fundef : 'm Statement.AssignFunctionDefinition.t) :
-    unit =
+and pp_fundef (ppf : Fmt.t) (fundef : 'm Statement.FunctionDefinition.t) =
   let pp_params = Fmt.(pp_lst !>", " pp_identifier) in
-  Fmt.fmt ppf "%a(%a) %a" pp_fundef_header fundef pp_params fundef.params
-    pp_body fundef.body
+  Fmt.fmt ppf "%a(%a) %a" pp_fundef_proto fundef pp_params fundef.params pp_body
+    fundef.body
 
-and pp_fundef_header (ppf : Fmt.t)
-    (fundef : 'm Statement.AssignFunctionDefinition.t) : unit =
+and pp_fundef_proto (ppf : Fmt.t) (fundef : 'm Statement.FunctionDefinition.t) =
   let pp_async ppf async = if async then Fmt.pp_str ppf "async " else () in
   let pp_generator ppf gen = if gen then Fmt.pp_str ppf "*" else () in
   if Config.(!test262_conform_hoisted) && fundef.hoisted then
@@ -177,74 +169,73 @@ and pp_fundef_header (ppf : Fmt.t)
     Fmt.fmt ppf "%a = %afunction%a " pp_leftvalue fundef.left pp_async
       fundef.async pp_generator fundef.generator
 
-and pp_dimport (ppf : Fmt.t) (import : 'm Statement.AssignDynamicImport.t) :
-    unit =
+and pp_dimport (ppf : Fmt.t) (import : 'm Statement.DynamicImport.t) =
   Fmt.fmt ppf "%a = import(%a);" pp_leftvalue import.left pp_expr import.arg
 
-and pp_if (ppf : Fmt.t) (if' : 'm Statement.If.t) : unit =
+and pp_if (ppf : Fmt.t) (if' : 'm Statement.If.t) =
   let pp_else ppf = Fmt.fmt ppf " else %a" pp_body in
   Fmt.fmt ppf "if (%a) %a%a" pp_expr if'.test pp_body if'.consequent
     (Fmt.pp_opt pp_else) if'.alternate
 
-and pp_switch (ppf : Fmt.t) (switch : 'm Statement.Switch.t) : unit =
+and pp_switch (ppf : Fmt.t) (switch : 'm Statement.Switch.t) =
   Fmt.fmt ppf "switch (%a) %a" pp_expr switch.discriminant
     (pp_block pp_switch_case) switch.cases
 
-and pp_switch_case (ppf : Fmt.t) (case : 'm Statement.Switch.Case.t) : unit =
+and pp_switch_case (ppf : Fmt.t) (case : 'm Statement.Switch.Case.t) =
   let pp_test ppf = function
     | None -> Fmt.pp_str ppf "default"
     | Some test -> Fmt.fmt ppf "case %a" pp_expr test in
   Fmt.fmt ppf "%a:%a" pp_test case.el.test (pp_indent pp_stmt) case.el.body
 
-and pp_while (ppf : Fmt.t) (while' : 'm Statement.While.t) : unit =
+and pp_while (ppf : Fmt.t) (while' : 'm Statement.While.t) =
   Fmt.fmt ppf "while (%a) %a" pp_expr while'.test pp_body while'.body
 
-and pp_forin (ppf : Fmt.t) (forin : 'm Statement.ForIn.t) : unit =
+and pp_forin (ppf : Fmt.t) (forin : 'm Statement.ForIn.t) =
   Fmt.fmt ppf "for (%a in %a) %a" pp_leftvalue forin.left pp_expr forin.right
     pp_body forin.body
 
-and pp_forof (ppf : Fmt.t) (forof : 'm Statement.ForOf.t) : unit =
+and pp_forof (ppf : Fmt.t) (forof : 'm Statement.ForOf.t) =
   let pp_await ppf await = if await then Fmt.pp_str ppf "await " in
   Fmt.fmt ppf "for %a(%a of %a) %a" pp_await forof.await pp_leftvalue forof.left
     pp_expr forof.right pp_body forof.body
 
-and pp_break (ppf : Fmt.t) (break : 'm Statement.Break.t) : unit =
+and pp_break (ppf : Fmt.t) (break : 'm Statement.Break.t) =
   let pp_label ppf = Fmt.fmt ppf " %a" pp_identifier in
   Fmt.fmt ppf "break%a;" (Fmt.pp_opt pp_label) break.label
 
-and pp_continue (ppf : Fmt.t) (continue : 'm Statement.Continue.t) : unit =
+and pp_continue (ppf : Fmt.t) (continue : 'm Statement.Continue.t) =
   let pp_label ppf = Fmt.fmt ppf " %a" pp_identifier in
   Fmt.fmt ppf "continue%a;" (Fmt.pp_opt pp_label) continue.label
 
-and pp_return (ppf : Fmt.t) (return : 'm Statement.Return.t) : unit =
+and pp_return (ppf : Fmt.t) (return : 'm Statement.Return.t) =
   let pp_arg ppf = Fmt.fmt ppf " %a" pp_expr in
   Fmt.fmt ppf "return%a;" (Fmt.pp_opt pp_arg) return.arg
 
-and pp_throw (ppf : Fmt.t) (throw : 'm Statement.Throw.t) : unit =
+and pp_throw (ppf : Fmt.t) (throw : 'm Statement.Throw.t) =
   Fmt.fmt ppf "throw %a;" pp_expr throw.arg
 
-and pp_try (ppf : Fmt.t) (try' : 'm Statement.Try.t) : unit =
+and pp_try (ppf : Fmt.t) (try' : 'm Statement.Try.t) =
   let pp_handler ppf = Fmt.fmt ppf " %a" pp_catch in
   let pp_finalizer ppf = Fmt.fmt ppf " finally %a" pp_body in
   Fmt.fmt ppf "try %a%a%a" pp_body try'.body (Fmt.pp_opt pp_handler)
     try'.handler (Fmt.pp_opt pp_finalizer) try'.finalizer
 
-and pp_catch (ppf : Fmt.t) (catch : 'm Statement.Try.Catch.t) : unit =
+and pp_catch (ppf : Fmt.t) (catch : 'm Statement.Try.Catch.t) =
   let pp_param ppf = Fmt.fmt ppf " (%a)" pp_identifier in
   Fmt.fmt ppf "catch%a %a" (Fmt.pp_opt pp_param) catch.el.param pp_body
     catch.el.body
 
-and pp_with (ppf : Fmt.t) (with' : 'm Statement.With.t) : unit =
+and pp_with (ppf : Fmt.t) (with' : 'm Statement.With.t) =
   Fmt.fmt ppf "with (%a) %a" pp_expr with'.expr pp_body with'.body
 
-and pp_labeled (ppf : Fmt.t) (labeled : 'm Statement.Labeled.t) : unit =
+and pp_labeled (ppf : Fmt.t) (labeled : 'm Statement.Labeled.t) =
   Fmt.fmt ppf "%a: %a" pp_identifier labeled.label
     Fmt.(pp_lst !>"@\n" pp_stmt)
     labeled.body
 
-and pp_debugger (ppf : Fmt.t) (() : unit) : unit = Fmt.fmt ppf "debugger;"
+and pp_debugger (ppf : Fmt.t) (() : unit) = Fmt.fmt ppf "debugger;"
 
-and pp_import (ppf : Fmt.t) (import : 'm Statement.ImportDecl.t) : unit =
+and pp_import (ppf : Fmt.t) (import : 'm Statement.ImportDecl.t) =
   Fmt.fmt ppf "import %a%S;" pp_import_spec import.specifier import.source
 
 and pp_import_spec (ppf : Fmt.t) : 'm Statement.ImportDecl.Specifier.t -> unit =
@@ -256,7 +247,7 @@ and pp_import_spec (ppf : Fmt.t) : 'm Statement.ImportDecl.Specifier.t -> unit =
   | Alias (prop, alias) ->
     Fmt.fmt ppf "{ %a as %a } from " pp_identifier prop pp_identifier alias
 
-and pp_export (ppf : Fmt.t) (export : 'm Statement.ExportDecl.t) : unit =
+and pp_export (ppf : Fmt.t) (export : 'm Statement.ExportDecl.t) =
   let pp_source ppf = Fmt.fmt ppf " from %S" in
   Fmt.fmt ppf "export %a%a;" pp_export_spec export.specifier
     (Fmt.pp_opt pp_source) export.source
@@ -271,28 +262,28 @@ and pp_export_spec (ppf : Fmt.t) : 'm Statement.ExportDecl.Specifier.t -> unit =
   | Alias (id, alias) ->
     Fmt.fmt ppf "{ %a as %a }" pp_identifier id pp_identifier alias
 
-and pp_stmt (ppf : Fmt.t) (stmt : 'm Statement.t) : unit =
+and pp_stmt (ppf : Fmt.t) (stmt : 'm Statement.t) =
   match stmt.el with
   | `ExprStmt expr -> pp_expr_stmt ppf expr
   | `VarDecl vdecl -> pp_vdecl ppf vdecl
-  | `AssignSimple assign -> pp_assign ppf assign
-  | `AssignNewObject obj -> pp_newobj ppf obj
-  | `AssignNewArray arr -> pp_newarray ppf arr
-  | `AssignUnopt unopt -> pp_unopt ppf unopt
-  | `AssignBinopt binopt -> pp_binopt ppf binopt
-  | `AssignYield yield -> pp_yield ppf yield
+  | `Assignment assign -> pp_assignment ppf assign
+  | `NewObject obj -> pp_newobj ppf obj
+  | `NewArray arr -> pp_newarray ppf arr
+  | `Unopt unopt -> pp_unopt ppf unopt
+  | `Binopt binopt -> pp_binopt ppf binopt
+  | `Yield yield -> pp_yield ppf yield
   | `StaticLookup lookup -> pp_slookup ppf lookup
   | `DynamicLookup lookup -> pp_dlookup ppf lookup
   | `StaticUpdate update -> pp_supdate ppf update
   | `DynamicUpdate update -> pp_dupdate ppf update
   | `StaticDelete delete -> pp_sdelete ppf delete
   | `DynamicDelete delete -> pp_ddelete ppf delete
-  | `AssignNewCall newcall -> pp_newcall ppf newcall
-  | `AssignFunctionCall funcall -> pp_funcall ppf funcall
-  | `AssignStaticMethodCall metcall -> pp_smetcall ppf metcall
-  | `AssignDynamicMethodCall metcall -> pp_dmetcall ppf metcall
-  | `AssignFunctionDefinition fundef -> pp_fundef ppf fundef
-  | `AssignDynamicImport import -> pp_dimport ppf import
+  | `NewCall newcall -> pp_newcall ppf newcall
+  | `FunctionCall funcall -> pp_funcall ppf funcall
+  | `StaticMethodCall metcall -> pp_smetcall ppf metcall
+  | `DynamicMethodCall metcall -> pp_dmetcall ppf metcall
+  | `FunctionDefinition fundef -> pp_fundef ppf fundef
+  | `DynamicImport import -> pp_dimport ppf import
   | `If if' -> pp_if ppf if'
   | `Switch switch -> pp_switch ppf switch
   | `While while' -> pp_while ppf while'
@@ -309,10 +300,10 @@ and pp_stmt (ppf : Fmt.t) (stmt : 'm Statement.t) : unit =
   | `ImportDecl import -> pp_import ppf import
   | `ExportDecl export -> pp_export ppf export
 
-and pp_body (ppf : Fmt.t) (stmts : 'm Statement.t list) : unit =
+and pp_body (ppf : Fmt.t) (stmts : 'm Statement.t list) =
   pp_block pp_stmt ppf stmts
 
-and pp_unopt_op (ppf : Fmt.t) : Operator.Unary.t -> unit = function
+and pp_unopt_op (ppf : Fmt.t) : Operator.unary -> unit = function
   | Plus -> Fmt.pp_str ppf "+"
   | Minus -> Fmt.pp_str ppf "-"
   | BitwiseNot -> Fmt.pp_str ppf "~"
@@ -322,7 +313,7 @@ and pp_unopt_op (ppf : Fmt.t) : Operator.Unary.t -> unit = function
   | Await -> Fmt.pp_str ppf "await"
   | Delete -> Fmt.pp_str ppf "delete"
 
-and pp_binopt_op (ppf : Fmt.t) : Operator.Binary.t -> unit = function
+and pp_binopt_op (ppf : Fmt.t) : Operator.binary -> unit = function
   | Plus -> Fmt.pp_str ppf "+"
   | Minus -> Fmt.pp_str ppf "-"
   | Mult -> Fmt.pp_str ppf "*"
