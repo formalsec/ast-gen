@@ -5,49 +5,48 @@ type t = (Location.t * string option, Node.t * Node.Set.t) Hashtbl.t
 
 let create () : t = Hashtbl.create Config.(!dflt_htbl_sz)
 
-let mem (summary : t) (node : Node.t) (prop : string option) : bool =
-  Hashtbl.mem summary (node.uid, prop)
+let mem (cache : t) (l_obj : Node.t) (prop : string option) : bool =
+  Hashtbl.mem cache (l_obj.uid, prop)
 
-let find_opt (summary : t) (node : Node.t) (prop : string option) :
-    Node.Set.t option =
-  Option.map snd (Hashtbl.find_opt summary (node.uid, prop))
+let find (cache : t) (obj : Node.t) (prop : string option) : Node.Set.t option =
+  Option.map snd (Hashtbl.find_opt cache (obj.uid, prop))
 
-let find (summary : t) (node : Node.t) (prop : string option) : Node.Set.t =
-  Option.value ~default:Node.Set.empty (find_opt summary node prop)
+let replace (cache : t) (l_obj : Node.t) (prop : string option)
+    (ls_prop : Node.Set.t) : unit =
+  Hashtbl.replace cache (l_obj.uid, prop) (l_obj, ls_prop)
 
-let replace (summary : t) (node : Node.t) (prop : string option)
-    (sites : Node.Set.t) : unit =
-  Hashtbl.replace summary (node.uid, prop) (node, sites)
+let get (cache : t) (l_obj : Node.t) (prop : string option) : Node.Set.t =
+  Option.value ~default:Node.Set.empty (find cache l_obj prop)
 
-let add (summary : t) (node : Node.t) (prop : string option) (site : Node.t) :
-    unit =
-  find summary node prop |> Node.Set.add site |> replace summary node prop
+let pp (ppf : Fmt.t) (cache : t) : unit =
+  let pp_p ppf prop = Fmt.pp_str ppf (Option.value ~default:"*" prop) in
+  let pp_v ppf (_, prop) (l_obj, ls_props) =
+    Fmt.fmt ppf "%a.%a -> %a" Node.pp l_obj pp_p prop Node.Set.pp ls_props in
+  Fmt.(pp_htbl !>"@\n" (fun ppf (key, value) -> pp_v ppf key value)) ppf cache
 
-let pp (ppf : Fmt.t) (summary : t) : unit =
-  let pp_prop ppf prop = Fmt.pp_str ppf (Option.value ~default:"*" prop) in
-  let pp_sites ppf (_, prop) (node, sites) =
-    Fmt.fmt ppf "%a.%a -> %a" Node.pp node pp_prop prop Node.Set.pp sites in
-  Fmt.(pp_htbl !>"@\n" (fun ppf (key, sites) -> pp_sites ppf key sites))
-    ppf summary
+let str (cache : t) : string = Fmt.str "%a" pp cache
 
-let str (summary : t) : string = Fmt.str "%a" pp summary [@@inline]
+let rec compute_properties (mdg : Mdg.t) (cache : t) (l_obj : Node.t)
+    (props : string option list) (acc : Node.Set.t) : Node.Set.t =
+  match props with
+  | [] -> Node.Set.singleton l_obj
+  | [ prop ] ->
+    let ls_props = compute_property mdg cache l_obj prop in
+    Node.Set.union acc ls_props
+  | prop :: props' ->
+    let ls_props = compute_property mdg cache l_obj prop in
+    Fun.flip2 Node.Set.fold ls_props acc (fun l_obj' acc ->
+        compute_properties mdg cache l_obj' props' acc )
 
-let rec compute_object (summary : t) (mdg : Mdg.t) (node : Node.t)
-    (acc : Node.Set.t) : string option list -> Node.Set.t = function
-  | [] -> acc
-  | prop :: props' -> (
-    match find_opt summary node prop with
-    | Some ls_prop -> compute_prop summary mdg ls_prop acc props'
-    | None ->
-      let ls_prop = Mdg.object_lookup mdg node prop in
-      replace summary node prop ls_prop;
-      compute_prop summary mdg ls_prop acc props' )
+and compute_property (mdg : Mdg.t) (cache : t) (l_obj : Node.t)
+    (prop : string option) : Node.Set.t =
+  match find cache l_obj prop with
+  | Some ls_prop -> ls_prop
+  | None ->
+    let ls_prop = Mdg.object_lookup mdg l_obj prop in
+    replace cache l_obj prop ls_prop;
+    ls_prop
 
-and compute_prop (summary : t) (mdg : Mdg.t) (ls_prop : Node.Set.t)
-    (acc : Node.Set.t) (props : string option list) : Node.Set.t =
-  Fun.flip2 Node.Set.fold ls_prop acc (fun l_prop acc ->
-      compute_object summary mdg l_prop acc props )
-
-let compute (summary : t) (mdg : Mdg.t) (node : Node.t)
+let compute (mdg : Mdg.t) (cache : t) (l_obj : Node.t)
     (props : string option list) : Node.Set.t =
-  compute_object summary mdg node Node.Set.empty props
+  compute_properties mdg cache l_obj props Node.Set.empty

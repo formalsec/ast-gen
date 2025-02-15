@@ -6,8 +6,8 @@
   vulnerability
   properties
   callers
-  reachability
-  interactability
+  exported
+  sources
   analysis_engine
   analyzer)
  (libraries graphjs_base graphjs_share graphjs_mdg))

@@ -30,18 +30,18 @@ type t =
   { mdg : Mdg.t
   ; properties : Properties.t
   ; callers : Callers.t
-  ; interactability : Interactability.t
-  ; reachability : Reachability.t
+  ; exported : Exported.t
+  ; sources : Sources.t
   ; worklist : Worklist.t
   }
 
 let initialize (mdg : Mdg.t) : t =
   let properties = Properties.create () in
   let callers = Callers.compute mdg in
-  let interactability = Interactability.compute mdg in
-  let reachability = Reachability.create () in
+  let exported = Exported.compute mdg in
+  let sources = Sources.compute mdg in
   let worklist = Worklist.create () in
-  { mdg; properties; callers; interactability; reachability; worklist }
+  { mdg; properties; callers; exported; sources; worklist }
 
 let rec run (f : Node.t -> t) (engine : t) : Node.t option =
   match Worklist.get_result engine.worklist with
@@ -54,8 +54,53 @@ let rec run (f : Node.t -> t) (engine : t) : Node.t option =
 let enqueue (engine : t) (node : Node.t) : t =
   { engine with worklist = Worklist.enqueue engine.worklist node }
 
+let enqueue_all (engine : t) (nodes : Node.Set.t) : t =
+  Node.Set.fold (fun node engine -> enqueue engine node) nodes engine
+
 let result (engine : t) (node : Node.t) : t =
   { engine with worklist = Worklist.set_result engine.worklist node }
+
+let lookup (engine : t) (node : Node.t) (prop : string option) : Node.Set.t =
+  Properties.compute engine.mdg engine.properties node [ prop ]
+
+let nested_lookup (engine : t) (node : Node.t) (props : string option list) :
+    Node.Set.t =
+  Properties.compute engine.mdg engine.properties node props
+
+let callers (engine : t) (node : Node.t) : Node.Set.t =
+  Callers.get engine.callers node
+
+let returns (engine : t) (node : Node.t) : Node.Set.t =
+  Mdg.get_called_functions engine.mdg node
+  |> List.fold_left (fun a n -> Mdg.get_function_returns engine.mdg n @ a) []
+  |> Node.Set.of_list
+
+let schemes (engine : t) (node : Node.t) : Exported.Scheme.t list =
+  Exported.get engine.exported node
+
+let sources (engine : t) (node : Node.t) : Sources.Set.t =
+  Sources.get engine.sources node
+
+let is_attacker_controlled (sources : Sources.Set.t) : bool =
+  Sources.Set.exists Sources.Source.is_taint_source sources
+
+let get_sinks (engine : t) : Node.Set.t =
+  Fun.flip2 Node.Set.fold engine.mdg.calls Node.Set.empty (fun l_call acc ->
+      let ls_func = Mdg.get_called_functions engine.mdg l_call in
+      Fun.flip2 List.fold_right ls_func acc (fun l_func acc ->
+          if Node.is_taint_sink l_func then Node.Set.add l_func acc else acc ) )
+
+let get_sink_args (engine : t) (l_sink : Node.t) : Node.Set.t =
+  match l_sink.kind with
+  | TaintSink sink ->
+    let sensitive_args = Tainted.args sink in
+    let callers = callers engine l_sink in
+    Fun.flip2 Node.Set.fold callers Node.Set.empty (fun l_call acc ->
+        Mdg.get_arguments engine.mdg l_call
+        |> List.filter (fun (idx, _) -> List.mem idx sensitive_args)
+        |> List.map (fun (_, l_arg) -> l_arg)
+        |> List.fold_left (fun acc l_arg -> Node.Set.add l_arg acc) acc )
+  | _ -> Log.fail "unexpected node kind in injection sink"
 
 let vulnerability (engine : t) (sink : Tainted.sink) (node : Node.t) :
     Vulnerability.t =
@@ -67,28 +112,3 @@ let vulnerability (engine : t) (sink : Tainted.sink) (node : Node.t) :
     |> List.hd_opt
     |> Option.fold ~none:vuln ~some:(Vulnerability.update vuln)
   else vuln
-
-let get_sinks (engine : t) : Node.Set.t =
-  Fun.flip2 Node.Set.fold engine.mdg.calls Node.Set.empty (fun l_call acc ->
-      let ls_func = Mdg.get_called_functions engine.mdg l_call in
-      Fun.flip2 List.fold_right ls_func acc (fun l_func acc ->
-          if Node.is_taint_sink l_func then Node.Set.add l_func acc else acc ) )
-
-let is_attacker_controlled (reachability : Reachability.Sources.t) : bool =
-  Reachability.Sources.exists Reachability.Source.is_taint_source reachability
-
-let lookup (engine : t) (node : Node.t) (prop : string option) : Node.Set.t =
-  Properties.compute engine.properties engine.mdg node [ prop ]
-
-let nested_lookup (engine : t) (node : Node.t) (props : string option list) :
-    Node.Set.t =
-  Properties.compute engine.properties engine.mdg node props
-
-let callers (engine : t) (node : Node.t) : Node.Set.t =
-  Callers.find engine.callers node
-
-let interaction (engine : t) (node : Node.t) : Interactability.Interaction.t =
-  Interactability.find engine.interactability node
-
-let sources (engine : t) (node : Node.t) : Reachability.Sources.t =
-  Reachability.compute engine.reachability engine.mdg node
