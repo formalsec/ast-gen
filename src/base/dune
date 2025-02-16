@@ -10,7 +10,6 @@
   fun
   option
   result
-  json
   config
   generator
   console
@@ -18,5 +17,6 @@
   writer
   font
   log
+  json
   time)
  (libraries unix fpath yojson))

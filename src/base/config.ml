@@ -27,7 +27,7 @@ let set (config : 'a t) (value : 'a) : unit =
   | Constant -> failwith "invalid update to locked config"
 
 let ( ! ) (config : 'a t) : 'a = get config
-let ( $= ) (config : 'a t) (value : 'a) = set config value
+let ( := ) (config : 'a t) (value : 'a) = set config value
 
 (* Generic platform configurations *)
 let dflt_buf_sz : int t = constant 512

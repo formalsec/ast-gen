@@ -10,7 +10,7 @@ module Options = struct
     }
 
   let set (test262_conform_hoisted' : bool) : unit =
-    Parser_config.(test262_conform_hoisted $= test262_conform_hoisted')
+    Parser_config.(test262_conform_hoisted := test262_conform_hoisted')
 
   let set_cmd (inputs : Fpath.t list) (output : Fpath.t option) () : t =
     { inputs; output }

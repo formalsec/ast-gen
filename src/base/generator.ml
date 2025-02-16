@@ -4,12 +4,12 @@ type 'a t =
   }
 
 open struct
-  let next (gen : int ref) (step : int) () =
+  let next (gen : int ref) (step : int) () : int =
     let counter = !gen in
     gen := counter + step;
     counter
 
-  let reset (counter : int ref) (init : int) () = counter := init
+  let reset (counter : int ref) (init : int) () : unit = counter := init
 end
 
 let of_numbers ?(init : int = 0) ?(step : int = 1) () : int t =

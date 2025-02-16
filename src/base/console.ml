@@ -39,8 +39,8 @@ let get_system () : system =
 module Config = struct
   include Config
 
-  let colored_requirement : int t = constant 256
-  let system : system t = constant (get_system ())
+  let colored_requirement = constant 256
+  let system = constant (get_system ())
 end
 
 let pwd () : string = Unix.getcwd ()

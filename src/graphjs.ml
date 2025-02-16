@@ -6,12 +6,12 @@ type status = (unit Exec.status Cmd.eval_ok, Cmd.eval_error) Result.t
 
 let set_copts (colorless : bool) (lvl : Enums.DebugLvl.t) (verbose : bool)
     (override' : bool) : unit =
-  Font.Config.(colored $= not colorless);
-  Log.Config.(log_warns $= (lvl >= Warn));
-  Log.Config.(log_infos $= (verbose || lvl >= Info));
-  Log.Config.(log_debugs $= (lvl >= All));
-  Log.Config.(log_verbose $= verbose);
-  Workspace.Config.(override $= override')
+  Font.Config.(colored := not colorless);
+  Log.Config.(log_warns := (lvl >= Warn));
+  Log.Config.(log_infos := (verbose || lvl >= Info));
+  Log.Config.(log_debugs := (lvl >= All));
+  Log.Config.(log_verbose := verbose);
+  Workspace.Config.(override := override')
 
 let copts : unit Term.t =
   let open Term in
@@ -23,7 +23,7 @@ let copts : unit Term.t =
 
 let set_shared_opts (mode' : Enums.AnalysisMode.t) () : unit =
   let open Graphjs_share in
-  Share_config.(mode $= Enums.AnalysisMode.conv mode')
+  Share_config.(mode := Enums.AnalysisMode.conv mode')
 
 let shared_opts : unit Term.t =
   Term.(const set_shared_opts $ Docs.SharedOpts.mode $ copts)

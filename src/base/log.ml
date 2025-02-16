@@ -1,32 +1,22 @@
 module Config = struct
   include Config
 
-  let log_warns : bool t = static true
-  let log_infos : bool t = static false
-  let log_debugs : bool t = static false
-  let log_verbose : bool t = static false
-
-  let app : ((Fmt.t -> unit) * Font.t) t =
-    constant (Fmt.dly "graphjs", Font.create ~fg:`White ())
-
-  let error : ((Fmt.t -> unit) * Font.t) t =
-    constant (Fmt.dly "error", Font.create ~fg:`LightRed ())
-
-  let warn : ((Fmt.t -> unit) * Font.t) t =
-    constant (Fmt.dly "warn", Font.create ~fg:`Yellow ())
-
-  let info : ((Fmt.t -> unit) * Font.t) t =
-    constant (Fmt.dly "info", Font.create ~fg:`LightCyan ())
-
-  let debug : ((Fmt.t -> unit) * Font.t) t =
-    constant (Fmt.dly "debug", Font.create ~fg:`Cyan ())
+  let log_warns = static true
+  let log_infos = static false
+  let log_debugs = static false
+  let log_verbose = static false
+  let app = constant (Fmt.dly "graphjs", Font.create ~fg:`White ())
+  let error = constant (Fmt.dly "error", Font.create ~fg:`LightRed ())
+  let warn = constant (Fmt.dly "warn", Font.create ~fg:`Yellow ())
+  let info = constant (Fmt.dly "info", Font.create ~fg:`LightCyan ())
+  let debug = constant (Fmt.dly "debug", Font.create ~fg:`Cyan ())
 end
 
 open struct
-  let create_log ((header, font) : (Fmt.t -> unit) * Font.t) (ppf : Fmt.t) :
-      ('a, Fmt.t, unit, 'b) format4 -> 'a =
+  let create_log ((header, font) : (Fmt.t -> unit) * Font.t) (ppf : Fmt.t)
+      (fmt : ('a, Fmt.t, unit, 'b) format4) : 'a =
     let pp_content ppf fmt = Font.fmt font ppf "[%t] %t" header fmt in
-    Fmt.kdly (Fmt.fmt ppf "%a@." pp_content)
+    Fmt.kdly (Fmt.fmt ppf "%a@." pp_content) fmt
 end
 
 let fmt_app (ppf : Fmt.t) (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
@@ -96,7 +86,7 @@ module Redirect = struct
     }
 
   let capture (old : Writer.t Config.t) (buf : Buffer.t) : Buffer.t =
-    Writer.Config.(old $= Writer.to_buffer buf);
+    Writer.Config.(old := Writer.to_buffer buf);
     buf
 
   let capture_to ~(out : Buffer.t option) ~(err : Buffer.t option) : t =
@@ -115,7 +105,7 @@ module Redirect = struct
     | Shared ->
       let streams = capture_to ~out:(buffer ()) ~err:None in
       let new_out = Writer.Config.(!stdout) in
-      Writer.Config.(stderr $= new_out);
+      Writer.Config.(stderr := new_out);
       streams
 
   let pp_captured (ppf : Fmt.t) (streams : t) : unit =
@@ -133,6 +123,6 @@ module Redirect = struct
     let new_err = Writer.Config.(!stderr) in
     Option.fold ~none:() ~some:(close new_out old_out.ppf) streams.new_out;
     Option.fold ~none:() ~some:(close new_err old_err.ppf) streams.new_err;
-    Writer.Config.(stdout $= old_out);
-    Writer.Config.(stderr $= old_err)
+    Writer.Config.(stdout := old_out);
+    Writer.Config.(stderr := old_err)
 end

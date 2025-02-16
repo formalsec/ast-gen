@@ -1,16 +1,13 @@
 include Stdlib.Option
 
-let ( let* ) (v : 'a t) (f : 'a -> 'b t) : 'b t = bind v f
-let ( let+ ) (f : 'a -> 'b) (v : 'a t) : 'b t = map f v
+let ( let* ) (o : 'a t) (f : 'a -> 'b t) : 'b t = bind o f
+let ( let+ ) (f : 'a -> 'b) (o : 'a t) : 'b t = map f o
 
-let value_lazy ~(default : 'a lazy_t) : 'a t -> 'a = function
-  | None -> Lazy.force default
-  | Some v -> v
+let value_lazy ~(default : 'a lazy_t) (o : 'a t) : 'a =
+  match o with None -> Lazy.force default | Some v -> v
 
-let map_none ~(value : 'a t) : 'a t -> 'a t = function
-  | None -> value
-  | Some _ as v -> v
+let map_none ~(value : 'a t) (o : 'a t) : 'a t =
+  match o with None -> value | Some _ as v -> v
 
-let fold_lazy ~(none : 'b lazy_t) ~(some : 'a -> 'b) : 'a t -> 'b = function
-  | None -> Lazy.force none
-  | Some v -> some v
+let fold_lazy ~(none : 'b lazy_t) ~(some : 'a -> 'b) (o : 'a t) : 'b =
+  match o with None -> Lazy.force none | Some v -> some v

@@ -3,7 +3,7 @@ open Graphjs_base
 module Config = struct
   include Config
 
-  let time_font_f font = Font.update font ~eff:`Faint
+  let time_font_f font = Font.update font ~effect:`Faint
   let main_font : Font.t t = constant (Font.create ~fg:`White ())
   let path_font : Font.t t = constant (Font.create ~fg:`DarkGray ())
   let success_font : Font.t t = constant (Font.create ~fg:`LightGreen ())
