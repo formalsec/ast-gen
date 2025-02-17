@@ -9,12 +9,13 @@ open struct
     Log.stderr "Expected:@\n%s@\nResult:@\n%s@\n@." exp res;
     false
 
-  let exec (mode : Mode.t) (path : string) : (t, string) Result.t =
-    match generate_with_mode mode path with
+  let exec (mode : Analysis_mode.t) (path : string) : (t, string) Result.t =
+    match generate mode path with
     | dt -> Ok dt
     | exception Exn fmt -> Error (Fmt.str "%t" fmt)
 
-  let test (mode : Mode.t) (path : string) (exp : (t, string) Result.t) : bool =
+  let test (mode : Analysis_mode.t) (path : string) (exp : (t, string) Result.t)
+      : bool =
     let res = exec mode path in
     match (exp, res) with
     | (Ok dt_exp, Ok dt_res) ->
@@ -26,9 +27,13 @@ open struct
 end
 
 module Analysis = struct
-  let basic : string -> (t, string) Result.t -> bool = test Mode.Basic
-  let single : string -> (t, string) Result.t -> bool = test Mode.SingleFile
-  let multi : string -> (t, string) Result.t -> bool = test Mode.MultiFile
+  let basic : string -> (t, string) Result.t -> bool = test Analysis_mode.Basic
+
+  let single : string -> (t, string) Result.t -> bool =
+    test Analysis_mode.SingleFile
+
+  let multi : string -> (t, string) Result.t -> bool =
+    test Analysis_mode.MultiFile
 end
 
 module Res = struct

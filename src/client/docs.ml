@@ -85,7 +85,7 @@ module FileOpts = struct
     Arg.(value & opt (some parser) None & info [ "o"; "output" ] ~docv ~doc)
 end
 
-module SharedOpts = struct
+module ParseOpts = struct
   let mode =
     let docv = "MODE" in
     let doc =
@@ -97,14 +97,6 @@ module SharedOpts = struct
     let modes = Arg.enum Enums.AnalysisMode.(args all) in
     Arg.(value & opt modes SingleFile & info [ "m"; "mode" ] ~docv ~doc)
 
-  let taint_config =
-    let docv = "FILE" in
-    let doc = "Path to the taint source/sink configuration file." in
-    let parser = Fs.Parser.valid_file in
-    Arg.(value & opt (some parser) None & info [ "c"; "config" ] ~docv ~doc)
-end
-
-module ParseOpts = struct
   let test262_conform_hoisted =
     let doc =
       "Normalizes function hoisting by representing hoisted functions as \
@@ -131,6 +123,12 @@ module ParseCmd = struct
 end
 
 module MdgOpts = struct
+  let taint_config =
+    let docv = "FILE" in
+    let doc = "Path to the taint source/sink configuration file." in
+    let parser = Fs.Parser.valid_file in
+    Arg.(value & opt (some parser) None & info [ "c"; "config" ] ~docv ~doc)
+
   let no_svg =
     let doc = "Run without generating the .svg graph representation." in
     Arg.(value & flag & info [ "no-svg" ] ~doc)
@@ -141,7 +139,7 @@ module MdgOpts = struct
        new object node. Using this flag may increase construction speed, but \
        introduce errors in the graph and subsequent analysis." in
     Arg.(value & flag & info [ "no-literal-property-wrapping" ] ~doc)
-end 
+end
 
 module MdgCmd = struct
   let name = "mdg"

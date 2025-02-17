@@ -7,9 +7,9 @@ type status = (unit Exec.status Cmd.eval_ok, Cmd.eval_error) Result.t
 let set_copts (colorless : bool) (lvl : Enums.DebugLvl.t) (verbose : bool)
     (override' : bool) : unit =
   Font.Config.(colored := not colorless);
-  Log.Config.(log_warns := (lvl >= Warn));
-  Log.Config.(log_infos := (verbose || lvl >= Info));
-  Log.Config.(log_debugs := (lvl >= All));
+  Log.Config.(log_warns := lvl >= Warn);
+  Log.Config.(log_infos := verbose || lvl >= Info);
+  Log.Config.(log_debugs := lvl >= All);
   Log.Config.(log_verbose := verbose);
   Workspace.Config.(override := override')
 
@@ -21,15 +21,11 @@ let copts : unit Term.t =
   $ Docs.CommonOpts.verbose
   $ Docs.CommonOpts.override
 
-let set_shared_opts (mode' : Enums.AnalysisMode.t) () : unit =
-  let open Graphjs_share in
-  Share_config.(mode := Enums.AnalysisMode.conv mode')
-
-let shared_opts : unit Term.t =
-  Term.(const set_shared_opts $ Docs.SharedOpts.mode $ copts)
-
 let parse_opts : unit Term.t =
-  Term.(const Cmd_parse.Options.set $ Docs.ParseOpts.test262_conform_hoisted)
+  let open Term in
+  const Cmd_parse.Options.set
+  $ Docs.ParseOpts.mode
+  $ Docs.ParseOpts.test262_conform_hoisted
 
 let parse_cmd_opts : Cmd_parse.Options.t Term.t =
   let open Term in
@@ -41,7 +37,7 @@ let parse_cmd_opts : Cmd_parse.Options.t Term.t =
 let parse_cmd : unit Exec.status Cmd.t =
   let open Docs.ParseCmd in
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
-  Cmd.v info Term.(const Cmd_parse.main $ parse_cmd_opts $ shared_opts)
+  Cmd.v info Term.(const Cmd_parse.main $ parse_cmd_opts $ copts)
 
 let mdg_opts : unit Term.t =
   let open Term in
@@ -55,13 +51,13 @@ let mdg_cmd_opts : Cmd_mdg.Options.t Term.t =
   const Cmd_mdg.Options.set_cmd
   $ Docs.FileOpts.inputs
   $ Docs.FileOpts.output
-  $ Docs.SharedOpts.taint_config
+  $ Docs.MdgOpts.taint_config
   $ mdg_opts
 
 let mdg_cmd : unit Exec.status Cmd.t =
   let open Docs.MdgCmd in
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
-  Cmd.v info Term.(const Cmd_mdg.main $ mdg_cmd_opts $ shared_opts)
+  Cmd.v info Term.(const Cmd_mdg.main $ mdg_cmd_opts $ copts)
 
 let analyze_opts : unit Term.t =
   let open Term in
@@ -72,13 +68,13 @@ let analyze_cmd_opts : Cmd_analyze.Options.t Term.t =
   const Cmd_analyze.Options.set_cmd
   $ Docs.FileOpts.inputs
   $ Docs.FileOpts.output
-  $ Docs.SharedOpts.taint_config
+  $ Docs.MdgOpts.taint_config
   $ analyze_opts
 
 let analyze_cmd : unit Exec.status Cmd.t =
   let open Docs.AnalyzeCmd in
   let info = Cmd.info name ~sdocs ~doc ~man ~man_xrefs ~exits in
-  Cmd.v info Term.(const Cmd_analyze.main $ analyze_cmd_opts $ shared_opts)
+  Cmd.v info Term.(const Cmd_analyze.main $ analyze_cmd_opts $ copts)
 
 let cmd_list : unit Exec.status Cmd.t list = [ parse_cmd; mdg_cmd; analyze_cmd ]
 

@@ -2,7 +2,7 @@
 
 (library
  (name graphjs_share)
- (modules mode sink_kind taint_config share_config site)
+ (modules site properties analysis_mode sink_kind taint_config)
  (libraries graphjs_base dune-site))
 
 (generate_sites_module

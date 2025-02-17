@@ -22,3 +22,6 @@ package-lock.json
 # Graph.js intermediate files
 .graphjs
 .out
+
+# Extra files
+dictionary.dic

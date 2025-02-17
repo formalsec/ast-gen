@@ -11,7 +11,7 @@ module Output = struct
 end
 
 let parse_taint_config = function
-  | None -> Share_config.default_taint_config ()
+  | None -> Properties.default_taint_config ()
   | Some tc -> tc
 
 let read_taint_config (w : Workspace.t) (path : Fpath.t) () : Taint_config.t =

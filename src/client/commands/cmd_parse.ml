@@ -1,7 +1,14 @@
 open Graphjs_base
 open Graphjs_ast
+open Graphjs_share
 open Graphjs_parser
 open Result
+
+module Config = struct
+  include Config
+
+  let mode = static Analysis_mode.SingleFile
+end
 
 module Options = struct
   type t =
@@ -9,7 +16,9 @@ module Options = struct
     ; output : Fpath.t option
     }
 
-  let set (test262_conform_hoisted' : bool) : unit =
+  let set (mode' : Enums.AnalysisMode.t) (test262_conform_hoisted' : bool) :
+      unit =
+    Config.(mode := Enums.AnalysisMode.conv mode');
     Parser_config.(test262_conform_hoisted := test262_conform_hoisted')
 
   let set_cmd (inputs : Fpath.t list) (output : Fpath.t option) () : t =
@@ -42,7 +51,8 @@ module Output = struct
 end
 
 let dep_tree (w : Workspace.t) (path : Fpath.t) () : Dependency_tree.t =
-  let dt = Dependency_tree.generate path in
+  let path' = Fpath.to_string path in
+  let dt = Dependency_tree.generate Config.(!mode) path' in
   Output.dep_tree w dt;
   dt
 

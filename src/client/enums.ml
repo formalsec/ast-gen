@@ -42,7 +42,7 @@ module AnalysisMode = struct
   let args : t list -> (string * t) list =
     List.map (fun mode -> (str mode, mode))
 
-  let conv : t -> Graphjs_share.Mode.t = function
+  let conv : t -> Graphjs_share.Analysis_mode.t = function
     | Basic -> Basic
     | SingleFile -> SingleFile
     | MultiFile -> MultiFile

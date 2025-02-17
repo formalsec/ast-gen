@@ -93,7 +93,7 @@ open struct
       else raise "Unable to find 'index.js' in directory %S." root_path
     | None -> raise "Unable to find main module of directory %S." module_path
 
-  let find_main_file (mode : Mode.t) (path : string) : string =
+  let find_main_file (mode : Analysis_mode.t) (path : string) : string =
     match (Sys.is_directory path, mode) with
     | (false, _) -> Unix.realpath path
     | (true, MultiFile) -> find_main_of_module path
@@ -101,20 +101,17 @@ open struct
       raise "Unable to perform singlefile analysis in directory %S." path
     | exception Sys_error _ -> raise "Unable to find the provided path %S." path
 
-  let generate_structure (mode : Mode.t) (main_file : string) : string =
+  let generate_structure (mode : Analysis_mode.t) (main_file : string) : string
+      =
     match mode with
     | Basic | SingleFile -> Fmt.str "{ %S : {} }" main_file
     | MultiFile -> Console.execute (Fmt.str "dt %s" main_file)
 end
 
-let generate_with_mode (mode : Mode.t) (path : string) : t =
+let generate (mode : Analysis_mode.t) (path : string) : t =
   let main_path = find_main_file mode path in
   let structure = generate_structure mode main_path in
   create (Json.from_string structure)
-
-let generate (path : Fpath.t) : t =
-  let mode = Share_config.(!mode) in
-  generate_with_mode mode (Fpath.to_string path)
 
 let multi_file (dt : t) : bool = DepSet.cardinal dt.deps > 0
 
