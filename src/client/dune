@@ -9,7 +9,6 @@
   exec
   enums
   docs
-  share
   cmd_parse
   cmd_mdg
   cmd_analyze)

@@ -751,6 +751,8 @@ module Prog = struct
   let create (files : (Fpath.t * 'm File.t) list) : 'm t =
     files |> List.to_seq |> Hashtbl.of_seq
 
+  let length (prog : 'm t) : int = Hashtbl.length prog
+
   let find (prog : 'm t) (path : Fpath.t) : 'm Ast.File.t =
     Hashtbl.find prog path
 

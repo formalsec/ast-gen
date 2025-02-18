@@ -5,7 +5,7 @@ module Config = struct
   include Config
 
   let path_font = constant (Font.create ~fg:`DarkGray ~italic:true ())
-  let test262_conform_hoisted = static false
+  let test262_conform_hoisted = dynamic false
 end
 
 let pp_indent (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (vs : 'a list) =

@@ -3,75 +3,80 @@ open Graphjs_base
 module Config = struct
   include Config
 
-  let override : bool t = static false
+  let dflt_output_path = constant (Fpath.v ".out/")
+  let dflt_manifest_path = constant (Fpath.v "manifest.graphjs")
+  let override = static false
 end
+
+type path =
+  | None
+  | Single of Fpath.t
+  | Bundle of Fpath.t
 
 type perm =
   | None
   | Main
   | Side
 
-type out =
-  | None
-  | Single of Fpath.t
-  | Bundle of Fpath.t
-
 type t =
-  { perm : perm
-  ; out : out
+  { path : path
+  ; perm : perm
   }
 
-let none : t = { perm = Main; out = None }
-let single ?(w : t = none) (path : Fpath.t) : t = { w with out = Single path }
-let bundle ?(w : t = none) (path : Fpath.t) : t = { w with out = Bundle path }
+let none = { path = None; perm = Main }
+let single ?(w = none) (path : Fpath.t) : t = { w with path = Single path }
+let bundle ?(w = none) (path : Fpath.t) : t = { w with path = Bundle path }
+let main_perm (w : t) : t = { w with perm = Main }
+let side_perm (w : t) : t = { w with perm = Side }
 
 let create ~(default : [ `None | `Single | `Bundle ]) (inputs : Fpath.t list)
     (output : Fpath.t option) : t =
   match (output, default) with
   | (None, _) when List.length inputs == 1 -> none
   | (None, `None) -> none
-  | (None, `Single) -> single (Fpath.v ".out/")
-  | (None, `Bundle) -> bundle (Fpath.v ".out/")
+  | (None, `Single) -> single Config.(!dflt_output_path)
+  | (None, `Bundle) -> bundle Config.(!dflt_output_path)
   | (Some path, _) when Fpath.is_dir_path path -> bundle path
   | (Some path, _) -> single path
 
-let side (w : t) : t = { w with perm = Side }
+let path (w : t) : Fpath.t =
+  match w with
+  | { path = None; _ } -> Log.fail "unexpected 'none' workspace"
+  | { path = Single path; _ } | { path = Bundle path; _ } -> path
 
-let pp (ppf : Fmt.t) : t -> unit = function
-  | { out = None; _ } -> ()
-  | { out = Single path; _ } | { out = Bundle path; _ } -> Fpath.pp ppf path
+let pp_path (ppf : Fmt.t) (w : t) : unit =
+  match w with
+  | { path = None; _ } -> ()
+  | { path = Single path; _ } | { path = Bundle path; _ } -> Fpath.pp ppf path
 
-let path : t -> Fpath.t = function
-  | { out = None; _ } -> Log.fail "unexpected 'none' workspace"
-  | { out = Single path; _ } | { out = Bundle path; _ } -> path
+let map (f : Fpath.t -> Fpath.t) (w : t) : t =
+  match w with
+  | { path = None; _ } as w -> w
+  | { path = Single path'; _ } as w -> { w with path = Single (f path') }
+  | { path = Bundle path'; _ } as w -> { w with path = Bundle (f path') }
 
-let map (f : Fpath.t -> Fpath.t) : t -> t = function
-  | { out = None; _ } as w -> w
-  | { out = Single path; _ } as w -> { w with out = Single (f path) }
-  | { out = Bundle path; _ } as w -> { w with out = Bundle (f path) }
-
-let ( / ) (w : t) (rel : string) : t = map Fpath.(fun w' -> w' / rel) w
-let ( // ) (w : t) (rel : Fpath.t) : t = map Fpath.(fun w' -> w' // rel) w
-let ( -+ ) (w : t) (ext : string) : t = map Fpath.(fun w' -> w' -+ ext) w
-let ( + ) (w : t) (ext : string) : t = map Fpath.(fun w' -> w' + ext) w
-
-let log (w : t) (fmt : Fmt.t -> unit) : unit =
-  match w.perm with
-  | Main when not Log.Config.(!log_verbose) -> Log.stdout "%t" fmt
-  | _ -> ()
+let ( / ) (w : t) (rel : string) : t = map Fpath.(fun path -> path / rel) w
+let ( // ) (w : t) (rel : Fpath.t) : t = map Fpath.(fun path -> path // rel) w
+let ( + ) (w : t) (ext : string) : t = map Fpath.(fun path -> path + ext) w
+let ( -+ ) (w : t) (ext : string) : t = map Fpath.(fun path -> path -+ ext) w
 
 let execute (p : perm) (w : t) (f : Fpath.t -> 'a Exec.status) :
     unit Exec.status =
-  match (p, w.out) with
+  match (p, w.path) with
   | (Main, Single path) | (Main, Bundle path) | (Side, Bundle path) ->
     Result.map ignore (f path)
   | _ -> Ok ()
 
 let execute_noerr (p : perm) (w : t) (f : Fpath.t -> 'a) : unit =
-  match (p, w.out) with
+  match (p, w.path) with
   | (Main, Single path) | (Main, Bundle path) | (Side, Bundle path) ->
     ignore (f path)
   | _ -> ()
+
+let log (w : t) (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
+  match w.perm with
+  | Main when not Log.Config.(!log_verbose) -> Log.stdout fmt
+  | _ -> Log.ignore fmt
 
 let mkdir (p : perm) (w : t) : unit Exec.status = execute p w Fs.mkdir
 let mkdir_noerr (p : perm) (w : t) : unit = execute_noerr p w Fs.mkdir_noerr
@@ -89,52 +94,53 @@ let output (p : perm) (w : t) (pp : Fmt.t -> 'a -> unit) (v : 'a) :
 let output_noerr (p : perm) (w : t) (pp : Fmt.t -> 'a -> unit) (v : 'a) : unit =
   execute_noerr p w (Fun.flip2 Fs.output_noerr pp v)
 
-let write (p : perm) (w : t) (fmt : Fmt.t -> unit) : unit Exec.status =
+let write (p : perm) (w : t) (fmt : ('a, Fmt.t, unit, 'b) format4) :
+    unit Exec.status =
   execute p w (Fun.flip Fs.write fmt)
 
-let write_noerr (p : perm) (w : t) (fmt : Fmt.t -> unit) : unit =
-  execute_noerr p w (Fun.flip Fs.write_noerr fmt)
+let write_noerr (p : perm) (w : t) (fm : ('a, Fmt.t, unit, 'b) format4) : unit =
+  execute_noerr p w (Fun.flip Fs.write_noerr fm)
 
-let clean' (w : t) : unit Exec.status =
+let clean (w : t) : unit Exec.status =
   let open Result in
-  let create_dir_template manifest path =
-    let* _ = Exec.bos (Bos.OS.Dir.create path) in
-    Exec.bos (Bos.OS.File.write manifest "") in
-  let override_dir manifest path warn =
-    if warn then Log.warn "Overriding \"%a\" directory." Fpath.pp path;
-    let* _ = Exec.bos (Bos.OS.Dir.delete ~recurse:true path) in
-    create_dir_template manifest path in
-  let override_file path =
-    Log.warn "Overriding \"%a\" file." Fpath.pp path;
-    Exec.bos (Bos.OS.File.delete path) in
-  let error_dir path =
-    Exec.error "Cannot override \"%a\" directory." Fpath.pp path in
-  let error_file path =
-    Exec.error "Cannot override \"%a\" file." Fpath.pp path in
-  match w.out with
+  let create_dir_template dir_path manifest_path =
+    let* _ = Fs.mkdir dir_path in
+    Fs.write manifest_path "" in
+  let override_dir dir_path manifest_path warn =
+    if warn then Log.warn "Overriding \"%a\" directory." Fpath.pp dir_path;
+    let* _ = Fs.delete ~recurse:true dir_path in
+    create_dir_template dir_path manifest_path in
+  let override_file file_path =
+    Log.warn "Overriding \"%a\" file." Fpath.pp file_path;
+    Fs.delete file_path in
+  let error_dir dir_path =
+    Exec.error "Cannot override \"%a\" directory." Fpath.pp dir_path in
+  let error_file file_path =
+    Exec.error "Cannot override \"%a\" file." Fpath.pp file_path in
+  match w.path with
   | None -> Ok ()
   | (Single path | Bundle path) when not (Fpath.is_dir_path path) ->
-    let* exists_file = Exec.bos (Bos.OS.File.exists path) in
+    let* exists_file = Fs.exists path in
     if exists_file && Config.(!override) then override_file path
     else if exists_file then error_file path
     else Ok ()
-  | Single path | Bundle path ->
-    let manifest = Fpath.add_seg path "manifest.graphjs" in
-    let* exists_dir = Exec.bos (Bos.OS.Dir.exists path) in
+  | Single dir_path | Bundle dir_path ->
+    let manifest_path = Fpath.append dir_path Config.(!dflt_manifest_path) in
+    let* exists_dir = Fs.exists dir_path in
     if exists_dir then
-      let* exists_manifest = Exec.bos (Bos.OS.File.exists manifest) in
-      if exists_manifest then override_dir manifest path false
-      else if Config.(!override) then override_dir manifest path true
-      else error_dir path
-    else create_dir_template manifest path
+      let* exists_manifest = Fs.exists manifest_path in
+      if exists_manifest then override_dir dir_path manifest_path false
+      else if Config.(!override) then override_dir dir_path manifest_path true
+      else error_dir dir_path
+    else create_dir_template dir_path manifest_path
 
-let clean (w : t) : unit Exec.status =
-  let res = clean' w in
-  Log.info "Workspace \"%a\" generated successfully." pp w;
-  res
+let prepare (w : t) : unit Exec.status =
+  Fun.flip Result.map (clean w) (fun res ->
+      Log.info "Workspace \"%a\" generated successfully." pp_path w;
+      res )
 
 let extend (w : t) (name : string) : t =
-  match (w.out, name) with
+  match (w.path, name) with
   | (None, _) -> w
   | (Single path, _) -> single ~w Fpath.(path // v name)
   | (Bundle path, _) -> bundle ~w Fpath.(to_dir_path (path // v name))

@@ -25,3 +25,13 @@ let format (time : t) : ftime =
   let mins = total_min mod 60 in
   let hours = total_min / 60 in
   { hours; mins; secs; ms }
+
+let pp (ppf : Fmt.t) (time : t) : unit =
+  let ftime = format time in
+  let log_hours = ftime.hours > 0 in
+  let log_mins = log_hours || ftime.mins > 0 in
+  if log_hours then Fmt.fmt ppf "%dh " ftime.hours;
+  if log_mins then Fmt.fmt ppf "%dm " ftime.mins;
+  Fmt.fmt ppf "%d.%03ds" ftime.secs ftime.ms
+
+let str (time : t) : string = Fmt.str "%a" pp time

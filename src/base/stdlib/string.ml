@@ -1,11 +1,18 @@
 include Stdlib.String
 
-(* FIXME: currently unhappy with this function *)
-let truncate (limit : int) (text : string) : string * bool =
-  let truncate_line line text =
-    try if length line > limit then (sub line 0 limit, true) else (line, text)
-    with Invalid_argument _ -> ("", true) in
+let split (limit : int option) (text : string) : string * string =
+  let limit' = Option.value ~default:Int.max_int limit in
+  let truncate_line line rest =
+    let len = length line in
+    if len > limit' then
+      let line' = sub line 0 limit' in
+      let rest' = sub line limit' (len - limit') in
+      (line', rest' ^ rest)
+    else (line, rest) in
   match split_on_char '\n' text with
-  | [] -> ("", false)
-  | line :: [] -> truncate_line line false
-  | line :: _ -> truncate_line line true
+  | [] -> ("", "")
+  | line :: [] -> truncate_line line ""
+  | line :: text' -> truncate_line line (concat "\n" text')
+
+let truncate (limit : int option) (text : string) : string =
+  fst (split limit text)

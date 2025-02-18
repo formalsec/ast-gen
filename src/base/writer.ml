@@ -1,5 +1,7 @@
 open Format
 
+type size = int option
+
 type stream =
   | Unknown
   | Buffer of Buffer.t
@@ -8,8 +10,8 @@ type stream =
 type t =
   { stream : stream
   ; ppf : formatter
-  ; width : int option
-  ; height : int option
+  ; width : size
+  ; height : size
   ; colored : bool
   }
 
@@ -29,13 +31,7 @@ open struct
     reg := reg_remove' !reg
 end
 
-let stream (writer : t) : stream = writer.stream
-let ppf (writer : t) : formatter = writer.ppf
-let width (writer : t) : int option = writer.width
-let height (writer : t) : int option = writer.height
-let colored (writer : t) : bool = writer.colored
-
-let stream_attributes (stream : stream) : int option * int option * bool =
+let stream_attributes (stream : stream) : size * size * bool =
   match stream with
   | Unknown | Buffer _ -> (None, None, false)
   | Channel oc -> Console.attributes (Unix.descr_of_out_channel oc)
@@ -58,6 +54,11 @@ let remove ?(close : bool = true) (writer : t) : unit =
 let find (ppf : formatter) : t =
   match reg_find ppf with None -> generate Unknown ppf | Some writer -> writer
 
+let stream (ppf : Fmt.t) : stream = (find ppf).stream
+let width (ppf : Fmt.t) : size = (find ppf).width
+let height (ppf : Fmt.t) : size = (find ppf).height
+let colored (ppf : Fmt.t) : bool = (find ppf).colored
+
 let to_buffer (buf : Buffer.t) : t =
   create (Buffer buf) (formatter_of_buffer buf)
 
@@ -74,3 +75,21 @@ module Config = struct
   let stderr = dynamic (create (Channel Stdlib.stderr) err_formatter)
   let stdbuf = constant (create (Buffer stdbuf) str_formatter)
 end
+
+let size ~(default : int) (size : size) : int = Option.value ~default size
+let ( + ) (size : size) (n : int) : size = Option.map Fun.(flip ( + ) n) size
+let ( - ) (size : size) (n : int) : size = Option.map Fun.(flip ( - ) n) size
+let ( * ) (size : size) (n : int) : size = Option.map Fun.(flip ( * ) n) size
+let ( / ) (size : size) (n : int) : size = Option.map Fun.(flip ( / ) n) size
+
+let ( < ) (size : size) (n : int) : bool =
+  Option.fold ~none:false ~some:Fun.(flip ( < ) n) size
+
+let ( <= ) (size : size) (n : int) : bool =
+  Option.fold ~none:false ~some:Fun.(flip ( <= ) n) size
+
+let ( > ) (size : size) (n : int) : bool =
+  Option.fold ~none:true ~some:Fun.(flip ( > ) n) size
+
+let ( >= ) (size : size) (n : int) : bool =
+  Option.fold ~none:true ~some:Fun.(flip ( >= ) n) size

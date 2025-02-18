@@ -110,8 +110,7 @@ open struct
     |> mk_style (`Strike, strike)
 end
 
-let colored (writer : Writer.t) : bool =
-  Config.(!colored) && Writer.colored writer
+let colored (ppf : Fmt.t) : bool = Config.(!colored) && Writer.colored ppf
 
 let get_foreground (font : t) : Attr.color option =
   List.find_map (function `Foreground fg -> Some fg | _ -> None) font
@@ -149,7 +148,7 @@ let pp_font (ppf : Fmt.t) (font : t) : unit =
   Fmt.fmt ppf "\027[%am" Fmt.(pp_lst !>";" pp_attr) font
 
 let pp (font : t) (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (v : 'a) : unit =
-  if not (colored (Writer.find ppf)) then pp_v ppf v
+  if not (colored ppf) then pp_v ppf v
   else Fmt.fmt ppf "%a%a%a" pp_font font pp_v v pp_font [ `Reset ]
 
 let kfmt (font : t) (k : Fmt.t -> 'a) (ppf : Fmt.t)

@@ -51,6 +51,9 @@ let stdout (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
 let stderr (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
   Fmt.fmt Writer.Config.(!stderr).ppf fmt
 
+let ignore (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
+  Fmt.ignore Writer.Config.(!stdbuf).ppf fmt
+
 let fail (fmt : ('a, Fmt.t, unit, 'b) format4) : 'a = Fmt.ksstr failwith fmt
 
 let app (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =

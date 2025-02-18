@@ -7,41 +7,47 @@ module Parser = struct
     | `Error of string
     ]
 
-  open struct
-    let check (check_f : Fpath.t -> bool) (kind : string) (fpath : t) : conv =
-      if check_f fpath then `Ok fpath
-      else `Error (Fmt.str "Path '%a' is not a valid %s!" pp fpath kind)
+  let check (check_f : Fpath.t -> bool) (kind : string) (fpath : t) : conv =
+    if check_f fpath then `Ok fpath
+    else `Error (Fmt.str "Path '%a' is not a valid %s!" pp fpath kind)
 
-    let parse (parse_f : t -> (bool, [< `Msg of string ]) Result.t)
-        (kind : string) (fpath : t) : conv =
-      match parse_f fpath with
-      | Ok true -> `Ok fpath
-      | Ok false -> `Error (Fmt.str "%s '%a' not found!" kind pp fpath)
-      | Error (`Msg err) -> `Error err
+  let parse (parse_f : t -> (bool, [< `Msg of string ]) Result.t)
+      (kind : string) (fpath : t) : conv =
+    match parse_f fpath with
+    | Ok true -> `Ok fpath
+    | Ok false -> `Error (Fmt.str "%s '%a' not found!" kind pp fpath)
+    | Error (`Msg err) -> `Error err
 
-    let fix_dir (fpath : t) : t =
-      if Fpath.exists_ext fpath then fpath else Fpath.to_dir_path fpath
-  end
+  let fix_dir (fpath : t) : t =
+    if Fpath.exists_ext fpath then fpath else Fpath.to_dir_path fpath
 
-  let fpath = Fun.((fun fpath -> `Ok fpath) << fix_dir << v, pp)
-  let dir = Fun.(check is_dir_path "directory" << fix_dir << v, pp)
   let file = Fun.(check is_file_path "filename" << v, pp)
-  let valid_fpath = Fun.(parse Bos.OS.Path.exists "Path" << fix_dir << v, pp)
-  let valid_dir = Fun.(parse Bos.OS.Dir.exists "Directory" << fix_dir << v, pp)
+  let dir = Fun.(check is_dir_path "directory" << fix_dir << v, pp)
+  let fpath = Fun.(check (fun _ -> true) "path" << fix_dir << v, pp)
   let valid_file = Fun.(parse Bos.OS.File.exists "File" << v, pp)
+  let valid_dir = Fun.(parse Bos.OS.Dir.exists "Directory" << fix_dir << v, pp)
+  let valid_fpath = Fun.(parse Bos.OS.Path.exists "Path" << fix_dir << v, pp)
 end
 
-let handle_error (f : t -> 'a Exec.status) (w : t) : unit =
-  match f w with
-  | Ok _ -> ()
-  | Error exn ->
-    Log.warn "Unable to interact with \"%a\".@\n%a" pp w Exec.pp_exn exn
+let handle_error ~(default : 'a) (f : t -> 'a Exec.status) (path : t) : 'a =
+  match f path with
+  | Ok v -> v
+  | Error err ->
+    Log.warn "Unable to output to \"%a\".@\n%a" pp path Exec.pp_err err;
+    default
 
 let mkdir (path : t) : unit Exec.status =
-  let open Result in
   let path' = if is_dir_path path then path else parent path in
-  let* _ = Exec.bos (Bos.OS.Dir.create path') in
-  Ok ()
+  Result.map (fun _ -> ()) (Exec.bos (Bos.OS.Dir.create path'))
+
+let delete ?(recurse : bool = false) (path : t) : unit Exec.status =
+  if is_dir_path path then
+    Result.map (fun _ -> ()) (Exec.bos (Bos.OS.Dir.delete ~recurse path))
+  else Result.map (fun _ -> ()) (Exec.bos (Bos.OS.File.delete path))
+
+let exists (path : t) : bool Exec.status =
+  if is_dir_path path then Exec.bos (Bos.OS.Dir.exists path)
+  else Exec.bos (Bos.OS.File.exists path)
 
 let copy (path : t) (src : t) : unit Exec.status =
   let open Result in
@@ -51,16 +57,21 @@ let copy (path : t) (src : t) : unit Exec.status =
 let output (path : t) (pp_v : Fmt.t -> 'a -> unit) (v : 'a) : unit Exec.status =
   Exec.bos (Bos.OS.File.writef path "%a" pp_v v)
 
-let write (path : t) (fmt : Fmt.t -> unit) : unit Exec.status =
-  Exec.bos (Bos.OS.File.writef path "%t" fmt)
+let write (path : t) (fmt : ('a, Fmt.t, unit, 'b) format4) : unit Exec.status =
+  Exec.bos (Bos.OS.File.writef path fmt)
 
-let mkdir_noerr (path : t) : unit = handle_error mkdir path
+let mkdir_noerr (path : t) : unit = handle_error ~default:() mkdir path
+
+let delete_noerr ?(recurse : bool = false) (path : t) : unit =
+  handle_error ~default:() (delete ~recurse) path
+
+let exists_noerr (path : t) : bool = handle_error ~default:false exists path
 
 let copy_noerr (path : t) (src : t) : unit =
-  handle_error (Fun.flip copy src) path
+  handle_error ~default:() (Fun.flip copy src) path
 
 let output_noerr (path : t) (pp_v : Fmt.t -> 'a -> unit) (v : 'a) : unit =
-  handle_error (Fun.flip2 output pp_v v) path
+  handle_error ~default:() (Fun.flip2 output pp_v v) path
 
-let write_noerr (path : t) (fmt : Fmt.t -> unit) : unit =
-  handle_error (Fun.flip write fmt) path
+let write_noerr (path : t) (fmt : ('a, Fmt.t, unit, 'b) format4) : unit =
+  handle_error ~default:() (Fun.flip write fmt) path

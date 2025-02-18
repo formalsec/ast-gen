@@ -2,44 +2,47 @@ open Cmdliner
 
 module ExitCodes = struct
   let ok = Cmd.Exit.ok
-  let deptree = 2
-  let parsejs = 3
-  let build_mdg = 4
-  let export_mdg = 5
-  let timeout = 110
   let term = 122
   let generic = Cmd.Exit.some_error
   let client = Cmd.Exit.cli_error
   let internal = Cmd.Exit.internal_error
+  let timeout = 126
+
+  (* graphjs specific errors *)
+  let deptree = 1
+  let parsejs = 2
+  let build_mdg = 3
+  let export_mdg = 4
 end
 
 module Exits = struct
   open Cmd.Exit
 
   let common =
-    info ~doc:"on timeout error" ExitCodes.timeout
-    :: info ~doc:"on terminal error" ExitCodes.term
-    :: defaults
+    let terminal = info ~doc:"on terminal error" ExitCodes.term in
+    let timeout = info ~doc:"on execution timeout" ExitCodes.timeout in
+    terminal :: timeout :: defaults
 
   let parse =
-    [ info ~doc:"on Dependency Tree generation error" ExitCodes.deptree
-    ; info ~doc:"on JavaScript parsing error" ExitCodes.parsejs ]
+    let dt = info ~doc:"on dependency tree generation error" ExitCodes.deptree in
+    let parsejs = info ~doc:"on JavaScript parsing error" ExitCodes.parsejs in
+    [ dt; parsejs ]
 
   let mdg =
-    [ info ~doc:"on MDG construction" ExitCodes.build_mdg
-    ; info ~doc:"on MDG export error" ExitCodes.export_mdg ]
+    let build = info ~doc:"on MDG construction error" ExitCodes.build_mdg in
+    let export = info ~doc:"on MDG export error" ExitCodes.export_mdg in
+    [ build; export ]
 end
 
 module CommonOpts = struct
   let colorless =
-    let docs = Manpage.s_common_options in
     let doc =
       "Generate colorless output. This flag may be required for terminals \
        lacking 16-ANSI-color support." in
-    Arg.(value & flag & info [ "colorless" ] ~docs ~doc)
+    let docs = Manpage.s_common_options in
+    Arg.(value & flag & info [ "colorless" ] ~doc ~docs)
 
   let debug =
-    let docs = Manpage.s_common_options in
     let docv = "LEVEL" in
     let doc =
       "Debug level used within the Graph.js application. Options include: (1) \
@@ -47,41 +50,62 @@ module CommonOpts = struct
        Graph.js warnings; (3) 'info' to additionally show the information logs \
        and program execution stage; and (4) 'full' to show all, including \
        debug prints." in
-    let levels = Arg.enum Enums.DebugLvl.(args all) in
-    Arg.(value & opt levels Warn & info [ "debug" ] ~docs ~docv ~doc)
+    let docs = Manpage.s_common_options in
+    let debug_lvls = Arg.enum Enums.DebugLvl.(args all) in
+    Arg.(value & opt debug_lvls Warn & info [ "debug" ] ~docv ~doc ~docs)
 
   let verbose =
-    let doc = "Run in verbose mode, printing all information available." in
-    Arg.(value & flag & info [ "v"; "verbose" ] ~doc)
+    let doc = "Run in verbose mode, printing all information generated." in
+    let docs = Manpage.s_common_options in
+    Arg.(value & flag & info [ "v"; "verbose" ] ~doc ~docs)
 
   let override =
     let doc = "Override existing files when outputing to the provided path." in
-    Arg.(value & flag & info [ "override" ] ~doc)
+    let docs = Manpage.s_common_options in
+    Arg.(value & flag & info [ "override" ] ~doc ~docs)
 end
 
 module FileOpts = struct
-  let input =
+  let input_file =
+    let docv = "FILE" in
+    let doc = "Path to the input file." in
+    let parser = Fs.Parser.valid_file in
+    Arg.(required & pos 0 (some parser) None & info [] ~docv ~doc)
+
+  let input_dir =
+    let docv = "FILE" in
+    let doc = "Path to the input directory." in
+    let parser = Fs.Parser.valid_dir in
+    Arg.(required & pos 0 (some parser) None & info [] ~docv ~doc)
+
+  let input_path =
     let docv = "FILE|DIR" in
     let doc = "Path to the input file or directory." in
     let parser = Fs.Parser.valid_fpath in
     Arg.(required & pos 0 (some parser) None & info [] ~docv ~doc)
 
-  let inputs =
+  let input_paths =
     let docv = "FILE|DIR..." in
     let doc = "Path to the input files or directories." in
     let parser = Fs.Parser.valid_fpath in
     Arg.(non_empty & pos_all parser [] & info [] ~docv ~doc)
 
-  let output =
-    let docv = "FILE|DIR" in
-    let doc = "Path to the output file or directory." in
-    let parser = Fs.Parser.fpath in
+  let output_file =
+    let docv = "FILE" in
+    let doc = "Path to the output file." in
+    let parser = Fs.Parser.file in
     Arg.(value & opt (some parser) None & info [ "o"; "output" ] ~docv ~doc)
 
   let output_dir =
     let docv = "DIR" in
     let doc = "Path to the output directory." in
     let parser = Fs.Parser.dir in
+    Arg.(value & opt (some parser) None & info [ "o"; "output" ] ~docv ~doc)
+
+  let output_path =
+    let docv = "FILE|DIR" in
+    let doc = "Path to the output file or directory." in
+    let parser = Fs.Parser.fpath in
     Arg.(value & opt (some parser) None & info [ "o"; "output" ] ~docv ~doc)
 end
 
@@ -95,7 +119,7 @@ module ParseOpts = struct
        by the input file; and (3) 'multifile' where the attacker controlls the \
        functions that were exported by the 'main' file of the module." in
     let modes = Arg.enum Enums.AnalysisMode.(args all) in
-    Arg.(value & opt modes SingleFile & info [ "m"; "mode" ] ~docv ~doc)
+    Arg.(value & opt modes SingleFile & info [ "mode" ] ~docv ~doc)
 
   let test262_conform_hoisted =
     let doc =
@@ -107,15 +131,14 @@ end
 
 module ParseCmd = struct
   let name = "parse"
-  let sdocs = Manpage.s_common_options
   let doc = "Parses and normalizes a Node.js package"
+  let sdocs = Manpage.s_common_options
 
   let description =
-    [| "Given a Node.js package, generates the dependency tree of the package. \
-        Then parses each dependency using the open-source TypeScript/React \
-        parser from Flow (https://flow.org/). Finally, normalizes the \
-        resulting AST of each dependency, generating a simplified core subset \
-        of JavaScript" |]
+    [| "Given a Node.js package, generates its dependency tree. Then parses \
+        each dependency using the open-source TypeScript/React parser from \
+        Flow (https://flow.org/). Finally, for each parsed dependency, \
+        normalizes the resulting AST, in a core subset of JavaScript." |]
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
@@ -127,7 +150,7 @@ module MdgOpts = struct
     let docv = "FILE" in
     let doc = "Path to the taint source/sink configuration file." in
     let parser = Fs.Parser.valid_file in
-    Arg.(value & opt (some parser) None & info [ "c"; "config" ] ~docv ~doc)
+    Arg.(value & opt (some parser) None & info [ "config" ] ~docv ~doc)
 
   let no_svg =
     let doc = "Run without generating the .svg graph representation." in
@@ -136,39 +159,37 @@ module MdgOpts = struct
   let no_literal_property_wrapping =
     let doc =
       "Builds the MDG without wrapping property updates on literal values in a \
-       new object node. Using this flag may increase construction speed, but \
-       introduce errors in the graph and subsequent analysis." in
+       new object node. Enabling this flag increases construction speed and \
+       reduces the graph size, but may introduce errors in the resulting graph \
+       and subsequent analysis." in
     Arg.(value & flag & info [ "no-literal-property-wrapping" ] ~doc)
 end
 
 module MdgCmd = struct
   let name = "mdg"
-  let sdocs = Manpage.s_common_options
   let doc = "Builds the MDG of a Node.js package"
+  let sdocs = Manpage.s_common_options
 
   let description =
     [| "Given a Node.js package, generates the Multiversion Dependency Graph \
-        (MDG) of the package. The command generates the MDGs of each module of \
-        the package, as well as the combined MDG." |]
+        (MDG) of each module of the package. Then merges all generated MDGs \
+        into a single graph that describes the entire package." |]
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
   let exits = Exits.common @ Exits.parse @ Exits.mdg
 end
 
-module AnalyzeOpts = struct end
-
 module AnalyzeCmd = struct
   let name = "analyze"
+  let doc = "Performs various static analyzes in a Node.js package"
   let sdocs = Manpage.s_common_options
-  let doc = "Searches for vulnerabilities in a Node.js package"
 
   let description =
-    [| "Given a Multiversion Dependency Graph (MDG) of a Node.js package, \
-        analyzes the package in search of vulnerabilities. Currently, the \
-        system supports two type of vulnerabilities: taint-style (code \
-        injection, command injection, and path traversal) and prototype \
-        pollution." |]
+    [| "Given a Node.js package, performs multiple static analyzes to the \
+        package. These analyzes include: caller analyses, exported values \
+        analyses, taint-style vulnerability detection, and prototype pollution \
+        detection." |]
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
@@ -196,10 +217,10 @@ module Application = struct
         (MDG) of the normalized package. This graph-based data structure \
         merges into a single representation the abstract syntax tree, control \
         flow graph, and data dependency graph."
-     ; "In the third phase, Graph.js runs several built-in queries on the \
-        graph using its internal query engine. These queries aim to identify \
-        vulnerable code patterns, such as data dependency paths connecting \
-        tainted sources to dangerous sinks. Graph.js allows for the \
+     ; "In the third phase, Graph.js runs several built-in analyzes on the \
+        graph using its internal analysis engine. These analyzes aim to \
+        identify vulnerable code patterns, such as data dependency paths \
+        connecting tainted sources to dangerous sinks. Graph.js allows for the \
         configuration of both program sources and sinks."
      ; "Use graphjs <command> --help for more information on a specific \
         command." |]

@@ -113,8 +113,6 @@ let generate (mode : Analysis_mode.t) (path : string) : t =
   let structure = generate_structure mode main_path in
   create (Json.from_string structure)
 
-let multi_file (dt : t) : bool = DepSet.cardinal dt.deps > 0
-
 let bottom_up_visit (f : Fpath.t * Fpath.t -> 'a) (dt : t) : 'a list =
   let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
   let rec bottom_up_visit' { path; mrel; deps } acc =
