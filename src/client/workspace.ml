@@ -21,23 +21,33 @@ type perm =
 type t =
   { path : path
   ; perm : perm
+  ; ext : string option
   }
 
-let none = { path = None; perm = Main }
+let none = { path = None; perm = Main; ext = None }
 let single ?(w = none) (path : Fpath.t) : t = { w with path = Single path }
 let bundle ?(w = none) (path : Fpath.t) : t = { w with path = Bundle path }
+
+let single_ext ?(w = none) (ext : string) (path : Fpath.t) : t =
+  { w with path = Single path; ext = Some ext }
+
 let main_perm (w : t) : t = { w with perm = Main }
 let side_perm (w : t) : t = { w with perm = Side }
 
-let create ~(default : [ `None | `Single | `Bundle ]) (inputs : Fpath.t list)
-    (output : Fpath.t option) : t =
+let create ~(default : [ `None | `Single of string option | `Bundle ])
+    (inputs : Fpath.t list) (output : Fpath.t option) : t =
   match (output, default) with
   | (None, _) when List.length inputs == 1 -> none
   | (None, `None) -> none
-  | (None, `Single) -> single Config.(!dflt_output_path)
+  | (None, `Single None) -> single Config.(!dflt_output_path)
+  | (None, `Single (Some ext)) -> single_ext ext Config.(!dflt_output_path)
   | (None, `Bundle) -> bundle Config.(!dflt_output_path)
   | (Some path, _) when Fpath.is_dir_path path -> bundle path
-  | (Some path, _) -> single path
+  | (Some path, _) when List.length inputs == 1 -> single path
+  | (Some path, `None) -> single path
+  | (Some path, `Single None) -> single path
+  | (Some path, `Single (Some ext)) -> single_ext ext path
+  | (Some path, `Bundle) -> bundle path
 
 let path (w : t) : Fpath.t =
   match w with
@@ -144,3 +154,8 @@ let extend (w : t) (name : string) : t =
   | (None, _) -> w
   | (Single path, _) -> single ~w Fpath.(path // v name)
   | (Bundle path, _) -> bundle ~w Fpath.(to_dir_path (path // v name))
+
+let set_ext (w : t) : t =
+  match (w.path, w.ext) with
+  | (Single path, Some ext) -> { w with path = Single Fpath.(path -+ ext) }
+  | _ -> w

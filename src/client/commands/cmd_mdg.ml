@@ -175,10 +175,10 @@ let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
   end )
 
 let main (opts : Options.t) () : unit Exec.status =
-  let ext = if opts.env.export_svg then "svg" else "mdg" in
-  let w = Workspace.create ~default:`Single opts.inputs opts.output in
+  let ext = Some (if opts.env.export_svg then "svg" else "mdg") in
+  let w = Workspace.create ~default:(`Single ext) opts.inputs opts.output in
   let* _ = Workspace.prepare w in
-  let* inputs = Bulk.InputTree.generate ~ext opts.inputs in
+  let* inputs = Bulk.InputTree.generate opts.inputs in
   let module Interface = (val bulk_interface opts.env) in
   let module Executor = Bulk.Executor (Interface) in
   Executor.execute w inputs

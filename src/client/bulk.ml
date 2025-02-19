@@ -23,52 +23,57 @@ end
 
 module InputTree = struct
   type t' =
-    | File of Fpath.t
-    | Directory of t
+    | Input of Fpath.t
+    | Tree of t
 
   and t = (string, t') Hashtbl.t
 
   let create () : t = Hashtbl.create Config.(!dflt_htbl_sz)
 
-  let rec add (rel : Fpath.t) (tree : t) (segs : string list) : unit =
-    match segs with
+  let count_next_sec (tree : t) : int * int =
+    Fun.flip2 Hashtbl.fold tree (0, 0) (fun _ item ((n_secs, n_items) as acc) ->
+        match item with
+        | Input _ -> acc
+        | Tree tree' -> (n_secs + 1, n_items + Hashtbl.length tree') )
+
+  let rec add (input : Fpath.t) (tree : t) (secs : string list) : unit =
+    match secs with
     | [] -> Log.fail "unexpected path in input tree generator"
-    | filename :: [] -> Hashtbl.add tree filename (File rel)
-    | dirname :: path' -> (
-      match Hashtbl.find_opt tree dirname with
-      | Some (File _) -> Log.fail "unexpected path in input tree generator"
-      | Some (Directory tree') -> add rel tree' path'
+    | sec :: [] -> Hashtbl.add tree sec (Input input)
+    | sec :: secs' -> (
+      match Hashtbl.find_opt tree sec with
+      | Some (Input _) -> Log.fail "unexpected path in input tree generator"
+      | Some (Tree tree') -> add input tree' secs'
       | None ->
         let tree' = Hashtbl.create Config.(!dflt_htbl_sz) in
-        Hashtbl.add tree dirname (Directory tree');
-        add rel tree' path' )
+        Hashtbl.add tree sec (Tree tree');
+        add input tree' secs' )
 
-  let fill (ext : string option) (inputs : Fpath.t list) (tree : t) : t =
+  let fill (inputs : Fpath.t list) (tree : t) : t =
     let pwd = Fpath.v (Console.pwd ()) in
-    Fun.flip List.iter inputs (fun rel ->
-        let abs = Fpath.normalize Fpath.(pwd // rel) in
-        let abs' = Option.fold ~none:abs ~some:Fpath.(( -+ ) abs) ext in
-        let segs = Fpath.segs abs' in
-        add rel tree segs );
+    Fun.flip List.iter inputs (fun input ->
+        let abs = Fpath.normalize Fpath.(pwd // input) in
+        let secs = Fpath.segs abs in
+        add input tree secs );
     tree
 
-  let trim (ext : string option) (tree : t) : (string list * Fpath.t) list =
-    let ext_f p = Option.fold ~none:p ~some:(fun e -> p ^ "." ^ e) ext in
-    let trim_f = function [] -> [] | hd :: tl -> ext_f hd :: tl in
-    let rec trim' curr tree acc =
-      let is_single = Hashtbl.length tree <= 1 in
-      Fun.flip2 Hashtbl.fold tree acc (fun dirname item acc ->
-          match (item, is_single) with
-          | (File path, true) -> (List.rev (trim_f curr), path) :: acc
-          | (File path, false) -> (List.rev (dirname :: curr), path) :: acc
-          | (Directory tree', true) -> trim' curr tree' acc
-          | (Directory tree', false) -> trim' (dirname :: curr) tree' acc )
+  let trim (tree : t) : (string list * Fpath.t) list =
+    let rec trim' curr tree trim_curr acc =
+      let trim_curr' = trim_curr && Hashtbl.length tree <= 1 in
+      let (n_next_secs, n_next_items) = count_next_sec tree in
+      let trim_next = n_next_secs == n_next_items in
+      Fun.flip2 Hashtbl.fold tree acc (fun sec item acc ->
+          match (item, trim_curr') with
+          | (Input input, true) -> (List.rev curr, input) :: acc
+          | (Input input, false) -> (List.rev (sec :: curr), input) :: acc
+          | (Tree tree', true) -> trim' curr tree' trim_next acc
+          | (Tree tree', false) -> trim' (sec :: curr) tree' trim_next acc )
     in
-    trim' [] tree []
+    trim' [] tree true []
 
-  let generate ?(ext : string option) (inputs : Fpath.t list) :
+  let generate (inputs : Fpath.t list) :
       (string list * Fpath.t) list Exec.status =
-    create () |> fill ext inputs |> trim ext |> Result.ok
+    create () |> fill inputs |> trim |> Result.ok
 end
 
 module Instance = struct
@@ -158,23 +163,24 @@ module InstanceTree = struct
   let add (tree : 'm t) (name : string) (instance : 'm Instance.t) : unit =
     Hashtbl.add tree.items name (Instance instance)
 
-  let rec extend (tree : 'm t) (offset : string list) :
+  let rec extend (tree : 'm t) (secs : string list) :
       'm t * Workspace.t * string =
-    match offset with
+    match secs with
     | [] -> Log.fail "unexpected path in instance tree"
-    | filename :: [] ->
-      let w' = Workspace.extend tree.workspace filename in
-      Workspace.mkdir_noerr Main w';
-      (tree, w', filename)
-    | dirname :: offset' -> (
-      match Hashtbl.find_opt tree.items dirname with
+    | sec :: [] ->
+      let w' = Workspace.extend tree.workspace sec in
+      let w'' = Workspace.set_ext w' in
+      Workspace.mkdir_noerr Main w'';
+      (tree, w'', sec)
+    | sec :: secs' -> (
+      match Hashtbl.find_opt tree.items sec with
       | Some (Instance _) -> Log.fail "unexpected path in instance tree"
-      | Some (Directory tree') -> extend tree' offset'
+      | Some (Directory tree') -> extend tree' secs'
       | None ->
-        let w' = Workspace.extend tree.workspace dirname in
+        let w' = Workspace.extend tree.workspace sec in
         let tree' = create w' in
-        Hashtbl.add tree.items dirname (Directory tree');
-        extend tree' offset' )
+        Hashtbl.add tree.items sec (Directory tree');
+        extend tree' secs' )
 
   let total (tree : 'm t) : int =
     tree.success + tree.failure + tree.anomaly + tree.timeout
