@@ -1,18 +1,19 @@
-  $ graphjs parse --mode=multifile --verbose .
+  $ graphjs parse --mode=multifile --verbose . 2>&1 | sed '/^\[info\] Dependency tree.*$/d'
   [info] Workspace "" generated successfully.
-  [info] Dependency tree "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/main.js" generated successfully.
   {
-    "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/main.js": {
-      "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/dependency.js": {}
+    "main.js": {
+      "dependency.js": {}
     }
   }
-  [info] File "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/dependency.js" normalized successfully.
+  [info] Initializing normalization of the 'dependency.js' module...
+  [info] Module 'dependency.js' normalized successfully.
   var foo = function () {
     
   }
   let $v1 = {};
   $v1.foo = foo;
   module.exports = $v1;
-  [info] File "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/package.t/main.js" normalized successfully.
-  const dep = require('dependency.js');
+  [info] Initializing normalization of the 'main.js' module...
+  [info] Module 'main.js' normalized successfully.
+  const dep = require('./dependency.js');
   let $v2 = dep.foo();

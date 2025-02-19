@@ -2,48 +2,43 @@ open Graphjs_base
 open Graphjs_share
 open Graphjs_parser.Dependency_tree
 
-open struct
-  let pwd = Fpath.v (Console.pwd ())
+let expected (exp : string) (res : string) : bool =
+  Log.stderr "Expected:@\n%s@\nResult:@\n%s@\n@." exp res;
+  false
 
-  let expected (exp : string) (res : string) : bool =
-    Log.stderr "Expected:@\n%s@\nResult:@\n%s@\n@." exp res;
-    false
+let exec (mode : Analysis_mode.t) (path : string) : (t, string) Result.t =
+  match generate mode (Fpath.v path) with
+  | dt -> Ok dt
+  | exception Exn fmt -> Error (Fmt.str "%t" fmt)
 
-  let exec (mode : Analysis_mode.t) (path : string) : (t, string) Result.t =
-    match generate mode (Fpath.v path) with
-    | dt -> Ok dt
-    | exception Exn fmt -> Error (Fmt.str "%t" fmt)
-
-  let test (mode : Analysis_mode.t) (path : string) (exp : (t, string) Result.t)
-      : bool =
-    let res = exec mode path in
-    match (exp, res) with
-    | (Ok dt_exp, Ok dt_res) ->
-      if equal dt_exp dt_res then true else expected (str dt_exp) (str dt_res)
-    | (Error err_exp, Error err_res) ->
-      if String.equal err_exp err_res then true else expected err_exp err_res
-    | (Ok dt_exp, Error err_res) -> expected (str dt_exp) err_res
-    | (Error err_exp, Ok dt_res) -> expected err_exp (str dt_res)
-end
+let test (mode : Analysis_mode.t) (path : string) (exp : (t, string) Result.t) :
+    bool =
+  let res = exec mode path in
+  match (exp, res) with
+  | (Ok dt_exp, Ok dt_res) ->
+    if equal dt_exp dt_res then true else expected (str dt_exp) (str dt_res)
+  | (Error err_exp, Error err_res) ->
+    if String.equal err_exp err_res then true else expected err_exp err_res
+  | (Ok dt_exp, Error err_res) -> expected (str dt_exp) err_res
+  | (Error err_exp, Ok dt_res) -> expected err_exp (str dt_res)
 
 module Analysis = struct
-  let basic : string -> (t, string) Result.t -> bool = test Analysis_mode.Basic
+  let basic (path : string) (res : (t, string) Result.t) : bool =
+    test Analysis_mode.Basic path res
 
-  let single : string -> (t, string) Result.t -> bool =
-    test Analysis_mode.SingleFile
+  let single (path : string) (res : (t, string) Result.t) =
+    test Analysis_mode.SingleFile path res
 
-  let multi : string -> (t, string) Result.t -> bool =
-    test Analysis_mode.MultiFile
+  let multi (path : string) (res : (t, string) Result.t) =
+    test Analysis_mode.MultiFile path res
 end
 
 module Res = struct
-  let err : ('a, Fmt.t, unit, 'b) format4 -> 'a =
-    Fmt.kdly (Fmt.str "[%t] %t@\n" Log.Config.(fst !error))
+  let err (fmt : ('a, Fmt.t, unit, 'b) format4) : 'a =
+    Fmt.kdly (Fmt.str "[%t] %t@\n" Log.Config.(fst !error)) fmt
 
   let ok (structure : string) : (t, string) Result.t =
-    create (Json.from_string structure)
-    |> map (fun abs -> Fpath.(pwd // abs))
-    |> Result.ok
+    create (Json.from_string structure) |> Result.ok
 
   let unknown_path (path : string) : (t, string) Result.t =
     Error (err "Unable to find the provided path %S." path)
@@ -54,8 +49,8 @@ module Res = struct
   let bad_directory (path : string) : (t, string) Result.t =
     Error (err "Unable to find main module of directory %S." path)
 
-  let bad_package (path : string) : (t, string) Result.t =
-    Error (err "Unable to find main module %S of 'package.json'." path)
+  let bad_package (path : string) (package : string) : (t, string) Result.t =
+    Error (err "Unable to find %S described in %S." path package)
 
   let bad_index (path : string) : (t, string) Result.t =
     Error (err "Unable to find 'index.js' in directory %S." path)

@@ -99,6 +99,7 @@ let generate (mode : Analysis_mode.t) (path : Fpath.t) : t =
   let path' = Fpath.to_string path in
   let main_path = find_main_file mode path' in
   let structure = generate_structure mode main_path in
+  Log.debug "%s" structure;
   create (Json.from_string structure)
 
 let equal (dt1 : t) (dt2 : t) : bool = compare dt1 dt2 == 0
@@ -125,10 +126,3 @@ let bottom_up_visit (f : Fpath.t * Fpath.t -> 'a) (dt : t) : 'a list =
       acc @ deps_acc @ [ f (path, mrel) ]
     else acc in
   bottom_up_visit' dt []
-
-let rec map (f : Fpath.t -> Fpath.t) (dt : t) : t =
-  (* TODO: Remove *)
-  { dt with path = f dt.path; deps = DepSet.map (map f) dt.deps }
-
-(* let pp ?(absolute : bool = false) (ppf : Fmt.t) (dt : t) : unit = *)
-(* Fmt.fmt ppf "{@\n@[<v 2>  %a@]@\n}" (pp_entries absolute) dt *)

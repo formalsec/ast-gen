@@ -1,2 +1,2 @@
-const dep = require('dependency.js');
+const dep = require('./dependency.js');
 dep.foo();

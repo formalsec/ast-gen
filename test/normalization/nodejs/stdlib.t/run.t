@@ -1,9 +1,9 @@
-  $ graphjs parse --mode=multifile --verbose stdlib.js
+  $ graphjs parse --mode=multifile --verbose stdlib.js 2>&1 | sed '/^\[info\] Dependency tree.*$/d'
   [info] Workspace "" generated successfully.
-  [info] Dependency tree "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/stdlib.t/stdlib.js" generated successfully.
   {
-    "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/stdlib.t/stdlib.js": {}
+    "stdlib.js": {}
   }
-  [info] File "/home/arckenimuz/dev/ast-gen/_build/default/test/normalization/nodejs/stdlib.t/stdlib.js" normalized successfully.
+  [info] Initializing normalization of the 'stdlib.js' module...
+  [info] Module 'stdlib.js' normalized successfully.
   const dep = require('child_process');
   let $v1 = dep.exec("");

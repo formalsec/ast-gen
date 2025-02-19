@@ -1,0 +1,1 @@
+require('./dir/f1.js');

@@ -11,6 +11,7 @@
  (deps
   (package graphjs)
   (source_tree main)
+  (source_tree directories)
   (source_tree recursive)
   (source_tree package)
   (source_tree index)
