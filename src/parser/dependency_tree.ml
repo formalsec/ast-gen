@@ -111,8 +111,9 @@ let rec pp (abs : bool) (ppf : Fmt.t) (dt : t) : unit =
   if DepSet.cardinal dt.deps == 0 then Fmt.fmt ppf "%a: {}" pp_path dt
   else Fmt.fmt ppf "%a: {%a}" pp_path dt pp_indent dt.deps
 
-let pp_rel (ppf : Fmt.t) (dt : t) : unit = pp false ppf dt
-let pp_abs (ppf : Fmt.t) (dt : t) : unit = pp true ppf dt
+let pp (abs : bool) (ppf : Fmt.t) (dt : t) : unit =
+  Fmt.fmt ppf "{@\n@[<v 2>  %a@]@\n}" (pp abs) dt
+
 let str ?(abs : bool = false) (dt : t) : string = Fmt.str "%a" (pp abs) dt
 
 let bottom_up_visit (f : Fpath.t * Fpath.t -> 'a) (dt : t) : 'a list =

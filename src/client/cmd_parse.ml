@@ -1,13 +1,14 @@
 open Graphjs_base
-open Graphjs_ast
 open Graphjs_share
 open Graphjs_parser
+open Graphjs_ast
 open Result
 
 module Options = struct
   type env =
     { mode : Analysis_mode.t
     ; test262_conform_hoisted : bool
+    ; deps_env : Cmd_dependencies.Options.env
     }
 
   type t =
@@ -16,8 +17,9 @@ module Options = struct
     ; env : env
     }
 
-  let env (mode : Analysis_mode.t) (test262_conform_hoisted : bool) : env =
-    { mode; test262_conform_hoisted }
+  let env (mode : Analysis_mode.t) (test262_conform_hoisted : bool)
+      (deps_env : Cmd_dependencies.Options.env) : env =
+    { mode; test262_conform_hoisted; deps_env }
 
   let cmd (inputs : Fpath.t list) (output : Fpath.t option) (env : env) : t =
     { inputs; output; env }
@@ -28,12 +30,6 @@ let set_temp_env (env : Options.env) : unit =
   Parser_config.(test262_conform_hoisted := env.test262_conform_hoisted)
 
 module Output = struct
-  let dep_tree (w : Workspace.t) (dt : Dependency_tree.t) : unit =
-    let w' = Workspace.(w / "dep_tree.json") in
-    Log.info "Dependency tree \"%a\" generated successfully." Fpath.pp dt.path;
-    Log.verbose "%a" Dependency_tree.pp_rel dt;
-    Workspace.output_noerr Side w' Dependency_tree.pp_rel dt
-
   let source_file (w : Workspace.t) (path : Fpath.t) (mrel : Fpath.t) : unit =
     let w' = Workspace.(w / "input" // mrel) in
     Log.info "Initializing normalization of the '%a' module..." Fpath.pp mrel;
@@ -53,21 +49,12 @@ module Output = struct
     Workspace.log w "%a@." (Prog.pp ~filename:multifile) p
 end
 
-let dep_tree (path : Fpath.t) (mode : Analysis_mode.t) () : Dependency_tree.t =
-  Dependency_tree.generate mode path
-
 let js_parser (path : Fpath.t) () : (Loc.t, Loc.t) Flow_ast.Program.t =
   Flow_parser.parse path
 
 let js_normalizer (file : (Loc.t, Loc.t) Flow_ast.Program.t) () :
     Normalizer.n_stmt =
   Normalizer.normalize_file file
-
-let generate_dependency_tree (env : Options.env) (w : Workspace.t)
-    (path : Fpath.t) : Dependency_tree.t Exec.status =
-  let* dt = Exec.graphjs (dep_tree path env.mode) in
-  Output.dep_tree w dt;
-  Ok dt
 
 let normalize_program_modules (w : Workspace.t) (dt : Dependency_tree.t) :
     (Fpath.t * 'm File.t) Exec.status list =
@@ -81,7 +68,7 @@ let normalize_program_modules (w : Workspace.t) (dt : Dependency_tree.t) :
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     (Dependency_tree.t * 'm Prog.t) Exec.status =
   set_temp_env env;
-  let* dt = generate_dependency_tree env w input in
+  let* dt = Cmd_dependencies.generate_dep_tree env.deps_env w env.mode input in
   let* files = Result.extract (normalize_program_modules w dt) in
   let prog = Prog.create files in
   Output.main w prog;

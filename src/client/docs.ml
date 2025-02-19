@@ -23,10 +23,13 @@ module Exits = struct
     let timeout = info ~doc:"on execution timeout" ExitCodes.timeout in
     terminal :: timeout :: defaults
 
-  let parse =
+  let dependencies =
     let dt = info ~doc:"on dependency tree generation error" ExitCodes.deptree in
+    [ dt ]
+
+  let parse =
     let parsejs = info ~doc:"on JavaScript parsing error" ExitCodes.parsejs in
-    [ dt; parsejs ]
+    [ parsejs ]
 
   let mdg =
     let build = info ~doc:"on MDG construction error" ExitCodes.build_mdg in
@@ -109,6 +112,28 @@ module FileOpts = struct
     Arg.(value & opt (some parser) None & info [ "o"; "output" ] ~docv ~doc)
 end
 
+module DependenciesOpts = struct
+  let absolute_dependency_paths =
+    let doc = "Outputs the dependency tree using absolute paths." in
+    let docs = Manpage.s_common_options in
+    Arg.(value & flag & info [ "abs-dep-paths" ] ~doc ~docs)
+end
+
+module DependenciesCmd = struct
+  let name = "dependencies"
+  let doc = "Generates the dependency tree of a Node.js package"
+  let sdocs = Manpage.s_common_options
+
+  let description =
+    [| "Given a Node.js package, generates its dependency tree. This command \
+        executes always in multifile mode, since the dependency tree is only \
+        meaningful when multiple files are considered." |]
+
+  let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
+  let man_xrefs = []
+  let exits = Exits.common @ Exits.dependencies
+end
+
 module ParseOpts = struct
   let mode =
     let docv = "MODE" in
@@ -142,7 +167,7 @@ module ParseCmd = struct
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
-  let exits = Exits.common @ Exits.parse
+  let exits = Exits.common @ Exits.dependencies @ Exits.parse
 end
 
 module MdgOpts = struct
@@ -177,7 +202,7 @@ module MdgCmd = struct
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
-  let exits = Exits.common @ Exits.parse @ Exits.mdg
+  let exits = Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg
 end
 
 module AnalyzeCmd = struct
@@ -193,7 +218,7 @@ module AnalyzeCmd = struct
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
-  let exits = Exits.common @ Exits.parse @ Exits.mdg
+  let exits = Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg
 end
 
 module Application = struct

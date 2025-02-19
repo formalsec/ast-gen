@@ -9,6 +9,7 @@
   exec
   enums
   docs
+  cmd_dependencies
   cmd_parse
   cmd_mdg
   cmd_analyze)

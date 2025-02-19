@@ -21,11 +21,29 @@ let copts =
   $ Docs.CommonOpts.verbose
   $ Docs.CommonOpts.override
 
+let dependencies_env =
+  let open Term in
+  const Cmd_dependencies.Options.env
+  $ Docs.DependenciesOpts.absolute_dependency_paths
+
+let dependencies_opts =
+  let open Term in
+  const Cmd_dependencies.Options.cmd
+  $ Docs.FileOpts.input_paths
+  $ Docs.FileOpts.output_path
+  $ dependencies_env
+
+let dependencies_cmd =
+  let open Docs.DependenciesCmd in
+  let info = Cmd.info name ~doc ~sdocs ~man ~man_xrefs ~exits in
+  Cmd.v info Term.(const Cmd_dependencies.main $ dependencies_opts $ copts)
+
 let parse_env =
   let open Term in
   const Cmd_parse.Options.env
   $ Docs.ParseOpts.mode
   $ Docs.ParseOpts.test262_conform_hoisted
+  $ dependencies_env
 
 let parse_opts =
   let open Term in
@@ -75,7 +93,7 @@ let analyze_cmd =
   let info = Cmd.info name ~doc ~sdocs ~man ~man_xrefs ~exits in
   Cmd.v info Term.(const Cmd_analyze.main $ analyze_opts $ copts)
 
-let cmd_list = [ parse_cmd; mdg_cmd; analyze_cmd ]
+let cmd_list = [ dependencies_cmd; parse_cmd; mdg_cmd; analyze_cmd ]
 
 let main_cmd =
   let open Docs.Application in
