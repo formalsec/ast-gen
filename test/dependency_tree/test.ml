@@ -10,7 +10,7 @@ open struct
     false
 
   let exec (mode : Analysis_mode.t) (path : string) : (t, string) Result.t =
-    match generate mode path with
+    match generate mode (Fpath.v path) with
     | dt -> Ok dt
     | exception Exn fmt -> Error (Fmt.str "%t" fmt)
 

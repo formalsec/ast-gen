@@ -31,8 +31,8 @@ module Output = struct
   let dep_tree (w : Workspace.t) (dt : Dependency_tree.t) : unit =
     let w' = Workspace.(w / "dep_tree.json") in
     Log.info "Dependency tree \"%a\" generated successfully." Fpath.pp dt.path;
-    Log.verbose "%a" Dependency_tree.pp dt;
-    Workspace.output_noerr Side w' Dependency_tree.pp dt
+    Log.verbose "%a" Dependency_tree.pp_rel dt;
+    Workspace.output_noerr Side w' Dependency_tree.pp_rel dt
 
   let source_file (w : Workspace.t) (path : Fpath.t) (mrel : Fpath.t) : unit =
     let w' = Workspace.(w / "input" // mrel) in
@@ -54,7 +54,7 @@ module Output = struct
 end
 
 let dep_tree (path : Fpath.t) (mode : Analysis_mode.t) () : Dependency_tree.t =
-  Dependency_tree.generate mode (Fpath.to_string path)
+  Dependency_tree.generate mode path
 
 let js_parser (path : Fpath.t) () : (Loc.t, Loc.t) Flow_ast.Program.t =
   Flow_parser.parse path

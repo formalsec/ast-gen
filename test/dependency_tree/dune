@@ -1,5 +1,5 @@
 (library
- (name graphjs_tests_dependency_tree)
+ (name graphjs_tests_dep_tree)
  (modules test test_basic test_single test_multi)
  (inline_tests)
  (preprocess

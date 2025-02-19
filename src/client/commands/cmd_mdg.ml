@@ -137,7 +137,7 @@ let build_program_mdgs (env : Options.env) (w : Workspace.t)
       let* mdg = Exec.graphjs (mdg_builder builder file) in
       let w' = Workspace.mdg env w mrel false in
       let* _ = Output.mdg w' mrel mdg in
-      Ok (mrel, mdg) )
+      Ok (path, mdg) )
 
 let merge_program_mdgs (env : Options.env) (w : Workspace.t)
     (dt : Dependency_tree.t) (merger : Merger.t) : Mdg.t Exec.status =
