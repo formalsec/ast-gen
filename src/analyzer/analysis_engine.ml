@@ -107,7 +107,7 @@ let vulnerability (engine : t) (sink : Tainted.sink) (node : Node.t) :
   (* HACK: vulnerabilities without a lineno are update with the lineno of the corresponding property *)
   (* this is useful, for example, when a sensitive sink is exported by the module *)
   let vuln = Vulnerability.make sink node in
-  if vuln.line == Region.invalid then
+  if Region.is_invalid vuln.line then
     Mdg.object_of_property engine.mdg node
     |> List.hd_opt
     |> Option.fold ~none:vuln ~some:(Vulnerability.update vuln)
