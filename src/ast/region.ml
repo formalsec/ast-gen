@@ -1,5 +1,11 @@
 open Graphjs_base
 
+module Config = struct
+  include Config
+
+  let invalid = constant (-1)
+end
+
 type pos =
   { line : int
   ; col : int
@@ -11,10 +17,8 @@ type t =
   ; rpos : pos
   }
 
-let invalid : int = -1
-
 let default_pos =
-  let dflt = { line = invalid; col = invalid } in
+  let dflt = { line = Config.(!invalid); col = Config.(!invalid) } in
   fun () -> dflt
 
 let default =
@@ -23,9 +27,11 @@ let default =
 
 let create_pos (line : int) (col : int) : pos = { line; col }
 let create (file : string) (lpos : pos) (rpos : pos) : t = { file; lpos; rpos }
+let is_invalid (v : int) : bool = v == Config.(!invalid)
 
 let pp_pos (ppf : Fmt.t) (pos : pos) : unit =
-  let pp_pos' ppf v = Fmt.(if v == -1 then pp_str ppf "x" else pp_int ppf v) in
+  let pp_pos' ppf v =
+    if is_invalid v then Fmt.pp_str ppf "x" else Fmt.pp_int ppf v in
   Fmt.fmt ppf "%a.%a" pp_pos' pos.line pp_pos' pos.col
 
 let pp (ppf : Fmt.t) (at : t) : unit =

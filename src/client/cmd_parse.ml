@@ -69,6 +69,7 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     (Dependency_tree.t * 'm Prog.t) Exec.status =
   set_temp_env env;
   let* dt = Cmd_dependencies.generate_dep_tree env.deps_env w env.mode input in
+  Identifier.reset_generator ();
   let* files = Result.extract (normalize_program_modules w dt) in
   let prog = Prog.create files in
   Output.main w prog;

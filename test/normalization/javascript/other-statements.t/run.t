@@ -2,17 +2,27 @@
   while (true) {
     break;
   }
-  foo: while (true) {
-    break foo;
+  foo: {
+    while (true) {
+      break foo;
+    }
   }
-  foo: bar: while (true) {
-    break foo;
+  foo: {
+    bar: {
+      while (true) {
+        break foo;
+      }
+    }
   }
   while (true) {
     continue;
   }
-  foo: bar: while (true) {
-    continue foo;
+  foo: {
+    bar: {
+      while (true) {
+        continue foo;
+      }
+    }
   }
 
   $ graphjs parse return.js

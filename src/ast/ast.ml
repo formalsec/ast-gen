@@ -49,8 +49,8 @@ and Expression : sig
       | String of string
       | Number of float
       | Boolean of bool
-      | BigInt of int64 option
       | Regex of Regex.t
+      | BigInt of int64 option
 
     type t =
       { value : t'
@@ -114,16 +114,16 @@ and Statement : sig
 
   module Unopt : sig
     type 'm t =
-      { left : 'm LeftValue.t
-      ; op : Operator.unary
+      { op : Operator.unary
+      ; left : 'm LeftValue.t
       ; arg : 'm Expression.t
       }
   end
 
   module Binopt : sig
     type 'm t =
-      { left : 'm LeftValue.t
-      ; op : Operator.binary
+      { op : Operator.binary
+      ; left : 'm LeftValue.t
       ; arg1 : 'm Expression.t
       ; arg2 : 'm Expression.t
       }
