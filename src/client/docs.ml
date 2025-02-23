@@ -146,12 +146,14 @@ module ParseOpts = struct
     let modes = Arg.enum Enums.AnalysisMode.(args all) in
     Arg.(value & opt modes SingleFile & info [ "mode" ] ~docv ~doc)
 
-  let test262_conform_hoisted =
+  let ignore_hoisting =
     let doc =
-      "Normalizes function hoisting by representing hoisted functions as \
-       declarations instead of assignments. This flag is required for testing \
-       the normalizer against the Test262 conformance test suite." in
-    Arg.(value & flag & info [ "test262-conform-hoisted" ] ~doc)
+      "Ignores function hoisting by treating hoisted functions as regular \
+       function assignments instead of declarations. Enabling this flag may \
+       reduce the complexity of the normalized code but will introduce \
+       normalization errors. Running the Test262 conformance test suite with \
+       this flag will result in test failures." in
+    Arg.(value & flag & info [ "ignore-hoisting" ] ~doc)
 end
 
 module ParseCmd = struct

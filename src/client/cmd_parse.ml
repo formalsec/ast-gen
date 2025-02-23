@@ -7,7 +7,7 @@ open Result
 module Options = struct
   type env =
     { mode : Analysis_mode.t
-    ; test262_conform_hoisted : bool
+    ; ignore_hoisting : bool
     ; deps_env : Cmd_dependencies.Options.env
     }
 
@@ -17,17 +17,13 @@ module Options = struct
     ; env : env
     }
 
-  let env (mode : Analysis_mode.t) (test262_conform_hoisted : bool)
+  let env (mode : Analysis_mode.t) (ignore_hoisting : bool)
       (deps_env : Cmd_dependencies.Options.env) : env =
-    { mode; test262_conform_hoisted; deps_env }
+    { mode; ignore_hoisting; deps_env }
 
   let cmd (inputs : Fpath.t list) (output : Fpath.t option) (env : env) : t =
     { inputs; output; env }
 end
-
-let set_temp_env (env : Options.env) : unit =
-  (* FIXME: remove in favor of env structures *)
-  Parser_config.(test262_conform_hoisted := env.test262_conform_hoisted)
 
 module Output = struct
   let source_file (w : Workspace.t) (path : Fpath.t) (mrel : Fpath.t) : unit =
@@ -52,25 +48,28 @@ end
 let js_parser (path : Fpath.t) () : (Loc.t, Loc.t) Flow_ast.Program.t =
   Flow_parser.parse path
 
-let js_normalizer (file : (Loc.t, Loc.t) Flow_ast.Program.t) () :
-    Normalizer.n_stmt =
-  Normalizer.normalize_file file
+let js_normalizer (env : Normalizer.Env.t)
+    (file : (Loc.t, Loc.t) Flow_ast.Program.t) () : Normalizer.n_stmt =
+  Normalizer.normalize_file ~env file
 
-let normalize_program_modules (w : Workspace.t) (dt : Dependency_tree.t) :
-    (Fpath.t * 'm File.t) Exec.status list =
+let normalizer_env (env : Options.env) : Normalizer.Env.t =
+  { ignore_hoisting = env.ignore_hoisting }
+
+let normalize_program_modules (env : Normalizer.Env.t) (w : Workspace.t)
+    (dt : Dependency_tree.t) : (Fpath.t * 'm File.t) Exec.status list =
   Fun.flip Dependency_tree.bottom_up_visit dt (fun (path, mrel) ->
       Output.source_file w path mrel;
       let* js_file = Exec.graphjs (js_parser path) in
-      let* normalized_file = Exec.graphjs (js_normalizer js_file) in
+      let* normalized_file = Exec.graphjs (js_normalizer env js_file) in
       Output.normalized_file w mrel normalized_file;
       Ok (path, normalized_file) )
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     (Dependency_tree.t * 'm Prog.t) Exec.status =
-  set_temp_env env;
   let* dt = Cmd_dependencies.generate_dep_tree env.deps_env w env.mode input in
   Identifier.reset_generator ();
-  let* files = Result.extract (normalize_program_modules w dt) in
+  let normalizer_env = normalizer_env env in
+  let* files = Result.extract (normalize_program_modules normalizer_env w dt) in
   let prog = Prog.create files in
   Output.main w prog;
   Ok (dt, prog)

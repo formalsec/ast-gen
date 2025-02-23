@@ -42,7 +42,7 @@ let parse_env =
   let open Term in
   const Cmd_parse.Options.env
   $ Docs.ParseOpts.mode
-  $ Docs.ParseOpts.test262_conform_hoisted
+  $ Docs.ParseOpts.ignore_hoisting
   $ dependencies_env
 
 let parse_opts =

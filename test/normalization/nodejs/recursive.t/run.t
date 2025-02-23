@@ -9,7 +9,7 @@
   }
   [info] Initializing normalization of the 'dependency.js' module...
   [info] Module 'dependency.js' normalized successfully.
-  var foo = function () {
+  function foo() {
     
   }
   let $v1 = {};
@@ -19,7 +19,7 @@
   let $v2 = main.foo();
   [info] Initializing normalization of the 'main.js' module...
   [info] Module 'main.js' normalized successfully.
-  var foo = function () {
+  function foo() {
     
   }
   let $v3 = {};

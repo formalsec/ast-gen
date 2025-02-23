@@ -170,7 +170,7 @@ and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
     : State.t =
   Fun.flip2 List.fold_left state stmts (fun state stmt ->
       match stmt.el with
-      | `FunctionDefinition fundef when fundef.hoisted ->
+      | `FunctionDefinition fundef when FunctionDefinition.is_hoisted fundef ->
         build_hoisted_function_header state fundef.left fundef.params (cid stmt)
       | _ -> state )
 
@@ -362,10 +362,11 @@ and build_hoisted_function_header (state : State.t) (left : 'm LeftValue.t)
 
 and build_function_definition (state : State.t) (left : 'm LeftValue.t)
     (params : 'm Identifier.t list) (body : 'm Statement.t list)
-    (hoisted : bool) (cid : cid) : State.t =
+    (hoisted : FunctionHoisting.t) (cid : cid) : State.t =
   let func_name = LeftValue.name left in
   let l_func = State.add_function_node state cid func_name in
-  if not hoisted then (* hoisted functions do not replace the current left *)
+  if not (FunctionHoisting.hoisted hoisted) then
+    (* hoisted functions do not replace the current left *)
     Store.replace state.store func_name (Node.Set.singleton l_func);
   let store' = Store.copy state.store in
   let state' = { state with store = store'; curr_func = Some l_func } in

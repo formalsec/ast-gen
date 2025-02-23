@@ -7,7 +7,7 @@
   }
   [info] Initializing normalization of the 'dependency.js' module...
   [info] Module 'dependency.js' normalized successfully.
-  var foo = function () {
+  function foo() {
     
   }
   let $v1 = {};

@@ -1,5 +1,4 @@
 open Graphjs_base
-open Graphjs_ast
 
 type t = (string, Node.Set.t) Hashtbl.t
 
