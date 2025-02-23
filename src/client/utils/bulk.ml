@@ -206,8 +206,8 @@ module InstanceTree = struct
       count_results tree;
       ( tree.success
       , tree.failure
-      , tree.timeout
       , tree.anomaly
+      , tree.timeout
       , tree.skipped
       , tree.time )
 

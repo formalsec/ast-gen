@@ -104,23 +104,17 @@
   $ graphjs parse update.js
   foo = foo + 1;
   let $v1 = foo;
-  $v1;
   foo = foo - 1;
   let $v2 = foo;
-  $v2;
   let $v3 = foo;
   foo = foo + 1;
-  $v3;
   let $v4 = foo;
   foo = foo - 1;
-  $v4;
   let $v6 = foo.bar;
   let $v6 = $v6 + 1;
   let $v5 = $v6;
   foo.bar = $v6;
-  $v5;
   let $v8 = foo[bar];
   let $v7 = $v8;
   let $v8 = $v8 + 1;
   foo[bar] = $v8;
-  $v7;
