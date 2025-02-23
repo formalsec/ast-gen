@@ -1,11 +1,5 @@
 open Graphjs_base
 
-module Config = struct
-  include Config
-
-  let test262_conform_hoisted : bool t = Printer.Config.test262_conform_hoisted
-end
-
 module Region = struct
   include Region
 end
@@ -446,21 +440,30 @@ module DynamicMethodCall = struct
   let str (call : 'm t) : string = Fmt.str "%a" pp call
 end
 
+module FunctionHoisting = struct
+  type t = Ast.Statement.FunctionDefinition.Hoisted.t
+
+  let hoisted (hoisted : t) : bool =
+    match hoisted with True -> true | False | Ignore -> false
+end
+
 module FunctionDefinition = struct
   type 'm t = 'm Ast.Statement.FunctionDefinition.t
 
   let create (left : 'm Ast.LeftValue.t) (params : 'm Identifier.t list)
       (body : 'm Ast.Statement.t list) (async : bool) (generator : bool)
-      (hoisted : bool) : 'm t =
+      (hoisted : Ast.Statement.FunctionDefinition.Hoisted.t) : 'm t =
     { left; params; body; async; generator; hoisted }
 
   let create_stmt (left : 'm Ast.LeftValue.t) (params : 'm Identifier.t list)
       (body : 'm Ast.Statement.t list) (async : bool) (generator : bool)
-      (hoisted : bool) : 'm Ast.Statement.t' =
+      (hoisted : Ast.Statement.FunctionDefinition.Hoisted.t) :
+      'm Ast.Statement.t' =
     `FunctionDefinition (create left params body async generator hoisted)
 
   let pp (ppf : Fmt.t) (func : 'm t) : unit = Printer.pp_fundef ppf func
   let str (func : 'm t) : string = Fmt.str "%a" pp func
+  let is_hoisted (func : 'm t) : bool = FunctionHoisting.hoisted func.hoisted
 end
 
 module DynamicImport = struct

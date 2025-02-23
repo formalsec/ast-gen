@@ -26,10 +26,10 @@ type n_stmt = stmt list
 type n_case = stmt list * case
 
 module Env = struct
-  type t = { test262_conform_hoisted : bool }
+  type t = { ignore_hoisting : bool }
 
   let default =
-    let dflt = { test262_conform_hoisted = false } in
+    let dflt = { ignore_hoisting = false } in
     fun () -> dflt
 end
 
@@ -56,7 +56,12 @@ module Ctx = struct
       ; curr_proto = None
       } in
     fun () -> dflt
+
+  let create (env : Env.t) : t = { (default ()) with env }
+  let reset (ctx : t) : t = create ctx.env
 end
+
+let ( ! ) (ctx : Ctx.t) : Ctx.t = Ctx.reset ctx
 
 module FlowUtils = struct
   type ('M, 'T) forleft =
@@ -128,13 +133,19 @@ let call_property (n_left : lval) (n_obj : expr) (n_prop : prop)
   | Static prop -> StaticMethodCall.create_stmt n_left n_obj prop n_args
   | Dynamic prop -> DynamicMethodCall.create_stmt n_left n_obj prop n_args
 
+let get_function_hoisting (ctx : Ctx.t) (hoisted : bool) : FunctionHoisting.t =
+  if ctx.env.ignore_hoisting then Ignore else if hoisted then True else False
+
 let create_function (ctx : Ctx.t) (n_left : lval) (n_params : id list)
     (n_body : n_stmt) (async : bool) (generator : bool) : stmt' =
+  let hoisted_f hoisted = get_function_hoisting ctx hoisted in
   match ctx.curr_stmt with
   | General | AssignSimple | AssignDecl _ ->
-    FunctionDefinition.create_stmt n_left n_params n_body async generator false
+    FunctionDefinition.create_stmt n_left n_params n_body async generator
+      (hoisted_f false)
   | FuncDecl ->
-    FunctionDefinition.create_stmt n_left n_params n_body async generator true
+    FunctionDefinition.create_stmt n_left n_params n_body async generator
+      (hoisted_f true)
   | _ -> Log.fail "invalid statement context for function creation"
 
 let get_property_expr (n_prop : prop) : expr' =
@@ -271,11 +282,11 @@ and normalize_template_expr (ctx : Ctx.t) (loc : Loc.t)
   let n_tliteral = TemplateLiteral.create_expr n_quasis n_exprs @!> loc in
   (n_exprs_s, n_tliteral)
 
-and normalize_template_literal (_ : Ctx.t)
+and normalize_template_literal (ctx : Ctx.t)
     (tliteral : (Loc.t, Loc.t) Flow.Expression.TemplateLiteral.t) :
     telement list * n_stmt * expr list =
   let n_quasis = List.map normalize_template_element tliteral.quasis in
-  let n_exprs' = List.map normalize_expr tliteral.expressions in
+  let n_exprs' = List.map (normalize_expr !ctx) tliteral.expressions in
   let (n_exprs_s, n_exprs) = List.split n_exprs' in
   (n_quasis, List.flatten n_exprs_s, n_exprs)
 
@@ -305,7 +316,7 @@ and normalize_super_expr (_ : Ctx.t) (loc : Loc.t) : n_expr =
 
 and normalize_sequence_expr (ctx : Ctx.t) (_ : Loc.t)
     (exprs : (Loc.t, Loc.t) Flow.Expression.Sequence.t) : n_expr =
-  let n_exprs' = List.map (normalize_expr ~ctx) exprs.expressions in
+  let n_exprs' = List.map (normalize_expr ctx) exprs.expressions in
   let (n_exprs_s, n_exprs) = List.split n_exprs' in
   let n_expr_last = List.nth n_exprs (List.length n_exprs - 1) in
   (List.flatten n_exprs_s, n_expr_last)
@@ -320,7 +331,7 @@ and normalize_object_expr (ctx : Ctx.t) (loc : Loc.t)
   let n_prop_s = List.map normalize_prop_f obj.properties in
   (n_obj_s :: List.flatten n_prop_s, n_left')
 
-and normalize_property_key (_ : Ctx.t) :
+and normalize_property_key (ctx : Ctx.t) :
     (Loc.t, Loc.t) Flow.Expression.Object.Property.key -> n_prop = function
   | Identifier (loc, id) ->
     ([], Static (Prop.IProp (Identifier.create id.name) @!> loc))
@@ -332,7 +343,7 @@ and normalize_property_key (_ : Ctx.t) :
     ([], Static (Prop.LProp (Literal.bigint lit.value lit.raw) @!> loc))
   | PrivateName _ -> Log.fail "[not implemented]: private property"
   | Computed (_, { expression = expr; _ }) ->
-    let (n_expr_s, n_expr) = normalize_expr expr in
+    let (n_expr_s, n_expr) = (normalize_expr !ctx) expr in
     (n_expr_s, Dynamic n_expr)
 
 and normalize_object_property (ctx : Ctx.t) (n_obj : expr) :
@@ -351,7 +362,7 @@ and normalize_init_property (ctx : Ctx.t) (loc : Loc.t) (n_obj : expr)
     (key : (Loc.t, Loc.t) Flow.Expression.Object.Property.key)
     (value : (Loc.t, Loc.t) Flow.Expression.t) : n_stmt =
   let (n_key_s, n_key) = normalize_property_key ctx key in
-  let (n_value_s, n_value) = normalize_expr value in
+  let (n_value_s, n_value) = normalize_expr !ctx value in
   let n_init_s = update_property n_obj n_key n_value @!> loc in
   n_key_s @ n_value_s @ [ n_init_s ]
 
@@ -414,11 +425,11 @@ and normalize_array_element (ctx : Ctx.t) (n_arr : expr) (idx : int) :
     normalize_expr_element ctx loc n_arr idx expr
   | Spread _ -> Log.fail "[not implemented]: spread element"
 
-and normalize_expr_element (_ : Ctx.t) (loc : Loc.t) (n_arr : expr) (idx : int)
-    (value : (Loc.t, Loc.t) Flow.Expression.t) : n_stmt =
+and normalize_expr_element (ctx : Ctx.t) (loc : Loc.t) (n_arr : expr)
+    (idx : int) (value : (Loc.t, Loc.t) Flow.Expression.t) : n_stmt =
   let md = normalize_location loc in
   let n_key = Prop.LProp (Literal.integer idx) @> md in
-  let (n_value_s, n_value) = normalize_expr value in
+  let (n_value_s, n_value) = normalize_expr !ctx value in
   let n_element_s = StaticUpdate.create_stmt n_arr n_key n_value @> md in
   n_value_s @ [ n_element_s ]
 
@@ -449,7 +460,7 @@ and normalize_not_null_or_undef (md : md) (n_arg : expr) (n_cnsq_s : n_stmt)
   let ops = Operator.(StrictNotEqual, LogicalAnd) in
   normalize_null_undef_impl ops md n_arg n_cnsq_s n_altr_s
 
-and normalize_default_value (n_left : lval)
+and normalize_default_value (ctx : Ctx.t) (n_left : lval)
     ((loc, _) as dflt : (Loc.t, Loc.t) Flow.Expression.t) : n_stmt =
   (* TODO[flag]: disable this and ignore all defaults *)
   let md = normalize_location loc in
@@ -458,7 +469,7 @@ and normalize_default_value (n_left : lval)
   let n_test = LeftValue.random () @> md in
   let n_test' = LeftValue.to_expr n_test @> md in
   let n_test_s = Binopt.create_stmt StrictEqual n_test n_left' n_undef @> md in
-  let (n_dflt_s, n_dflt) = normalize_expr dflt in
+  let (n_dflt_s, n_dflt) = normalize_expr !ctx dflt in
   let n_adflt_s = [ Assignment.create_stmt n_left n_dflt @> md ] in
   let n_check_s = If.create_stmt n_test' (n_dflt_s @ n_adflt_s) None @> md in
   [ n_test_s; n_check_s ]
@@ -472,7 +483,7 @@ and normalize_assignment (ctx : Ctx.t)
     (left : (Loc.t, Loc.t) Flow_ast.Pattern.t)
     (right : (Loc.t, Loc.t) Flow_ast.Expression.t) : n_expr =
   let ctx' = { ctx with curr_lval = leftvalue_ctx ctx left } in
-  let (n_right_s, n_right) = normalize_expr ~ctx:ctx' right in
+  let (n_right_s, n_right) = normalize_expr ctx' right in
   let assign_s = normalize_assignment_pattern ctx' n_right left in
   (n_right_s @ assign_s, n_right)
 
@@ -546,7 +557,7 @@ and normalize_assignment_with_member (ctx : Ctx.t) (loc : Loc.t)
     (prop : (Loc.t, Loc.t) Flow.Expression.Member.property) (n_right : expr) :
     n_stmt =
   let md = normalize_location loc in
-  let (n_obj_s, n_obj) = normalize_expr obj in
+  let (n_obj_s, n_obj) = normalize_expr !ctx obj in
   let (n_prop_s, n_prop) = normalize_member_property ctx prop in
   let n_assign_s =
     match ctx.curr_stmt with
@@ -572,7 +583,7 @@ and normalize_assignment_argument (ctx : Ctx.t) (md : md) (n_key : prop)
     (init_left_f n_left, n_left)
   | Some dflt' ->
     let (n_left_s, n_left) = get_lval_redef ~init:init_left_f ctx md in
-    let n_dflt_s = normalize_default_value n_left dflt' in
+    let n_dflt_s = normalize_default_value ctx n_left dflt' in
     (n_left_s @ n_dflt_s, n_left)
 
 and already_assigned (n_left : lval) (n_right : expr) : bool =
@@ -591,7 +602,7 @@ and normalize_unary_expr (ctx : Ctx.t) (loc : Loc.t)
 and normalize_unopt_expr (ctx : Ctx.t) (loc : Loc.t) (op : Operator.unary)
     (arg : (Loc.t, Loc.t) Flow.Expression.t) : n_expr =
   let md = normalize_location loc in
-  let (n_arg_s, n_arg) = normalize_expr arg in
+  let (n_arg_s, n_arg) = normalize_expr !ctx arg in
   let n_left = get_lval_ctx ctx md in
   let n_left' = LeftValue.to_expr n_left @> md in
   let n_assign_s = Unopt.create_stmt op n_left n_arg @> md in
@@ -602,7 +613,7 @@ and normalize_unopt_delete_expr (ctx : Ctx.t) (loc : Loc.t)
   match arg with
   | (_, Member { _object = obj; property = prop; _ }) ->
     let md = normalize_location loc in
-    let (n_obj_s, n_obj) = normalize_expr obj in
+    let (n_obj_s, n_obj) = normalize_expr !ctx obj in
     let (n_prop_s, n_prop) = normalize_member_property ctx prop in
     let n_left = get_lval_ctx ctx md in
     let n_left' = LeftValue.to_expr n_left @> md in
@@ -614,8 +625,8 @@ and normalize_binary_expr (ctx : Ctx.t) (loc : Loc.t)
     (binary : (Loc.t, Loc.t) Flow.Expression.Binary.t) : n_expr =
   let md = normalize_location loc in
   let binopt = translate_binary binary.operator in
-  let (n_arg1_s, n_arg1) = normalize_expr binary.left in
-  let (n_arg2_s, n_arg2) = normalize_expr binary.right in
+  let (n_arg1_s, n_arg1) = normalize_expr !ctx binary.left in
+  let (n_arg2_s, n_arg2) = normalize_expr !ctx binary.right in
   let n_left = get_lval_ctx ctx md in
   let n_left' = LeftValue.to_expr n_left @> md in
   let n_assign_s = Binopt.create_stmt binopt n_left n_arg1 n_arg2 @> md in
@@ -634,10 +645,10 @@ and normalize_logical_sc_and_expr (ctx : Ctx.t) (loc : Loc.t)
   let md = normalize_location loc in
   let n_tr = Literal.(to_expr @@ boolean true) @> md in
   let cmp_f n_lval = Binopt.create_stmt LogicalAnd n_lval in
-  let (n_arg1_s, n_arg1) = normalize_expr logical.left in
+  let (n_arg1_s, n_arg1) = normalize_expr !ctx logical.left in
   let n_asgn1_f n_left = [ cmp_f n_left n_arg1 n_tr @> md ] in
   let (n_left_s, n_left) = get_lval_redef ~init:n_asgn1_f ctx md in
-  let (n_arg2_s, n_arg2) = normalize_expr logical.right in
+  let (n_arg2_s, n_arg2) = normalize_expr !ctx logical.right in
   let n_asgn2_f n_left = [ cmp_f n_left n_arg2 n_tr @> md ] in
   let n_left' = LeftValue.to_expr n_left @> md in
   let n_cnsq = n_arg2_s @ n_asgn2_f n_left in
@@ -649,10 +660,10 @@ and normalize_logical_sc_or_expr (ctx : Ctx.t) (loc : Loc.t)
   let md = normalize_location loc in
   let n_fls = Literal.(to_expr @@ boolean false) @> md in
   let cmp_f n_left = Binopt.create_stmt LogicalAnd n_left in
-  let (n_arg1_s, n_arg1) = normalize_expr logical.left in
+  let (n_arg1_s, n_arg1) = normalize_expr !ctx logical.left in
   let n_asgn1_f n_left = [ cmp_f n_left n_arg1 n_fls @> md ] in
   let (n_left_s, n_left) = get_lval_redef ~init:n_asgn1_f ctx md in
-  let (n_arg2_s, n_arg2) = normalize_expr logical.right in
+  let (n_arg2_s, n_arg2) = normalize_expr !ctx logical.right in
   let n_asgn2_f n_left = [ cmp_f n_left n_arg2 n_fls @> md ] in
   let n_left' = LeftValue.to_expr n_left @> md in
   let n_altr = n_arg2_s @ n_asgn2_f n_left in
@@ -662,10 +673,10 @@ and normalize_logical_sc_or_expr (ctx : Ctx.t) (loc : Loc.t)
 and normalize_sc_nullish_coalesce_expr (ctx : Ctx.t) (loc : Loc.t)
     (logical : (Loc.t, Loc.t) Flow.Expression.Logical.t) : n_expr =
   let md = normalize_location loc in
-  let (n_arg1_s, n_arg1) = normalize_expr logical.left in
+  let (n_arg1_s, n_arg1) = normalize_expr !ctx logical.left in
   let n_asgn1_f n_left = [ Assignment.create_stmt n_left n_arg1 @> md ] in
   let (n_left_s, n_left) = get_lval_redef ~init:n_asgn1_f ctx md in
-  let (n_arg2_s, n_arg2) = normalize_expr logical.right in
+  let (n_arg2_s, n_arg2) = normalize_expr !ctx logical.right in
   let n_asgn2_f n_left = [ Assignment.create_stmt n_left n_arg2 @> md ] in
   let n_left' = LeftValue.to_expr n_left @> md in
   let n_cnsq_s = n_arg2_s @ n_asgn2_f n_left in
@@ -678,9 +689,9 @@ and normalize_conditional_expr (ctx : Ctx.t) (loc : Loc.t)
   let md = normalize_location loc in
   let (n_left_s, n_left) = get_lval_redef ctx md in
   let n_left' = LeftValue.to_expr n_left @> md in
-  let (n_test_s, n_test) = normalize_expr conditional.test in
-  let (n_cnsq_s, n_cnsq) = normalize_expr conditional.consequent in
-  let (n_altr_s, n_altr) = normalize_expr conditional.alternate in
+  let (n_test_s, n_test) = normalize_expr !ctx conditional.test in
+  let (n_cnsq_s, n_cnsq) = normalize_expr !ctx conditional.consequent in
+  let (n_altr_s, n_altr) = normalize_expr !ctx conditional.alternate in
   let n_cnsq_assign_s = Assignment.create_stmt n_left n_cnsq @> md in
   let n_altr_assign_s = Assignment.create_stmt n_left n_altr @> md in
   let n_cnsq_s' = n_cnsq_s @ [ n_cnsq_assign_s ] in
@@ -699,7 +710,7 @@ and normalize_update_expr (ctx : Ctx.t) (loc : Loc.t)
   let op_pos_f sto upd = if update.prefix then [ upd; sto ] else [ sto; upd ] in
   match update.argument with
   | (_, Member { _object = obj; property = prop; _ }) ->
-    let (n_obj_s, n_obj) = normalize_expr obj in
+    let (n_obj_s, n_obj) = normalize_expr !ctx obj in
     let (n_prop_s, n_prop) = normalize_member_property ctx prop in
     let n_val = LeftValue.random () @> md in
     let n_val' = LeftValue.to_expr n_val @> md in
@@ -710,7 +721,7 @@ and normalize_update_expr (ctx : Ctx.t) (loc : Loc.t)
     let n_update_s = [ n_lookup_s ] @ op_pos_f n_sto_s n_inc_s @ [ n_upd_s ] in
     (n_obj_s @ n_prop_s @ n_update_s, n_left')
   | arg ->
-    let (n_arg_s, n_arg') = normalize_expr arg in
+    let (n_arg_s, n_arg') = normalize_expr !ctx arg in
     let n_arg = Identifier.of_expr n_arg' |> LeftValue.of_identifier in
     let n_sto_s = Assignment.create_stmt n_left n_arg' @> md in
     let n_upd_s = Binopt.create_stmt binopt n_arg n_arg' n_one @> md in
@@ -719,7 +730,7 @@ and normalize_update_expr (ctx : Ctx.t) (loc : Loc.t)
 and normalize_yield_expr (ctx : Ctx.t) (loc : Loc.t)
     (yield : (Loc.t, Loc.t) Flow.Expression.Yield.t) : n_expr =
   let md = normalize_location loc in
-  let (n_arg_s, n_arg) = normalize_expr_opt yield.argument in
+  let (n_arg_s, n_arg) = normalize_expr_opt !ctx yield.argument in
   let n_left = get_lval_ctx ctx md in
   let n_left' = LeftValue.to_expr n_left @> md in
   let n_yield_s = Yield.create_stmt n_left n_arg yield.delegate @> md in
@@ -728,7 +739,7 @@ and normalize_yield_expr (ctx : Ctx.t) (loc : Loc.t)
 and normalize_member_expr (ctx : Ctx.t) (loc : Loc.t)
     (member : (Loc.t, Loc.t) Flow.Expression.Member.t) : n_expr =
   let md = normalize_location loc in
-  let (n_obj_s, n_obj) = normalize_expr member._object in
+  let (n_obj_s, n_obj) = normalize_expr !ctx member._object in
   let (n_prop_s, n_prop) = normalize_member_property ctx member.property in
   let n_left = get_lval_ctx ctx md in
   let n_left' = LeftValue.to_expr n_left @> md in
@@ -743,7 +754,7 @@ and normalize_opt_member_expr (ctx : Ctx.t) (loc : Loc.t)
   if member.optional == false then normalize_member_expr ctx loc member.member
   else
     let member' = member.member in
-    let (n_obj_s, n_obj) = normalize_expr member'._object in
+    let (n_obj_s, n_obj) = normalize_expr !ctx member'._object in
     let (n_prop_s, n_prop) = normalize_member_property ctx member'.property in
     let (n_left_s, n_left) = get_lval_redef ~init:undef_f ctx md in
     let n_left' = LeftValue.to_expr n_left @> md in
@@ -763,7 +774,7 @@ and normalize_meta_property (ctx : Ctx.t) (loc : Loc.t)
   let n_lookup_s = lookup_property n_left n_obj' p_prop @> md in
   ([ n_lookup_s ], n_left')
 
-and normalize_member_property (_ : Ctx.t) :
+and normalize_member_property (ctx : Ctx.t) :
     (Loc.t, Loc.t) Flow.Expression.Member.property -> n_prop = function
   | PropertyIdentifier (loc, id) ->
     ([], Static (Prop.IProp (Identifier.create id.name) @!> loc))
@@ -778,7 +789,7 @@ and normalize_member_property (_ : Ctx.t) :
   | PropertyExpression (loc, BooleanLiteral lit) ->
     ([], Static (Prop.LProp (Literal.boolean lit.value) @!> loc))
   | PropertyExpression expr ->
-    let (n_expr_s, n_expr) = normalize_expr expr in
+    let (n_expr_s, n_expr) = normalize_expr !ctx expr in
     (n_expr_s, Dynamic n_expr)
   | PropertyPrivateName _ ->
     Log.fail "[not implemented]: private property member"
@@ -788,7 +799,7 @@ and normalize_new_expr (ctx : Ctx.t) (loc : Loc.t)
   let normalize_args_f =
     Option.fold ~none:([], []) ~some:(normalize_call_arguments ctx) in
   let md = normalize_location loc in
-  let (n_callee_s, n_callee) = normalize_expr call.callee in
+  let (n_callee_s, n_callee) = normalize_expr !ctx call.callee in
   let (n_args_s, n_args) = normalize_args_f call.arguments in
   let n_left = get_lval_ctx ctx md in
   let n_left' = LeftValue.to_expr n_left @> md in
@@ -801,7 +812,7 @@ and normalize_call_expr (ctx : Ctx.t) (loc : Loc.t)
   let md = normalize_location loc in
   match call.callee with
   | (_, Super _) ->
-    let (n_obj_s, n_obj) = normalize_expr call.callee in
+    let (n_obj_s, n_obj) = normalize_expr !ctx call.callee in
     let p_cons = Prop.IProp (Identifier.create "constructor") @> md in
     let (n_args_s, n_args) = normalize_call_arguments ctx call.arguments in
     let n_left = get_lval_ctx ctx md in
@@ -809,7 +820,7 @@ and normalize_call_expr (ctx : Ctx.t) (loc : Loc.t)
     let n_call_s = call_property n_left n_obj (Static p_cons) n_args @> md in
     (n_obj_s @ List.flatten n_args_s @ [ n_call_s ], n_left')
   | (_, Member { _object = obj; property = prop; _ }) ->
-    let (n_obj_s, n_obj) = normalize_expr obj in
+    let (n_obj_s, n_obj) = normalize_expr !ctx obj in
     let (n_prop_s, n_prop) = normalize_member_property ctx prop in
     let (n_args_s, n_args) = normalize_call_arguments ctx call.arguments in
     let n_left = get_lval_ctx ctx md in
@@ -817,7 +828,7 @@ and normalize_call_expr (ctx : Ctx.t) (loc : Loc.t)
     let n_call_s = call_property n_left n_obj n_prop n_args @> md in
     (n_obj_s @ n_prop_s @ List.flatten n_args_s @ [ n_call_s ], n_left')
   | _ ->
-    let (n_callee_s, n_callee) = normalize_expr call.callee in
+    let (n_callee_s, n_callee) = normalize_expr !ctx call.callee in
     let (n_args_s, n_args) = normalize_call_arguments ctx call.arguments in
     let n_left = get_lval_ctx ctx md in
     let n_left' = LeftValue.to_expr n_left @> md in
@@ -833,7 +844,7 @@ and normalize_opt_call_expr (ctx : Ctx.t) (loc : Loc.t)
   if call.optional == false then normalize_call_expr ctx loc call.call
   else
     let call = call.call in
-    let (n_callee_s, n_callee) = normalize_expr call.callee in
+    let (n_callee_s, n_callee) = normalize_expr !ctx call.callee in
     let n_opt = LeftValue.random () @> md in
     let (n_args_s, n_args) = normalize_call_arguments ctx call.arguments in
     let (n_left_s, n_left) = get_lval_redef ~init:undef_f ctx md in
@@ -845,11 +856,11 @@ and normalize_opt_call_expr (ctx : Ctx.t) (loc : Loc.t)
     let n_test_s = normalize_not_null_or_undef md n_callee n_cnsq_s None in
     (n_callee_s @ [ n_fid_s ] @ n_left_s @ n_test_s, n_left')
 
-and normalize_call_arguments (_ : Ctx.t)
+and normalize_call_arguments (ctx : Ctx.t)
     ((_, args) : (Loc.t, Loc.t) Flow.Expression.ArgList.t) :
     n_stmt list * expr list =
   Fun.(List.split << flip List.map args.arguments) (function
-    | Expression expr -> normalize_expr expr
+    | Expression expr -> normalize_expr !ctx expr
     | Spread _ -> Log.fail "[not implemented]: spread argument" )
 
 and normalize_tagged_template (ctx : Ctx.t) (loc : Loc.t)
@@ -857,7 +868,7 @@ and normalize_tagged_template (ctx : Ctx.t) (loc : Loc.t)
   let (quasi_loc, quasi) = tagged.quasi in
   let md = normalize_location loc in
   let n_quasi_loc = normalize_location quasi_loc in
-  let (n_tag_s, n_tag) = normalize_expr tagged.tag in
+  let (n_tag_s, n_tag) = normalize_expr !ctx tagged.tag in
   let (n_quasis, n_exprs_s, n_exprs) = normalize_template_literal ctx quasi in
   let quasi_f n_quasi = TemplateElement.to_expr n_quasi @> n_quasi_loc in
   let n_quasis' = List.map quasi_f n_quasis in
@@ -896,14 +907,14 @@ and normalize_class_expression (ctx : Ctx.t) (loc : Loc.t)
 and normalize_dynamic_import (ctx : Ctx.t) (loc : Loc.t)
     (import : (Loc.t, Loc.t) Flow.Expression.Import.t) : n_expr =
   let md = normalize_location loc in
-  let (n_arg_s, n_arg) = normalize_expr import.argument in
+  let (n_arg_s, n_arg) = normalize_expr !ctx import.argument in
   let n_left = get_lval_ctx ctx md in
   let n_left' = LeftValue.to_expr n_left @> md in
   let n_import = DynamicImport.create_stmt n_left n_arg @> md in
   (n_arg_s @ [ n_import ], n_left')
 
-and normalize_expr ?(ctx = Ctx.default ()) :
-    (Loc.t, Loc.t) Flow.Expression.t -> n_expr = function
+and normalize_expr (ctx : Ctx.t) : (Loc.t, Loc.t) Flow.Expression.t -> n_expr =
+  function
   | (loc, NullLiteral _) -> normalize_null_literal ctx loc
   | (loc, StringLiteral literal) -> normalize_string_literal ctx loc literal
   | (loc, NumberLiteral literal) -> normalize_number_literal ctx loc literal
@@ -945,9 +956,9 @@ and normalize_expr ?(ctx = Ctx.default ()) :
   | (_, ModuleRefLiteral _) ->
     Log.fail "[internal flow construct]: ModuleRefLiteral"
 
-and normalize_expr_opt ?(ctx = Ctx.default ())
+and normalize_expr_opt (ctx : Ctx.t)
     (expr : (Loc.t, Loc.t) Flow.Expression.t option) : stmt list * expr option =
-  match Option.map (normalize_expr ~ctx) expr with
+  match Option.map (normalize_expr ctx) expr with
   | Some (n_arg_s, n_arg) -> (n_arg_s, Some n_arg)
   | None -> ([], None)
 
@@ -957,11 +968,11 @@ and normalize_block (ctx : Ctx.t)
 
 and normalize_block_stmt (ctx : Ctx.t) (_ : Loc.t)
     (block : (Loc.t, Loc.t) Flow.Statement.Block.t) : n_stmt =
-  List.map (normalize_stmt ~ctx) block.body |> List.flatten
+  List.map (normalize_stmt ctx) block.body |> List.flatten
 
 and normalize_expr_stmt (ctx : Ctx.t) (loc : Loc.t)
     (expr : (Loc.t, Loc.t) Flow.Statement.Expression.t) : n_stmt =
-  let (n_expr_s, n_expr) = normalize_expr ~ctx expr.expression in
+  let (n_expr_s, n_expr) = normalize_expr ctx expr.expression in
   if not (requires_expr_stmt expr.expression) then n_expr_s
   else n_expr_s @ [ ExprStmt.create_stmt n_expr.el @!> loc ]
 
@@ -983,19 +994,19 @@ and normalize_vdecl (ctx : Ctx.t)
 
 and normalize_if_stmt (ctx : Ctx.t) (loc : Loc.t)
     (if' : (Loc.t, Loc.t) Flow.Statement.If.t) : n_stmt =
-  let (n_test_s, n_test) = normalize_expr ~ctx if'.test in
-  let n_cnsq_s = normalize_stmt ~ctx if'.consequent in
+  let (n_test_s, n_test) = normalize_expr ctx if'.test in
+  let n_cnsq_s = normalize_stmt ctx if'.consequent in
   let n_altr_s = Option.map (normalize_alternate_f ctx) if'.alternate in
   let n_if_s = If.create_stmt n_test n_cnsq_s n_altr_s @!> loc in
   n_test_s @ [ n_if_s ]
 
 and normalize_alternate_f (ctx : Ctx.t)
     ((_, alternate) : (Loc.t, Loc.t) Flow.Statement.If.Alternate.t) : n_stmt =
-  normalize_stmt ~ctx alternate.body
+  normalize_stmt ctx alternate.body
 
 and normalize_switch_stmt (ctx : Ctx.t) (loc : Loc.t)
     (switch : (Loc.t, Loc.t) Flow.Statement.Switch.t) : n_stmt =
-  let n_discriminant' = normalize_expr ~ctx switch.discriminant in
+  let n_discriminant' = normalize_expr ctx switch.discriminant in
   let n_cases' = List.map (normalize_switch_case ctx) switch.cases in
   let (n_discriminant_s, n_discriminant) = n_discriminant' in
   let (n_cases_s, n_cases) = List.split n_cases' in
@@ -1004,15 +1015,15 @@ and normalize_switch_stmt (ctx : Ctx.t) (loc : Loc.t)
 
 and normalize_switch_case (ctx : Ctx.t)
     ((loc, case) : (Loc.t, Loc.t) Flow.Statement.Switch.Case.t) : n_case =
-  let (n_test_s, n_test) = normalize_expr_opt ~ctx case.test in
-  let n_cnsq_s = List.flatten (List.map (normalize_stmt ~ctx) case.consequent) in
+  let (n_test_s, n_test) = normalize_expr_opt ctx case.test in
+  let n_cnsq_s = List.flatten (List.map (normalize_stmt ctx) case.consequent) in
   let n_case_s = SwitchCase.create n_test n_cnsq_s @!> loc in
   (n_test_s, n_case_s)
 
 and normalize_while_stmt (ctx : Ctx.t) (loc : Loc.t)
     (while' : (Loc.t, Loc.t) Flow.Statement.While.t) : n_stmt =
-  let (n_test_s, n_test) = normalize_expr ~ctx while'.test in
-  let n_body_s = normalize_stmt ~ctx while'.body in
+  let (n_test_s, n_test) = normalize_expr ctx while'.test in
+  let n_body_s = normalize_stmt ctx while'.body in
   let n_body_s' = n_body_s @ initialize_stmts_lvals n_test_s in
   let n_loop_s = While.create_stmt n_test n_body_s' @!> loc in
   n_test_s @ [ n_loop_s ]
@@ -1024,8 +1035,8 @@ and normalize_dowhile_stmt (ctx : Ctx.t) (loc : Loc.t)
   let n_test_wrp = LeftValue.random () @> md in
   let n_test_wrp' = LeftValue.initialize n_test_wrp in
   let n_test_wrp'' = LeftValue.to_expr n_test_wrp @> md in
-  let n_body_s = normalize_stmt ~ctx dowhile.body in
-  let (n_test_s, n_test) = normalize_expr ~ctx dowhile.test in
+  let n_body_s = normalize_stmt ctx dowhile.body in
+  let (n_test_s, n_test) = normalize_expr ctx dowhile.test in
   let n_init_s = Assignment.create_stmt n_test_wrp n_tr @> md in
   let n_upd_s = Assignment.create_stmt n_test_wrp' n_test @> md in
   let n_body_s' = n_body_s @ n_test_s @ [ n_upd_s ] in
@@ -1037,9 +1048,9 @@ and normalize_for_stmt (ctx : Ctx.t) (loc : Loc.t)
   let md = normalize_location loc in
   let n_tr = Literal.(to_expr @@ boolean true) @> md in
   let n_init_s = normalize_for_init ctx for'.init in
-  let (n_test_s, n_test) = normalize_expr_opt ~ctx for'.test in
-  let n_body_s = normalize_stmt ~ctx for'.body in
-  let (n_upd_s, _) = normalize_expr_opt ~ctx for'.update in
+  let (n_test_s, n_test) = normalize_expr_opt ctx for'.test in
+  let n_body_s = normalize_stmt ctx for'.body in
+  let (n_upd_s, _) = normalize_expr_opt ctx for'.update in
   let n_test' = Option.value ~default:n_tr n_test in
   let n_body_s' = n_body_s @ n_upd_s @ initialize_stmts_lvals n_test_s in
   let n_loop_s = While.create_stmt n_test' n_body_s' @> md in
@@ -1049,15 +1060,15 @@ and normalize_for_init (ctx : Ctx.t) :
     (Loc.t, Loc.t) Flow.Statement.For.init option -> n_stmt = function
   | None -> []
   | Some (InitDeclaration (loc, decl)) -> normalize_vdecl_stmt ctx loc decl
-  | Some (InitExpression expr) -> fst (normalize_expr ~ctx expr)
+  | Some (InitExpression expr) -> fst (normalize_expr ctx expr)
 
 and normalize_forin_stmt (ctx : Ctx.t) (loc : Loc.t)
     (forin : (Loc.t, Loc.t) Flow.Statement.ForIn.t) : n_stmt =
   let ctx' = { ctx with curr_stmt = AssignSimple } in
   let left' = FlowUtils.convert_forin_left forin.left in
-  let (n_right_s, n_right) = normalize_expr ~ctx forin.right in
+  let (n_right_s, n_right) = normalize_expr ctx forin.right in
   let (n_left_s, n_left) = normalize_for_left ctx' left' in
-  let n_body_s = normalize_stmt ~ctx forin.body in
+  let n_body_s = normalize_stmt ctx forin.body in
   let n_body_s' = n_left_s @ n_body_s in
   let n_loop_s = ForIn.create_stmt n_left n_right n_body_s' @!> loc in
   n_right_s @ [ n_loop_s ]
@@ -1066,9 +1077,9 @@ and normalize_forof_stmt (ctx : Ctx.t) (loc : Loc.t)
     (forof : (Loc.t, Loc.t) Flow.Statement.ForOf.t) : n_stmt =
   let ctx' = { ctx with curr_stmt = AssignSimple } in
   let left' = FlowUtils.convert_forof_left forof.left in
-  let (n_right_s, n_right) = normalize_expr ~ctx forof.right in
+  let (n_right_s, n_right) = normalize_expr ctx forof.right in
   let (n_left_s, n_left) = normalize_for_left ctx' left' in
-  let n_body_s = normalize_stmt ~ctx forof.body in
+  let n_body_s = normalize_stmt ctx forof.body in
   let n_body_s' = n_left_s @ n_body_s in
   let await = forof.await in
   let n_loop_s = ForOf.create_stmt n_left n_right n_body_s' await @!> loc in
@@ -1106,13 +1117,13 @@ and normalize_continue_stmt (ctx : Ctx.t) (loc : Loc.t)
 
 and normalize_return_stmt (ctx : Ctx.t) (loc : Loc.t)
     (return : (Loc.t, Loc.t) Flow.Statement.Return.t) : n_stmt =
-  let (n_arg_s, n_arg) = normalize_expr_opt ~ctx return.argument in
+  let (n_arg_s, n_arg) = normalize_expr_opt ctx return.argument in
   let n_return_s = Return.create_stmt n_arg @!> loc in
   n_arg_s @ [ n_return_s ]
 
 and normalize_throw_stmt (ctx : Ctx.t) (loc : Loc.t)
     (throw : (Loc.t, Loc.t) Flow.Statement.Throw.t) : n_stmt =
-  let (n_arg_s, n_arg) = normalize_expr ~ctx throw.argument in
+  let (n_arg_s, n_arg) = normalize_expr ctx throw.argument in
   let n_throw_s = Throw.create_stmt n_arg @!> loc in
   n_arg_s @ [ n_throw_s ]
 
@@ -1146,15 +1157,15 @@ and normalize_catch_param (ctx : Ctx.t) :
 
 and normalize_with_stmt (ctx : Ctx.t) (loc : Loc.t)
     (with' : (Loc.t, Loc.t) Flow.Statement.With.t) : n_stmt =
-  let (n_expr_s, n_expr) = normalize_expr ~ctx with'._object in
-  let n_body = normalize_stmt ~ctx with'.body in
+  let (n_expr_s, n_expr) = normalize_expr ctx with'._object in
+  let n_body = normalize_stmt ctx with'.body in
   let n_with_s = With.create_stmt n_expr n_body @!> loc in
   n_expr_s @ [ n_with_s ]
 
 and normalize_labeled_stmt (ctx : Ctx.t) (loc : Loc.t)
     (labeled : (Loc.t, Loc.t) Flow.Statement.Labeled.t) : n_stmt =
   let n_label = normalize_identifier ctx labeled.label in
-  let n_body = normalize_stmt ~ctx labeled.body in
+  let n_body = normalize_stmt ctx labeled.body in
   let n_labeled_s = Labeled.create_stmt n_label n_body @!> loc in
   [ n_labeled_s ]
 
@@ -1277,7 +1288,7 @@ and normalize_export_decl (ctx : Ctx.t)
     let n_exprs = List.map id_to_expr_f n_decls in
     (n_decls_s, n_exprs)
   | Expression expr ->
-    let (n_expr_s, n_expr) = normalize_expr expr in
+    let (n_expr_s, n_expr) = normalize_expr !ctx expr in
     (n_expr_s, [ n_expr ])
 
 and normalize_export_decl_stmt (ctx : Ctx.t) :
@@ -1297,8 +1308,8 @@ and normalize_export_decl_stmt (ctx : Ctx.t) :
     (n_class_s, [ n_id ])
   | _ -> Log.fail "invalid declaration statement in export"
 
-and normalize_stmt ?(ctx = Ctx.default ()) :
-    (Loc.t, Loc.t) Flow.Statement.t -> n_stmt = function
+and normalize_stmt (ctx : Ctx.t) : (Loc.t, Loc.t) Flow.Statement.t -> n_stmt =
+  function
   | (_, Empty _) -> []
   | (loc, Block block) -> normalize_block_stmt ctx loc block
   | (loc, Expression expr) -> normalize_expr_stmt ctx loc expr
@@ -1384,7 +1395,7 @@ and normalize_function_param (ctx : Ctx.t)
   let n_param = get_lval_ctx ctx' md in
   let n_param' = LeftValue.to_expr n_param @> md in
   let n_param_id = Identifier.of_lval n_param in
-  let normalize_dflt_f = normalize_default_value n_param in
+  let normalize_dflt_f = normalize_default_value !ctx n_param in
   let n_dflt_s = Option.fold ~none:[] ~some:normalize_dflt_f param.default in
   if LeftValue.generated n_param then
     let n_pattern_s = normalize_assignment_pattern ctx n_param' param.argument in
@@ -1395,11 +1406,12 @@ and normalize_function_rest_param (_ : Ctx.t)
     (_ : ('M, 'T) Flow_ast.Function.RestParam.t) : n_id =
   Log.fail "[not implemented]: rest parameter"
 
-and normalize_function_body (_ : Ctx.t) :
+and normalize_function_body (ctx : Ctx.t) :
     (Loc.t, Loc.t) Flow.Function.body -> n_stmt = function
-  | Flow.Function.BodyBlock (loc, block) -> normalize_stmt (loc, Block block)
+  | Flow.Function.BodyBlock (loc, block) ->
+    normalize_stmt !ctx (loc, Block block)
   | Flow.Function.BodyExpression ((loc, _) as body_expr) ->
-    let (n_body_s, n_body) = normalize_expr body_expr in
+    let (n_body_s, n_body) = normalize_expr !ctx body_expr in
     let n_return_s = Return.create_stmt (Some n_body) @!> loc in
     n_body_s @ [ n_return_s ]
 
@@ -1420,7 +1432,7 @@ and normalize_class_extends (ctx : Ctx.t)
   let (n_class, n_proto) = get_class_ctx ctx in
   let n_class' = LeftValue.to_expr n_class @> md in
   let n_proto' = LeftValue.to_expr n_proto @> md in
-  let (n_extends_s, n_extends) = normalize_expr extends.expr in
+  let (n_extends_s, n_extends) = normalize_expr !ctx extends.expr in
   let n_parent = LeftValue.random () @> md in
   let n_parent' = LeftValue.to_expr n_parent @> md in
   let p_proto = Static (Prop.IProp (Identifier.create "__proto__") @> md) in
@@ -1531,14 +1543,16 @@ and normalize_class_property (ctx : Ctx.t) (loc : Loc.t) (static : bool)
   let n_prop_s = update_property n_left' n_key n_func @> md in
   n_key_s @ n_func_s @ [ n_prop_s ]
 
-and normalize_class_property_value (_ : Ctx.t) (md : md) :
+and normalize_class_property_value (ctx : Ctx.t) (md : md) :
     (Loc.t, Loc.t) Flow.Class.Property.value -> n_expr = function
   | Declared | Uninitialized -> ([], Identifier.undefined_expr () @> md)
-  | Initialized expr -> normalize_expr expr
+  | Initialized expr -> normalize_expr !ctx expr
 
-and normalize_file (file : (Loc.t, Loc.t) Flow_ast.Program.t) : n_stmt =
+and normalize_file ?(env = Env.default ())
+    (file : (Loc.t, Loc.t) Flow_ast.Program.t) : n_stmt =
+  let ctx = Ctx.create env in
   let (_, { Flow.Program.statements; _ }) = file in
-  List.map normalize_stmt statements |> List.flatten
+  List.map (normalize_stmt ctx) statements |> List.flatten
 
 and translate_unary (op : Flow.Expression.Unary.operator) : Operator.unary =
   match op with

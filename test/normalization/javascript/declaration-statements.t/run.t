@@ -1,14 +1,14 @@
   $ graphjs parse function.js
-  var foo = function (bar, baz) {
+  function foo(bar, baz) {
     qux;
   }
-  var foo = async function (bar, baz) {
+  async function foo(bar, baz) {
     qux;
   }
-  var foo = function* (bar, baz) {
+  function* foo(bar, baz) {
     qux;
   }
-  var foo = async function* (bar, baz) {
+  async function* foo(bar, baz) {
     qux;
   }
 

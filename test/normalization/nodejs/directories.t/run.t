@@ -9,7 +9,7 @@
   }
   [info] Initializing normalization of the 'library.js' module...
   [info] Module 'library.js' normalized successfully.
-  var bar = function () {
+  function bar() {
     
   }
   let $v1 = {};
@@ -19,7 +19,7 @@
   [info] Module '../dependency.js' normalized successfully.
   const lib = require('./dir/library.js');
   let $v2 = lib.bar();
-  var foo = function () {
+  function foo() {
     
   }
   let $v3 = {};

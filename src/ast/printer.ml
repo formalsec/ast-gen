@@ -5,7 +5,6 @@ module Config = struct
   include Config
 
   let path_font = constant (Font.create ~fg:`DarkGray ~italic:true ())
-  let test262_conform_hoisted = dynamic false
 end
 
 let pp_indent (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (vs : 'a list) : unit =
@@ -164,14 +163,17 @@ and pp_fundef (ppf : Fmt.t) (func : 'm Statement.FunctionDefinition.t) : unit =
 
 and pp_fundef_header (ppf : Fmt.t) (func : 'm Statement.FunctionDefinition.t) :
     unit =
+  match func.hoisted with
+  | True ->
+    Fmt.fmt ppf "%a %a" pp_fundef_details func pp_identifier' func.left.el.id
+  | False | Ignore ->
+    Fmt.fmt ppf "%a = %a " pp_leftvalue func.left pp_fundef_details func
+
+and pp_fundef_details (ppf : Fmt.t) (func : 'm Statement.FunctionDefinition.t) :
+    unit =
   let pp_async ppf async = if async then Fmt.pp_str ppf "async " else () in
   let pp_generator ppf gen = if gen then Fmt.pp_str ppf "*" else () in
-  if Config.(!test262_conform_hoisted) && func.hoisted then
-    Fmt.fmt ppf "%afunction%a %a" pp_async func.async pp_generator
-      func.generator pp_identifier' func.left.el.id
-  else
-    Fmt.fmt ppf "%a = %afunction%a " pp_leftvalue func.left pp_async func.async
-      pp_generator func.generator
+  Fmt.fmt ppf "%afunction%a" pp_async func.async pp_generator func.generator
 
 and pp_dimport (ppf : Fmt.t) (import : 'm Statement.DynamicImport.t) : unit =
   Fmt.fmt ppf "%a = import(%a);" pp_leftvalue import.left pp_expr import.arg

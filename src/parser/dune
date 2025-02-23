@@ -2,5 +2,5 @@
 
 (library
  (name graphjs_parser)
- (modules parser_config dependency_tree flow_parser normalizer)
+ (modules dependency_tree flow_parser normalizer)
  (libraries graphjs_base graphjs_share graphjs_ast flow_parser))

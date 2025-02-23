@@ -220,13 +220,20 @@ and Statement : sig
   end
 
   module FunctionDefinition : sig
+    module Hoisted : sig
+      type t =
+        | True
+        | False
+        | Ignore
+    end
+
     type 'm t =
       { left : 'm LeftValue.t
       ; params : 'm Identifier.t list
       ; body : 'm Statement.t list
       ; async : bool
       ; generator : bool
-      ; hoisted : bool
+      ; hoisted : Hoisted.t
       }
   end
 
