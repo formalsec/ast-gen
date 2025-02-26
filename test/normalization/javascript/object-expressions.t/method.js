@@ -11,10 +11,10 @@
 // object expression with a computed key getter field
 ({ get [foo]() { } });
 // object expression with a setter field
-({ set foo(bar) { } });
+({ set foo(x) { } });
 // object expression with a literal key setter field
-({ set 10(bar) { } });
+({ set 10(x) { } });
 // object expression with a computed key setter field
-({ set [foo](bar) { } });
-// object expression with a getter and setter fields
-({ get foo() { }, set foo(bar) { } });
+({ set [foo](x) { } });
+// object expression with a method, getter and setter fields
+({ foo() { }, get bar() { }, set baz(x) { } });

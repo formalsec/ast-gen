@@ -1,7 +1,8 @@
   $ graphjs parse identifier.js
   foo = 10;
-  bar2 = true;
+  baz = true;
   bar = true;
+  foo = true;
 
   $ graphjs parse assignment_operator.js
   foo = foo + 10;
@@ -36,10 +37,14 @@
   foo = bar;
   foo = bar;
   bar = bar + 1;
-  let $v1 = obj[bar];
+  let $v1 = bar[baz];
+  let $v1 = $v1 - 1;
   foo = $v1;
-  let $v1 = $v1 + 1;
-  obj[bar] = $v1;
+  bar[baz] = $v1;
+  let $v2 = bar[baz];
+  foo = $v2;
+  let $v2 = $v2 + 1;
+  bar[baz] = $v2;
 
   $ graphjs parse member_pattern.js
   this.foo = 10;
@@ -53,177 +58,181 @@
 
   $ graphjs parse object_pattern.js
   let $v1 = {};
-  foo = $v1.foo;
   let $v2 = {};
   foo = $v2.foo;
-  bar = $v2.bar;
   let $v3 = {};
   foo = $v3.foo;
-  let $v4 = $v3.bar;
-  baz = $v4.baz;
-  qux = $v4.qux;
-  let $v5 = {};
-  foo = $v5.foo;
-  let $v6 = foo === undefined;
-  if ($v6) {
+  bar = $v3.bar;
+  let $v4 = {};
+  foo = $v4.foo;
+  let $v5 = $v4.bar;
+  baz = $v5.baz;
+  qux = $v5.qux;
+  let $v6 = {};
+  foo = $v6.foo;
+  let $v7 = foo === undefined;
+  if ($v7) {
     foo = 10;
   }
-  bar = $v5.bar;
-  let $v7 = bar === undefined;
-  if ($v7) {
+  bar = $v6.bar;
+  let $v8 = bar === undefined;
+  if ($v8) {
     bar = "abc";
   }
-  let $v8 = {};
-  foo = $v8.foo;
-  let $v9 = foo === undefined;
-  if ($v9) {
+  let $v9 = {};
+  foo = $v9.foo;
+  let $v10 = foo === undefined;
+  if ($v10) {
     foo = 10;
   }
-  let $v10 = $v8.bar;
-  baz = $v10.baz;
-  let $v11 = baz === undefined;
-  if ($v11) {
+  let $v11 = $v9.bar;
+  baz = $v11.baz;
+  let $v12 = baz === undefined;
+  if ($v12) {
     baz = "abc";
   }
-  let $v12 = {};
-  foo = $v12.foo;
-  let $v13 = foo === undefined;
-  if ($v13) {
+  let $v13 = {};
+  foo = $v13.foo;
+  let $v14 = foo === undefined;
+  if ($v14) {
     foo = 10;
   }
-  let $v14 = $v12.bar;
-  let $v15 = $v14 === undefined;
-  if ($v15) {
-    let $v16 = {};
-    $v16.baz = "abc";
-    $v14 = $v16;
+  let $v15 = $v13.bar;
+  let $v16 = $v15 === undefined;
+  if ($v16) {
+    let $v17 = {};
+    $v17.baz = "abc";
+    $v15 = $v17;
   }
-  baz = $v14.baz;
-  let $v17 = {};
-  a = $v17.foo;
-  b = $v17.bar;
-  c = $v17.baz;
+  baz = $v15.baz;
   let $v18 = {};
   a = $v18.foo;
-  let $v19 = a === undefined;
-  if ($v19) {
+  b = $v18.bar;
+  c = $v18.baz;
+  let $v19 = {};
+  a = $v19.foo;
+  let $v20 = a === undefined;
+  if ($v20) {
     a = 10;
   }
-  b = $v18.bar;
-  let $v20 = b === undefined;
-  if ($v20) {
+  b = $v19.bar;
+  let $v21 = b === undefined;
+  if ($v21) {
     b = "abc";
   }
-  let $v21 = {};
-  a = $v21["foo"];
+  let $v22 = {};
+  let $v23 = 10 + "abc";
+  a = $v22[$v23];
 
   $ graphjs parse array_pattern.js
   let $v1 = [];
-  foo = $v1[0];
   let $v2 = [];
   foo = $v2[0];
-  bar = $v2[1];
   let $v3 = [];
   foo = $v3[0];
-  let $v4 = $v3[1];
-  bar = $v4[0];
-  baz = $v4[1];
-  let $v5 = [];
-  foo = $v5[0];
-  let $v6 = foo === undefined;
-  if ($v6) {
-    foo = 10;
-  }
-  bar = $v5[1];
-  let $v7 = bar === undefined;
+  bar = $v3[1];
+  let $v4 = [];
+  foo = $v4[0];
+  let $v5 = $v4[1];
+  bar = $v5[0];
+  baz = $v5[1];
+  let $v6 = [];
+  foo = $v6[0];
+  let $v7 = foo === undefined;
   if ($v7) {
-    bar = "abc";
-  }
-  let $v8 = [];
-  foo = $v8[0];
-  let $v9 = foo === undefined;
-  if ($v9) {
     foo = 10;
   }
-  let $v10 = $v8[1];
-  bar = $v10[0];
-  let $v11 = bar === undefined;
-  if ($v11) {
+  bar = $v6[1];
+  let $v8 = bar === undefined;
+  if ($v8) {
     bar = "abc";
   }
-  let $v12 = [];
-  foo = $v12[0];
-  let $v13 = foo === undefined;
-  if ($v13) {
+  let $v9 = [];
+  foo = $v9[0];
+  let $v10 = foo === undefined;
+  if ($v10) {
     foo = 10;
   }
-  bar = $v12[1];
-  let $v14 = bar === undefined;
+  let $v11 = $v9[1];
+  bar = $v11[0];
+  let $v12 = bar === undefined;
+  if ($v12) {
+    bar = "abc";
+  }
+  let $v13 = [];
+  foo = $v13[0];
+  let $v14 = foo === undefined;
   if ($v14) {
-    let $v15 = [];
-    $v15[0] = "abc";
-    bar = $v15;
+    foo = 10;
   }
-  let $v16 = [];
-  foo = $v16[0];
-  bar = $v16[2];
+  bar = $v13[1];
+  let $v15 = bar === undefined;
+  if ($v15) {
+    let $v16 = [];
+    $v16[0] = "abc";
+    bar = $v16;
+  }
   let $v17 = [];
   foo = $v17[0];
-  bar = $v17[1];
+  bar = $v17[2];
+  let $v18 = [];
+  foo = $v18[0];
+  bar = $v18[1];
 
   $ graphjs parse array_pattern.js
   let $v1 = [];
-  foo = $v1[0];
   let $v2 = [];
   foo = $v2[0];
-  bar = $v2[1];
   let $v3 = [];
   foo = $v3[0];
-  let $v4 = $v3[1];
-  bar = $v4[0];
-  baz = $v4[1];
-  let $v5 = [];
-  foo = $v5[0];
-  let $v6 = foo === undefined;
-  if ($v6) {
-    foo = 10;
-  }
-  bar = $v5[1];
-  let $v7 = bar === undefined;
+  bar = $v3[1];
+  let $v4 = [];
+  foo = $v4[0];
+  let $v5 = $v4[1];
+  bar = $v5[0];
+  baz = $v5[1];
+  let $v6 = [];
+  foo = $v6[0];
+  let $v7 = foo === undefined;
   if ($v7) {
-    bar = "abc";
-  }
-  let $v8 = [];
-  foo = $v8[0];
-  let $v9 = foo === undefined;
-  if ($v9) {
     foo = 10;
   }
-  let $v10 = $v8[1];
-  bar = $v10[0];
-  let $v11 = bar === undefined;
-  if ($v11) {
+  bar = $v6[1];
+  let $v8 = bar === undefined;
+  if ($v8) {
     bar = "abc";
   }
-  let $v12 = [];
-  foo = $v12[0];
-  let $v13 = foo === undefined;
-  if ($v13) {
+  let $v9 = [];
+  foo = $v9[0];
+  let $v10 = foo === undefined;
+  if ($v10) {
     foo = 10;
   }
-  bar = $v12[1];
-  let $v14 = bar === undefined;
+  let $v11 = $v9[1];
+  bar = $v11[0];
+  let $v12 = bar === undefined;
+  if ($v12) {
+    bar = "abc";
+  }
+  let $v13 = [];
+  foo = $v13[0];
+  let $v14 = foo === undefined;
   if ($v14) {
-    let $v15 = [];
-    $v15[0] = "abc";
-    bar = $v15;
+    foo = 10;
   }
-  let $v16 = [];
-  foo = $v16[0];
-  bar = $v16[2];
+  bar = $v13[1];
+  let $v15 = bar === undefined;
+  if ($v15) {
+    let $v16 = [];
+    $v16[0] = "abc";
+    bar = $v16;
+  }
   let $v17 = [];
   foo = $v17[0];
-  bar = $v17[1];
+  bar = $v17[2];
+  let $v18 = [];
+  foo = $v18[0];
+  bar = $v18[1];
 
   $ graphjs parse member.js 
   let $v1 = {};
@@ -293,3 +302,53 @@
     return Bar;
   }
   Foo = $v5();
+
+  $ graphjs parse leftvalue_context.js
+  let $v1 = 10 + 20;
+  foo = `abc${$v1} def${true}`;
+  let $v2 = 10 + 20;
+  let $v3 = "abc" + "def";
+  foo = $v3;
+  foo = {};
+  let $v4 = 10 + 20;
+  foo.bar = $v4;
+  let $v5 = "abc" + "def";
+  foo.baz = $v5;
+  foo = [];
+  let $v6 = 10 + 20;
+  foo[0] = $v6;
+  let $v7 = "abc" + "def";
+  foo[1] = $v7;
+  let $v8 = -10;
+  foo = -$v8;
+  let $v9 = 10 + 20;
+  foo = $v9 + 30;
+  let $v10 = {};
+  let $v11 = $v10.bar;
+  let $v12 = {};
+  let $v13 = $v12.baz;
+  foo = $v11 + $v13;
+  let $v14 = 10 + 20;
+  let $v15 = "abc" + "def";
+  foo = new bar($v14, $v15);
+  let $v16 = 10 + 20;
+  let $v17 = "abc" + "def";
+  foo = bar($v16, $v17);
+  let $v18 = bar;
+  foo = undefined;
+  let $v21 = bar !== null;
+  let $v22 = bar !== undefined;
+  let $v23 = $v21 && $v22;
+  if ($v23) {
+    let $v19 = 10 + 20;
+    let $v20 = "abc" + "def";
+    foo = $v18($v19, $v20);
+  }
+  let $v24 = 10 + 20;
+  let $v25 = "abc" + "def";
+  let $v26 = [];
+  $v26[0] = "";
+  $v26[1] = "";
+  foo = $v24($v26, $v25);
+  let $v27 = "abc" + "def";
+  foo = import($v27);

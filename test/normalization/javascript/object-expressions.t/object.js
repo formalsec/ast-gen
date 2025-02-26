@@ -9,4 +9,4 @@
 // object expression with literal field keys
 ({ "foo": 10, 20: "abc", 30n: true });
 // object expression with a computed field key
-({ ["foo"]: 10 });
+({ [10 + "abc"]: true });

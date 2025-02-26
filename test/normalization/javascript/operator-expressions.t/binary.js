@@ -1,6 +1,6 @@
 // binary operator : arithmetic plus
 10 + 5;
-// binary operator : arithmetic plus sequence
+// binary operator : nested arithmetic plus
 10 + 5 + 2;
 // binary operator : arithmetic minus
 10 - 5;
@@ -8,7 +8,7 @@
 10 * 5;
 // binary operator : arithmetic division
 10 / 5;
-// binary operator : arithmetic module
+// binary operator : arithmetic modulus
 10 % 5;
 // binary operator : arithmetic exponentiation
 10 ** 5;
@@ -41,6 +41,6 @@
 // binary operator : relational grater than equal
 10 >= 5;
 // binary operator : instanceof
-10 instanceof 5;
+10 instanceof Number;
 // binary operator : in
-10 in 5;
+10 in Number;

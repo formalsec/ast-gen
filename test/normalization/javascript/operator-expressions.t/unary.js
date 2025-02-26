@@ -1,6 +1,6 @@
 // unary operator : arithmetic positive
 +10;
-// unary operator : double arithmetic positive
+// unary operator : nested arithmetic positive
 +(+10);
 // unary operator : arithmetic negative
 -10;
@@ -12,8 +12,6 @@
 typeof 10;
 // unary operator : void
 void 10;
-// unary operator : await
-// only works inside async functions
 // unary operator : redundant delete
 delete 10;
 // unary operator : static delete

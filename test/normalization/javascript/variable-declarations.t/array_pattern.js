@@ -1,3 +1,7 @@
+// array pattern no elements
+var [] = [];
+// array pattern no elements (const)
+const [] = [];
 // array pattern a single element
 var [foo] = [];
 // array pattern a single element (const)
@@ -23,6 +27,10 @@ var [foo = 10, bar = ["abc"]] = [];
 // array pattern with default nested array elements (const)
 const [foo6 = 10, bar6 = ["abc"]] = [];
 // array pattern with a hole pattern
-var [foo,,bar] = [];
+var [foo, , bar] = [];
+// array pattern with a hole pattern (const)
+const [foo, , bar] = [];
 // array pattern with a trailing comma
 var [foo, bar,] = [];
+// array pattern with a trailing comma(const)
+const [foo, bar,] = [];

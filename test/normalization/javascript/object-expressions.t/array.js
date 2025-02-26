@@ -10,3 +10,5 @@
 [10, ["abc", true]];
 // array expression with a trailing comma
 [10, "abc",];
+// array expression with computed elements
+[10 + "abc"]

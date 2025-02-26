@@ -1,3 +1,5 @@
+// object pattern with no fields
+({} = {});
 // object pattern with a single field
 ({ foo } = {});
 // object pattern with multiple fields
@@ -15,4 +17,4 @@
 // object pattern with field aliases and defaults
 ({ foo: a = 10, bar: b = "abc" } = {});
 // object pattern with computed keys
-({ ["foo"]: a } = {});
+({ [10 + "abc"]: a } = {});

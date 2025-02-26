@@ -65,9 +65,9 @@
   $v21;
   let $v22 = 10 >= 5;
   $v22;
-  let $v23 = 10 instanceof 5;
+  let $v23 = 10 instanceof Number;
   $v23;
-  let $v24 = 10 in 5;
+  let $v24 = 10 in Number;
   $v24;
 
   $ graphjs parse logical.js
@@ -76,21 +76,30 @@
     $v1 = false && true;
   }
   $v1;
-  let $v2 = true && false;
+  let $v2 = true && true;
   if ($v2) {
-    
-  } else {
-    $v2 = false && false;
+    $v2 = false && true;
   }
-  $v2;
-  let $v3 = 10;
-  let $v4 = 10 === null;
-  let $v5 = 10 === undefined;
-  let $v6 = $v4 || $v5;
-  if ($v6) {
-    $v3 = "abc";
+  let $v3 = $v2 && true;
+  if ($v3) {
+    $v3 = true && true;
   }
   $v3;
+  let $v4 = true && false;
+  if ($v4) {
+    
+  } else {
+    $v4 = false && false;
+  }
+  $v4;
+  let $v5 = 10;
+  let $v6 = 10 === null;
+  let $v7 = 10 === undefined;
+  let $v8 = $v6 || $v7;
+  if ($v8) {
+    $v5 = "abc";
+  }
+  $v5;
 
   $ graphjs parse conditional.js
   let $v1;
@@ -100,6 +109,26 @@
     $v1 = "abc";
   }
   $v1;
+  let $v2;
+  if (false) {
+    $v2 = 10;
+  } else {
+    $v2 = "abc";
+  }
+  $v2;
+  let $v3;
+  if (false) {
+    $v3 = 10;
+  } else {
+    let $v4;
+    if (true) {
+      $v4 = "abc";
+    } else {
+      $v4 = true;
+    }
+    $v3 = $v4;
+  }
+  $v3;
 
   $ graphjs parse update.js
   foo = foo + 1;

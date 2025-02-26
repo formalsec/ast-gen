@@ -191,3 +191,37 @@
     }
     return $v30;
   }
+
+  $ graphjs parse await.js
+  let $v1 = async function () {
+    let $v2 = foo();
+    let $v3 = await $v2;
+    $v3;
+  }
+  let $v4 = async function () {
+    let $v5 = foo(10);
+    let $v6 = await $v5;
+    $v6;
+  }
+  let $v7 = async function () {
+    let $v8 = foo(10, "abc", true);
+    let $v9 = await $v8;
+    $v9;
+  }
+  let $v10 = async function () {
+    let $v11 = 10 + "abc";
+    let $v12 = foo($v11);
+    let $v13 = await $v12;
+    $v13;
+  }
+  let $v14 = async function () {
+    let $v15 = 10 + "abc";
+    let $v16 = $v15(true);
+    let $v17 = await $v16;
+    $v17;
+  }
+  let $v18 = async function () {
+    let $v19 = foo();
+    let $v20 = await $v19;
+    let $v21 = bar($v20);
+  }

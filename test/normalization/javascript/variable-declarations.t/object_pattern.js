@@ -1,3 +1,7 @@
+// object pattern no fields
+var { } = {};
+// object pattern no fields (const)
+const { } = {};
 // object pattern a single field
 var { foo } = {};
 // object pattern a single field (const)
@@ -31,4 +35,6 @@ var { foo: a = 10, bar: b = "abc" } = {};
 // object pattern with field aliases and defaults (const)
 const { foo: a8 = 10, bar: b8 = "abc" } = {};
 // object pattern with computed keys
-var { ["foo"]: a } = {};
+var { [10 + "abc"]: a } = {};
+// object pattern with computed keys (const)
+const { [10 + "abc"]: a } = {};
