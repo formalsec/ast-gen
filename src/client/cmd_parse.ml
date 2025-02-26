@@ -7,7 +7,7 @@ open Result
 module Options = struct
   type env =
     { mode : Analysis_mode.t
-    ; ignore_hoisting : bool
+    ; disable_hoisting : bool
     ; deps_env : Cmd_dependencies.Options.env
     }
 
@@ -17,9 +17,9 @@ module Options = struct
     ; env : env
     }
 
-  let env (mode : Analysis_mode.t) (ignore_hoisting : bool)
+  let env (mode : Analysis_mode.t) (disable_hoisting : bool)
       (deps_env : Cmd_dependencies.Options.env) : env =
-    { mode; ignore_hoisting; deps_env }
+    { mode; disable_hoisting; deps_env }
 
   let cmd (inputs : Fpath.t list) (output : Fpath.t option) (env : env) : t =
     { inputs; output; env }
@@ -53,7 +53,7 @@ let js_normalizer (env : Normalizer.Env.t)
   Normalizer.normalize_file ~env file
 
 let normalizer_env (env : Options.env) : Normalizer.Env.t =
-  { ignore_hoisting = env.ignore_hoisting }
+  { disable_hoisting = env.disable_hoisting }
 
 let normalize_program_modules (env : Normalizer.Env.t) (w : Workspace.t)
     (dt : Dependency_tree.t) : (Fpath.t * 'm File.t) Exec.status list =

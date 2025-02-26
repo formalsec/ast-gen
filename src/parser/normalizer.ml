@@ -26,10 +26,10 @@ type n_stmt = stmt list
 type n_case = stmt list * case
 
 module Env = struct
-  type t = { ignore_hoisting : bool }
+  type t = { disable_hoisting : bool }
 
   let default =
-    let dflt = { ignore_hoisting = false } in
+    let dflt = { disable_hoisting = false } in
     fun () -> dflt
 end
 
@@ -133,7 +133,7 @@ let call_property (n_left : lval) (n_obj : expr) (n_prop : prop)
   | Dynamic prop -> DynamicMethodCall.create_stmt n_left n_obj prop n_args
 
 let get_function_hoisting (ctx : Ctx.t) (hoisted : bool) : FunctionHoisting.t =
-  if ctx.env.ignore_hoisting then Ignore else if hoisted then True else False
+  if ctx.env.disable_hoisting then Ignore else if hoisted then True else False
 
 let create_function (ctx : Ctx.t) (n_left : lval) (n_params : id list)
     (n_body : n_stmt) (async : bool) (generator : bool) : stmt' =
