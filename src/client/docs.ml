@@ -146,14 +146,14 @@ module ParseOpts = struct
     let modes = Arg.enum Enums.AnalysisMode.(args all) in
     Arg.(value & opt modes SingleFile & info [ "mode" ] ~docv ~doc)
 
-  let ignore_hoisting =
+  let disable_hoisting =
     let doc =
-      "Ignores function hoisting by treating hoisted functions as regular \
+      "Disables function hoisting by treating hoisted functions as regular \
        function assignments instead of declarations. Enabling this flag may \
        reduce the complexity of the normalized code but will introduce \
        normalization errors. Running the Test262 conformance test suite with \
        this flag will result in test failures." in
-    Arg.(value & flag & info [ "ignore-hoisting" ] ~doc)
+    Arg.(value & flag & info [ "disable-hoisting" ] ~doc)
 end
 
 module ParseCmd = struct
