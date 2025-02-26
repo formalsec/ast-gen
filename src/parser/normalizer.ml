@@ -26,10 +26,13 @@ type n_stmt = stmt list
 type n_case = stmt list * case
 
 module Env = struct
-  type t = { disable_hoisting : bool }
+  type t =
+    { always_fresh : bool
+    ; disable_hoisting : bool
+    }
 
   let default =
-    let dflt = { disable_hoisting = false } in
+    let dflt = { always_fresh = false; disable_hoisting = false } in
     fun () -> dflt
 end
 
@@ -81,10 +84,11 @@ module FlowUtils = struct
     | LeftPattern pat -> LeftPattern pat
 end
 
-let get_lval_ctx (ctx : Ctx.t) (md : md) : lval =
-  match ctx.curr_lval with
-  | None -> LeftValue.random () @> md
-  | Some lval -> lval
+let get_lval_ctx ?(prevent_fresh = false) (ctx : Ctx.t) (md : md) : lval =
+  let fresh_var = ctx.env.always_fresh && not prevent_fresh in
+  match (fresh_var, ctx.curr_lval) with
+  | (true, _) | (false, None) -> LeftValue.random () @> md
+  | (false, Some lval) -> lval
 
 let get_lval_redef ?(init : (lval -> n_stmt) option) (ctx : Ctx.t) (md : md) :
     n_lval =
@@ -1089,10 +1093,11 @@ and normalize_for_left (ctx : Ctx.t) :
   | LeftPattern ((loc, _) as pattern) ->
     let ctx' = { ctx with curr_lval = leftvalue_ctx ctx pattern } in
     let md = normalize_location loc in
-    let n_left = get_lval_ctx ctx' md in
+    let n_left = get_lval_ctx ~prevent_fresh:true ctx' md in
     let n_left' = LeftValue.to_expr n_left @> md in
     if LeftValue.generated n_left then
-      let n_pattern_s = normalize_assignment_pattern ctx' n_left' pattern in
+      let ctx'' = { ctx with curr_stmt = AssignSimple } in
+      let n_pattern_s = normalize_assignment_pattern ctx'' n_left' pattern in
       (n_pattern_s, n_left)
     else ([], n_left)
 
@@ -1138,13 +1143,14 @@ and normalize_catch_param (ctx : Ctx.t) :
     (Loc.t, Loc.t) Flow.Pattern.t option -> stmt list * id option = function
   | None -> ([], None)
   | Some ((loc, _) as pattern) ->
-    let ctx' = { ctx with curr_lval = leftvalue_ctx ctx pattern } in
     let md = normalize_location loc in
-    let n_param = get_lval_ctx ctx' md in
+    let ctx' = { ctx with curr_lval = leftvalue_ctx ctx pattern } in
+    let n_param = get_lval_ctx ~prevent_fresh:true ctx' md in
     let n_param' = LeftValue.to_expr n_param @> md in
     let n_param_id = Identifier.of_lval n_param in
     if LeftValue.generated n_param then
-      let n_pattern_s = normalize_assignment_pattern ctx' n_param' pattern in
+      let ctx'' = { ctx with curr_stmt = AssignSimple } in
+      let n_pattern_s = normalize_assignment_pattern ctx'' n_param' pattern in
       (n_pattern_s, Some n_param_id)
     else ([], Some n_param_id)
 
@@ -1367,7 +1373,7 @@ and normalize_alias_wrapper (ctx : Ctx.t) (md : md) (wrapped_f : lval -> n_stmt)
 
 and normalize_function (ctx : Ctx.t) (md : md)
     (func : (Loc.t, Loc.t) Flow.Function.t) (n_left : lval) : n_stmt =
-  let (n_params_s, n_params) = normalize_function_param_list ctx func.params in
+  let (n_params_s, n_params) = normalize_function_param_list !ctx func.params in
   let n_body_s = normalize_function_body ctx func.body in
   let n_body_s' = List.flatten n_params_s @ n_body_s in
   let (async, gen) = (func.async, func.generator) in
@@ -1385,13 +1391,15 @@ and normalize_function_param (ctx : Ctx.t)
     ((loc, param) : (Loc.t, Loc.t) Flow.Function.Param.t) : n_id =
   let md = normalize_location loc in
   let ctx' = { ctx with curr_lval = leftvalue_ctx ctx param.argument } in
-  let n_param = get_lval_ctx ctx' md in
+  let n_param = get_lval_ctx ~prevent_fresh:true ctx' md in
   let n_param' = LeftValue.to_expr n_param @> md in
   let n_param_id = Identifier.of_lval n_param in
   let normalize_dflt_f = normalize_default_value ctx n_param in
   let n_dflt_s = Option.fold ~none:[] ~some:normalize_dflt_f param.default in
   if LeftValue.generated n_param then
-    let n_pattern_s = normalize_assignment_pattern ctx n_param' param.argument in
+    let argument = param.argument in
+    let ctx'' = { ctx with curr_stmt = AssignSimple } in
+    let n_pattern_s = normalize_assignment_pattern ctx'' n_param' argument in
     (n_dflt_s @ n_pattern_s, n_param_id)
   else (n_dflt_s, n_param_id)
 

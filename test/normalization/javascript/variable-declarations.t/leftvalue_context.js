@@ -34,9 +34,9 @@ const foo8 = new bar(10 + 20, "abc" + "def");
 var foo = bar(10 + 20, "abc" + "def");
 // function call assignment with expression evaluation (const)
 const foo9 = bar(10 + 20, "abc" + "def");
-// optional call assignment with expression evaluation
+// optional function call assignment with expression evaluation
 var foo = bar?.(10 + 20, "abc" + "def");
-// optional call assignment with expression evaluation (const)
+// optional function call assignment with expression evaluation (const)
 const foo10 = bar?.(10 + 20, "abc" + "def");
 // tag template assignment with expression evaluation
 var foo = (10 + 20)`${"abc" + "def"}`;
