@@ -99,7 +99,6 @@ let generate (mode : Analysis_mode.t) (path : Fpath.t) : t =
   let path' = Fpath.to_string path in
   let main_path = find_main_file mode path' in
   let structure = generate_structure mode main_path in
-  Log.debug "%s" structure;
   create (Json.from_string structure)
 
 let equal (dt1 : t) (dt2 : t) : bool = compare dt1 dt2 == 0

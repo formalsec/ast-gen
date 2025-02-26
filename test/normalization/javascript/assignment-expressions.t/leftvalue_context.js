@@ -16,7 +16,7 @@ foo = {}.bar + {}.baz;
 foo = new bar(10 + 20, "abc" + "def");
 // function call assignment with expression evaluation
 foo = bar(10 + 20, "abc" + "def");
-// optional call assignment with expression evaluation
+// optional function call assignment with expression evaluation
 foo = bar?.(10 + 20, "abc" + "def");
 // tag template assignment with expression evaluation
 foo = (10 + 20)`${"abc" + "def"}`;

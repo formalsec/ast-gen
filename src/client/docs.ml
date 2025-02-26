@@ -115,8 +115,7 @@ end
 module DependenciesOpts = struct
   let absolute_dependency_paths =
     let doc = "Outputs the dependency tree using absolute paths." in
-    let docs = Manpage.s_common_options in
-    Arg.(value & flag & info [ "abs-dep-paths" ] ~doc ~docs)
+    Arg.(value & flag & info [ "abs-dep-paths" ] ~doc)
 end
 
 module DependenciesCmd = struct
@@ -145,6 +144,16 @@ module ParseOpts = struct
        functions that were exported by the 'main' file of the module." in
     let modes = Arg.enum Enums.AnalysisMode.(args all) in
     Arg.(value & opt modes SingleFile & info [ "mode" ] ~docv ~doc)
+
+  let always_fresh =
+    let doc =
+      "Always generates a fresh variable when evaluating the result of an \
+       expression. During assignments, the normalizer defaults to storing the \
+       result of simple expressions directly into the left-hand side variable. \
+       Enabling this flag prevents this behavior, ensuring that a fresh \
+       variable is always created and then assigned to the left-hand side of \
+       the original assignment." in
+    Arg.(value & flag & info [ "always-fresh" ] ~doc)
 
   let disable_hoisting =
     let doc =
