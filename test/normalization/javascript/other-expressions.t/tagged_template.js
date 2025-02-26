@@ -1,6 +1,6 @@
-// tagged template with no quasi expressions (single line)
+// tagged template with no quasi expressions (single-line)
 foo`abc`;
-// tagged template with no quasi expressions (multiline)
+// tagged template with no quasi expressions (multi-line)
 foo`abc
  def`;
 // tagged template with a single quasi expression

@@ -1,4 +1,2 @@
-// variable identifier
-foo;
-// this identifier
-this;
+foo;        // variable identifier
+this;       // this identifier

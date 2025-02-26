@@ -1,3 +1,5 @@
+// array pattern with no elements
+[] = [];
 // array pattern with a single element
 [foo] = [];
 // array pattern with multiple elements

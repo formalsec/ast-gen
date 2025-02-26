@@ -1,7 +1,7 @@
   $ graphjs parse sequence.js
   "abc";
   true;
-  let $v1 = 10 * 10.1;
+  let $v1 = 10 * 20;
   let $v2 = "abc" + "def";
   let $v3 = true && true;
   if ($v3) {

@@ -10,5 +10,7 @@ foo = true ? 10 : "abc";
 foo = ++bar;
 // assignment expression with a postfix update operator
 foo = bar++;
+// assignment expression with a prefix member update operator
+foo = --bar[baz];
 // assignment expression with a postfix member update operator
-foo = obj[bar]++;
+foo = bar[baz]++;

@@ -22,7 +22,8 @@
   $v6[30n] = true;
   $v6;
   let $v7 = {};
-  $v7["foo"] = 10;
+  let $v8 = 10 + "abc";
+  $v7[$v8] = true;
   $v7;
 
   $ graphjs parse array.js
@@ -49,6 +50,10 @@
   $v7[0] = 10;
   $v7[1] = "abc";
   $v7;
+  let $v8 = [];
+  let $v9 = 10 + "abc";
+  $v8[0] = $v9;
+  $v8;
 
   $ graphjs parse method.js
   let $v1 = {};
@@ -97,7 +102,7 @@
   let $v18 = Object.defineProperty($v15, foo, $v17);
   $v15;
   let $v19 = {};
-  let $v20 = function (bar) {
+  let $v20 = function (x) {
     
   }
   let $v21 = {};
@@ -106,7 +111,7 @@
   let $v22 = Object.defineProperty($v19, "foo", $v21);
   $v19;
   let $v23 = {};
-  let $v24 = function (bar) {
+  let $v24 = function (x) {
     
   }
   let $v25 = {};
@@ -115,7 +120,7 @@
   let $v26 = Object.defineProperty($v23, 10, $v25);
   $v23;
   let $v27 = {};
-  let $v28 = function (bar) {
+  let $v28 = function (x) {
     
   }
   let $v29 = {};
@@ -127,17 +132,21 @@
   let $v32 = function () {
     
   }
-  let $v33 = {};
-  $v33.get = $v32;
-  $v33.configurable = true;
-  let $v34 = Object.defineProperty($v31, "foo", $v33);
-  let $v35 = function (bar) {
+  $v31.foo = $v32;
+  let $v33 = function () {
     
   }
-  let $v36 = {};
-  $v36.set = $v35;
-  $v36.configurable = true;
-  let $v37 = Object.defineProperty($v31, "foo", $v36);
+  let $v34 = {};
+  $v34.get = $v33;
+  $v34.configurable = true;
+  let $v35 = Object.defineProperty($v31, "bar", $v34);
+  let $v36 = function (x) {
+    
+  }
+  let $v37 = {};
+  $v37.set = $v36;
+  $v37.configurable = true;
+  let $v38 = Object.defineProperty($v31, "baz", $v37);
   $v31;
 
   $ graphjs parse member.js

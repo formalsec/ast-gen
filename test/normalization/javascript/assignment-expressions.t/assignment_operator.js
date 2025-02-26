@@ -1,30 +1,30 @@
-// Plus assignment operator
+// arithmetic plus assignment operator
 foo += 10;
-// Minus assignment operator
+// arithmetic minus assignment operator
 foo -= 10;
-// Mult assignment operator
+// arithmetic multiplication assignment operator
 foo *= 10;
-// Div assignment operator
+// arithmetic division assignment operator
 foo /= 10;
-// Mod assignment operator
+// arithmetic modulus assignment operator
 foo %= 10;
-// Exp assignment operator
+// arithmetic exponentiation assignment operator
 foo **= 10;
-// BitwiseAnd assignment operator
+// bitwise and assignment operator
 foo &= 10;
-// BitwiseOr assignment operator
+// bitwise or assignment operator
 foo |= 10;
-// BitwiseXor assignment operator
+// bitwise xor assignment operator
 foo ^= 10;
-// ShiftLeft assignment operator
+// bitwise left shift assignment operator
 foo <<= 10;
-// ShiftRight assignment operator
+// bitwise right shift assignment operator
 foo >>= 10;
-// ShiftRightLogical assignment operator
+// bitwise logical left shift assignment operator
 foo >>>= 10;
-// LogicalAnd assignment operator
+// logical and assignment operator
 foo &&= 10;
-// LogicalOr assignment operator
+// logical or assignment operator
 foo ||= 10;
-// NullishCoalesce assignment operator
+// nullish coalesce assignment operator
 foo ??= 10;

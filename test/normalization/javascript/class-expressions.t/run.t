@@ -165,7 +165,7 @@
   }
   let $v34 = $v33.prototype;
   $v34.constructor = $v33;
-  let $v35 = function (bar) {
+  let $v35 = function (x) {
     
   }
   let $v36 = {};
@@ -177,7 +177,7 @@
   }
   let $v39 = $v38.prototype;
   $v39.constructor = $v38;
-  let $v40 = function (bar) {
+  let $v40 = function (x) {
     
   }
   let $v41 = {};
@@ -189,7 +189,7 @@
   }
   let $v44 = $v43.prototype;
   $v44.constructor = $v43;
-  let $v45 = function (bar) {
+  let $v45 = function (x) {
     
   }
   let $v46 = {};
@@ -201,7 +201,7 @@
   }
   let $v49 = $v48.prototype;
   $v49.constructor = $v48;
-  let $v50 = function (bar) {
+  let $v50 = function (x) {
     
   }
   let $v51 = {};
@@ -216,36 +216,44 @@
   let $v55 = function () {
     
   }
-  let $v56 = {};
-  $v56.get = $v55;
-  $v56.configurable = true;
-  let $v57 = Object.defineProperty($v54, "foo", $v56);
-  let $v58 = function (bar) {
+  $v54.foo = $v55;
+  let $v56 = function () {
     
   }
-  let $v59 = {};
-  $v59.set = $v58;
-  $v59.configurable = true;
-  let $v60 = Object.defineProperty($v54, "foo", $v59);
-  let $v61 = function () {
+  let $v57 = {};
+  $v57.get = $v56;
+  $v57.configurable = true;
+  let $v58 = Object.defineProperty($v54, "bar", $v57);
+  let $v59 = function (x) {
     
   }
-  let $v62 = $v61.prototype;
-  $v62.constructor = $v61;
-  let $v63 = function () {
+  let $v60 = {};
+  $v60.set = $v59;
+  $v60.configurable = true;
+  let $v61 = Object.defineProperty($v54, "baz", $v60);
+  let $v62 = function () {
     
   }
-  let $v64 = {};
-  $v64.get = $v63;
-  $v64.configurable = true;
-  let $v65 = Object.defineProperty($v61, "foo", $v64);
-  let $v66 = function (bar) {
+  let $v63 = $v62.prototype;
+  $v63.constructor = $v62;
+  let $v64 = function () {
     
   }
-  let $v67 = {};
-  $v67.set = $v66;
-  $v67.configurable = true;
-  let $v68 = Object.defineProperty($v61, "foo", $v67);
+  $v62.foo = $v64;
+  let $v65 = function () {
+    
+  }
+  let $v66 = {};
+  $v66.get = $v65;
+  $v66.configurable = true;
+  let $v67 = Object.defineProperty($v62, "bar", $v66);
+  let $v68 = function (x) {
+    
+  }
+  let $v69 = {};
+  $v69.set = $v68;
+  $v69.configurable = true;
+  let $v70 = Object.defineProperty($v62, "baz", $v69);
 
   $ graphjs parse extends.js
   let $v1 = function () {

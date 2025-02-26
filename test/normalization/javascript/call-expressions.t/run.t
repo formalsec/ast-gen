@@ -30,27 +30,26 @@
   let $v3 = foo.bar(10, "abc", true);
   let $v4 = 10 + "abc";
   let $v5 = foo.bar($v4);
-  let $v6 = foo[bar](10);
-  let $v7 = 10 + "abc";
-  let $v8 = foo[$v7](true);
-  let $v9 = foo.bar;
-  let $v10 = $v9;
-  let $v11 = undefined;
-  let $v12 = $v9 !== null;
-  let $v13 = $v9 !== undefined;
-  let $v14 = $v12 && $v13;
-  if ($v14) {
-    $v11 = $v10(10);
+  let $v6 = 10 + "abc";
+  let $v7 = foo[$v6](true);
+  let $v8 = foo.bar;
+  let $v9 = $v8;
+  let $v10 = undefined;
+  let $v11 = $v8 !== null;
+  let $v12 = $v8 !== undefined;
+  let $v13 = $v11 && $v12;
+  if ($v13) {
+    $v10 = $v9(10);
   }
-  let $v15 = foo.bar;
-  let $v16 = $v15;
-  let $v18 = undefined;
-  let $v19 = $v15 !== null;
-  let $v20 = $v15 !== undefined;
-  let $v21 = $v19 && $v20;
-  if ($v21) {
-    let $v17 = 10 + "abc";
-    $v18 = $v16($v17);
+  let $v14 = foo.bar;
+  let $v15 = $v14;
+  let $v17 = undefined;
+  let $v18 = $v14 !== null;
+  let $v19 = $v14 !== undefined;
+  let $v20 = $v18 && $v19;
+  if ($v20) {
+    let $v16 = 10 + "abc";
+    $v17 = $v15($v16);
   }
 
   $ graphjs parse new.js
