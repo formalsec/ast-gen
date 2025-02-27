@@ -29,10 +29,15 @@ module Env = struct
   type t =
     { always_fresh : bool
     ; disable_hoisting : bool
+    ; disable_defaults : bool
     }
 
   let default =
-    let dflt = { always_fresh = false; disable_hoisting = false } in
+    let dflt =
+      { always_fresh = false
+      ; disable_hoisting = false
+      ; disable_defaults = false
+      } in
     fun () -> dflt
 end
 
@@ -462,16 +467,18 @@ and normalize_not_null_or_undef (md : md) (n_arg : expr) (n_cnsq_s : n_stmt)
 
 and normalize_default_value (ctx : Ctx.t) (n_left : lval)
     ((loc, _) as dflt : (Loc.t, Loc.t) Flow.Expression.t) : n_stmt =
-  let md = normalize_location loc in
-  let n_left' = LeftValue.to_expr n_left @> md in
-  let n_undef = Identifier.undefined_expr () @> md in
-  let n_test = LeftValue.random () @> md in
-  let n_test' = LeftValue.to_expr n_test @> md in
-  let n_test_s = Binopt.create_stmt StrictEqual n_test n_left' n_undef @> md in
-  let (n_dflt_s, n_dflt) = normalize_expr !ctx dflt in
-  let n_adflt_s = [ Assignment.create_stmt n_left n_dflt @> md ] in
-  let n_check_s = If.create_stmt n_test' (n_dflt_s @ n_adflt_s) None @> md in
-  [ n_test_s; n_check_s ]
+  if not ctx.env.disable_defaults then
+    let md = normalize_location loc in
+    let n_left' = LeftValue.to_expr n_left @> md in
+    let n_undef = Identifier.undefined_expr () @> md in
+    let n_test = LeftValue.random () @> md in
+    let n_test' = LeftValue.to_expr n_test @> md in
+    let n_test_s = Binopt.create_stmt StrictEqual n_test n_left' n_undef @> md in
+    let (n_dflt_s, n_dflt) = normalize_expr !ctx dflt in
+    let n_adflt_s = [ Assignment.create_stmt n_left n_dflt @> md ] in
+    let n_check_s = If.create_stmt n_test' (n_dflt_s @ n_adflt_s) None @> md in
+    [ n_test_s; n_check_s ]
+  else []
 
 and normalize_assignment_expr (ctx : Ctx.t) (_ : Loc.t)
     (assign : (Loc.t, Loc.t) Flow.Expression.Assignment.t) : n_expr =

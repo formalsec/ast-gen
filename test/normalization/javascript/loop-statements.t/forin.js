@@ -19,10 +19,10 @@ for (foo.bar in baz) x;
 // for-in with a dynamic property access left-handside
 for (foo[bar] in baz) x;
 // for-in statement with an object pattern left-handside
-for ({ foo, bar } of qux) x;
+for ({ foo, bar } in qux) x;
 // for-in statement with an object pattern left-handside with default values
-for ({ foo = 10, bar = { baz: "abc" } } of qux) x;
+for ({ foo = 10, bar = { baz: "abc" } } in qux) x;
 // for-in statement with an array pattern left-handside
-for ([foo, bar] of qux) x;
+for ([foo, bar] in qux) x;
 // for-in statement with an array pattern left-handside with default values
-for ([foo = 10, bar = ["abc", true]] of qux) x;
+for ([foo = 10, bar = ["abc", true]] in qux) x;
