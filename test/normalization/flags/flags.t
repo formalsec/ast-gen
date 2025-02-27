@@ -63,3 +63,100 @@ Flag for disabling function hoisting
   var bar = function () {
     
   }
+
+
+
+Flag for disabling default values
+  $ graphjs parse disable_defaults.js
+  let $v1 = {};
+  var foo = $v1.foo;
+  let $v2 = foo === undefined;
+  if ($v2) {
+    foo = 10;
+  }
+  var bar = $v1.bar;
+  let $v3 = bar === undefined;
+  if ($v3) {
+    bar = "abc";
+  }
+  let $v4 = [];
+  var foo = $v4[0];
+  let $v5 = foo === undefined;
+  if ($v5) {
+    foo = 10;
+  }
+  var bar = $v4[1];
+  let $v6 = bar === undefined;
+  if ($v6) {
+    bar = "abc";
+  }
+  for (let $v7 in qux) {
+    foo = $v7.foo;
+    let $v8 = foo === undefined;
+    if ($v8) {
+      foo = 10;
+    }
+    bar = $v7.bar;
+    let $v9 = bar === undefined;
+    if ($v9) {
+      let $v10 = {};
+      $v10.baz = "abc";
+      bar = $v10;
+    }
+  }
+  for (let $v11 of qux) {
+    foo = $v11.foo;
+    let $v12 = foo === undefined;
+    if ($v12) {
+      foo = 10;
+    }
+    bar = $v11.bar;
+    let $v13 = bar === undefined;
+    if ($v13) {
+      let $v14 = {};
+      $v14.baz = "abc";
+      bar = $v14;
+    }
+  }
+  let $v15 = function (foo, bar) {
+    let $v16 = foo === undefined;
+    if ($v16) {
+      foo = 10;
+    }
+    let $v17 = bar === undefined;
+    if ($v17) {
+      bar = "abc";
+    }
+  }
+  let $v18 = function (foo, bar) {
+    let $v19 = foo === undefined;
+    if ($v19) {
+      foo = 10;
+    }
+    let $v20 = bar === undefined;
+    if ($v20) {
+      bar = "abc";
+    }
+  }
+
+  $ graphjs parse disable_defaults.js --disable-defaults
+  let $v1 = {};
+  var foo = $v1.foo;
+  var bar = $v1.bar;
+  let $v2 = [];
+  var foo = $v2[0];
+  var bar = $v2[1];
+  for (let $v3 in qux) {
+    foo = $v3.foo;
+    bar = $v3.bar;
+  }
+  for (let $v4 of qux) {
+    foo = $v4.foo;
+    bar = $v4.bar;
+  }
+  let $v5 = function (foo, bar) {
+    
+  }
+  let $v6 = function (foo, bar) {
+    
+  }

@@ -160,9 +160,16 @@ module ParseOpts = struct
       "Disables function hoisting by treating hoisted functions as regular \
        function assignments instead of declarations. Enabling this flag may \
        reduce the complexity of the normalized code but will introduce \
-       normalization errors. Running the Test262 conformance test suite with \
-       this flag will result in test failures." in
+       normalization errors." in
     Arg.(value & flag & info [ "disable-hoisting" ] ~doc)
+
+  let disable_defaults =
+    let doc =
+      "Disables default value checking and assignment in destructuring \
+       assignments and function parameters. Enabling this flag may reduce the \
+       complexity of the normalized code but will introduce normalization \
+       errors." in
+    Arg.(value & flag & info [ "disable-defaults" ] ~doc)
 end
 
 module ParseCmd = struct

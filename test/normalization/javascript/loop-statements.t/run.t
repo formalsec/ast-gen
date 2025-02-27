@@ -218,12 +218,12 @@
     foo[bar] = $v3;
     x;
   }
-  for (let $v4 of qux) {
+  for (let $v4 in qux) {
     foo = $v4.foo;
     bar = $v4.bar;
     x;
   }
-  for (let $v5 of qux) {
+  for (let $v5 in qux) {
     foo = $v5.foo;
     let $v6 = foo === undefined;
     if ($v6) {
@@ -238,12 +238,12 @@
     }
     x;
   }
-  for (let $v9 of qux) {
+  for (let $v9 in qux) {
     foo = $v9[0];
     bar = $v9[1];
     x;
   }
-  for (let $v10 of qux) {
+  for (let $v10 in qux) {
     foo = $v10[0];
     let $v11 = foo === undefined;
     if ($v11) {
