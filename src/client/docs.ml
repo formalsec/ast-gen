@@ -170,6 +170,14 @@ module ParseOpts = struct
        complexity of the normalized code but will introduce normalization \
        errors." in
     Arg.(value & flag & info [ "disable-defaults" ] ~doc)
+
+  let disable_short_circuit =
+    let doc =
+      "Disables short-circuit evaluation of the logical AND, OR, and Nullish \
+       Coalescence operators, treating them as standard binary operations \
+       instead. Enabling this flag may reduce the complexity of the normalized \
+       code but will introduce normalization errors." in
+    Arg.(value & flag & info [ "disable-short-circuit" ] ~doc)
 end
 
 module ParseCmd = struct
