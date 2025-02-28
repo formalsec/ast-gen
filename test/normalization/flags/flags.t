@@ -160,3 +160,48 @@ Flag for disabling default values
   let $v6 = function (foo, bar) {
     
   }
+
+
+
+Flag for disabling logical operator evaluation with short circuit
+  $ graphjs parse disable_short_circuit.js
+  let $v1 = true && true;
+  if ($v1) {
+    $v1 = false && true;
+  }
+  $v1;
+  let $v2 = true && true;
+  if ($v2) {
+    $v2 = false && true;
+  }
+  let $v3 = $v2 && true;
+  if ($v3) {
+    $v3 = true && true;
+  }
+  $v3;
+  let $v4 = true && false;
+  if ($v4) {
+    
+  } else {
+    $v4 = false && false;
+  }
+  $v4;
+  let $v5 = 10;
+  let $v6 = 10 === null;
+  let $v7 = 10 === undefined;
+  let $v8 = $v6 || $v7;
+  if ($v8) {
+    $v5 = "abc";
+  }
+  $v5;
+
+  $ graphjs parse disable_short_circuit.js --disable-short-circuit
+  let $v1 = true && false;
+  $v1;
+  let $v2 = true && false;
+  let $v3 = $v2 && true;
+  $v3;
+  let $v4 = true || false;
+  $v4;
+  let $v5 = 10 ?? "abc";
+  $v5;

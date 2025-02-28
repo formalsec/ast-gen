@@ -30,6 +30,7 @@ module Env = struct
     { always_fresh : bool
     ; disable_hoisting : bool
     ; disable_defaults : bool
+    ; disable_short_circuit : bool
     }
 
   let default =
@@ -37,6 +38,7 @@ module Env = struct
       { always_fresh = false
       ; disable_hoisting = false
       ; disable_defaults = false
+      ; disable_short_circuit = false
       } in
     fun () -> dflt
 end
@@ -630,23 +632,30 @@ and normalize_unopt_delete_expr (ctx : Ctx.t) (loc : Loc.t)
 
 and normalize_binary_expr (ctx : Ctx.t) (loc : Loc.t)
     (binary : (Loc.t, Loc.t) Flow.Expression.Binary.t) : n_expr =
+  let n_op = translate_binary binary.operator in
+  normalize_binopt_expr ctx loc n_op binary.left binary.right
+
+and normalize_binopt_expr (ctx : Ctx.t) (loc : Loc.t) (n_op : Operator.binary)
+    (arg1 : (Loc.t, Loc.t) Flow.Expression.t)
+    (arg2 : (Loc.t, Loc.t) Flow.Expression.t) : n_expr =
   let md = normalize_location loc in
-  let binopt = translate_binary binary.operator in
-  let (n_arg1_s, n_arg1) = normalize_expr !ctx binary.left in
-  let (n_arg2_s, n_arg2) = normalize_expr !ctx binary.right in
+  let (n_arg1_s, n_arg1) = normalize_expr !ctx arg1 in
+  let (n_arg2_s, n_arg2) = normalize_expr !ctx arg2 in
   let n_left = get_lval_ctx ctx md in
   let n_left' = LeftValue.to_expr n_left @> md in
-  let n_assign_s = Binopt.create_stmt binopt n_left n_arg1 n_arg2 @> md in
+  let n_assign_s = Binopt.create_stmt n_op n_left n_arg1 n_arg2 @> md in
   (n_arg1_s @ n_arg2_s @ [ n_assign_s ], n_left')
 
 and normalize_logical_expr (ctx : Ctx.t) (loc : Loc.t)
     (logical : (Loc.t, Loc.t) Flow.Expression.Logical.t) : n_expr =
-  match logical.operator with
-  | And -> normalize_logical_sc_and_expr ctx loc logical
-  | Or -> normalize_logical_sc_or_expr ctx loc logical
-  | NullishCoalesce -> normalize_sc_nullish_coalesce_expr ctx loc logical
+  let n_op = translate_logic logical.operator in
+  match (ctx.env.disable_short_circuit, logical.operator) with
+  | (true, _) -> normalize_binopt_expr ctx loc n_op logical.left logical.right
+  | (false, And) -> normalize_logical_and_expr ctx loc logical
+  | (false, Or) -> normalize_logical_or_expr ctx loc logical
+  | (false, NullishCoalesce) -> normalize_nullish_coalesce_expr ctx loc logical
 
-and normalize_logical_sc_and_expr (ctx : Ctx.t) (loc : Loc.t)
+and normalize_logical_and_expr (ctx : Ctx.t) (loc : Loc.t)
     (logical : (Loc.t, Loc.t) Flow.Expression.Logical.t) : n_expr =
   let md = normalize_location loc in
   let n_tr = Literal.(to_expr @@ boolean true) @> md in
@@ -661,7 +670,7 @@ and normalize_logical_sc_and_expr (ctx : Ctx.t) (loc : Loc.t)
   let n_test_s = If.create_stmt n_left' n_cnsq None @> md in
   (n_arg1_s @ n_left_s @ [ n_test_s ], n_left')
 
-and normalize_logical_sc_or_expr (ctx : Ctx.t) (loc : Loc.t)
+and normalize_logical_or_expr (ctx : Ctx.t) (loc : Loc.t)
     (logical : (Loc.t, Loc.t) Flow.Expression.Logical.t) : n_expr =
   let md = normalize_location loc in
   let n_fls = Literal.(to_expr @@ boolean false) @> md in
@@ -676,7 +685,7 @@ and normalize_logical_sc_or_expr (ctx : Ctx.t) (loc : Loc.t)
   let n_test_s = If.create_stmt n_left' [] (Some n_altr) @> md in
   (n_arg1_s @ n_left_s @ [ n_test_s ], n_left')
 
-and normalize_sc_nullish_coalesce_expr (ctx : Ctx.t) (loc : Loc.t)
+and normalize_nullish_coalesce_expr (ctx : Ctx.t) (loc : Loc.t)
     (logical : (Loc.t, Loc.t) Flow.Expression.Logical.t) : n_expr =
   let md = normalize_location loc in
   let (n_arg1_s, n_arg1) = normalize_expr !ctx logical.left in
