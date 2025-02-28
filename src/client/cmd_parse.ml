@@ -11,6 +11,7 @@ module Options = struct
     ; disable_hoisting : bool
     ; disable_defaults : bool
     ; disable_short_circuit : bool
+    ; disable_aliases : bool
     ; deps_env : Cmd_dependencies.Options.env
     }
 
@@ -22,13 +23,14 @@ module Options = struct
 
   let env (mode : Analysis_mode.t) (always_fresh : bool)
       (disable_hoisting : bool) (disable_defaults : bool)
-      (disable_short_circuit : bool) (deps_env : Cmd_dependencies.Options.env) :
-      env =
+      (disable_short_circuit : bool) (disable_aliases : bool)
+      (deps_env : Cmd_dependencies.Options.env) : env =
     { mode
     ; always_fresh
     ; disable_hoisting
     ; disable_defaults
     ; disable_short_circuit
+    ; disable_aliases
     ; deps_env
     }
 
@@ -68,6 +70,7 @@ let normalizer_env (env : Options.env) : Normalizer.Env.t =
   ; disable_hoisting = env.disable_hoisting
   ; disable_defaults = env.disable_defaults
   ; disable_short_circuit = env.disable_short_circuit
+  ; disable_aliases = env.disable_aliases
   }
 
 let normalize_program_modules (env : Normalizer.Env.t) (w : Workspace.t)

@@ -31,6 +31,7 @@ module Env = struct
     ; disable_hoisting : bool
     ; disable_defaults : bool
     ; disable_short_circuit : bool
+    ; disable_aliases : bool
     }
 
   let default =
@@ -39,6 +40,7 @@ module Env = struct
       ; disable_hoisting = false
       ; disable_defaults = false
       ; disable_short_circuit = false
+      ; disable_aliases = false
       } in
     fun () -> dflt
 end
@@ -1372,9 +1374,9 @@ and normalize_stmt (ctx : Ctx.t) : (Loc.t, Loc.t) Flow.Statement.t -> n_stmt =
 
 and normalize_alias_wrapper (ctx : Ctx.t) (md : md) (wrapped_f : lval -> n_stmt)
     (n_left : lval) (alias : (Loc.t, Loc.t) Flow.Identifier.t option) : n_stmt =
-  match alias with
-  | None -> wrapped_f n_left
-  | Some alias ->
+  match (ctx.env.disable_aliases, alias) with
+  | (true, _) | (false, None) -> wrapped_f n_left
+  | (false, Some alias) ->
     let n_alias_id = normalize_identifier ctx alias in
     let n_alias = LeftValue.of_identifier ~kind:Let n_alias_id in
     let n_alias' = LeftValue.to_expr n_alias @> md in
