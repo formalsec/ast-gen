@@ -46,6 +46,7 @@ let parse_env =
   $ Docs.ParseOpts.disable_hoisting
   $ Docs.ParseOpts.disable_defaults
   $ Docs.ParseOpts.disable_short_circuit
+  $ Docs.ParseOpts.disable_aliases
   $ dependencies_env
 
 let parse_opts =

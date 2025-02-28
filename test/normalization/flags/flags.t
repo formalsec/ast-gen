@@ -205,3 +205,50 @@ Flag for disabling logical operator evaluation with short circuit
   $v4;
   let $v5 = 10 ?? "abc";
   $v5;
+
+
+
+Flag for disabling function and class aliases
+  $ graphjs parse disable_aliases.js
+  var foo = function () {
+    
+  }
+  let $v1 = function () {
+    let bar = function () {
+      
+    }
+    return bar;
+  }
+  var foo = $v1();
+  var Foo = function () {
+    
+  }
+  let $v2 = Foo.prototype;
+  $v2.constructor = Foo;
+  let $v4 = function () {
+    let Bar = function () {
+      
+    }
+    let $v3 = Bar.prototype;
+    $v3.constructor = Bar;
+    return Bar;
+  }
+  var Foo = $v4();
+
+  $ graphjs parse disable_aliases.js --disable-aliases
+  var foo = function () {
+    
+  }
+  var foo = function () {
+    
+  }
+  var Foo = function () {
+    
+  }
+  let $v1 = Foo.prototype;
+  $v1.constructor = Foo;
+  var Foo = function () {
+    
+  }
+  let $v2 = Foo.prototype;
+  $v2.constructor = Foo;

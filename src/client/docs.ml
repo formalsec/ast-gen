@@ -178,6 +178,13 @@ module ParseOpts = struct
        instead. Enabling this flag may reduce the complexity of the normalized \
        code but will introduce normalization errors." in
     Arg.(value & flag & info [ "disable-short-circuit" ] ~doc)
+
+  let disable_aliases =
+    let doc =
+      "Disables function and class aliases during assignment expressions. \
+       Enabling this flag may reduce the complexity of the normalized code but \
+       will introduce normalization errors." in
+    Arg.(value & flag & info [ "disable-aliases" ] ~doc)
 end
 
 module ParseCmd = struct
