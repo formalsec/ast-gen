@@ -349,12 +349,11 @@ and pp_binopt_op (ppf : Fmt.t) (op : Operator.binary) : unit =
 let pp_file (ppf : Fmt.t) (file : 'm Ast.File.t) : unit =
   Fmt.fmt ppf "%a" Fmt.(pp_lst !>"@\n" pp_stmt) file
 
-let pp_prog_file ?(filename : bool = false) (ppf : Fmt.t)
+let pp_prog_file ?(filename = false) (ppf : Fmt.t)
     ((path, file) : Fpath.t * 'm Ast.File.t) : unit =
   let pp_path ppf = Font.fmt Config.(!path_font) ppf "File \"%a\"@\n" Fpath.pp in
   let pp_path' ppf = if filename then pp_path ppf else Fmt.pp_none ppf in
   Fmt.fmt ppf "%a%a" pp_path' path pp_file file
 
-let pp_prog ?(filename : bool = false) (ppf : Fmt.t) (prog : 'm Ast.Prog.t) :
-    unit =
+let pp_prog ?(filename = false) (ppf : Fmt.t) (prog : 'm Ast.Prog.t) : unit =
   Fmt.(pp_htbl !>"@\n@\n" (pp_prog_file ~filename)) ppf prog

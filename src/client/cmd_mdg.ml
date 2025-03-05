@@ -8,8 +8,8 @@ open Result
 module Options = struct
   type env =
     { taint_config : Fpath.t
+    ; unsafe_literal_properties : bool
     ; export_svg : bool
-    ; wrap_literal_property_updates : bool
     ; parse_env : Cmd_parse.Options.env
     }
 
@@ -24,12 +24,11 @@ module Options = struct
     | Some taint_config' -> taint_config'
     | None -> Properties.default_taint_config ()
 
-  let env (taint_config' : Fpath.t option) (no_svg : bool)
-      (no_literal_prop_wrap : bool) (parse_env : Cmd_parse.Options.env) : env =
+  let env (taint_config' : Fpath.t option) (unsafe_literal_properties : bool)
+      (no_svg : bool) (parse_env : Cmd_parse.Options.env) : env =
     let taint_config = parse_taint_config taint_config' in
     let export_svg = not no_svg in
-    let wrap_literal_property_updates = not no_literal_prop_wrap in
-    { taint_config; export_svg; wrap_literal_property_updates; parse_env }
+    { taint_config; unsafe_literal_properties; export_svg; parse_env }
 
   let cmd (inputs : Fpath.t list) (output : Fpath.t option) (env : env) : t =
     { inputs; output; env }
@@ -37,9 +36,7 @@ end
 
 let set_temp_env (env : Options.env) : unit =
   (* FIXME: remove in favor of env structures *)
-  Builder_config.(export_svg := env.export_svg);
-  Builder_config.(
-    wrap_literal_property_updates := env.wrap_literal_property_updates )
+  Builder_config.(export_svg := env.export_svg)
 
 module Workspace = struct
   include Workspace
@@ -123,6 +120,9 @@ let mdg_builder (builder : State.t) (file : 'm File.t) () : Mdg.t =
 
 let mdg_merger (merger : Merger.t) () : Mdg.t = Merger.merge_entries merger
 
+let builder_env (env : Options.env) : State.Env.t =
+  { unsafe_literal_properties = env.unsafe_literal_properties }
+
 let read_taint_config (env : Options.env) (w : Workspace.t) :
     Taint_config.t Exec.status =
   let* tc = Exec.graphjs (taint_config env.taint_config) in
@@ -151,7 +151,8 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   set_temp_env env;
   let* (dt, prog) = Cmd_parse.run env.parse_env (Workspace.side_perm w) input in
   let* tc = read_taint_config env w in
-  let builder = Builder.initialize_builder tc in
+  let builder_env = builder_env env in
+  let builder = Builder.initialize_builder ~env:builder_env tc in
   let* mdgs = Result.extract (build_program_mdgs env w dt builder prog) in
   let merger = Merger.create tc mdgs in
   merge_program_mdgs env w dt merger

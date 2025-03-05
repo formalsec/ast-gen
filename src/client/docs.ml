@@ -210,17 +210,17 @@ module MdgOpts = struct
     let parser = Fs.Parser.valid_file in
     Arg.(value & opt (some parser) None & info [ "config" ] ~docv ~doc)
 
+  let unsafe_literal_properties =
+    let doc =
+      "Builds the MDG without safety assurances for literal properties, such \
+       as preventing new versions from being created from literal objects. \
+       Enabling this flag may increase construction speed and reduce the graph \
+       size, but will introduce graph construction errors." in
+    Arg.(value & flag & info [ "unsafe-literal-properties" ] ~doc)
+
   let no_svg =
     let doc = "Run without generating the .svg graph representation." in
     Arg.(value & flag & info [ "no-svg" ] ~doc)
-
-  let no_literal_property_wrapping =
-    let doc =
-      "Builds the MDG without wrapping property updates on literal values in a \
-       new object node. Enabling this flag increases construction speed and \
-       reduces the graph size, but may introduce errors in the resulting graph \
-       and subsequent analysis." in
-    Arg.(value & flag & info [ "no-literal-property-wrapping" ] ~doc)
 end
 
 module MdgCmd = struct

@@ -7,8 +7,8 @@ type t =
   ; literal : Node.t
   ; jslib : Node.Set.t
   ; calls : Node.Set.t
-  ; requires : Node.Set.t
-  ; exported : Location.t
+  ; imports : Node.Set.t
+  ; exports : Node.Set.t
   }
 
 let create () : t =
@@ -18,9 +18,9 @@ let create () : t =
   let literal = Node.create_literal () in
   let jslib = Node.Set.empty in
   let calls = Node.Set.empty in
-  let requires = Node.Set.empty in
-  let exported = Location.invalid_loc () in
-  { nodes; edges; trans; literal; jslib; calls; requires; exported }
+  let imports = Node.Set.empty in
+  let exports = Node.Set.empty in
+  { nodes; edges; trans; literal; jslib; calls; imports; exports }
 
 let copy (mdg : t) : t =
   let nodes = Hashtbl.copy mdg.nodes in
@@ -53,7 +53,7 @@ let pp (ppf : Fmt.t) (mdg : t) : unit =
   let nodes' = List.sort Node.compare nodes in
   Fmt.(pp_lst !>"@\n" (pp_node mdg)) ppf nodes'
 
-let str (mdg : t) : string = Fmt.str "%a" pp mdg [@@inline]
+let str (mdg : t) : string = Fmt.str "%a" pp mdg
 
 let add_node (mdg : t) (node : Node.t) : unit =
   Hashtbl.replace mdg.nodes node.uid node;
@@ -73,16 +73,18 @@ let add_jslib (mdg : t) (node : Node.t) : t =
 let add_call (mdg : t) (node : Node.t) : t =
   { mdg with calls = Node.Set.add node mdg.calls }
 
-let add_requires (mdg : t) (node : Node.t) : t =
-  { mdg with requires = Node.Set.add node mdg.requires }
+let add_imports (mdg : t) (node : Node.t) : t =
+  { mdg with imports = Node.Set.add node mdg.imports }
 
-let set_exported (mdg : t) (node : Node.t) : t =
-  { mdg with exported = node.uid }
+let add_exports (mdg : t) (node : Node.t) : t =
+  { mdg with exports = Node.Set.add node mdg.exports }
 
 let remove_node_meta (mdg : t) (node : Node.t) : t =
   match node.kind with
   | Call _ -> { mdg with calls = Node.Set.remove node mdg.calls }
-  | Require _ -> { mdg with requires = Node.Set.remove node mdg.requires }
+  | Import _ -> { mdg with imports = Node.Set.remove node mdg.imports }
+  | _ when Node.Set.mem node mdg.exports ->
+    { mdg with exports = Node.Set.remove node mdg.exports }
   | _ -> mdg
 
 let remove_node (mdg : t) (node : Node.t) : t =
@@ -111,11 +113,9 @@ let remove_edge (mdg : t) (edge : Edge.t) : unit =
 let join (mdg1 : t) (mdg2 : t) : t =
   let jslib = Node.Set.union mdg1.jslib mdg2.jslib in
   let calls = Node.Set.union mdg1.calls mdg2.calls in
-  let requires = Node.Set.union mdg1.requires mdg2.requires in
-  let exported =
-    if mdg1.exported == Location.invalid_loc () then mdg2.exported
-    else mdg1.exported in
-  { mdg1 with jslib; calls; requires; exported }
+  let imports = Node.Set.union mdg1.imports mdg2.imports in
+  let exports = Node.Set.union mdg1.exports mdg2.exports in
+  { mdg1 with jslib; calls; imports; exports }
 
 let lub (mdg1 : t) (mdg2 : t) : t =
   Fun.flip Hashtbl.iter mdg2.edges (fun loc edges2 ->
@@ -136,38 +136,38 @@ let get_dependencies (mdg : t) (node : Node.t) : Node.t list =
   |> Edge.Set.filter Edge.is_dependency
   |> Edge.Set.map_list Edge.tar
 
-let has_property (mdg : t) (node : Node.t) (prop : string option) : bool =
-  get_edges mdg node.uid |> Edge.Set.exists (Edge.is_property ~prop:(Some prop))
+let has_property (mdg : t) (node : Node.t) (prop : Property.t) : bool =
+  get_edges mdg node.uid |> Edge.Set.exists (Edge.is_property ~prop)
 
-let get_property (mdg : t) (node : Node.t) (prp : string option) : Node.t list =
+let get_property (mdg : t) (node : Node.t) (prop : Property.t) : Node.t list =
   get_edges mdg node.uid
-  |> Edge.Set.filter (Edge.is_property ~prop:(Some prp))
+  |> Edge.Set.filter (Edge.is_property ~prop)
   |> Edge.Set.map_list Edge.tar
 
-let get_properties (mdg : t) (node : Node.t) : (string option * Node.t) list =
+let get_properties (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
   get_edges mdg node.uid
   |> Edge.Set.filter Edge.is_property
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
-let object_of_property (mdg : t) (node : Node.t) : Node.t list =
+let get_property_owners (mdg : t) (node : Node.t) : Node.t list =
   get_trans mdg node.uid
   |> Edge.Set.filter Edge.is_property
   |> Edge.Set.map_list Edge.tar
 
-let get_versions (mdg : t) (node : Node.t) : (string option * Node.t) list =
+let get_versions (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
   get_edges mdg node.uid
   |> Edge.Set.filter Edge.is_version
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
-let get_parents (mdg : t) (node : Node.t) : (string option * Node.t) list =
+let get_parents (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
   get_trans mdg node.uid
   |> Edge.Set.filter Edge.is_version
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
 let get_parameter (mdg : t) (node : Node.t) (idx : int) : Node.t =
   get_edges mdg node.uid
-  |> Edge.Set.filter (Edge.is_parameter ~idx:(Some idx))
-  |> Edge.Set.choose
+  |> Edge.Set.filter (Edge.is_parameter ~idx)
+  |> Edge.Set.choose (* functions can only have a single parameter per index *)
   |> Edge.tar
 
 let get_parameters (mdg : t) (node : Node.t) : (int * Node.t) list =
@@ -177,7 +177,7 @@ let get_parameters (mdg : t) (node : Node.t) : (int * Node.t) list =
 
 let get_argument (mdg : t) (node : Node.t) (idx : int) : Node.t list =
   get_trans mdg node.uid
-  |> Edge.Set.filter (Edge.is_argument ~idx:(Some idx))
+  |> Edge.Set.filter (Edge.is_argument ~idx)
   |> Edge.Set.map_list Edge.tar
 
 let get_arguments (mdg : t) (node : Node.t) : (int * Node.t) list =
@@ -187,24 +187,24 @@ let get_arguments (mdg : t) (node : Node.t) : (int * Node.t) list =
 
 let get_called_functions (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.uid
-  |> Edge.Set.filter Edge.is_call
+  |> Edge.Set.filter Edge.is_caller
   |> Edge.Set.map_list Edge.tar
 
 let get_return_of_call (mdg : t) (node : Node.t) : Node.t =
   get_edges mdg node.uid
-  |> Edge.Set.filter Edge.is_return
-  |> Edge.Set.choose
+  |> Edge.Set.filter Edge.is_dependency
+  |> Edge.Set.choose (* calls can only have a single return *)
   |> Edge.tar
 
 let get_call_of_return (mdg : t) (node : Node.t) : Node.t =
   get_trans mdg node.uid
-  |> Edge.Set.filter Edge.is_return
-  |> Edge.Set.choose
+  |> Edge.Set.filter Edge.is_dependency
+  |> Edge.Set.choose (* returns can only have a single call *)
   |> Edge.tar
 
 let get_function_returns (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.uid
-  |> Edge.Set.filter Edge.is_returns
+  |> Edge.Set.filter Edge.is_return
   |> Edge.Set.map_list Edge.tar
 
 let object_parents_traversal (f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
@@ -214,14 +214,14 @@ let object_parents_traversal (f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
       else f (Node.Set.add l_parent ls_visited) l_parent acc )
 
 let object_lineage_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
-    (lineage_f : t -> Node.t -> (string option * Node.t) list)
+    (lineage_f : t -> Node.t -> (Property.t * Node.t) list)
     (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
   let no_lineage_f lineage = List.is_empty lineage in
   let rec_lineage_f node lineage = List.equal Node.equal [ node ] lineage in
   let rec traverse ls_visited node acc =
     let (_, lineage) = List.split (lineage_f mdg node) in
-    let in_lineage = no_lineage_f lineage || rec_lineage_f node lineage in
-    let acc' = if in_lineage then f node acc else acc in
+    let final_node = no_lineage_f lineage || rec_lineage_f node lineage in
+    let acc' = if final_node then f node acc else acc in
     Fun.flip2 List.fold_left acc' lineage (fun acc l_lineage ->
         if Node.Set.mem l_lineage ls_visited then acc
         else traverse (Node.Set.add l_lineage ls_visited) l_lineage acc ) in
@@ -245,46 +245,41 @@ let object_final_traversal (final : bool) (f : Node.Set.t -> Node.t -> 'a -> 'a)
     let ls_visited' = Node.Set.add node ls_visited in
     f ls_visited' node acc
 
-let object_static_traversal ?(final : bool = true) (f : Node.t -> 'a -> 'a)
-    (mdg : t) (ls_visited : Node.Set.t) (node : Node.t) (prop : string)
-    (acc : 'a) : 'a =
-  let prop' = Some prop in
+let object_static_traversal ?(final = true) (f : Node.t -> 'a -> 'a) (mdg : t)
+    (ls_visited : Node.Set.t) (node : Node.t) (prop : string) (acc : 'a) : 'a =
   let rec traverse ls_visited node acc =
     let ls_dynamic = get_property mdg node None in
-    let ls_prop = get_property mdg node prop' in
+    let ls_prop = get_property mdg node (Some prop) in
     let acc' = List.fold_right f ls_dynamic acc in
     if not (List.is_empty ls_prop) then List.fold_right f ls_prop acc'
     else object_parents_traversal traverse mdg ls_visited node acc' in
   object_final_traversal final traverse mdg ls_visited node acc
 
-let object_dynamic_traversal ?(final : bool = true)
-    (f : string option * Node.t -> 'a -> 'a) (mdg : t) (ls_visited : Node.Set.t)
+let object_dynamic_traversal ?(final = true)
+    (f : Property.t * Node.t -> 'a -> 'a) (mdg : t) (ls_visited : Node.Set.t)
     (node : Node.t) (acc : 'a) : 'a =
-  let rec traverse seen_props ls_visited node acc =
-    let dynamic_f (prop, _) = Option.is_none prop in
-    let unseen_f (prop, _) = not (List.mem prop seen_props) in
-    let static_f (prop, node) = (Option.get prop, node) in
+  let rec traverse seen ls_visited node acc =
+    let dynamic_f (prop, _) = Property.is_dynamic prop in
+    let unseen_f (prop, _) = not (List.exists (Property.equal prop) seen) in
     let (dynamic, static) = List.partition dynamic_f (get_properties mdg node) in
-    let static' = List.map static_f static in
-    let unseen = List.filter unseen_f static' in
-    let seen_props' = seen_props @ List.map fst unseen in
-    let acc' = List.fold_right f (dynamic @ static) acc in
-    object_parents_traversal (traverse seen_props') mdg ls_visited node acc'
-  in
+    let unseen = List.filter unseen_f static in
+    let seen' = seen @ List.map fst unseen in
+    let acc' = List.fold_right f (dynamic @ unseen) acc in
+    object_parents_traversal (traverse seen') mdg ls_visited node acc' in
   object_final_traversal final (traverse []) mdg ls_visited node acc
 
-let object_nested_traversal ?(final : bool = true)
-    (f : string option list * Node.t -> 'a -> 'a) (mdg : t) (node : Node.t)
+let object_nested_traversal ?(final = true)
+    (f : Property.t list * Node.t -> 'a -> 'a) (mdg : t) (node : Node.t)
     (acc : 'a) : 'a =
-  let f' el found = el :: found in
+  let f' node acc = node :: acc in
   let rec traverse ls_visited nodes acc =
     match nodes with
     | [] -> acc
-    | (prev, node) :: nodes' ->
+    | (props, node) :: nodes' ->
       let found = object_dynamic_traversal ~final f' mdg ls_visited node [] in
-      let found' = List.map (fun (p, n) -> (prev @ [ p ], n)) found in
-      let (_, ls_props) = List.split found' in
-      let ls_visited' = Node.Set.union ls_visited (Node.Set.of_list ls_props) in
+      let found' = List.map (fun (p, n) -> (props @ [ p ], n)) found in
+      let (_, ls_found) = List.split found' in
+      let ls_visited' = Node.Set.union ls_visited (Node.Set.of_list ls_found) in
       let nodes'' = nodes' @ found' in
       let acc' = List.fold_right f found' acc in
       traverse ls_visited' nodes'' acc' in
@@ -298,12 +293,7 @@ let object_dynamic_lookup (mdg : t) (node : Node.t) : Node.Set.t =
   let f (_, node) acc = Node.Set.add node acc in
   object_dynamic_traversal f mdg (Node.Set.singleton node) node Node.Set.empty
 
-let object_lookup (mdg : t) (node : Node.t) : string option -> Node.Set.t =
-  function
+let object_lookup (mdg : t) (node : Node.t) (prop : Property.t) : Node.Set.t =
+  match prop with
   | Some prop' -> object_static_lookup mdg node prop'
   | None -> object_dynamic_lookup mdg node
-
-let exported_object (mdg : t) : Node.Set.t =
-  match Hashtbl.find_opt mdg.nodes mdg.exported with
-  | None -> Node.Set.empty
-  | Some l_module -> object_static_lookup mdg l_module "exports"

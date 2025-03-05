@@ -13,9 +13,8 @@ module Source = struct
   let id (src : t) : Location.t =
     match src with
     | Param (n, _) | Retn (n, _) -> n.uid
-    | TaintSource -> Location.taint_source_loc ()
+    | TaintSource -> Location.taint_source ()
 
-  let hash (src : t) : int = Location.hash (id src)
   let equal (src1 : t) (src2 : t) : bool = Location.equal (id src1) (id src2)
   let compare (src1 : t) (src2 : t) : int = Location.compare (id src1) (id src2)
 
