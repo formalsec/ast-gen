@@ -1,29 +1,23 @@
   $ graphjs mdg --no-svg header.js
   [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
-  foo[f_1] --< Param(1) >--> x1[p_1]
   this[p_0] -
-  x1[p_1] -
   bar[f_2] --< Param(0) >--> this[p_0]
-  bar[f_2] --< Param(1) >--> w1[p_1]
-  bar[f_2] --< Param(2) >--> w2[p_2]
-  bar[f_2] --< Param(3) >--> w3[p_3]
-  this[p_0] -
-  w1[p_1] -
-  w2[p_2] -
-  w3[p_3] -
-  bar[f_3] --< Param(0) >--> this[p_0]
-  bar[f_3] --< Param(1) >--> y1[p_1]
+  bar[f_2] --< Param(1) >--> y1[p_1]
   this[p_0] -
   y1[p_1] -
-  foo[f_4] --< Param(0) >--> this[p_0]
-  foo[f_4] --< Param(1) >--> z1[p_1]
-  foo[f_4] --< Param(2) >--> z2[p_2]
-  foo[f_4] --< Param(3) >--> z3[p_3]
+  baz[f_3] --< Param(0) >--> this[p_0]
+  baz[f_3] --< Param(1) >--> z1[p_1]
+  baz[f_3] --< Param(2) >--> z2[p_2]
+  baz[f_3] --< Param(3) >--> z3[p_3]
   this[p_0] -
   z1[p_1] -
   z2[p_2] -
   z3[p_3] -
+  baz[f_4] --< Param(0) >--> this[p_0]
+  baz[f_4] --< Param(1) >--> w1[p_1]
+  this[p_0] -
+  w1[p_1] -
 
   $ graphjs mdg --no-svg body.js
   [[literal]] -
@@ -63,6 +57,8 @@
   w1.p1[l_11] -
   $v5[l_12] --< P(p) >--> w1.p1[l_11]
   $v5.p[l_13] -
+  $v8[l_14] --< V(q) >--> $v8[l_15]
+  $v8[l_15] --< P(q) >--> w1.p1[l_11]
 
   $ graphjs mdg --no-svg return.js
   [[literal]] -
@@ -70,20 +66,20 @@
   foo[f_1] --< Param(1) >--> x1[p_1]
   this[p_0] -
   x1[p_1] -
-  bar[f_2] --< Returns >--> [[literal]]
+  bar[f_2] --< Retn >--> [[literal]]
   bar[f_2] --< Param(0) >--> this[p_0]
   bar[f_2] --< Param(1) >--> y1[p_1]
   this[p_0] -
   y1[p_1] -
   baz[f_3] --< Param(0) >--> this[p_0]
   baz[f_3] --< Param(1) >--> z1[p_1]
-  baz[f_3] --< Returns >--> $v1[l_1]
+  baz[f_3] --< Retn >--> $v1[l_1]
   this[p_0] -
   z1[p_1] -
   $v1[l_1] -
   qux[f_4] --< Param(0) >--> this[p_0]
   qux[f_4] --< Param(1) >--> w1[p_1]
-  qux[f_4] --< Returns >--> w1[p_1]
+  qux[f_4] --< Retn >--> w1[p_1]
   this[p_0] -
   w1[p_1] -
 
@@ -125,18 +121,55 @@
   y2[p_2] -
   y3[p_3] -
   foo(...)[l_1] --< Call >--> foo[f_1]
-  foo(...)[l_1] --< Ret >--> $v1[l_2]
+  foo(...)[l_1] --< D >--> $v1[l_2]
   $v1[l_2] -
   bar(...)[l_3] --< Call >--> bar[f_2]
-  bar(...)[l_3] --< Ret >--> $v2[l_4]
+  bar(...)[l_3] --< D >--> $v2[l_4]
   $v2[l_4] -
   foo(...)[l_5] --< Call >--> foo[f_1]
-  foo(...)[l_5] --< Ret >--> $v3[l_6]
+  foo(...)[l_5] --< D >--> $v3[l_6]
   $v3[l_6] -
   bar(...)[l_7] --< Call >--> bar[f_2]
-  bar(...)[l_7] --< Ret >--> $v4[l_8]
+  bar(...)[l_7] --< D >--> $v4[l_8]
   $v4[l_8] -
-  baz(...)[l_9] --< Ret >--> $v5[l_10]
+  baz(...)[l_9] --< D >--> $v5[l_10]
+  $v5[l_10] -
+
+  $ graphjs mdg --no-svg new.js
+  [[literal]] --< Arg(1) >--> foo(...)[l_1]
+  [[literal]] --< Arg(1) >--> bar(...)[l_3]
+  [[literal]] --< Arg(1) >--> foo(...)[l_5]
+  [[literal]] --< Arg(2) >--> foo(...)[l_5]
+  [[literal]] --< Arg(3) >--> foo(...)[l_5]
+  [[literal]] --< Arg(1) >--> bar(...)[l_7]
+  [[literal]] --< Arg(2) >--> bar(...)[l_7]
+  [[literal]] --< Arg(3) >--> bar(...)[l_7]
+  [[literal]] --< Arg(1) >--> baz(...)[l_9]
+  foo[f_1] --< Param(0) >--> this[p_0]
+  foo[f_1] --< Param(1) >--> x1[p_1]
+  this[p_0] -
+  x1[p_1] -
+  bar[f_2] --< Param(0) >--> this[p_0]
+  bar[f_2] --< Param(1) >--> y1[p_1]
+  bar[f_2] --< Param(2) >--> y2[p_2]
+  bar[f_2] --< Param(3) >--> y3[p_3]
+  this[p_0] -
+  y1[p_1] -
+  y2[p_2] -
+  y3[p_3] -
+  foo(...)[l_1] --< Call >--> foo[f_1]
+  foo(...)[l_1] --< D >--> $v1[l_2]
+  $v1[l_2] -
+  bar(...)[l_3] --< Call >--> bar[f_2]
+  bar(...)[l_3] --< D >--> $v2[l_4]
+  $v2[l_4] -
+  foo(...)[l_5] --< Call >--> foo[f_1]
+  foo(...)[l_5] --< D >--> $v3[l_6]
+  $v3[l_6] -
+  bar(...)[l_7] --< Call >--> bar[f_2]
+  bar(...)[l_7] --< D >--> $v4[l_8]
+  $v4[l_8] -
+  baz(...)[l_9] --< D >--> $v5[l_10]
   $v5[l_10] -
 
   $ graphjs mdg --no-svg hoisted.js
@@ -145,50 +178,50 @@
   [[literal]] --< Arg(1) >--> foo(...)[l_17]
   [[literal]] --< Arg(1) >--> bar(...)[l_19]
   foo[f_1] --< Param(0) >--> this[p_0]
-  foo[f_1] --< Param(1) >--> p[p_1]
+  foo[f_1] --< Param(1) >--> x[p_1]
   this[p_0] -
-  p[p_1] --< Arg(1) >--> foo(...)[l_5]
-  p[p_1] --< Arg(1) >--> bar(...)[l_7]
+  x[p_1] --< Arg(1) >--> foo(...)[l_5]
+  x[p_1] --< Arg(1) >--> bar(...)[l_7]
   bar[f_2] --< Param(0) >--> this[p_0]
-  bar[f_2] --< Param(1) >--> p[p_1]
+  bar[f_2] --< Param(1) >--> w[p_1]
   this[p_0] -
-  p[p_1] --< Arg(1) >--> bar(...)[l_13]
-  p[p_1] --< Arg(1) >--> foo(...)[l_15]
+  w[p_1] --< Arg(1) >--> bar(...)[l_13]
+  w[p_1] --< Arg(1) >--> foo(...)[l_15]
   foo(...)[l_1] --< Call >--> foo[f_1]
-  foo(...)[l_1] --< Ret >--> $v1[l_2]
+  foo(...)[l_1] --< D >--> $v1[l_2]
   $v1[l_2] -
   bar(...)[l_3] --< Call >--> bar[f_2]
-  bar(...)[l_3] --< Ret >--> $v2[l_4]
+  bar(...)[l_3] --< D >--> $v2[l_4]
   $v2[l_4] -
   foo(...)[l_5] --< Call >--> foo[f_1]
-  foo(...)[l_5] --< Ret >--> $v3[l_6]
+  foo(...)[l_5] --< D >--> $v3[l_6]
   $v3[l_6] -
   bar(...)[l_7] --< Call >--> bar[f_2]
-  bar(...)[l_7] --< Ret >--> $v4[l_8]
+  bar(...)[l_7] --< D >--> $v4[l_8]
   $v4[l_8] -
   foo[f_3] --< Param(0) >--> this[p_0]
-  foo[f_3] --< Param(1) >--> p[p_1]
+  foo[f_3] --< Param(1) >--> y[p_1]
   this[p_0] -
-  p[p_1] --< Arg(1) >--> foo(...)[l_9]
+  y[p_1] --< Arg(1) >--> foo(...)[l_9]
   foo(...)[l_9] --< Call >--> foo[f_3]
-  foo(...)[l_9] --< Ret >--> $v5[l_10]
+  foo(...)[l_9] --< D >--> $v5[l_10]
   $v5[l_10] -
   bar[f_4] --< Param(0) >--> this[p_0]
-  bar[f_4] --< Param(1) >--> p[p_1]
+  bar[f_4] --< Param(1) >--> z[p_1]
   this[p_0] -
-  p[p_1] --< Arg(1) >--> bar(...)[l_11]
+  z[p_1] --< Arg(1) >--> bar(...)[l_11]
   bar(...)[l_11] --< Call >--> bar[f_4]
-  bar(...)[l_11] --< Ret >--> $v6[l_12]
+  bar(...)[l_11] --< D >--> $v6[l_12]
   $v6[l_12] -
   bar(...)[l_13] --< Call >--> bar[f_4]
-  bar(...)[l_13] --< Ret >--> $v7[l_14]
+  bar(...)[l_13] --< D >--> $v7[l_14]
   $v7[l_14] -
   foo(...)[l_15] --< Call >--> foo[f_3]
-  foo(...)[l_15] --< Ret >--> $v8[l_16]
+  foo(...)[l_15] --< D >--> $v8[l_16]
   $v8[l_16] -
   foo(...)[l_17] --< Call >--> foo[f_3]
-  foo(...)[l_17] --< Ret >--> $v9[l_18]
+  foo(...)[l_17] --< D >--> $v9[l_18]
   $v9[l_18] -
   bar(...)[l_19] --< Call >--> bar[f_4]
-  bar(...)[l_19] --< Ret >--> $v10[l_20]
+  bar(...)[l_19] --< D >--> $v10[l_20]
   $v10[l_20] -

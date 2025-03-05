@@ -2,6 +2,8 @@
 let obj = {};
 // dynamic lookup on a non-exiting dynamic identifier property
 obj[foo];
+// dynamic lookup on non-exiting nested identifier properties
+obj[foo][bar];
 // dynamic lookup on a non-exiting dependent property
 obj[{}];
 // dynamic lookup on a non-exiting computed property

@@ -1,8 +1,10 @@
 // binary operator applied to multiple literal values
 10 + "abc";
-// binary operator applied to a literal value and a location value
+// multiple binary operators applied to multiple literal values
+10 + "abc" + true;
+// binary operator applied to a literal value and an object value
 10 + ({});
-// binary operator applied to multiple location values
+// binary operator applied to multiple object values
 ({}) + ({});
-// multiple binary operators applied to multiple location values consecutively
+// multiple binary operators applied to multiple object values
 ({}) + ({}) + ({});

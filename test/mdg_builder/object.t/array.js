@@ -1,6 +1,10 @@
-// variable declaration with an array initialization 
-var foo = {};
-// variable assignment with an array initialization 
-bar = {};
+// var declaration with an object initialization 
+var foo = [];
+// let declaration with an object initialization 
+let bar = [];
+// const declaration with an object initialization 
+const baz = [];
 // variable assignment with an object initialization
-baz = foo; 
+qux = [];
+// variable assignment with an object variable
+quux = foo; 

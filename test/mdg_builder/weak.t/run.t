@@ -102,16 +102,16 @@
   obj.foo[l_5] -
   obj.foo(...)[l_6] --< Call >--> $v2[f_1]
   obj.foo(...)[l_6] --< Call >--> obj.foo[l_5]
-  obj.foo(...)[l_6] --< Ret >--> $v5[l_7]
+  obj.foo(...)[l_6] --< D >--> $v5[l_7]
   $v5[l_7] -
   obj.bar[l_8] -
   obj.bar(...)[l_9] --< Call >--> $v4[f_2]
   obj.bar(...)[l_9] --< Call >--> obj.bar[l_8]
-  obj.bar(...)[l_9] --< Ret >--> $v6[l_10]
+  obj.bar(...)[l_9] --< D >--> $v6[l_10]
   $v6[l_10] -
   obj.baz[l_11] -
   obj.baz(...)[l_12] --< Call >--> obj.baz[l_11]
-  obj.baz(...)[l_12] --< Ret >--> $v7[l_13]
+  obj.baz(...)[l_12] --< D >--> $v7[l_13]
   $v7[l_13] -
 
   $ graphjs mdg --no-svg property_value.js
@@ -151,9 +151,9 @@
   y3[p_3] -
   foo(...)[l_1] --< Call >--> $v1[f_1]
   foo(...)[l_1] --< Call >--> $v2[f_2]
-  foo(...)[l_1] --< Ret >--> $v3[l_2]
+  foo(...)[l_1] --< D >--> $v3[l_2]
   $v3[l_2] -
   foo(...)[l_3] --< Call >--> $v1[f_1]
   foo(...)[l_3] --< Call >--> $v2[f_2]
-  foo(...)[l_3] --< Ret >--> $v4[l_4]
+  foo(...)[l_3] --< D >--> $v4[l_4]
   $v4[l_4] -
