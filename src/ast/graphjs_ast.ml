@@ -758,9 +758,9 @@ module Prog = struct
   let add (prog : 'm t) (path : Fpath.t) (file : 'm Ast.File.t) : unit =
     Hashtbl.add prog path file
 
-  let pp ?(filename : bool = false) (ppf : Fmt.t) (prog : 'm t) : unit =
+  let pp ?(filename = false) (ppf : Fmt.t) (prog : 'm t) : unit =
     Printer.pp_prog ~filename ppf prog
 
-  let str ?(filename : bool = false) (prog : 'm t) : string =
+  let str ?(filename = false) (prog : 'm t) : string =
     Fmt.str "%a" (pp ~filename) prog
 end

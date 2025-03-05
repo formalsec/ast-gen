@@ -108,7 +108,7 @@ let vulnerability (engine : t) (sink : Tainted.sink) (node : Node.t) :
   (* this is useful, for example, when a sensitive sink is exported by the module *)
   let vuln = Vulnerability.make sink node in
   if Region.is_invalid vuln.line then
-    Mdg.object_of_property engine.mdg node
+    Mdg.get_property_owners engine.mdg node
     |> List.hd_opt
     |> Option.fold ~none:vuln ~some:(Vulnerability.update vuln)
   else vuln

@@ -18,12 +18,13 @@ type t =
   }
 
 let create_entry ((path, mdg) : Fpath.t * Mdg.t) : Fpath.t * Entry.t =
-  (path, { mdg; exported = Mdg.exported_object mdg })
+  (* (path, { mdg; exported = Mdg.exported_object mdg }) *)
+  (path, { mdg; exported = Node.Set.empty })
 
 let create_requires ((path, mdg) : Fpath.t * Mdg.t)
     (acc : (Fpath.t * Node.t) list) : (Fpath.t * Node.t) list =
   let (root, _) = Fpath.split_base path in
-  Node.Set.map_list (fun l_require -> (root, l_require)) mdg.requires @ acc
+  Node.Set.map_list (fun l_require -> (root, l_require)) mdg.imports @ acc
 
 let create (taint_config : Taint_config.t) (mdgs : (Fpath.t * Mdg.t) list) : t =
   let mdgs' = List.map (fun (path, mdg) -> (Fpath.rem_ext path, mdg)) mdgs in
@@ -33,7 +34,8 @@ let create (taint_config : Taint_config.t) (mdgs : (Fpath.t * Mdg.t) list) : t =
   { taint_config; entries; requires; mdg }
 
 let combine_mdgs (merger : t) : t =
-  let mdg = { (Mdg.create ()) with exported = merger.mdg.exported } in
+  let mdg = { (Mdg.create ()) with exports = Node.Set.empty } in
+  (* let mdg = { (Mdg.create ()) with exported = merger.mdg.exported } in *)
   let merger' = { merger with mdg } in
   Fun.flip2 Hashtbl.fold merger.entries merger' (fun _ entry acc ->
       { merger with mdg = Mdg.lub acc.mdg (Entry.mdg entry) } )
@@ -103,11 +105,11 @@ let merge_modules (merger : t) : t =
   Fun.flip2 List.fold_left merger merger.requires
     (fun merger (root, l_require) ->
       match l_require.kind with
-      | Require path -> require_modules merger l_require root path
+      | Import path -> require_modules merger l_require root path
       | _ -> Log.fail "unexpected node kind in mdg requires" )
 
 let remove_require_function (merger : t) : t =
-  if Node.Set.cardinal merger.mdg.requires == 0 then
+  if Node.Set.cardinal merger.mdg.imports == 0 then
     Fun.flip2 Node.Set.fold merger.mdg.jslib merger (fun node merger ->
         match node.kind with
         | Function "require" ->

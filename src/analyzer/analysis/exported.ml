@@ -110,7 +110,8 @@ let rec compute_object (mdg : Mdg.t) (cache : t) (prev : Scheme.t)
 
 let compute (mdg : Mdg.t) : t =
   let cache = create () in
-  let ls_exported = Mdg.exported_object mdg in
+  let ls_exported = mdg.exports in
+  (* let ls_exported = Mdg.exported_object mdg in *)
   if Node.Set.is_empty ls_exported then cache
   else (
     compute_object mdg cache [] ls_exported;

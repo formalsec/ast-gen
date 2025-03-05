@@ -65,8 +65,8 @@ let mdg_env =
   let open Term in
   const Cmd_mdg.Options.env
   $ Docs.MdgOpts.taint_config
+  $ Docs.MdgOpts.unsafe_literal_properties
   $ Docs.MdgOpts.no_svg
-  $ Docs.MdgOpts.no_literal_property_wrapping
   $ parse_env
 
 let mdg_opts =

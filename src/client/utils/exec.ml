@@ -45,7 +45,7 @@ let graphjs (exec_f : unit -> 'a) : 'a status =
   try Ok (exec_f ()) with
   | Graphjs_parser.Dependency_tree.Exn fmt -> exn (`DepTree fmt)
   | Graphjs_parser.Flow_parser.Exn fmt -> exn (`ParseJS fmt)
-  | Graphjs_mdg.State.Exn fmt -> exn (`BuildMDG fmt)
+  (* | Graphjs_mdg.State.Exn fmt -> exn (`BuildMDG fmt) *)
   | Graphjs_mdg.Svg_exporter.Exn fmt -> exn (`ExportMDG fmt)
   | err ->
     let msg = Printexc.to_string err in
