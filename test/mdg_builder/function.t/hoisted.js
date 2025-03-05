@@ -4,31 +4,31 @@ foo(10);
 bar("abc");
 
 // hoisted function declaration with a single parameter
-function foo(p) {
+function foo(x) {
     // recursive function call to the current hoisted function
-    foo(p);
+    foo(x);
     // function call to the hoisted function declared afterwards
-    bar(p);
+    bar(x);
 }
 
 // non-hoisted function declaration with a single parameter
-var foo = function (p) {
+var foo = function (y) {
     // recursive function call to the current non-hoisted function
-    foo(p);
+    foo(y);
 }
 
 // non-hoisted function declaration with a single parameter
-var bar = function (p) {
+var bar = function (z) {
     // recursive function call to the current non-hoisted function
-    bar(p);
+    bar(z);
 }
 
 // hoisted function declaration with a single parameter
-function bar(p) {
+function bar(w) {
     // function call to the non-hoisted function declaration
-    bar(p);
+    bar(w);
     // function call to the hoisted function declared previously
-    foo(p);
+    foo(w);
 }
 
 // function call to a non-hoisted function

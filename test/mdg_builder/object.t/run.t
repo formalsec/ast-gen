@@ -2,11 +2,15 @@
   [[literal]] -
   foo[l_1] -
   bar[l_2] -
+  baz[l_3] -
+  qux[l_4] -
 
   $ graphjs mdg --no-svg array.js
   [[literal]] -
   foo[l_1] -
   bar[l_2] -
+  baz[l_3] -
+  qux[l_4] -
 
   $ graphjs mdg --no-svg this.js
   [[literal]] --< Arg(1) >--> this.bar(...)[l_3]
@@ -22,7 +26,7 @@
   this.foo[l_1] -
   this.bar[l_2] -
   this.bar(...)[l_3] --< Call >--> this.bar[l_2]
-  this.bar(...)[l_3] --< Ret >--> y[l_4]
+  this.bar(...)[l_3] --< D >--> y[l_4]
   y[l_4] -
   obj[l_5] --< V(foo) >--> obj[l_6]
   obj[l_5] --< P(bar) >--> obj.bar[l_10]
@@ -32,9 +36,9 @@
   obj[l_7] --< P(bar) >--> bar[f_1]
   obj[l_7] --< Arg(0) >--> obj.bar(...)[l_11]
   bar(...)[l_8] --< Call >--> bar[f_1]
-  bar(...)[l_8] --< Ret >--> $v1[l_9]
+  bar(...)[l_8] --< D >--> $v1[l_9]
   $v1[l_9] -
   obj.bar[l_10] -
   obj.bar(...)[l_11] --< Call >--> bar[f_1]
-  obj.bar(...)[l_11] --< Ret >--> $v2[l_12]
+  obj.bar(...)[l_11] --< D >--> $v2[l_12]
   $v2[l_12] -

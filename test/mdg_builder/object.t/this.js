@@ -1,5 +1,5 @@
-// function declaration with a single parameter
-let bar = function (x1) {
+// function assignment with a single parameter
+var bar = function (x1) {
     // static lookup on a this expression
     let x = this.foo;
     // method call on a this expression with a single parameter
