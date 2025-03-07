@@ -41,7 +41,6 @@ type t =
   ; curr_func : Node.t option
   }
 
-(* TODO: Fix function handlers *)
 and call_interceptor =
      t
   -> Node.t

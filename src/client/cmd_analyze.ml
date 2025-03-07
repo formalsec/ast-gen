@@ -55,7 +55,6 @@ let outcome (result : 'a Exec.status) : Bulk.Instance.outcome =
   | Ok _ -> Success
   | Error (`DepTree _) -> Anomaly
   | Error (`ParseJS _) -> Anomaly
-  | Error (`BuildMDG _) -> Anomaly
   | Error (`ExportMDG _) -> Anomaly
   | Error _ -> Anomaly
 

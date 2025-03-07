@@ -1,4 +1,4 @@
-  $ graphjs mdg --no-svg eval.js
+  $ graphjs mdg --no-export eval.js
   [[literal]] --< Arg(1) >--> eval(...)[l_3]
   eval[s_1] -
   foo[f_1] --< Param(0) >--> this[p_0]
@@ -12,7 +12,7 @@
   eval(...)[l_3] --< D >--> $v2[l_4]
   $v2[l_4] -
 
-$ graphjs mdg --no-svg stdlib.js
+$ graphjs mdg --no-export stdlib.js
 [[literal]] --< Arg(1) >--> require(...)[l_1]
 [[literal]] --< Arg(1) >--> dep.exec(...)[l_7]
 require[f_1] -

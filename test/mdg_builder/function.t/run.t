@@ -1,4 +1,4 @@
-  $ graphjs mdg --no-svg header.js
+  $ graphjs mdg --no-export header.js
   [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   this[p_0] -
@@ -19,7 +19,7 @@
   this[p_0] -
   w1[p_1] -
 
-  $ graphjs mdg --no-svg body.js
+  $ graphjs mdg --no-export body.js
   [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x1[p_1]
@@ -60,7 +60,7 @@
   $v8[l_14] --< V(q) >--> $v8[l_15]
   $v8[l_15] --< P(q) >--> w1.p1[l_11]
 
-  $ graphjs mdg --no-svg return.js
+  $ graphjs mdg --no-export return.js
   [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x1[p_1]
@@ -83,7 +83,7 @@
   this[p_0] -
   w1[p_1] -
 
-  $ graphjs mdg --no-svg scope.js
+  $ graphjs mdg --no-export scope.js
   [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x[p_1]
@@ -98,7 +98,7 @@
   $v1[l_2] --< V(p2) >--> $v1[l_3]
   $v1[l_3] --< P(p2) >--> y[p_1]
 
-  $ graphjs mdg --no-svg call.js
+  $ graphjs mdg --no-export call.js
   [[literal]] --< Arg(1) >--> foo(...)[l_1]
   [[literal]] --< Arg(1) >--> bar(...)[l_3]
   [[literal]] --< Arg(1) >--> foo(...)[l_5]
@@ -135,7 +135,7 @@
   baz(...)[l_9] --< D >--> $v5[l_10]
   $v5[l_10] -
 
-  $ graphjs mdg --no-svg new.js
+  $ graphjs mdg --no-export new.js
   [[literal]] --< Arg(1) >--> foo(...)[l_1]
   [[literal]] --< Arg(1) >--> bar(...)[l_3]
   [[literal]] --< Arg(1) >--> foo(...)[l_5]
@@ -172,7 +172,7 @@
   baz(...)[l_9] --< D >--> $v5[l_10]
   $v5[l_10] -
 
-  $ graphjs mdg --no-svg hoisted.js
+  $ graphjs mdg --no-export hoisted.js
   [[literal]] --< Arg(1) >--> foo(...)[l_1]
   [[literal]] --< Arg(1) >--> bar(...)[l_3]
   [[literal]] --< Arg(1) >--> foo(...)[l_17]

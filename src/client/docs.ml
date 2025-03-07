@@ -11,8 +11,7 @@ module ExitCodes = struct
   (* graphjs specific errors *)
   let deptree = 1
   let parsejs = 2
-  let build_mdg = 3
-  let export_mdg = 4
+  let export_mdg = 3
 end
 
 module Exits = struct
@@ -32,9 +31,8 @@ module Exits = struct
     [ parsejs ]
 
   let mdg =
-    let build = info ~doc:"on MDG construction error" ExitCodes.build_mdg in
     let export = info ~doc:"on MDG export error" ExitCodes.export_mdg in
-    [ build; export ]
+    [ export ]
 end
 
 module CommonOpts = struct
@@ -218,9 +216,17 @@ module MdgOpts = struct
        size, but will introduce graph construction errors." in
     Arg.(value & flag & info [ "unsafe-literal-properties" ] ~doc)
 
-  let no_svg =
+  let no_export =
     let doc = "Run without generating the .svg graph representation." in
-    Arg.(value & flag & info [ "no-svg" ] ~doc)
+    Arg.(value & flag & info [ "no-export" ] ~doc)
+
+  let no_subgraphs =
+    let doc = "Run without generating subgraphs in the .svg representation." in
+    Arg.(value & flag & info [ "no-subgraphs" ] ~doc)
+
+  let export_timeout =
+    let doc = "Timeout for exporting the graph into the .svg representation." in
+    Arg.(value & opt int 30 & info [ "export-timeout" ] ~doc)
 end
 
 module MdgCmd = struct

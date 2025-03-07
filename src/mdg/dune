@@ -12,7 +12,6 @@
   store
   state
   svg_exporter
-  builder_config
   builder
   merger
   jslib)

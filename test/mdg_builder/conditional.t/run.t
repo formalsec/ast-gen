@@ -1,4 +1,4 @@
-  $ graphjs mdg --no-svg if.js
+  $ graphjs mdg --no-export if.js
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> "abc"[l_0]
@@ -40,7 +40,7 @@
   w[l_22] --< P(q1) >--> w1[l_19]
   w[l_22] --< P(q1) >--> w1[l_20]
 
-  $ graphjs mdg --no-svg switch.js
+  $ graphjs mdg --no-export switch.js
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> "abc"[l_0]
