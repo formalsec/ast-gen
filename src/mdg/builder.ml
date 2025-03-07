@@ -9,7 +9,8 @@ let cid (stmt : 'a Statement.t) : cid = State.GraphRegistry.cid stmt
 let offset (cid : cid) (ofs : int) : cid = State.GraphRegistry.offset cid ofs
 
 let object_name (ls_obj : Node.Set.t) (obj : 'm Expression.t) : string =
-  if Node.Set.cardinal ls_obj == 1 then Node.name (Node.Set.choose ls_obj)
+  if Node.Set.cardinal ls_obj == 1 then
+    try Node.name (Node.Set.choose ls_obj) with _ -> Expression.str obj
   else Expression.str obj
 
 let object_property_name (ls_obj : Node.Set.t) (obj : 'm Expression.t)

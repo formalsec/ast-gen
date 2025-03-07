@@ -66,7 +66,9 @@ let mdg_env =
   const Cmd_mdg.Options.env
   $ Docs.MdgOpts.taint_config
   $ Docs.MdgOpts.unsafe_literal_properties
-  $ Docs.MdgOpts.no_svg
+  $ Docs.MdgOpts.no_export
+  $ Docs.MdgOpts.no_subgraphs
+  $ Docs.MdgOpts.export_timeout
   $ parse_env
 
 let mdg_opts =
@@ -114,7 +116,6 @@ let eval_cmd (status : status) =
   | Ok (`Ok (Error `Timeout)) -> Docs.ExitCodes.timeout
   | Ok (`Ok (Error (`DepTree _))) -> Docs.ExitCodes.deptree
   | Ok (`Ok (Error (`ParseJS _))) -> Docs.ExitCodes.parsejs
-  | Ok (`Ok (Error (`BuildMDG _))) -> Docs.ExitCodes.build_mdg
   | Ok (`Ok (Error (`ExportMDG _))) -> Docs.ExitCodes.export_mdg
   | Error `Term -> Docs.ExitCodes.term
   | Error `Parse -> Docs.ExitCodes.client

@@ -1,18 +1,18 @@
-  $ graphjs mdg --no-svg object.js
+  $ graphjs mdg --no-export object.js
   [[literal]] -
   foo[l_1] -
   bar[l_2] -
   baz[l_3] -
   qux[l_4] -
 
-  $ graphjs mdg --no-svg array.js
+  $ graphjs mdg --no-export array.js
   [[literal]] -
   foo[l_1] -
   bar[l_2] -
   baz[l_3] -
   qux[l_4] -
 
-  $ graphjs mdg --no-svg this.js
+  $ graphjs mdg --no-export this.js
   [[literal]] --< Arg(1) >--> this.bar(...)[l_3]
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< Arg(1) >--> bar(...)[l_8]

@@ -1,4 +1,4 @@
-$ graphjs mdg --no-svg --mode=singlefile main.js
+$ graphjs mdg --no-export --mode=singlefile main.js
 [[literal]] --< Arg(1) >--> require(...)[l_1]
 [[literal]] --< Arg(1) >--> require(...)[l_4]
 require[f_1] -
@@ -39,7 +39,7 @@ bar.bar4(...)[l_21] --< Call >--> bar.bar4[l_20]
 bar.bar4(...)[l_21] --< D >--> $v9[l_22]
 $v9[l_22] -
 
-$ graphjs mdg --no-svg --mode=multifile main.js
+$ graphjs mdg --no-export --mode=multifile main.js
 [[literal]] --< D >--> 10[l_0]
 module[l_8] --< V(exports) >--> module[l_9]
 foo[f_1] --< Param(0) >--> this[p_0]

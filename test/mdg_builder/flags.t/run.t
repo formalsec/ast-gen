@@ -1,5 +1,5 @@
 Flag for using unsafe literal properties
-  $ graphjs mdg --no-svg unsafe_literal_properties.js
+  $ graphjs mdg --no-export unsafe_literal_properties.js
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 20[l_0]
   obj[l_1] --< V(*) >--> obj[l_2]
@@ -10,7 +10,7 @@ Flag for using unsafe literal properties
   20[l_0] -
   $v1[l_4] --< P(*) >--> 20[l_0]
 
-  $ graphjs mdg --no-svg unsafe_literal_properties.js --unsafe-literal-properties
+  $ graphjs mdg --no-export unsafe_literal_properties.js --unsafe-literal-properties
   [[literal]] --< V(*) >--> $v1[l_4]
   obj[l_1] --< V(*) >--> obj[l_2]
   obj[l_1] --< P(*) >--> obj.*[l_3]

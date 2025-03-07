@@ -1,4 +1,4 @@
-  $ graphjs mdg --no-svg property_lookup.js
+  $ graphjs mdg --no-export property_lookup.js
   [[literal]] -
   $v1[l_1] --< P(foo) >--> obj.foo[l_3]
   $v1[l_1] --< P(bar) >--> obj.bar[l_4]
@@ -17,7 +17,7 @@
   obj.abc[l_7] -
   obj.null[l_8] -
 
-  $ graphjs mdg --no-svg property_update.js
+  $ graphjs mdg --no-export property_update.js
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 10[l_0]
@@ -45,7 +45,7 @@
   10[l_0] -
   obj[l_10] --< P(null) >--> 10[l_0]
 
-  $ graphjs mdg --no-svg property_access.js
+  $ graphjs mdg --no-export property_access.js
   [[literal]] --< D >--> 10[l_0]
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(foo) >--> obj.foo[l_6]
@@ -65,7 +65,7 @@
   obj.bar[l_8] -
   obj[l_9] --< P(baz) >--> $v3[l_4]
 
-  $ graphjs mdg --no-svg method_call.js
+  $ graphjs mdg --no-export method_call.js
   [[literal]] --< Arg(1) >--> obj.foo(...)[l_6]
   [[literal]] --< Arg(1) >--> obj.bar(...)[l_9]
   [[literal]] --< Arg(2) >--> obj.bar(...)[l_9]
@@ -114,7 +114,7 @@
   obj.baz(...)[l_12] --< D >--> $v7[l_13]
   $v7[l_13] -
 
-  $ graphjs mdg --no-svg property_value.js
+  $ graphjs mdg --no-export property_value.js
   [[literal]] --< D >--> 10[l_0]
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(foo) >--> obj.foo[l_8]
@@ -132,7 +132,7 @@
   obj2[l_9] --< P(bar) >--> $v4[l_4]
   obj2[l_9] --< P(bar) >--> $v5[l_5]
 
-  $ graphjs mdg --no-svg function_call.js
+  $ graphjs mdg --no-export function_call.js
   [[literal]] --< Arg(1) >--> foo(...)[l_1]
   [[literal]] --< Arg(1) >--> foo(...)[l_3]
   [[literal]] --< Arg(2) >--> foo(...)[l_3]

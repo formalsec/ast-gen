@@ -1,4 +1,4 @@
-  $ graphjs mdg --no-svg static_lookup.js
+  $ graphjs mdg --no-export static_lookup.js
   [[literal]] -
   obj[l_1] --< P(foo) >--> obj.foo[l_2]
   obj[l_1] --< P(bar) >--> obj.bar[l_3]
@@ -12,7 +12,7 @@
   obj.abc[l_6] -
   obj.null[l_7] -
 
-  $ graphjs mdg --no-svg dynamic_lookup.js
+  $ graphjs mdg --no-export dynamic_lookup.js
   [[literal]] --< D >--> $v6[l_5]
   obj[l_1] --< P(*) >--> obj.*[l_2]
   obj.*[l_2] --< P(*) >--> obj.*.*[l_3]
@@ -21,7 +21,7 @@
   $v6[l_5] --< D >--> obj.*[l_2]
   $v9[l_6] --< D >--> obj.*.*[l_3]
 
-  $ graphjs mdg --no-svg static_update.js
+  $ graphjs mdg --no-export static_update.js
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 10[l_0]
@@ -49,7 +49,7 @@
   obj[l_9] --< P(null) >--> 10[l_0]
   10[l_0] -
 
-  $ graphjs mdg --no-svg dynamic_update.js
+  $ graphjs mdg --no-export dynamic_update.js
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 10[l_0]
@@ -83,7 +83,7 @@
   $v5[l_12] --< P(*) >--> 10[l_0]
   10[l_0] -
 
-  $ graphjs mdg --no-svg static_access.js
+  $ graphjs mdg --no-export static_access.js
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 10[l_0]
   obj[l_1] --< V(foo) >--> obj[l_2]
@@ -105,7 +105,7 @@
   obj.bar[l_9] -
   obj[l_10] --< P(qux) >--> $v1[l_3]
 
-  $ graphjs mdg --no-svg dynamic_access.js
+  $ graphjs mdg --no-export dynamic_access.js
   [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> 10[l_0]
   obj[l_1] --< V(*) >--> obj[l_2]
@@ -127,7 +127,7 @@
   obj[l_8] --< P(*) >--> $v1[l_3]
   obj[l_8] --< P(*) >--> obj.*[l_5]
 
-  $ graphjs mdg --no-svg static_method.js
+  $ graphjs mdg --no-export static_method.js
   [[literal]] --< Arg(1) >--> obj.foo(...)[l_5]
   [[literal]] --< Arg(1) >--> obj.bar(...)[l_8]
   [[literal]] --< Arg(2) >--> obj.bar(...)[l_8]
@@ -168,7 +168,7 @@
   obj.baz(...)[l_11] --< D >--> $v5[l_12]
   $v5[l_12] -
 
-  $ graphjs mdg --no-svg dynamic_method.js
+  $ graphjs mdg --no-export dynamic_method.js
   [[literal]] --< Arg(1) >--> obj.*(...)[l_5]
   [[literal]] --< Arg(1) >--> obj.*(...)[l_7]
   [[literal]] --< Arg(2) >--> obj.*(...)[l_7]

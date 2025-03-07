@@ -9,7 +9,9 @@ module Options = struct
   type env =
     { taint_config : Fpath.t
     ; unsafe_literal_properties : bool
-    ; export_svg : bool
+    ; export_graph : bool
+    ; export_subgraphs : bool
+    ; export_timeout : int
     ; parse_env : Cmd_parse.Options.env
     }
 
@@ -24,19 +26,20 @@ module Options = struct
     | Some taint_config' -> taint_config'
     | None -> Properties.default_taint_config ()
 
-  let env (taint_config' : Fpath.t option) (unsafe_literal_properties : bool)
-      (no_svg : bool) (parse_env : Cmd_parse.Options.env) : env =
-    let taint_config = parse_taint_config taint_config' in
-    let export_svg = not no_svg in
-    { taint_config; unsafe_literal_properties; export_svg; parse_env }
+  let env (taint_config' : Fpath.t option) (unsafe_literal_properties' : bool)
+      (no_export : bool) (no_subgraphs : bool) (export_timeout' : int)
+      (parse_env' : Cmd_parse.Options.env) : env =
+    { taint_config = parse_taint_config taint_config'
+    ; unsafe_literal_properties = unsafe_literal_properties'
+    ; export_graph = not no_export
+    ; export_subgraphs = not no_subgraphs
+    ; export_timeout = export_timeout'
+    ; parse_env = parse_env'
+    }
 
   let cmd (inputs : Fpath.t list) (output : Fpath.t option) (env : env) : t =
     { inputs; output; env }
 end
-
-let set_temp_env (env : Options.env) : unit =
-  (* FIXME: remove in favor of env structures *)
-  Builder_config.(export_svg := env.export_svg)
 
 module Workspace = struct
   include Workspace
@@ -45,7 +48,7 @@ module Workspace = struct
     let temp_f rel = Filename.temp_file "graphjs" (Fpath.to_string rel) in
     let dir_f w = Fs.mkdir_noerr (Fpath.parent (path w)) |> fun () -> w in
     let rel' = Fpath.rem_ext mrel in
-    match (main, w.path, env.export_svg) with
+    match (main, w.path, env.export_graph) with
     | (true, None, true) -> single ~w Fpath.(v (temp_f rel') + "svg")
     | (true, None, false) -> w
     | (true, Single _, _) -> w
@@ -57,12 +60,14 @@ end
 module Output = struct
   let url (path : Fpath.t) : string = Console.url (Fpath.to_string path)
 
-  let export_dot (mdg : Mdg.t) (path : Fpath.t) : unit Exec.status =
-    Exec.graphjs (fun () -> Svg_exporter.export_dot path mdg)
-
-  let export_svg (kind : [ `Dot of Fpath.t | `Mdg of Mdg.t ]) (path : Fpath.t) :
+  let export_dot (env : Svg_exporter.Env.t) (mdg : Mdg.t) (path : Fpath.t) :
       unit Exec.status =
-    Exec.graphjs (fun () -> Svg_exporter.export_svg path kind)
+    Exec.graphjs (fun () -> Svg_exporter.export_dot ~env path mdg)
+
+  let export_svg (env : Svg_exporter.Env.t)
+      (kind : [ `Dot of Fpath.t | `Mdg of Mdg.t ]) (path : Fpath.t) :
+      unit Exec.status =
+    Exec.graphjs (fun () -> Svg_exporter.export_svg ~env path kind)
 
   let taint_config (w : Workspace.t) (path : Fpath.t) (tc : Taint_config.t) :
       unit =
@@ -71,7 +76,8 @@ module Output = struct
     Log.verbose "%a" Taint_config.pp tc;
     Workspace.output_noerr Side w' Taint_config.pp tc
 
-  let mdg (w : Workspace.t) (mrel : Fpath.t) (mdg : Mdg.t) : unit Exec.status =
+  let mdg (env : Svg_exporter.Env.t) (w : Workspace.t) (mrel : Fpath.t)
+      (mdg : Mdg.t) : unit Exec.status =
     let w' = Workspace.(w -+ "mdg") in
     Log.info "Module MDG '%a' built successfully." Fpath.pp mrel;
     Log.verbose "%a" Mdg.pp mdg;
@@ -80,33 +86,33 @@ module Output = struct
     | Bundle svg_path ->
       let w'' = Workspace.(w -+ "dot") in
       let dot_path = Workspace.path w'' in
-      let* _ = Workspace.execute Side w'' (export_dot mdg) in
-      let* _ = Workspace.execute Side w (export_svg (`Dot dot_path)) in
+      let* _ = Workspace.execute Side w'' (export_dot env mdg) in
+      let* _ = Workspace.execute Side w (export_svg env (`Dot dot_path)) in
       Log.info "Module MDG '%a' exported successfully." Fpath.pp mrel;
       Log.verbose "%s" (url svg_path);
       Ok ()
     | _ -> Ok ()
 
-  let main (env : Options.env) (w : Workspace.t) (path : Fpath.t) (mdg : Mdg.t)
-      : unit Exec.status =
+  let main (env : Svg_exporter.Env.t) (export : bool) (w : Workspace.t)
+      (path : Fpath.t) (mdg : Mdg.t) : unit Exec.status =
     let w' = Workspace.(w -+ "mdg") in
     Log.info "MDGs \"%a\" merged successfully." Fpath.pp path;
     Log.verbose "%a" Mdg.pp mdg;
-    match (env.export_svg, w.path) with
+    match (export, w.path) with
     | (false, _) ->
       Workspace.output_noerr Main w' Mdg.pp mdg;
       Workspace.log w "%a@." Mdg.pp mdg;
       Ok ()
     | (true, Single svg_path) ->
-      let* _ = Workspace.execute Main w (export_svg (`Mdg mdg)) in
+      let* _ = Workspace.execute Main w (export_svg env (`Mdg mdg)) in
       Log.info "MDG \"%a\" exported successfully." Fpath.pp path;
       Workspace.log w "%s@." (url svg_path);
       Ok ()
     | (true, Bundle svg_path) ->
       let w'' = Workspace.(w -+ "dot") in
       let dot_path = Workspace.path w'' in
-      let* _ = Workspace.execute Side w'' (export_dot mdg) in
-      let* _ = Workspace.execute Main w (export_svg (`Dot dot_path)) in
+      let* _ = Workspace.execute Side w'' (export_dot env mdg) in
+      let* _ = Workspace.execute Main w (export_svg env (`Dot dot_path)) in
       Log.info "MDG \"%a\" exported successfully." Fpath.pp path;
       Workspace.log w "%s@." (url svg_path);
       Ok ()
@@ -123,6 +129,9 @@ let mdg_merger (merger : Merger.t) () : Mdg.t = Merger.merge_entries merger
 let builder_env (env : Options.env) : State.Env.t =
   { unsafe_literal_properties = env.unsafe_literal_properties }
 
+let export_env (env : Options.env) : Svg_exporter.Env.t =
+  { subgraphs = env.export_subgraphs; timeout = env.export_timeout }
+
 let read_taint_config (env : Options.env) (w : Workspace.t) :
     Taint_config.t Exec.status =
   let* tc = Exec.graphjs (taint_config env.taint_config) in
@@ -132,23 +141,24 @@ let read_taint_config (env : Options.env) (w : Workspace.t) :
 let build_program_mdgs (env : Options.env) (w : Workspace.t)
     (dt : Dependency_tree.t) (builder : State.t) (prog : 'm Prog.t) :
     (Fpath.t * Mdg.t) Exec.status list =
+  let export_env = export_env env in
   Fun.flip Dependency_tree.bottom_up_visit dt (fun (path, mrel) ->
       let file = Prog.find prog path in
       let* mdg = Exec.graphjs (mdg_builder builder file) in
       let w' = Workspace.mdg env w mrel false in
-      let* _ = Output.mdg w' mrel mdg in
+      let* _ = Output.mdg export_env w' mrel mdg in
       Ok (path, mdg) )
 
 let merge_program_mdgs (env : Options.env) (w : Workspace.t)
     (dt : Dependency_tree.t) (merger : Merger.t) : Mdg.t Exec.status =
+  let export_env = export_env env in
   let* mdg = Exec.graphjs (mdg_merger merger) in
   let w' = Workspace.mdg env w dt.mrel true in
-  let* _ = Output.main env w' dt.path mdg in
+  let* _ = Output.main export_env env.export_graph w' dt.path mdg in
   Ok mdg
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     Mdg.t Exec.status =
-  set_temp_env env;
   let* (dt, prog) = Cmd_parse.run env.parse_env (Workspace.side_perm w) input in
   let* tc = read_taint_config env w in
   let builder_env = builder_env env in
@@ -162,7 +172,6 @@ let outcome (result : Mdg.t Exec.status) : Bulk.Instance.outcome =
   | Ok _ -> Success
   | Error (`DepTree _) -> Failure
   | Error (`ParseJS _) -> Failure
-  | Error (`BuildMDG _) -> Failure
   | Error (`ExportMDG _) -> Anomaly
   | Error _ -> Anomaly
 
@@ -176,7 +185,7 @@ let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
   end )
 
 let main (opts : Options.t) () : unit Exec.status =
-  let ext = Some (if opts.env.export_svg then "svg" else "mdg") in
+  let ext = Some (if opts.env.export_graph then "svg" else "mdg") in
   let w = Workspace.create ~default:(`Single ext) opts.inputs opts.output in
   let* _ = Workspace.prepare w in
   let* inputs = Bulk.InputTree.generate opts.inputs in
