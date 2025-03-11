@@ -25,17 +25,19 @@ let raise (path : string) (flow_errs : (Loc.t * Parse_error.t) list) : 'a =
   let err = Fmt.dly "%a%a@\n" pp_err_header path pp_flow_errs flow_errs in
   raise (Exn err)
 
-let parse_ic (ic : in_channel) (path : string) :
+let parse_ic (ic : in_channel) (path : string) (rel : string) :
     (Loc.t, Loc.t) Flow_ast.Program.t =
   let ic_sz = in_channel_length ic in
   let ic_text = really_input_string ic ic_sz in
-  match Parser_flow.program ~fail:false ic_text with
+  let source = Some (File_key.SourceFile rel) in
+  match Parser_flow.program_file ~fail:false ic_text source with
   | (flow_ast, []) -> flow_ast
   | (_, flow_errors) -> raise path flow_errors
 
-let parse (path : Fpath.t) : (Loc.t, Loc.t) Flow_ast.Program.t =
+let parse (path : Fpath.t) (rel : Fpath.t) : (Loc.t, Loc.t) Flow_ast.Program.t =
   let path' = Fpath.to_string path in
+  let rel' = Fpath.to_string rel in
   let ic = open_in path' in
-  let parse_f () = parse_ic ic path' in
+  let parse_f () = parse_ic ic path' rel' in
   let finally () = close_in_noerr ic in
   Fun.protect ~finally parse_f

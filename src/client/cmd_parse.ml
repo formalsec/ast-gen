@@ -58,8 +58,9 @@ module Output = struct
     Workspace.log w "%a@." (Prog.pp ~filename:multifile) p
 end
 
-let js_parser (path : Fpath.t) () : (Loc.t, Loc.t) Flow_ast.Program.t =
-  Flow_parser.parse path
+let js_parser (path : Fpath.t) (mrel : Fpath.t) () :
+    (Loc.t, Loc.t) Flow_ast.Program.t =
+  Flow_parser.parse path mrel
 
 let js_normalizer (env : Normalizer.Env.t)
     (file : (Loc.t, Loc.t) Flow_ast.Program.t) () : Normalizer.n_stmt =
@@ -77,7 +78,7 @@ let normalize_program_modules (env : Normalizer.Env.t) (w : Workspace.t)
     (dt : Dependency_tree.t) : (Fpath.t * 'm File.t) Exec.status list =
   Fun.flip Dependency_tree.bottom_up_visit dt (fun (path, mrel) ->
       Output.source_file w path mrel;
-      let* js_file = Exec.graphjs (js_parser path) in
+      let* js_file = Exec.graphjs (js_parser path mrel) in
       let* normalized_file = Exec.graphjs (js_normalizer env js_file) in
       Output.normalized_file w mrel normalized_file;
       Ok (path, normalized_file) )
