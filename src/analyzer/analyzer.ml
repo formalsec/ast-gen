@@ -3,7 +3,7 @@ open Graphjs_mdg
 module Worklist = Analysis_engine.Worklist
 
 let run_injection_param (engine : Analysis_engine.t) (l_param : Node.t)
-    (props : string option list) : Analysis_engine.t =
+    (props : Property.t list) : Analysis_engine.t =
   let callers = Analysis_engine.callers engine l_param in
   Log.debug "callers = %a" Node.Set.pp callers;
   Fun.flip2 Node.Set.fold callers engine (fun l_arg engine ->
@@ -12,7 +12,7 @@ let run_injection_param (engine : Analysis_engine.t) (l_param : Node.t)
       Analysis_engine.enqueue_all engine nodes )
 
 let run_injection_return (engine : Analysis_engine.t) (l_call : Node.t)
-    (props : string option list) : Analysis_engine.t =
+    (props : Property.t list) : Analysis_engine.t =
   let returns = Analysis_engine.returns engine l_call in
   Log.debug "returns = %a" Node.Set.pp returns;
   Fun.flip2 Node.Set.fold returns engine (fun l_arg engine ->

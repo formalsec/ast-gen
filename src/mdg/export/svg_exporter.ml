@@ -130,6 +130,7 @@ module Dot = struct
       | _ -> [ `Color 2105376 ] )
 
     let vertex_name (node : V.t) : string = Location.str node.uid
+    let subgraph_name (l_func : V.t) : string = Fmt.str "%d" (Node.uid l_func)
 
     let subgraph_color (l_func : V.t) : int =
       let depth = func_depth l_func in
@@ -145,13 +146,12 @@ module Dot = struct
       ; `Fillcolor (subgraph_color l_func) ]
 
     let get_subgraph (node : V.t) : subgraph option =
-      let name_f node = string_of_int (Node.uid node) in
       match (!env.subgraphs, get_func node) with
       | (false, _) | (true, None) -> None
       | (true, Some l_func) ->
-        let sg_name = name_f l_func in
+        let sg_name = subgraph_name l_func in
         let sg_attributes = subgraph_attrs l_func in
-        let sg_parent = Option.map name_f l_func.parent in
+        let sg_parent = Option.map subgraph_name l_func.parent in
         Some { sg_name; sg_attributes; sg_parent }
   end)
 end

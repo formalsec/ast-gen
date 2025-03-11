@@ -5,4 +5,4 @@ const foo = require('../foo')
 foo.foo({});
 
 // module exports with a function that calls the 'foo' method of the 'foo' module
-module.exports = function (x) { foo.foo(x) };
+module.exports = function (z) { foo.foo(z) };

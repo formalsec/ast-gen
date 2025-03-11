@@ -1,22 +1,34 @@
 open Graphjs_base
 
-type t = string option
+type t =
+  | Static of string
+  | Dynamic
 
-let static (name : string) = Some name
+let is_static (prop : t) : bool =
+  match prop with Static _ -> true | _ -> false
 
-let dynamic =
-  let dyn = None in
-  fun () -> dyn
+let is_dynamic (prop : t) : bool =
+  match prop with Dynamic -> true | _ -> false
 
-let is_static (prop : t) = Option.is_some prop
-let is_dynamic (prop : t) = Option.is_none prop
-let hash (prop : t) : int = Option.fold ~none:0 ~some:String.hash prop
-let equal (prop1 : t) (prop2 : t) : bool = Option.equal String.equal prop1 prop2
+let hash (prop : t) : int =
+  match prop with Static prop' -> String.hash prop' | Dynamic -> 0
+
+let equal (prop1 : t) (prop2 : t) : bool =
+  match (prop1, prop2) with
+  | (Static prop1', Static prop2') -> String.equal prop1' prop2'
+  | (Dynamic, Dynamic) -> true
+  | _ -> false
 
 let compare (prop1 : t) (prop2 : t) : int =
-  Option.compare String.compare prop1 prop2
+  match (prop1, prop2) with
+  | (Static prop1', Static prop2') -> String.compare prop1' prop2'
+  | (Dynamic, Dynamic) -> 0
+  | (Dynamic, Static _) -> -1
+  | (Static _, Dynamic) -> 1
 
 let pp (ppf : Fmt.t) (prop : t) : unit =
-  Fmt.pp_str ppf (Option.value ~default:"*" prop)
+  match prop with
+  | Static prop' -> Fmt.pp_str ppf prop'
+  | Dynamic -> Fmt.pp_str ppf "*"
 
 let str (prop : t) : string = Fmt.str "%a" pp prop

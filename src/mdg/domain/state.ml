@@ -37,9 +37,13 @@ type t =
   ; mdg : Mdg.t
   ; store : Store.t
   ; registry : GraphRegistry.t
+  ; lookup_interceptors : (Location.t, lookup_interceptor) Hashtbl.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
   ; curr_func : Node.t option
   }
+
+and lookup_interceptor =
+  t -> Node.t -> string -> Node.Set.t -> Property.t -> Node.Set.t -> t
 
 and call_interceptor =
      t
@@ -51,15 +55,17 @@ and call_interceptor =
   -> GraphRegistry.id
   -> t
 
-let create (env : Env.t) : t =
-  let mdg = Mdg.create () in
-  let store = Store.create () in
-  let registry = GraphRegistry.create () in
-  let call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz) in
-  let curr_func = None in
-  { env; mdg; store; registry; call_interceptors; curr_func }
+let create (env' : Env.t) : t =
+  { env = env'
+  ; mdg = Mdg.create ()
+  ; store = Store.create ()
+  ; registry = GraphRegistry.create ()
+  ; lookup_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
+  ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
+  ; curr_func = None
+  }
 
-let prepare (state : t) : t =
+let initialize (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
   let registry = GraphRegistry.copy state.registry in
@@ -163,7 +169,15 @@ let concretize_node (state : t) (id : string) (node : Node.t) : Node.t =
   Store.replace state.store id (Node.Set.singleton node');
   node'
 
-let has_call_interceptor (state : t) (node : Node.t) : call_interceptor option =
+let get_lookup_interceptor (state : t) (node : Node.t) :
+    lookup_interceptor option =
+  Hashtbl.find_opt state.lookup_interceptors node.uid
+
+let set_lookup_interceptor (state : t) (node : Node.t)
+    (interceptor : lookup_interceptor) : unit =
+  Hashtbl.replace state.lookup_interceptors node.uid interceptor
+
+let get_call_interceptor (state : t) (node : Node.t) : call_interceptor option =
   Hashtbl.find_opt state.call_interceptors node.uid
 
 let set_call_interceptor (state : t) (node : Node.t)
