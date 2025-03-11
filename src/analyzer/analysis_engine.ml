@@ -60,10 +60,10 @@ let enqueue_all (engine : t) (nodes : Node.Set.t) : t =
 let result (engine : t) (node : Node.t) : t =
   { engine with worklist = Worklist.set_result engine.worklist node }
 
-let lookup (engine : t) (node : Node.t) (prop : string option) : Node.Set.t =
+let lookup (engine : t) (node : Node.t) (prop : Property.t) : Node.Set.t =
   Properties.compute engine.mdg engine.properties node [ prop ]
 
-let nested_lookup (engine : t) (node : Node.t) (props : string option list) :
+let nested_lookup (engine : t) (node : Node.t) (props : Property.t list) :
     Node.Set.t =
   Properties.compute engine.mdg engine.properties node props
 

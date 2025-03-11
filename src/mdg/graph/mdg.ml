@@ -4,29 +4,28 @@ type t =
   { nodes : (Location.t, Node.t) Hashtbl.t
   ; edges : (Location.t, Edge.Set.t) Hashtbl.t
   ; trans : (Location.t, Edge.Set.t) Hashtbl.t
+  ; jslib : (string, Node.t) Hashtbl.t
   ; literal : Node.t
-  ; jslib : Node.Set.t
   ; calls : Node.Set.t
   ; imports : Node.Set.t
-  ; exports : Node.Set.t
   }
 
 let create () : t =
   let nodes = Hashtbl.create Config.(!dflt_htbl_sz) in
   let edges = Hashtbl.create Config.(!dflt_htbl_sz) in
   let trans = Hashtbl.create Config.(!dflt_htbl_sz) in
+  let jslib = Hashtbl.create Config.(!dflt_htbl_sz) in
   let literal = Node.create_literal () in
-  let jslib = Node.Set.empty in
   let calls = Node.Set.empty in
   let imports = Node.Set.empty in
-  let exports = Node.Set.empty in
-  { nodes; edges; trans; literal; jslib; calls; imports; exports }
+  { nodes; edges; trans; literal; jslib; calls; imports }
 
 let copy (mdg : t) : t =
   let nodes = Hashtbl.copy mdg.nodes in
   let edges = Hashtbl.copy mdg.edges in
   let trans = Hashtbl.copy mdg.trans in
-  { mdg with nodes; edges; trans }
+  let jslib = Hashtbl.copy mdg.jslib in
+  { mdg with nodes; edges; trans; jslib }
 
 let get_node (mdg : t) (loc : Location.t) : Node.t =
   match Hashtbl.find_opt mdg.nodes loc with
@@ -42,6 +41,14 @@ let get_trans (mdg : t) (loc : Location.t) : Edge.Set.t =
   match Hashtbl.find_opt mdg.trans loc with
   | None -> Log.fail "expecting edge to location '%a' in mdg" Location.pp loc
   | Some edges -> edges
+
+let get_jslib_template (mdg : t) (name : string) : Node.t =
+  match Hashtbl.find_opt mdg.jslib name with
+  | None -> Log.fail "expecting jslib location with name '%s' in mdg" name
+  | Some node -> node
+
+let get_jslib_node (mdg : t) (name : string) : Node.t option =
+  Hashtbl.find_opt mdg.nodes (get_jslib_template mdg name).uid
 
 let pp_node (mdg : t) (ppf : Fmt.t) (node : Node.t) : unit =
   let edges = get_edges mdg node.uid in
@@ -67,24 +74,19 @@ let add_edge (mdg : t) (edge : Edge.t) : unit =
   Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.add edge edges);
   Hashtbl.replace mdg.trans edge.tar.uid (Edge.Set.add tran trans)
 
-let add_jslib (mdg : t) (node : Node.t) : t =
-  { mdg with jslib = Node.Set.add node mdg.jslib }
+let add_jslib (mdg : t) (name : string) (l_jslib : Node.t) : unit =
+  Hashtbl.replace mdg.jslib name l_jslib
 
-let add_call (mdg : t) (node : Node.t) : t =
-  { mdg with calls = Node.Set.add node mdg.calls }
+let add_call (mdg : t) (l_call : Node.t) : t =
+  { mdg with calls = Node.Set.add l_call mdg.calls }
 
-let add_imports (mdg : t) (node : Node.t) : t =
-  { mdg with imports = Node.Set.add node mdg.imports }
-
-let add_exports (mdg : t) (node : Node.t) : t =
-  { mdg with exports = Node.Set.add node mdg.exports }
+let add_imports (mdg : t) (l_import : Node.t) : t =
+  { mdg with imports = Node.Set.add l_import mdg.imports }
 
 let remove_node_meta (mdg : t) (node : Node.t) : t =
   match node.kind with
   | Call _ -> { mdg with calls = Node.Set.remove node mdg.calls }
   | Import _ -> { mdg with imports = Node.Set.remove node mdg.imports }
-  | _ when Node.Set.mem node mdg.exports ->
-    { mdg with exports = Node.Set.remove node mdg.exports }
   | _ -> mdg
 
 let remove_node (mdg : t) (node : Node.t) : t =
@@ -103,6 +105,9 @@ let remove_node (mdg : t) (node : Node.t) : t =
   Hashtbl.remove mdg.trans node.uid;
   remove_node_meta mdg node
 
+let remove_nodes (mdg : t) (nodes : Node.t list) : t =
+  List.fold_left remove_node mdg nodes
+
 let remove_edge (mdg : t) (edge : Edge.t) : unit =
   let tran = Edge.transpose edge in
   let edges = get_edges mdg edge.src.uid in
@@ -110,12 +115,13 @@ let remove_edge (mdg : t) (edge : Edge.t) : unit =
   Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.remove edge edges);
   Hashtbl.replace mdg.trans tran.src.uid (Edge.Set.remove tran trans)
 
+let remove_edges (mdg : t) (edges : Edge.t list) : unit =
+  List.iter (remove_edge mdg) edges
+
 let join (mdg1 : t) (mdg2 : t) : t =
-  let jslib = Node.Set.union mdg1.jslib mdg2.jslib in
   let calls = Node.Set.union mdg1.calls mdg2.calls in
   let imports = Node.Set.union mdg1.imports mdg2.imports in
-  let exports = Node.Set.union mdg1.exports mdg2.exports in
-  { mdg1 with jslib; calls; imports; exports }
+  { mdg1 with calls; imports }
 
 let lub (mdg1 : t) (mdg2 : t) : t =
   Fun.flip Hashtbl.iter mdg2.edges (fun loc edges2 ->
@@ -248,8 +254,8 @@ let object_final_traversal (final : bool) (f : Node.Set.t -> Node.t -> 'a -> 'a)
 let object_static_traversal ?(final = true) (f : Node.t -> 'a -> 'a) (mdg : t)
     (ls_visited : Node.Set.t) (node : Node.t) (prop : string) (acc : 'a) : 'a =
   let rec traverse ls_visited node acc =
-    let ls_dynamic = get_property mdg node None in
-    let ls_prop = get_property mdg node (Some prop) in
+    let ls_dynamic = get_property mdg node Dynamic in
+    let ls_prop = get_property mdg node (Static prop) in
     let acc' = List.fold_right f ls_dynamic acc in
     if not (List.is_empty ls_prop) then List.fold_right f ls_prop acc'
     else object_parents_traversal traverse mdg ls_visited node acc' in
@@ -295,5 +301,5 @@ let object_dynamic_lookup (mdg : t) (node : Node.t) : Node.Set.t =
 
 let object_lookup (mdg : t) (node : Node.t) (prop : Property.t) : Node.Set.t =
   match prop with
-  | Some prop' -> object_static_lookup mdg node prop'
-  | None -> object_dynamic_lookup mdg node
+  | Static prop' -> object_static_lookup mdg node prop'
+  | Dynamic -> object_dynamic_lookup mdg node

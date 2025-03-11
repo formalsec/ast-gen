@@ -20,8 +20,8 @@ let object_property_name (ls_obj : Node.Set.t) (obj : 'm Expression.t)
 
 let lookup_property (state : State.t) (ls_obj : Node.Set.t) (prop : Property.t)
     : Node.Set.t =
-  let lookup_f = Fun.flip (Mdg.object_lookup state.mdg) prop in
-  Node.Set.map_flat lookup_f ls_obj
+  Fun.flip Node.Set.map_flat ls_obj (fun l_obj ->
+      Mdg.object_lookup state.mdg l_obj prop )
 
 let wrap_literal_properties (state : State.t) (right : 'm Expression.t)
     (ls_right : Node.Set.t) (cid : cid) : Node.Set.t =
@@ -48,7 +48,7 @@ let add_static_orig_object_property (state : State.t) (name : string)
 
 let add_dynamic_orig_object_property (state : State.t) (name : string)
     (ls_obj : Node.Set.t) (ls_prop : Node.Set.t) (cid : cid) : unit =
-  let prop = Property.dynamic () in
+  let prop = Property.Dynamic in
   let set_deps_f l_node = Fun.flip (State.add_dependency_edge state) l_node in
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
       let ls_orig = Mdg.object_orig_versions state.mdg l_obj in
@@ -81,14 +81,14 @@ let static_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
 let dynamic_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
     (ls_prop : Node.Set.t) (cid : cid) : Node.Set.t =
   let l_node = State.add_object_node state cid name in
-  State.add_version_edge state l_obj l_node None;
+  State.add_version_edge state l_obj l_node Property.Dynamic;
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop;
   Store.strong_update state.store l_obj l_node;
   Node.Set.singleton l_node
 
 let dynamic_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
     (ls_prop : Node.Set.t) (cid : cid) : Node.Set.t =
-  let prop = Property.dynamic () in
+  let prop = Property.Dynamic in
   let l_node = State.add_object_node state cid name in
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
       let ls_new = Node.Set.of_list [ l_obj; l_node ] in
@@ -127,14 +127,23 @@ let add_function_call (state : State.t) (name_call : string)
       Node.Set.iter (add_arg_f idx) ls_arg );
   (state', l_call, l_retn)
 
+let lookup_interceptor (state : State.t) (name : string) (ls_obj : Node.Set.t)
+    (prop : Property.t) (ls_lookup : Node.Set.t) : State.t =
+  let ls_orig = Node.Set.map_flat (Mdg.object_orig_versions state.mdg) ls_obj in
+  Fun.flip2 Node.Set.fold ls_orig state (fun l_orig state ->
+      match State.get_lookup_interceptor state l_orig with
+      | None -> state
+      | Some interceptor_f ->
+        interceptor_f state l_orig name ls_obj prop ls_lookup )
+
 let call_interceptor (state : State.t) (ls_func : Node.Set.t) (l_call : Node.t)
     (l_retn : Node.t) (ls_args : Node.Set.t list) (args : 'm Expression.t list)
     (cid : cid) : State.t =
-  Fun.flip2 Node.Set.fold ls_func state (fun l_func state' ->
-      match State.has_call_interceptor state' l_func with
-      | None -> state'
+  Fun.flip2 Node.Set.fold ls_func state (fun l_func state ->
+      match State.get_call_interceptor state l_func with
+      | None -> state
       | Some interceptor_f ->
-        interceptor_f state' l_func l_call l_retn ls_args args cid )
+        interceptor_f state l_func l_call l_retn ls_args args cid )
 
 let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   let exprs_f acc expr = Node.Set.union acc (eval_expr state expr) in
@@ -161,7 +170,7 @@ let initialize_builder ?(env = State.Env.default ())
 
 let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
     State.t =
-  let state' = State.prepare state in
+  let state' = State.initialize state in
   let state'' = Jslib.initialize_state state' in
   initialize_hoisted_functions state'' stmts
 
@@ -216,34 +225,35 @@ and build_yield (state : State.t) (_left : 'm LeftValue.t)
 and build_static_lookup (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (cid : cid) : State.t =
   let name = LeftValue.name left in
-  let prop' = Property.static (Prop.name prop) in
+  let prop' = Property.Static (Prop.name prop) in
   let ls_obj = eval_expr state obj in
   let field_name = object_property_name ls_obj obj prop' in
   add_static_orig_object_property state field_name ls_obj prop' cid;
   let ls_lookup = lookup_property state ls_obj prop' in
   Store.replace state.store name ls_lookup;
-  state
+  lookup_interceptor state name ls_obj prop' ls_lookup
 
 and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t) (cid : cid) : State.t =
   let name = LeftValue.name left in
-  let prop' = Property.dynamic () in
+  let prop' = Property.Dynamic in
   let ls_obj = eval_expr state obj in
   let ls_prop = eval_expr state prop in
   let field_name = object_property_name ls_obj obj prop' in
   add_dynamic_orig_object_property state field_name ls_obj ls_prop cid;
   let ls_lookup = lookup_property state ls_obj prop' in
   Store.replace state.store name ls_lookup;
-  state
+  lookup_interceptor state name ls_obj prop' ls_lookup
 
 and build_static_update (state : State.t) (obj : 'm Expression.t)
     (prop : 'm Prop.t) (right : 'm Expression.t) (cid : cid) : State.t =
-  let prop' = Property.static (Prop.name prop) in
+  let prop' = Property.Static (Prop.name prop) in
   let ls_obj = eval_expr state obj in
+  let ls_obj' = Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_obj in
   let ls_right = eval_expr state right in
   let ls_right' = wrap_literal_properties state right ls_right cid in
-  let object_name = object_name ls_obj obj in
-  let ls_new = add_static_object_version state object_name ls_obj prop' cid in
+  let obj_name = object_name ls_obj obj in
+  let ls_new = add_static_object_version state obj_name ls_obj' prop' cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
       Fun.flip Node.Set.iter ls_right' (fun l_right ->
           State.add_property_edge state l_new l_right prop' ) );
@@ -251,13 +261,14 @@ and build_static_update (state : State.t) (obj : 'm Expression.t)
 
 and build_dynamic_update (state : State.t) (obj : 'm Expression.t)
     (prop : 'm Expression.t) (right : 'm Expression.t) (cid : cid) : State.t =
-  let prop' = Property.dynamic () in
+  let prop' = Property.Dynamic in
   let ls_obj = eval_expr state obj in
+  let ls_obj' = Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_obj in
   let ls_prop = eval_expr state prop in
   let ls_right = eval_expr state right in
   let ls_right' = wrap_literal_properties state right ls_right cid in
-  let object_name = object_name ls_obj obj in
-  let ls_new = add_dynamic_object_version state object_name ls_obj ls_prop cid in
+  let obj_name = object_name ls_obj obj in
+  let ls_new = add_dynamic_object_version state obj_name ls_obj' ls_prop cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
       Fun.flip Node.Set.iter ls_right' (fun l_right ->
           State.add_property_edge state l_new l_right prop' ) );
@@ -294,7 +305,7 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
     (cid : cid) : State.t =
   let name = LeftValue.name left in
-  let prop' = Property.static (Prop.str prop) in
+  let prop' = Property.Static (Prop.str prop) in
   let ls_obj = eval_expr state obj in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = ls_obj :: ls_args in
@@ -313,7 +324,7 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
     (args : 'm Expression.t list) (cid : cid) : State.t =
   let name = LeftValue.name left in
-  let prop' = Property.dynamic () in
+  let prop' = Property.Dynamic in
   let ls_obj = eval_expr state obj in
   let ls_prop = eval_expr state prop in
   let ls_args = List.map (eval_expr state) args in

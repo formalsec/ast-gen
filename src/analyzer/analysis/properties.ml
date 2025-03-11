@@ -1,33 +1,33 @@
 open Graphjs_base
 open Graphjs_mdg
 
-type t = (Location.t * string option, Node.t * Node.Set.t) Hashtbl.t
+type t = (Location.t * Property.t, Node.t * Node.Set.t) Hashtbl.t
 
 let create () : t = Hashtbl.create Config.(!dflt_htbl_sz)
 
-let mem (cache : t) (l_obj : Node.t) (prop : string option) : bool =
+let mem (cache : t) (l_obj : Node.t) (prop : Property.t) : bool =
   Hashtbl.mem cache (l_obj.uid, prop)
 
-let find (cache : t) (obj : Node.t) (prop : string option) : Node.Set.t option =
+let find (cache : t) (obj : Node.t) (prop : Property.t) : Node.Set.t option =
   Option.map snd (Hashtbl.find_opt cache (obj.uid, prop))
 
-let replace (cache : t) (l_obj : Node.t) (prop : string option)
+let replace (cache : t) (l_obj : Node.t) (prop : Property.t)
     (ls_prop : Node.Set.t) : unit =
   Hashtbl.replace cache (l_obj.uid, prop) (l_obj, ls_prop)
 
-let get (cache : t) (l_obj : Node.t) (prop : string option) : Node.Set.t =
+let get (cache : t) (l_obj : Node.t) (prop : Property.t) : Node.Set.t =
   Option.value ~default:Node.Set.empty (find cache l_obj prop)
 
 let pp (ppf : Fmt.t) (cache : t) : unit =
-  let pp_p ppf prop = Fmt.pp_str ppf (Option.value ~default:"*" prop) in
   let pp_v ppf (_, prop) (l_obj, ls_props) =
-    Fmt.fmt ppf "%a.%a -> %a" Node.pp l_obj pp_p prop Node.Set.pp ls_props in
+    Fmt.fmt ppf "%a.%a -> %a" Node.pp l_obj Property.pp prop Node.Set.pp
+      ls_props in
   Fmt.(pp_htbl !>"@\n" (fun ppf (key, value) -> pp_v ppf key value)) ppf cache
 
 let str (cache : t) : string = Fmt.str "%a" pp cache
 
 let rec compute_properties (mdg : Mdg.t) (cache : t) (l_obj : Node.t)
-    (props : string option list) (acc : Node.Set.t) : Node.Set.t =
+    (props : Property.t list) (acc : Node.Set.t) : Node.Set.t =
   match props with
   | [] -> Node.Set.singleton l_obj
   | [ prop ] ->
@@ -39,7 +39,7 @@ let rec compute_properties (mdg : Mdg.t) (cache : t) (l_obj : Node.t)
         compute_properties mdg cache l_obj' props' acc )
 
 and compute_property (mdg : Mdg.t) (cache : t) (l_obj : Node.t)
-    (prop : string option) : Node.Set.t =
+    (prop : Property.t) : Node.Set.t =
   match find cache l_obj prop with
   | Some ls_prop -> ls_prop
   | None ->
@@ -47,6 +47,6 @@ and compute_property (mdg : Mdg.t) (cache : t) (l_obj : Node.t)
     replace cache l_obj prop ls_prop;
     ls_prop
 
-let compute (mdg : Mdg.t) (cache : t) (l_obj : Node.t)
-    (props : string option list) : Node.Set.t =
+let compute (mdg : Mdg.t) (cache : t) (l_obj : Node.t) (props : Property.t list)
+    : Node.Set.t =
   compute_properties mdg cache l_obj props Node.Set.empty

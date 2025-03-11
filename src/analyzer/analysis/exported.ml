@@ -3,13 +3,13 @@ open Graphjs_mdg
 
 module Interaction = struct
   type t =
-    | Lookup of string option
+    | Lookup of Property.t
     | Invoke
 
   let pp (ppf : Fmt.t) (itx : t) : unit =
     match itx with
-    | Lookup (Some prop) -> Fmt.fmt ppf ".%s" prop
-    | Lookup None -> Fmt.pp_str ppf ".*"
+    | Lookup (Static prop) -> Fmt.fmt ppf ".%s" prop
+    | Lookup Dynamic -> Fmt.pp_str ppf ".*"
     | Invoke -> Fmt.pp_str ppf "()"
 
   let str (itx : t) : string = Fmt.str "%a" pp itx
@@ -110,7 +110,8 @@ let rec compute_object (mdg : Mdg.t) (cache : t) (prev : Scheme.t)
 
 let compute (mdg : Mdg.t) : t =
   let cache = create () in
-  let ls_exported = mdg.exports in
+  let ls_exported = Node.Set.empty in
+  (* let ls_exported = mdg.exports in *)
   (* let ls_exported = Mdg.exported_object mdg in *)
   if Node.Set.is_empty ls_exported then cache
   else (

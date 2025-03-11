@@ -3,8 +3,8 @@ open Graphjs_mdg
 
 module Source = struct
   type t =
-    | Param of Node.t * string option list
-    | Retn of Node.t * string option list
+    | Param of Node.t * Property.t list
+    | Retn of Node.t * Property.t list
     | TaintSource
 
   let is_taint_source (src : t) : bool =
@@ -18,16 +18,15 @@ module Source = struct
   let equal (src1 : t) (src2 : t) : bool = Location.equal (id src1) (id src2)
   let compare (src1 : t) (src2 : t) : int = Location.compare (id src1) (id src2)
 
-  let extend (prop : string option) (src : t) : t =
+  let extend (prop : Property.t) (src : t) : t =
     match src with
     | Param (l_param, props) -> Param (l_param, props @ [ prop ])
     | Retn (l_call, props) -> Retn (l_call, props @ [ prop ])
     | TaintSource -> src
 
-  let pp_props (ppf : Fmt.t) (props : string option list) =
-    let pp_prop ppf prop = Fmt.pp_str ppf (Option.value ~default:"*" prop) in
+  let pp_props (ppf : Fmt.t) (props : Property.t list) =
     if not (List.is_empty props) then
-      Fmt.fmt ppf ", %a" Fmt.(pp_lst !>"." pp_prop) props
+      Fmt.fmt ppf ", %a" Fmt.(pp_lst !>"." Property.pp) props
 
   let pp (ppf : Fmt.t) (src : t) : unit =
     match src with
