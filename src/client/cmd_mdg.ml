@@ -11,6 +11,7 @@ module Options = struct
     ; unsafe_literal_properties : bool
     ; export_graph : bool
     ; export_subgraphs : bool
+    ; export_view : Export_view.t
     ; export_timeout : int
     ; parse_env : Cmd_parse.Options.env
     }
@@ -27,12 +28,13 @@ module Options = struct
     | None -> Properties.default_taint_config ()
 
   let env (taint_config' : Fpath.t option) (unsafe_literal_properties' : bool)
-      (no_export : bool) (no_subgraphs : bool) (export_timeout' : int)
-      (parse_env' : Cmd_parse.Options.env) : env =
+      (no_export : bool) (no_subgraphs : bool) (export_view' : Export_view.t)
+      (export_timeout' : int) (parse_env' : Cmd_parse.Options.env) : env =
     { taint_config = parse_taint_config taint_config'
     ; unsafe_literal_properties = unsafe_literal_properties'
     ; export_graph = not no_export
     ; export_subgraphs = not no_subgraphs
+    ; export_view = export_view'
     ; export_timeout = export_timeout'
     ; parse_env = parse_env'
     }
@@ -130,7 +132,10 @@ let builder_env (env : Options.env) : State.Env.t =
   { unsafe_literal_properties = env.unsafe_literal_properties }
 
 let export_env (env : Options.env) : Svg_exporter.Env.t =
-  { subgraphs = env.export_subgraphs; timeout = env.export_timeout }
+  { subgraphs = env.export_subgraphs
+  ; view = env.export_view
+  ; timeout = env.export_timeout
+  }
 
 let read_taint_config (env : Options.env) (w : Workspace.t) :
     Taint_config.t Exec.status =

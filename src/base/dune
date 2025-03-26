@@ -19,4 +19,4 @@
   log
   json
   time)
- (libraries unix fpath yojson))
+ (libraries unix str fpath yojson))
