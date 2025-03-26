@@ -11,6 +11,7 @@
   mdg
   store
   state
+  export_view
   svg_exporter
   builder
   merger

@@ -20,24 +20,6 @@ module Env = struct
     fun () -> dflt
 end
 
-module DotNode = struct
-  type t = Node.t
-
-  let hash = Node.hash
-  let equal = Node.equal
-  let compare = Node.compare
-end
-
-module DotEdge = struct
-  type t = Edge.t
-
-  let default = Edge.default ()
-  let compare = Edge.compare
-end
-
-module G =
-  Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (DotNode) (DotEdge)
-
 module Dot = struct
   let env = ref (Env.default ())
   let mdg = ref (Mdg.create ())
@@ -61,24 +43,24 @@ module Dot = struct
     | Dependency -> Fmt.str "D"
     | Property prop -> Fmt.str "P(%s)" (String.escaped (Property.str prop))
     | Version prop -> Fmt.str "V(%s)" (String.escaped (Property.str prop))
-    | Parameter 0 -> Fmt.str "this"
+    | Parameter 0 -> Fmt.str "This"
     | Parameter idx -> Fmt.str "Param:%d" idx
+    | Argument 0 -> Fmt.str "this"
     | Argument idx -> Fmt.str "Arg:%d" idx
     | Caller -> Fmt.str "Call"
     | Return -> Fmt.str "Return"
 
-  let get_func (node : Node.t) : Node.t option =
+  let get_function (node : Node.t) : Node.t option =
     Option.bind (Node.func node) (fun l_func ->
         if Edge.Set.is_empty (Mdg.get_edges !mdg l_func.uid) then None
         else Some l_func )
 
-  let rec func_depth (l_func : Node.t) : int =
-    match l_func.parent with
-    | None -> 1
-    | Some l_func' -> func_depth l_func' + 1
+  let rec function_depth (l_func : Node.t) : int =
+    Option.fold l_func.parent ~none:1 ~some:(fun l_func ->
+        1 + function_depth l_func )
 
   include Graph.Graphviz.Dot (struct
-    include G
+    include Export_view.G
 
     type graph_attrs = Graph.Graphviz.DotAttributes.graph list
     type vertex_attrs = Graph.Graphviz.DotAttributes.vertex list
@@ -89,10 +71,12 @@ module Dot = struct
 
     let default_vertex_attributes (_ : t) : vertex_attrs =
       [ `Shape `Box; `Style `Rounded; `Style `Filled; `Penwidth 1.3
-      ; `Fontsize 18; `Fontname "Times-Roman" ]
+      ; `Fontsize 14; `Fontname "Times-Roman" ]
 
     let default_edge_attributes (_ : t) : edge_attrs =
-      [ `Arrowhead `Normal; `Fontsize 16; `Fontname "Times-Roman" ]
+      [ `Arrowhead `Normal; `Fontsize 12; `Fontname "Times-Roman" ]
+
+    let vertex_name (node : V.t) : string = Location.str node.uid
 
     let vertex_attributes (node : V.t) : vertex_attrs =
       `Label (node_label node)
@@ -125,15 +109,15 @@ module Dot = struct
         [ `Style `Dotted; `Color 6684672; `Fontcolor 6684672 ]
       | Parameter 0 -> [ `Color 6684723; `Fontcolor 6684723 ]
       | Parameter _ -> [ `Color 26112; `Fontcolor 26112 ]
+      | Argument 0 -> [ `Style `Dotted; `Color 6684723; `Fontcolor 6684723 ]
       | Caller -> [ `Color 6697728; `Fontcolor 6697728 ]
       | Return -> [ `Style `Dotted; `Color 26112; `Fontcolor 26112 ]
       | _ -> [ `Color 2105376 ] )
 
-    let vertex_name (node : V.t) : string = Location.str node.uid
     let subgraph_name (l_func : V.t) : string = Fmt.str "%d" (Node.uid l_func)
 
     let subgraph_color (l_func : V.t) : int =
-      let depth = func_depth l_func in
+      let depth = function_depth l_func in
       let factor = 0.2 +. (0.497 *. log (float_of_int depth)) in
       let light = 255.0 in
       let dark = 192.0 in
@@ -146,7 +130,7 @@ module Dot = struct
       ; `Fillcolor (subgraph_color l_func) ]
 
     let get_subgraph (node : V.t) : subgraph option =
-      match (!env.subgraphs, get_func node) with
+      match (!env.subgraphs, get_function node) with
       | (false, _) | (true, None) -> None
       | (true, Some l_func) ->
         let sg_name = subgraph_name l_func in
@@ -156,26 +140,15 @@ module Dot = struct
   end)
 end
 
-let build_graph_edges (edge : Edge.t) (graph : G.t) : G.t =
-  match edge.kind with
-  | Argument 0 -> graph
-  | _ ->
-    let e = G.E.create edge.src edge edge.tar in
-    G.add_edge_e graph e
-
-let build_graph_nodes (mdg : Mdg.t) (loc : Location.t) (node : Node.t)
-    (graph : G.t) : G.t =
-  let graph' = G.add_vertex graph node in
-  let edges = Mdg.get_edges mdg loc in
-  Edge.Set.fold build_graph_edges edges graph'
-
-let build_graph (mdg : Mdg.t) : G.t =
-  Hashtbl.fold (build_graph_nodes mdg) mdg.nodes G.empty
+let build_graph (mdg : Mdg.t) : Export_view.G.t =
+  let module ExportView = Export_view.Default in
+  ExportView.build_graph mdg
 
 let svg_cmd (env : Env.t) (svg : string) (dot : string) : string =
   Fmt.str "timeout %d dot -Tsvg %s -o %s 2>/dev/null" env.timeout dot svg
 
-let output_dot (env : Env.t) (mdg : Mdg.t) (dot : string) (graph : G.t) : unit =
+let output_dot (env : Env.t) (mdg : Mdg.t) (dot : string)
+    (graph : Export_view.G.t) : unit =
   let oc = open_out_bin dot in
   Dot.set_env env;
   Dot.set_mdg mdg;

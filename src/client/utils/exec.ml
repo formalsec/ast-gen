@@ -45,6 +45,7 @@ let graphjs (exec_f : unit -> 'a) : 'a status =
   | Graphjs_parser.Flow_parser.Exn fmt -> exn (`ParseJS fmt)
   | Graphjs_mdg.Svg_exporter.Exn fmt -> exn (`ExportMDG fmt)
   | Graphjs_mdg.Svg_exporter.Timeout -> exn `Timeout
+  | Graphjs_mdg.Export_view.Exn fmt -> exn (`ExportMDG fmt)
   | err ->
     let msg = Printexc.to_string err in
     let trace = Printexc.get_backtrace () in
