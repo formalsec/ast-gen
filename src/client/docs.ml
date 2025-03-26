@@ -137,9 +137,10 @@ module ParseOpts = struct
     let doc =
       "Analysis mode used in a Graph.js execution. Options include (1) 'basic' \
        where the attacker controlls all the parameters from all the functions; \
-       (2): 'singlefile' where the attacker controlls the functions exported \
-       by the input file; and (3) 'multifile' where the attacker controlls the \
-       functions that were exported by the 'main' file of the module." in
+       (2): 'singlefile' [default] where the attacker controlls the functions \
+       exported by the input file; and (3) 'multifile' where the attacker \
+       controlls the functions that were exported by the 'main' file of the \
+       module." in
     let modes = Arg.enum Enums.AnalysisMode.(args all) in
     Arg.(value & opt modes SingleFile & info [ "mode" ] ~docv ~doc)
 
@@ -223,6 +224,20 @@ module MdgOpts = struct
   let no_subgraphs =
     let doc = "Run without generating subgraphs in the .svg representation." in
     Arg.(value & flag & info [ "no-subgraphs" ] ~doc)
+
+  let export_view =
+    let docv = "VIEW" in
+    let doc =
+      "Export view when exporting the graph into the .svg representation. \
+       Options include (1) 'full' [default] for exporting the complete graph; \
+       (2) 'calls' for exporting the program's call graph; (3) \
+       'function:<#loc>' for exporting the graph of the function at location \
+       <#loc>; (4) 'object:<#loc>' for exporting the graph of the object at \
+       location <#loc>; and (5) 'reaches:<#loc>' for exporting the subgraph \
+       that reaches the node at location <#loc>." in
+    let parse_f = Enums.ExportView.parse in
+    let default = Enums.ExportView.default () in
+    Arg.(value & opt parse_f default & info [ "export-view" ] ~docv ~doc)
 
   let export_timeout =
     let doc = "Timeout for exporting the graph into the .svg representation." in

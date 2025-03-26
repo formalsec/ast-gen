@@ -12,11 +12,12 @@ let timeout () : 'a = Stdlib.raise Timeout
 module Env = struct
   type t =
     { subgraphs : bool
+    ; view : Export_view.t
     ; timeout : int
     }
 
   let default =
-    let dflt = { subgraphs = true; timeout = 30 } in
+    let dflt = { subgraphs = true; view = Full; timeout = 30 } in
     fun () -> dflt
 end
 
@@ -140,9 +141,13 @@ module Dot = struct
   end)
 end
 
-let build_graph (mdg : Mdg.t) : Export_view.G.t =
-  let module ExportView = Export_view.Default in
-  ExportView.build_graph mdg
+let build_graph (env : Env.t) (mdg : Mdg.t) : Export_view.G.t =
+  match env.view with
+  | Full -> Export_view.Full.build_graph mdg
+  | Calls -> Export_view.Calls.build_graph mdg
+  | Function loc -> Export_view.Function.build_graph mdg loc
+  | Object loc -> Export_view.Object.build_graph mdg loc
+  | Reaches loc -> Export_view.Reaches.build_graph mdg loc
 
 let svg_cmd (env : Env.t) (svg : string) (dot : string) : string =
   Fmt.str "timeout %d dot -Tsvg %s -o %s 2>/dev/null" env.timeout dot svg
@@ -163,7 +168,7 @@ let output_svg (env : Env.t) (svg : string) (dot : string) : unit =
   | _ -> raise "Unable to generate the %S file." svg
 
 let export_dot ?(env = Env.default ()) (dot : Fpath.t) (mdg : Mdg.t) : unit =
-  let graph = build_graph mdg in
+  let graph = build_graph env mdg in
   output_dot env mdg (Fpath.to_string dot) graph
 
 let export_svg ?(env = Env.default ()) (svg : Fpath.t) :
@@ -171,6 +176,6 @@ let export_svg ?(env = Env.default ()) (svg : Fpath.t) :
   | `Dot dot -> output_svg env (Fpath.to_string svg) (Fpath.to_string dot)
   | `Mdg mdg ->
     let dot = Filename.temp_file "graphjs" "dot" in
-    let graph = build_graph mdg in
+    let graph = build_graph env mdg in
     output_dot env mdg dot graph;
     output_svg env (Fpath.to_string svg) dot

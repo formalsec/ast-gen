@@ -29,7 +29,14 @@ end
 module G =
   Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (GraphNode) (GraphEdge)
 
-module Default = struct
+type t =
+  | Full
+  | Calls
+  | Function of Location.t
+  | Object of Location.t
+  | Reaches of Location.t
+
+module Full = struct
   let build_graph_node (node : Node.t) (graph : G.t) : G.t =
     G.add_vertex graph node
 
@@ -81,26 +88,7 @@ module Function = struct
     |> Hashtbl.fold (fun _ -> Edge.Set.fold (build_graph_edge l_node)) mdg.edges
 end
 
-module Flow = struct
-  type worklist = Node.t Queue.t
-  type visited = (Location.t, unit) Hashtbl.t
-
-  let visit_f (_ : Edge.t) : bool = true
-  let node_f (node : Node.t) (graph : G.t) : G.t = G.add_vertex graph node
-
-  let edge_f (tran : Edge.t) (graph : G.t) : G.t =
-    let edge = Edge.transpose tran in
-    G.add_edge_e graph (G.E.create edge.src edge edge.tar)
-
-  let build_graph (mdg : Mdg.t) (loc : Location.t) : G.t =
-    let node = get_node mdg loc in
-    Mdg.visit_backwards visit_f node_f edge_f mdg node G.empty
-end
-
 module Object = struct
-  type worklist = Node.t Queue.t
-  type visited = (Location.t, unit) Hashtbl.t
-
   let get_object (mdg : Mdg.t) (uid : Location.t) : Node.t =
     let l_obj = get_node mdg uid in
     match l_obj.kind with
@@ -118,4 +106,17 @@ module Object = struct
   let build_graph (mdg : Mdg.t) (loc : Location.t) : G.t =
     let node = get_object mdg loc in
     Mdg.visit_forwards visit_f node_f edge_f mdg node G.empty
+end
+
+module Reaches = struct
+  let visit_f (_ : Edge.t) : bool = true
+  let node_f (node : Node.t) (graph : G.t) : G.t = G.add_vertex graph node
+
+  let edge_f (tran : Edge.t) (graph : G.t) : G.t =
+    let edge = Edge.transpose tran in
+    G.add_edge_e graph (G.E.create edge.src edge edge.tar)
+
+  let build_graph (mdg : Mdg.t) (loc : Location.t) : G.t =
+    let node = get_node mdg loc in
+    Mdg.visit_backwards visit_f node_f edge_f mdg node G.empty
 end

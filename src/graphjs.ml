@@ -68,6 +68,7 @@ let mdg_env =
   $ Docs.MdgOpts.unsafe_literal_properties
   $ Docs.MdgOpts.no_export
   $ Docs.MdgOpts.no_subgraphs
+  $ Docs.MdgOpts.export_view
   $ Docs.MdgOpts.export_timeout
   $ parse_env
 

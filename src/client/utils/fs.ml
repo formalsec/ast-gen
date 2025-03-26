@@ -9,13 +9,13 @@ module Parser = struct
 
   let check (check_f : Fpath.t -> bool) (kind : string) (fpath : t) : conv =
     if check_f fpath then `Ok fpath
-    else `Error (Fmt.str "Path '%a' is not a valid %s!" pp fpath kind)
+    else `Error (Fmt.str "Path '%a' is not a valid %s." pp fpath kind)
 
   let parse (parse_f : t -> (bool, [< `Msg of string ]) Result.t)
       (kind : string) (fpath : t) : conv =
     match parse_f fpath with
     | Ok true -> `Ok fpath
-    | Ok false -> `Error (Fmt.str "%s '%a' not found!" kind pp fpath)
+    | Ok false -> `Error (Fmt.str "%s '%a' not found." kind pp fpath)
     | Error (`Msg err) -> `Error err
 
   let fix_dir (fpath : t) : t =
