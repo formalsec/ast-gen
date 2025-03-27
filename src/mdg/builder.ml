@@ -3,10 +3,11 @@ open Graphjs_share
 open Graphjs_ast
 open Metadata
 
-type cid = State.GraphRegistry.id
+type 'a el = ('a, Region.t) Metadata.t
+type cid = Registry.cid
 
-let cid (stmt : 'a Statement.t) : cid = State.GraphRegistry.cid stmt
-let offset (cid : cid) (ofs : int) : cid = State.GraphRegistry.offset cid ofs
+let newcid (el : 'a el) : cid = Registry.cid el
+let offset (cid : cid) (ofs : int) : cid = Registry.offset cid ofs
 
 let object_name (ls_obj : Node.Set.t) (obj : 'm Expression.t) : string =
   if Node.Set.cardinal ls_obj == 1 then
@@ -179,7 +180,7 @@ and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
   Fun.flip2 List.fold_left state stmts (fun state stmt ->
       match stmt.el with
       | `FunctionDefinition func when FunctionDefinition.is_hoisted func ->
-        build_function_declaration state func.left func.params (cid stmt)
+        build_function_declaration state func.left func.params (newcid stmt)
       | _ -> state )
 
 and build_assignment (state : State.t) (left : 'm LeftValue.t)
@@ -289,13 +290,13 @@ and build_dynamic_delete (state : State.t) (_left : 'm LeftValue.t)
 and build_function_call (state : State.t) (left : 'm LeftValue.t)
     (callee : 'm Identifier.t) (args : 'm Expression.t list) (cid : cid) :
     State.t =
+  let cid1 = newcid left in
+  let cid2 = offset cid 1 in
   let name_call = Identifier.name callee in
   let name_retn = LeftValue.name left in
   let ls_func = eval_store_expr state name_call in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = Node.Set.empty :: ls_args in
-  let cid1 = offset cid 1 in
-  let cid2 = offset cid 2 in
   let (state', l_call, l_retn) =
     add_function_call state name_call name_retn ls_func ls_args' cid cid1 in
   Store.replace state'.store name_retn (Node.Set.singleton l_retn);
@@ -304,25 +305,28 @@ and build_function_call (state : State.t) (left : 'm LeftValue.t)
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
     (cid : cid) : State.t =
+  let cid1 = newcid left in
+  let cid2 = newcid prop in
+  let cid3 = offset cid 1 in
   let name = LeftValue.name left in
   let prop' = Property.Static (Prop.str prop) in
   let ls_obj = eval_expr state obj in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = ls_obj :: ls_args in
   let method_name = object_property_name ls_obj obj prop' in
-  add_static_orig_object_property state method_name ls_obj prop' cid;
+  add_static_orig_object_property state method_name ls_obj prop' cid2;
   let ls_method = lookup_property state ls_obj prop' in
-  let cid1 = offset cid 1 in
-  let cid2 = offset cid 2 in
-  let cid3 = offset cid 3 in
   let (state', l_call, l_retn) =
-    add_function_call state method_name name ls_method ls_args' cid1 cid2 in
+    add_function_call state method_name name ls_method ls_args' cid cid1 in
   Store.replace state'.store name (Node.Set.singleton l_retn);
   call_interceptor state' ls_method l_call l_retn ls_args' args cid3
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
     (args : 'm Expression.t list) (cid : cid) : State.t =
+  let cid1 = newcid left in
+  let cid2 = newcid prop in
+  let cid3 = offset cid 1 in
   let name = LeftValue.name left in
   let prop' = Property.Dynamic in
   let ls_obj = eval_expr state obj in
@@ -330,13 +334,10 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = ls_obj :: ls_args in
   let method_name = object_property_name ls_obj obj prop' in
-  add_dynamic_orig_object_property state method_name ls_obj ls_prop cid;
+  add_dynamic_orig_object_property state method_name ls_obj ls_prop cid2;
   let ls_method = lookup_property state ls_obj prop' in
-  let cid1 = offset cid 1 in
-  let cid2 = offset cid 2 in
-  let cid3 = offset cid 3 in
   let (state', l_call, l_retn) =
-    add_function_call state method_name name ls_method ls_args' cid1 cid2 in
+    add_function_call state method_name name ls_method ls_args' cid cid1 in
   Store.replace state'.store name (Node.Set.singleton l_retn);
   call_interceptor state' ls_method l_call l_retn ls_args' args cid3
 
@@ -371,12 +372,12 @@ and build_function_declaration (state : State.t) (left : 'm LeftValue.t)
   let l_func = State.add_function_node state cid name in
   Store.replace state.store name (Node.Set.singleton l_func);
   let state' = { state with curr_func = Some l_func } in
-  let cid' = offset cid (List.length params + 1) in
+  let cid' = newcid left in
   let l_this = State.add_parameter_node state' cid' 0 "this" in
   State.add_parameter_edge state' l_func l_this 0;
   Fun.flip List.iteri params (fun idx param ->
       let idx' = idx + 1 in
-      let cid' = offset cid idx' in
+      let cid' = newcid param in
       let name = Identifier.name param in
       let l_param = State.add_parameter_node state' cid' idx' name in
       State.add_parameter_edge state' l_func l_param idx' );
@@ -392,12 +393,11 @@ and build_function_definition (state : State.t) (left : 'm LeftValue.t)
   let store' = Store.copy state'.store in
   let state'' = { state' with store = store'; curr_func = Some l_func } in
   let state''' = initialize_hoisted_functions state'' body in
-  let cid' = offset cid (List.length params + 1) in
+  let cid' = newcid left in
   let l_this = State.get_node state cid' in
   Store.replace state'''.store "this" (Node.Set.singleton l_this);
-  Fun.flip List.iteri params (fun idx param ->
-      let idx' = idx + 1 in
-      let cid' = offset cid idx' in
+  Fun.flip List.iteri params (fun _ param ->
+      let cid' = newcid param in
       let name = Identifier.name param in
       let l_param = State.get_node state cid' in
       Store.replace state'''.store name (Node.Set.singleton l_param) );
@@ -453,35 +453,35 @@ and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
   | `ExprStmt _ -> state
   | `VarDecl _ -> state
   | `Assignment { left; right } -> build_assignment state left right
-  | `NewObject { left } -> build_new state left (cid stmt)
-  | `NewArray { left } -> build_new state left (cid stmt)
-  | `Unopt { left; arg; _ } -> build_unopt state left arg (cid stmt)
+  | `NewObject { left } -> build_new state left (newcid stmt)
+  | `NewArray { left } -> build_new state left (newcid stmt)
+  | `Unopt { left; arg; _ } -> build_unopt state left arg (newcid stmt)
   | `Binopt { left; arg1; arg2; _ } ->
-    build_binopt state left arg1 arg2 (cid stmt)
+    build_binopt state left arg1 arg2 (newcid stmt)
   | `Yield { left; arg; delegate } ->
-    build_yield state left arg delegate (cid stmt)
+    build_yield state left arg delegate (newcid stmt)
   | `StaticLookup { left; obj; prop } ->
-    build_static_lookup state left obj prop (cid stmt)
+    build_static_lookup state left obj prop (newcid stmt)
   | `DynamicLookup { left; obj; prop } ->
-    build_dynamic_lookup state left obj prop (cid stmt)
+    build_dynamic_lookup state left obj prop (newcid stmt)
   | `StaticUpdate { obj; prop; right } ->
-    build_static_update state obj prop right (cid stmt)
+    build_static_update state obj prop right (newcid stmt)
   | `DynamicUpdate { obj; prop; right } ->
-    build_dynamic_update state obj prop right (cid stmt)
+    build_dynamic_update state obj prop right (newcid stmt)
   | `StaticDelete { left; obj; prop } ->
-    build_static_delete state left obj prop (cid stmt)
+    build_static_delete state left obj prop (newcid stmt)
   | `DynamicDelete { left; obj; prop } ->
-    build_dynamic_delete state left obj prop (cid stmt)
+    build_dynamic_delete state left obj prop (newcid stmt)
   | `NewCall { left; callee; args } ->
-    build_function_call state left callee args (cid stmt)
+    build_function_call state left callee args (newcid stmt)
   | `FunctionCall { left; callee; args } ->
-    build_function_call state left callee args (cid stmt)
+    build_function_call state left callee args (newcid stmt)
   | `StaticMethodCall { left; obj; prop; args } ->
-    build_static_method_call state left obj prop args (cid stmt)
+    build_static_method_call state left obj prop args (newcid stmt)
   | `DynamicMethodCall { left; obj; prop; args } ->
-    build_dynamic_method_call state left obj prop args (cid stmt)
+    build_dynamic_method_call state left obj prop args (newcid stmt)
   | `FunctionDefinition { left; params; body; hoisted; _ } ->
-    build_function_definition state left params body hoisted (cid stmt)
+    build_function_definition state left params body hoisted (newcid stmt)
   | `DynamicImport _ -> state
   | `If { consequent; alternate; _ } -> build_if state consequent alternate
   | `Switch { cases; _ } -> build_switch state cases

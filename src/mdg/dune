@@ -10,6 +10,7 @@
   edge
   mdg
   store
+  registry
   state
   export_view
   svg_exporter
