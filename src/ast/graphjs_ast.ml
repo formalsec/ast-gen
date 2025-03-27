@@ -91,15 +91,15 @@ module Prop = struct
 end
 
 module Regex = struct
-  include Ast.Expression.Literal.Regex
+  include Ast.Expression.LiteralValue.Regex
 
   let create (pattern : string) (flags : string) : t = { pattern; flags }
   let pp (ppf : Fmt.t) (regex : t) : unit = Printer.pp_regex ppf regex
   let str (regex : t) : string = Fmt.str "%a" pp regex
 end
 
-module Literal = struct
-  include Ast.Expression.Literal
+module LiteralValue = struct
+  include Ast.Expression.LiteralValue
 
   let create (value : t') (raw : string) : t = { value; raw }
   let null () : t = create Null "null"
@@ -114,7 +114,7 @@ module Literal = struct
   let integer (value : int) : t =
     create (Number (float_of_int value)) (string_of_int value)
 
-  let to_expr (lit : t) : 'm Ast.Expression.t' = `Literal lit
+  let to_expr (literal : t) : 'm Ast.Expression.t' = `LiteralValue literal
   let pp (ppf : Fmt.t) (literal : t) : unit = Printer.pp_literal ppf literal
   let str (literal : t) : string = Fmt.str "%a" pp literal
 end
@@ -147,8 +147,8 @@ module TemplateElement = struct
   let to_expr (telement : 'm t) : 'm Ast.Expression.t' =
     let value = telement.el.value.raw in
     let raw = Fmt.str "%S" value in
-    let literal = Literal.string value raw in
-    Literal.to_expr literal
+    let literal = LiteralValue.string value raw in
+    LiteralValue.to_expr literal
 
   let pp (ppf : Fmt.t) (telement : 'm t) : unit =
     Printer.pp_template_element ppf telement

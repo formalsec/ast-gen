@@ -43,10 +43,10 @@ and pp_prop_access (ppf : Fmt.t) (prop : 'm Prop.t) : unit =
   | IProp id -> Fmt.fmt ppf ".%a" pp_identifier' id
   | LProp lit -> Fmt.fmt ppf "[%a]" pp_literal lit
 
-and pp_literal (ppf : Fmt.t) (literal : Expression.Literal.t) : unit =
+and pp_literal (ppf : Fmt.t) (literal : Expression.LiteralValue.t) : unit =
   Fmt.pp_str ppf literal.raw
 
-and pp_regex (ppf : Fmt.t) (regex : Expression.Literal.Regex.t) : unit =
+and pp_regex (ppf : Fmt.t) (regex : Expression.LiteralValue.Regex.t) : unit =
   Fmt.fmt ppf "/%s/%s" regex.pattern regex.flags
 
 and pp_template_literal (ppf : Fmt.t)
@@ -72,7 +72,7 @@ and pp_expr (ppf : Fmt.t) (expr : 'm Expression.t) : unit = pp_expr' ppf expr.el
 
 and pp_expr' (ppf : Fmt.t) (expr : 'm Expression.t') : unit =
   match expr with
-  | `Literal literal -> pp_literal ppf literal
+  | `LiteralValue literal -> pp_literal ppf literal
   | `TemplateLiteral tliteral -> pp_template_literal ppf tliteral
   | `Identifier id -> pp_identifier' ppf id
   | `This () -> pp_this ppf ()

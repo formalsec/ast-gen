@@ -31,12 +31,12 @@ and Prop : sig
 
   and t' =
     | IProp of Identifier.t'
-    | LProp of Expression.Literal.t
+    | LProp of Expression.LiteralValue.t
 end =
   Prop
 
 and Expression : sig
-  module Literal : sig
+  module LiteralValue : sig
     module Regex : sig
       type t =
         { pattern : string
@@ -88,7 +88,7 @@ and Expression : sig
   type 'm t = ('m, 'm t') Metadata.t
 
   and 'm t' =
-    [ `Literal of Literal.t
+    [ `LiteralValue of LiteralValue.t
     | `TemplateLiteral of 'm TemplateLiteral.t
     | `Identifier of Identifier.t'
     | `This of This.t

@@ -162,8 +162,8 @@ let create_function (ctx : Ctx.t) (n_left : lval) (n_params : id list)
 let get_property_expr (n_prop : prop) : expr' =
   match n_prop with
   | Static { el = Prop.IProp id; _ } ->
-    Literal.to_expr (Literal.string id.name (Fmt.str "%S" id.name))
-  | Static { el = Prop.LProp literal; _ } -> Literal.to_expr literal
+    LiteralValue.to_expr (LiteralValue.string id.name (Fmt.str "%S" id.name))
+  | Static { el = Prop.LProp literal; _ } -> LiteralValue.to_expr literal
   | Dynamic prop -> prop.el
 
 let get_stmt_lvals (n_stmts : n_stmt) : lval list =
@@ -264,28 +264,28 @@ and normalize_leftvalue (ctx : Ctx.t)
   LeftValue.create ~kind:(declaration_ctx ctx) id.name @!> loc
 
 and normalize_null_literal (_ : Ctx.t) (loc : Loc.t) : n_expr =
-  ([], Literal.(to_expr @@ null ()) @!> loc)
+  ([], LiteralValue.(to_expr @@ null ()) @!> loc)
 
 and normalize_string_literal (_ : Ctx.t) (loc : Loc.t)
     (literal : Loc.t Flow.StringLiteral.t) : n_expr =
-  ([], Literal.(to_expr @@ string literal.value literal.raw) @!> loc)
+  ([], LiteralValue.(to_expr @@ string literal.value literal.raw) @!> loc)
 
 and normalize_number_literal (_ : Ctx.t) (loc : Loc.t)
     (literal : Loc.t Flow.NumberLiteral.t) : n_expr =
-  ([], Literal.(to_expr @@ number literal.value literal.raw) @!> loc)
+  ([], LiteralValue.(to_expr @@ number literal.value literal.raw) @!> loc)
 
 and normalize_bigint_literal (_ : Ctx.t) (loc : Loc.t)
     (literal : Loc.t Flow.BigIntLiteral.t) : n_expr =
-  ([], Literal.(to_expr @@ bigint literal.value literal.raw) @!> loc)
+  ([], LiteralValue.(to_expr @@ bigint literal.value literal.raw) @!> loc)
 
 and normalize_boolean_literal (_ : Ctx.t) (loc : Loc.t)
     (literal : Loc.t Flow.BooleanLiteral.t) : n_expr =
-  ([], Literal.(to_expr @@ boolean literal.value) @!> loc)
+  ([], LiteralValue.(to_expr @@ boolean literal.value) @!> loc)
 
 and normalize_regexpr_literal (_ : Ctx.t) (loc : Loc.t)
     (literal : Loc.t Flow.RegExpLiteral.t) : n_expr =
   let n_regex = Regex.create literal.pattern literal.flags in
-  ([], Literal.(to_expr @@ regex n_regex literal.raw) @!> loc)
+  ([], LiteralValue.(to_expr @@ regex n_regex literal.raw) @!> loc)
 
 and normalize_template_expr (ctx : Ctx.t) (loc : Loc.t)
     (tliteral : (Loc.t, Loc.t) Flow.Expression.TemplateLiteral.t) : n_expr =
@@ -348,11 +348,11 @@ and normalize_property_key (ctx : Ctx.t) :
   | Identifier (loc, id) ->
     ([], Static (Prop.IProp (Identifier.create id.name) @!> loc))
   | StringLiteral (loc, lit) ->
-    ([], Static (Prop.LProp (Literal.string lit.value lit.raw) @!> loc))
+    ([], Static (Prop.LProp (LiteralValue.string lit.value lit.raw) @!> loc))
   | NumberLiteral (loc, lit) ->
-    ([], Static (Prop.LProp (Literal.number lit.value lit.raw) @!> loc))
+    ([], Static (Prop.LProp (LiteralValue.number lit.value lit.raw) @!> loc))
   | BigIntLiteral (loc, lit) ->
-    ([], Static (Prop.LProp (Literal.bigint lit.value lit.raw) @!> loc))
+    ([], Static (Prop.LProp (LiteralValue.bigint lit.value lit.raw) @!> loc))
   | PrivateName _ -> Log.fail "[not implemented]: private property"
   | Computed (_, { expression = expr; _ }) ->
     let (n_expr_s, n_expr) = (normalize_expr ctx) expr in
@@ -400,7 +400,7 @@ and normalize_getter_setter_config (_ : Ctx.t) (md : md) (kind : string)
     (n_func : expr) : n_expr =
   let p_kind = Prop.IProp (Identifier.create kind) @> md in
   let p_config = Prop.IProp (Identifier.create "configurable") @> md in
-  let n_tr = Literal.(to_expr @@ boolean true) @> md in
+  let n_tr = LiteralValue.(to_expr @@ boolean true) @> md in
   let n_conf = LeftValue.random () @> md in
   let n_conf' = LeftValue.to_expr n_conf @> md in
   let n_conf_new_s = NewObject.create_stmt n_conf @> md in
@@ -437,7 +437,7 @@ and normalize_array_element (ctx : Ctx.t) (n_arr : expr) (idx : int) :
 and normalize_expr_element (ctx : Ctx.t) (loc : Loc.t) (n_arr : expr)
     (idx : int) (value : (Loc.t, Loc.t) Flow.Expression.t) : n_stmt =
   let md = normalize_location loc in
-  let p_key = Prop.LProp (Literal.integer idx) @> md in
+  let p_key = Prop.LProp (LiteralValue.integer idx) @> md in
   let (n_value_s, n_value) = normalize_expr ctx value in
   let n_element_s = StaticUpdate.create_stmt n_arr p_key n_value @> md in
   n_value_s @ [ n_element_s ]
@@ -451,7 +451,7 @@ and normalize_null_undef_impl ((t_op, c_op) : Operator.binary * Operator.binary)
   let n_tnull' = LeftValue.to_expr n_tnull @> md in
   let n_tundf' = LeftValue.to_expr n_tundf @> md in
   let n_tnone' = LeftValue.to_expr n_tnone @> md in
-  let n_null = Literal.(to_expr @@ null ()) @> md in
+  let n_null = LiteralValue.(to_expr @@ null ()) @> md in
   let n_undf = Identifier.undefined_expr () @> md in
   let n_tnull_s = Binopt.create_stmt t_op n_tnull n_arg n_null @> md in
   let n_tundf_s = Binopt.create_stmt t_op n_tundf n_arg n_undf @> md in
@@ -550,7 +550,7 @@ and normalize_assignment_with_array (ctx : Ctx.t) (_ : Loc.t)
     | Flow.Pattern.Array.Hole _ -> []
     | Flow.Pattern.Array.Element (loc, { argument; default; _ }) ->
       let md = normalize_location loc in
-      let n_key = Static (Prop.LProp (Literal.integer idx) @> md) in
+      let n_key = Static (Prop.LProp (LiteralValue.integer idx) @> md) in
       let ctx' = { ctx with curr_lval = leftvalue_ctx ctx argument } in
       let normalize_assignment_arg_f = normalize_assignment_argument ctx' md in
       let (n_arg_s, n_arg) = normalize_assignment_arg_f n_key n_right default in
@@ -660,7 +660,7 @@ and normalize_logical_expr (ctx : Ctx.t) (loc : Loc.t)
 and normalize_logical_and_expr (ctx : Ctx.t) (loc : Loc.t)
     (logical : (Loc.t, Loc.t) Flow.Expression.Logical.t) : n_expr =
   let md = normalize_location loc in
-  let n_tr = Literal.(to_expr @@ boolean true) @> md in
+  let n_tr = LiteralValue.(to_expr @@ boolean true) @> md in
   let cmp_f n_lval = Binopt.create_stmt LogicalAnd n_lval in
   let (n_arg1_s, n_arg1) = normalize_expr !ctx logical.left in
   let n_asgn1_f n_left = [ cmp_f n_left n_arg1 n_tr @> md ] in
@@ -675,7 +675,7 @@ and normalize_logical_and_expr (ctx : Ctx.t) (loc : Loc.t)
 and normalize_logical_or_expr (ctx : Ctx.t) (loc : Loc.t)
     (logical : (Loc.t, Loc.t) Flow.Expression.Logical.t) : n_expr =
   let md = normalize_location loc in
-  let n_fls = Literal.(to_expr @@ boolean false) @> md in
+  let n_fls = LiteralValue.(to_expr @@ boolean false) @> md in
   let cmp_f n_left = Binopt.create_stmt LogicalAnd n_left in
   let (n_arg1_s, n_arg1) = normalize_expr !ctx logical.left in
   let n_asgn1_f n_left = [ cmp_f n_left n_arg1 n_fls @> md ] in
@@ -719,7 +719,7 @@ and normalize_update_expr (ctx : Ctx.t) (loc : Loc.t)
     (update : (Loc.t, Loc.t) Flow.Expression.Update.t) : n_expr =
   let md = normalize_location loc in
   let binopt = translate_update update.operator in
-  let n_one = Literal.(to_expr @@ integer 1) @> md in
+  let n_one = LiteralValue.(to_expr @@ integer 1) @> md in
   let n_left = get_lval_ctx ctx md in
   let n_left' = LeftValue.to_expr n_left @> md in
   let op_pos_f sto upd = if update.prefix then [ upd; sto ] else [ sto; upd ] in
@@ -782,15 +782,15 @@ and normalize_member_property (ctx : Ctx.t) :
   | PropertyIdentifier (loc, id) ->
     ([], Static (Prop.IProp (Identifier.create id.name) @!> loc))
   | PropertyExpression (loc, NullLiteral _) ->
-    ([], Static (Prop.LProp (Literal.null ()) @!> loc))
+    ([], Static (Prop.LProp (LiteralValue.null ()) @!> loc))
   | PropertyExpression (loc, StringLiteral lit) ->
-    ([], Static (Prop.LProp (Literal.string lit.value lit.raw) @!> loc))
+    ([], Static (Prop.LProp (LiteralValue.string lit.value lit.raw) @!> loc))
   | PropertyExpression (loc, NumberLiteral lit) ->
-    ([], Static (Prop.LProp (Literal.number lit.value lit.raw) @!> loc))
+    ([], Static (Prop.LProp (LiteralValue.number lit.value lit.raw) @!> loc))
   | PropertyExpression (loc, BigIntLiteral lit) ->
-    ([], Static (Prop.LProp (Literal.bigint lit.value lit.raw) @!> loc))
+    ([], Static (Prop.LProp (LiteralValue.bigint lit.value lit.raw) @!> loc))
   | PropertyExpression (loc, BooleanLiteral lit) ->
-    ([], Static (Prop.LProp (Literal.boolean lit.value) @!> loc))
+    ([], Static (Prop.LProp (LiteralValue.boolean lit.value) @!> loc))
   | PropertyExpression expr ->
     let (n_expr_s, n_expr) = normalize_expr ctx expr in
     (n_expr_s, Dynamic n_expr)
@@ -889,7 +889,7 @@ and normalize_tagged_template (ctx : Ctx.t) (loc : Loc.t)
   let n_quasis' = List.map quasi_f n_quasis in
   let n_quasi_arr = LeftValue.random () @> md in
   let n_quasi_arr' = LeftValue.to_expr n_quasi_arr @> md in
-  let key_f i = Prop.LProp (Literal.integer i) @> md in
+  let key_f i = Prop.LProp (LiteralValue.integer i) @> md in
   let upd_f i e = StaticUpdate.create_stmt n_quasi_arr' (key_f i) e @> md in
   let n_quasi_arr_s = NewArray.create_stmt n_quasi_arr @> md in
   let n_quasi_upd_s = List.mapi upd_f n_quasis' in
@@ -1046,7 +1046,7 @@ and normalize_while_stmt (ctx : Ctx.t) (loc : Loc.t)
 and normalize_dowhile_stmt (ctx : Ctx.t) (loc : Loc.t)
     (dowhile : (Loc.t, Loc.t) Flow.Statement.DoWhile.t) : n_stmt =
   let md = normalize_location loc in
-  let n_tr = Literal.(to_expr @@ boolean true) @> md in
+  let n_tr = LiteralValue.(to_expr @@ boolean true) @> md in
   let n_test_wrp = LeftValue.random () @> md in
   let n_test_wrp' = LeftValue.initialize n_test_wrp in
   let n_test_wrp'' = LeftValue.to_expr n_test_wrp @> md in
@@ -1061,7 +1061,7 @@ and normalize_dowhile_stmt (ctx : Ctx.t) (loc : Loc.t)
 and normalize_for_stmt (ctx : Ctx.t) (loc : Loc.t)
     (for' : (Loc.t, Loc.t) Flow.Statement.For.t) : n_stmt =
   let md = normalize_location loc in
-  let n_tr = Literal.(to_expr @@ boolean true) @> md in
+  let n_tr = LiteralValue.(to_expr @@ boolean true) @> md in
   let n_init_s = normalize_for_init ctx for'.init in
   let (n_test_s, n_test) = normalize_expr_opt ctx for'.test in
   let n_body_s = normalize_stmt ctx for'.body in

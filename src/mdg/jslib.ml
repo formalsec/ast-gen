@@ -62,8 +62,9 @@ end
 module CallInterceptor = struct
   let require (state : State.t) (_ : Node.t) (_ : Node.t) (l_retn : Node.t)
       (_ : Node.Set.t list) (es : 'm Expression.t list) (cid : cid) : State.t =
+    let open Metadata in
     match es with
-    | Metadata.{ el = `Literal Literal.{ value = String arg; _ }; _ } :: _ ->
+    | { el = `LiteralValue LiteralValue.{ value = String arg; _ }; _ } :: _ ->
       let (state', l_require) = State.add_import_node state cid arg in
       State.add_dependency_edge state' l_require l_retn;
       state'
