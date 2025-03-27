@@ -8,7 +8,7 @@ open Result
 module Options = struct
   type env =
     { taint_config : Fpath.t
-    ; unsafe_literal_properties : bool
+    ; literal_mode : Literal.mode
     ; export_graph : bool
     ; export_subgraphs : bool
     ; export_view : Export_view.t
@@ -27,11 +27,11 @@ module Options = struct
     | Some taint_config' -> taint_config'
     | None -> Properties.default_taint_config ()
 
-  let env (taint_config' : Fpath.t option) (unsafe_literal_properties' : bool)
+  let env (taint_config' : Fpath.t option) (literal_mode' : Literal.mode)
       (no_export : bool) (no_subgraphs : bool) (export_view' : Export_view.t)
       (export_timeout' : int) (parse_env' : Cmd_parse.Options.env) : env =
     { taint_config = parse_taint_config taint_config'
-    ; unsafe_literal_properties = unsafe_literal_properties'
+    ; literal_mode = literal_mode'
     ; export_graph = not no_export
     ; export_subgraphs = not no_subgraphs
     ; export_view = export_view'
@@ -129,7 +129,7 @@ let mdg_builder (builder : State.t) (file : 'm File.t) () : Mdg.t =
 let mdg_merger (merger : Merger.t) () : Mdg.t = Merger.merge_entries merger
 
 let builder_env (env : Options.env) : State.Env.t =
-  { unsafe_literal_properties = env.unsafe_literal_properties }
+  { literal_mode = env.literal_mode }
 
 let export_env (env : Options.env) : Svg_exporter.Env.t =
   { subgraphs = env.export_subgraphs

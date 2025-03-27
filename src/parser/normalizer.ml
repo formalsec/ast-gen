@@ -70,10 +70,14 @@ module Ctx = struct
     fun () -> dflt
 
   let create (env : Env.t) : t = { (default ()) with env }
-  let reset (ctx : t) : t = create ctx.env
+  let reset (ctx : t) : t = { (default ()) with env = ctx.env }
 end
 
 let ( ! ) (ctx : Ctx.t) : Ctx.t = Ctx.reset ctx
+
+let initialize_normalizer (env : Env.t) : Ctx.t =
+  Metadata.reset_generator ();
+  Ctx.create env
 
 module FlowUtils = struct
   type ('M, 'T) forleft =
@@ -487,7 +491,8 @@ and normalize_default_value (ctx : Ctx.t) (n_left : lval)
 and normalize_assignment_expr (ctx : Ctx.t) (_ : Loc.t)
     (assign : (Loc.t, Loc.t) Flow.Expression.Assignment.t) : n_expr =
   let ctx' = { ctx with curr_stmt = assignment_ctx ctx assign.operator } in
-  normalize_assignment ctx' assign.left assign.right
+  let (n_stmt, n_expr) = normalize_assignment ctx' assign.left assign.right in
+  (n_stmt, n_expr.el @> n_expr.md)
 
 and normalize_assignment (ctx : Ctx.t)
     (left : (Loc.t, Loc.t) Flow_ast.Pattern.t)
@@ -929,47 +934,47 @@ and normalize_dynamic_import (ctx : Ctx.t) (loc : Loc.t)
   (n_arg_s @ [ n_import ], n_left')
 
 and normalize_expr (ctx : Ctx.t) : (Loc.t, Loc.t) Flow.Expression.t -> n_expr =
-  function
-  | (loc, NullLiteral _) -> normalize_null_literal ctx loc
-  | (loc, StringLiteral literal) -> normalize_string_literal ctx loc literal
-  | (loc, NumberLiteral literal) -> normalize_number_literal ctx loc literal
-  | (loc, BigIntLiteral literal) -> normalize_bigint_literal ctx loc literal
-  | (loc, BooleanLiteral literal) -> normalize_boolean_literal ctx loc literal
-  | (loc, RegExpLiteral literal) -> normalize_regexpr_literal ctx loc literal
-  | (loc, TemplateLiteral literal) -> normalize_template_expr ctx loc literal
-  | (loc, Identifier id) -> normalize_identifier_expr ctx loc id
-  | (loc, This _) -> normalize_this_expr ctx loc
-  | (loc, Super _) -> normalize_super_expr ctx loc
-  | (loc, Sequence exprs) -> normalize_sequence_expr ctx loc exprs
-  | (loc, Object obj) -> normalize_object_expr ctx loc obj
-  | (loc, Array arr) -> normalize_array_expr ctx loc arr
-  | (loc, Assignment assign) -> normalize_assignment_expr ctx loc assign
-  | (loc, Unary unary) -> normalize_unary_expr ctx loc unary
-  | (loc, Binary binary) -> normalize_binary_expr ctx loc binary
-  | (loc, Logical logical) -> normalize_logical_expr ctx loc logical
-  | (loc, Conditional condition) -> normalize_conditional_expr ctx loc condition
-  | (loc, Update update) -> normalize_update_expr ctx loc update
-  | (loc, Yield yield) -> normalize_yield_expr ctx loc yield
-  | (loc, Member member) -> normalize_member_expr ctx loc member
-  | (loc, OptionalMember member) -> normalize_opt_member_expr ctx loc member
-  | (loc, MetaProperty metaprop) -> normalize_meta_property ctx loc metaprop
-  | (loc, New call) -> normalize_new_expr ctx loc call
-  | (loc, Call call) -> normalize_call_expr ctx loc call
-  | (loc, OptionalCall call) -> normalize_opt_call_expr ctx loc call
-  | (loc, TaggedTemplate tagged) -> normalize_tagged_template ctx loc tagged
-  | (loc, Function func) -> normalize_function_expression ctx loc func
-  | (loc, ArrowFunction func) -> normalize_function_expression ctx loc func
-  | (loc, Class class') -> normalize_class_expression ctx loc class'
-  | (loc, Import import) -> normalize_dynamic_import ctx loc import
-  | (_, TypeCast _)
-  | (_, TSSatisfies _)
-  | (_, AsConstExpression _)
-  | (_, AsExpression _) ->
-    Log.fail "[not implemented]: TypeScript expressions"
-  | (_, JSXElement _) | (_, JSXFragment _) ->
-    Log.fail "[not implemented]: React expressions"
-  | (_, ModuleRefLiteral _) ->
-    Log.fail "[internal flow construct]: ModuleRefLiteral"
+ (function
+ | (loc, NullLiteral _) -> normalize_null_literal ctx loc
+ | (loc, StringLiteral literal) -> normalize_string_literal ctx loc literal
+ | (loc, NumberLiteral literal) -> normalize_number_literal ctx loc literal
+ | (loc, BigIntLiteral literal) -> normalize_bigint_literal ctx loc literal
+ | (loc, BooleanLiteral literal) -> normalize_boolean_literal ctx loc literal
+ | (loc, RegExpLiteral literal) -> normalize_regexpr_literal ctx loc literal
+ | (loc, TemplateLiteral literal) -> normalize_template_expr ctx loc literal
+ | (loc, Identifier id) -> normalize_identifier_expr ctx loc id
+ | (loc, This _) -> normalize_this_expr ctx loc
+ | (loc, Super _) -> normalize_super_expr ctx loc
+ | (loc, Sequence exprs) -> normalize_sequence_expr ctx loc exprs
+ | (loc, Object obj) -> normalize_object_expr ctx loc obj
+ | (loc, Array arr) -> normalize_array_expr ctx loc arr
+ | (loc, Assignment assign) -> normalize_assignment_expr ctx loc assign
+ | (loc, Unary unary) -> normalize_unary_expr ctx loc unary
+ | (loc, Binary binary) -> normalize_binary_expr ctx loc binary
+ | (loc, Logical logical) -> normalize_logical_expr ctx loc logical
+ | (loc, Conditional condition) -> normalize_conditional_expr ctx loc condition
+ | (loc, Update update) -> normalize_update_expr ctx loc update
+ | (loc, Yield yield) -> normalize_yield_expr ctx loc yield
+ | (loc, Member member) -> normalize_member_expr ctx loc member
+ | (loc, OptionalMember member) -> normalize_opt_member_expr ctx loc member
+ | (loc, MetaProperty metaprop) -> normalize_meta_property ctx loc metaprop
+ | (loc, New call) -> normalize_new_expr ctx loc call
+ | (loc, Call call) -> normalize_call_expr ctx loc call
+ | (loc, OptionalCall call) -> normalize_opt_call_expr ctx loc call
+ | (loc, TaggedTemplate tagged) -> normalize_tagged_template ctx loc tagged
+ | (loc, Function func) -> normalize_function_expression ctx loc func
+ | (loc, ArrowFunction func) -> normalize_function_expression ctx loc func
+ | (loc, Class class') -> normalize_class_expression ctx loc class'
+ | (loc, Import import) -> normalize_dynamic_import ctx loc import
+ | (_, TypeCast _)
+ | (_, TSSatisfies _)
+ | (_, AsConstExpression _)
+ | (_, AsExpression _) ->
+   Log.fail "[not implemented]: TypeScript expressions"
+ | (_, JSXElement _) | (_, JSXFragment _) ->
+   Log.fail "[not implemented]: React expressions"
+ | (_, ModuleRefLiteral _) ->
+   Log.fail "[internal flow construct]: ModuleRefLiteral" )
 
 and normalize_expr_opt (ctx : Ctx.t)
     (expr : (Loc.t, Loc.t) Flow.Expression.t option) : stmt list * expr option =
@@ -1567,9 +1572,8 @@ and normalize_class_property_value (ctx : Ctx.t) (md : md) :
   | Declared | Uninitialized -> ([], Identifier.undefined_expr () @> md)
   | Initialized expr -> normalize_expr !ctx expr
 
-and normalize_file ?(env = Env.default ())
-    (file : (Loc.t, Loc.t) Flow_ast.Program.t) : n_stmt =
-  let ctx = Ctx.create env in
+and normalize_file (ctx : Ctx.t) (file : (Loc.t, Loc.t) Flow_ast.Program.t) :
+    n_stmt =
   let (_, { Flow.Program.statements; _ }) = file in
   List.map (normalize_stmt ctx) statements |> List.flatten
 

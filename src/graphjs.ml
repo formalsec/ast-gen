@@ -65,7 +65,7 @@ let mdg_env =
   let open Term in
   const Cmd_mdg.Options.env
   $ Docs.MdgOpts.taint_config
-  $ Docs.MdgOpts.unsafe_literal_properties
+  $ Docs.MdgOpts.literal_mode
   $ Docs.MdgOpts.no_export
   $ Docs.MdgOpts.no_subgraphs
   $ Docs.MdgOpts.export_view

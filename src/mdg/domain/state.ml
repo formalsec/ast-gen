@@ -2,16 +2,12 @@ open Graphjs_base
 open Graphjs_ast
 
 module Env = struct
-  type t = { unsafe_literal_properties : bool }
+  type t = { literal_mode : Literal.mode }
 
   let default =
-    let dflt = { unsafe_literal_properties = false } in
+    let dflt = { literal_mode = Multiple } in
     fun () -> dflt
 end
-
-type eval_ctx =
-  | General
-  | PropUpdateRight
 
 type t =
   { env : Env.t
@@ -21,7 +17,7 @@ type t =
   ; lookup_interceptors : (Location.t, lookup_interceptor) Hashtbl.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
   ; curr_func : Node.t option
-  ; curr_eval : eval_ctx
+  ; literal_ctx : literal_ctx
   }
 
 and lookup_interceptor =
@@ -37,6 +33,11 @@ and call_interceptor =
   -> Registry.cid
   -> t
 
+and literal_ctx =
+  | Skip
+  | Make
+  | MakeProp
+
 let create (env' : Env.t) : t =
   { env = env'
   ; mdg = Mdg.create ()
@@ -45,7 +46,7 @@ let create (env' : Env.t) : t =
   ; lookup_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; curr_func = None
-  ; curr_eval = General
+  ; literal_ctx = Make
   }
 
 let initialize (state : t) : t =
@@ -72,24 +73,36 @@ let lub (state1 : t) (state2 : t) : t =
   let registry = Registry.lub state1.registry state2.registry in
   { state1 with mdg; store; registry }
 
-let eval_prop_update_right (state : t) : t =
-  { state with curr_eval = PropUpdateRight }
+let skip_literal (state : t) : t = { state with literal_ctx = Skip }
+let make_literal (state : t) : t = { state with literal_ctx = Make }
+let make_literal_prop (state : t) : t = { state with literal_ctx = MakeProp }
 
-let get_node (state : t) (id : Registry.cid) : Node.t =
-  match Registry.find_opt state.registry id with
+type cid = Registry.cid
+
+let get_node (state : t) (cid : cid) : Node.t =
+  match Registry.find_opt state.registry cid with
   | None ->
-    let at = Registry.at id in
+    let at = Registry.at cid in
     Log.fail "expecting node of region '%a' in registry" Region.pp at
   | Some node -> node
 
-let add_node (state : t) (id : Registry.cid)
+let add_node (state : t) (cid : cid)
     (create_node_f : Node.t option -> Region.t -> Node.t) : Node.t =
-  match Registry.find_opt state.registry id with
+  match Registry.find_opt state.registry cid with
   | Some node -> node
   | None ->
-    let node = create_node_f state.curr_func (Registry.at id) in
-    Registry.replace state.registry id node;
+    let node = create_node_f state.curr_func (Registry.at cid) in
+    Registry.replace state.registry cid node;
     Mdg.add_node state.mdg node;
+    node
+
+let add_candidate_node (state : t) (cid : cid)
+    (create_node_f : Node.t option -> Region.t -> Node.t) : Node.t =
+  match Registry.find_opt state.registry cid with
+  | Some node -> node
+  | None ->
+    let node = create_node_f state.curr_func (Registry.at cid) in
+    Registry.replace state.registry cid node;
     node
 
 let add_edge (state : t) (src : Node.t) (tar : Node.t)
@@ -98,30 +111,32 @@ let add_edge (state : t) (src : Node.t) (tar : Node.t)
   Mdg.add_edge state.mdg edge;
   edge
 
-let add_object_node (st : t) (id : Registry.cid) (name : string) : Node.t =
-  add_node st id (Node.create_object name)
+let add_object_node (st : t) (cid : cid) (name : string) : Node.t =
+  add_node st cid (Node.create_object name)
 
-let add_literal_node (state : t) (id : Registry.cid) (literal : Literal.t) :
+let add_literal_node (state : t) (cid : cid) (literal : Literal.t) : Node.t =
+  add_node state cid (Node.create_literal literal)
+
+let add_function_node (state : t) (cid : cid) (name : string) : Node.t =
+  add_node state cid (Node.create_function name)
+
+let add_parameter_node (state : t) (cid : cid) (idx : int) (name : string) :
     Node.t =
-  add_node state id (Node.create_literal literal)
+  add_node state cid (Node.create_parameter idx name)
 
-let add_function_node (state : t) (id : Registry.cid) (name : string) : Node.t =
-  add_node state id (Node.create_function name)
+let add_call_node (state : t) (cid : cid) (name : string) : Node.t =
+  add_node state cid (Node.create_call name)
 
-let add_parameter_node (state : t) (id : Registry.cid) (idx : int)
-    (name : string) : Node.t =
-  add_node state id (Node.create_parameter idx name)
+let add_return_node (st : t) (cid : cid) (name : string) : Node.t =
+  add_node st cid (Node.create_return name)
 
-let add_call_node (state : t) (id : Registry.cid) (name : string) : Node.t =
-  add_node state id (Node.create_call name)
-
-let add_return_node (st : t) (id : Registry.cid) (name : string) : Node.t =
-  add_node st id (Node.create_return name)
-
-let add_import_node (state : t) (id : Registry.cid) (name : string) : t * Node.t
-    =
-  let node = add_node state id (Node.create_import name) in
+let add_import_node (state : t) (cid : cid) (name : string) : t * Node.t =
+  let node = add_node state cid (Node.create_import name) in
   ({ state with mdg = Mdg.add_imports state.mdg node }, node)
+
+let add_candidate_literal_node (state : t) (cid : cid) (literal : Literal.t) :
+    Node.t =
+  add_candidate_node state cid (Node.create_candidate_literal literal)
 
 let add_dependency_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state src tar (Edge.create_dependency ()) |> ignore

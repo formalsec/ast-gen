@@ -10,6 +10,5 @@ let equal (loc1 : t) (loc2 : t) : bool = Int.equal loc1 loc2
 let compare (loc1 : t) (loc2 : t) : int = Int.compare loc1 loc2
 let pp (ppf : Fmt.t) (loc : t) : unit = Fmt.pp_int ppf loc
 let str (loc : t) : string = Fmt.str "%a" pp loc
-let literal = fun () -> -0
 let invalid = fun () -> -1
 let taint_source = fun () -> -3

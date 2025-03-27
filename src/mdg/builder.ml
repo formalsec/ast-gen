@@ -151,8 +151,12 @@ let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
 
 and eval_literal_expr (state : State.t) (literal : LiteralValue.t) (cid : cid) :
     Node.Set.t =
-  match (state.env.unsafe_literal_properties, state.curr_eval) with
-  | (false, PropUpdateRight) ->
+  match (state.env.literal_mode, state.literal_ctx) with
+  | (Multiple, Skip) ->
+    let literal' = convert_literal literal in
+    let l_literal = State.add_candidate_literal_node state cid literal' in
+    Node.Set.singleton l_literal
+  | (Multiple, Make) | (Multiple, MakeProp) | (PropWrap, MakeProp) ->
     let literal' = convert_literal literal in
     let l_literal = State.add_literal_node state cid literal' in
     Node.Set.singleton l_literal
@@ -167,7 +171,8 @@ let initialize_builder ?(env = State.Env.default ())
     (taint_config : Taint_config.t) : State.t =
   Node.reset_generators ();
   let state = State.create env in
-  Mdg.add_node state.mdg state.mdg.literal;
+  if not (Literal.is_multiple env.literal_mode) then
+    Mdg.add_node state.mdg state.mdg.literal;
   Jslib.initialize_builder state taint_config
 
 let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
@@ -187,7 +192,7 @@ and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
 and build_assignment (state : State.t) (left : 'm LeftValue.t)
     (right : 'm Expression.t) : State.t =
   let name = LeftValue.name left in
-  let ls_right = eval_expr state right in
+  let ls_right = eval_expr (State.skip_literal state) right in
   Store.replace state.store name ls_right;
   state
 
@@ -252,7 +257,7 @@ and build_static_update (state : State.t) (obj : 'm Expression.t)
   let prop' = Property.Static (Prop.name prop) in
   let ls_obj = eval_expr state obj in
   let ls_obj' = Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_obj in
-  let ls_right = eval_expr (State.eval_prop_update_right state) right in
+  let ls_right = eval_expr (State.make_literal_prop state) right in
   let obj_name = object_name ls_obj obj in
   let ls_new = add_static_object_version state obj_name ls_obj' prop' cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
@@ -266,7 +271,7 @@ and build_dynamic_update (state : State.t) (obj : 'm Expression.t)
   let ls_obj = eval_expr state obj in
   let ls_obj' = Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_obj in
   let ls_prop = eval_expr state prop in
-  let ls_right = eval_expr (State.eval_prop_update_right state) right in
+  let ls_right = eval_expr (State.make_literal_prop state) right in
   let obj_name = object_name ls_obj obj in
   let ls_new = add_dynamic_object_version state obj_name ls_obj' ls_prop cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
