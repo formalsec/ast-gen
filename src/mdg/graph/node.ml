@@ -17,7 +17,7 @@ let reset_generators () : unit =
   Location.reset_generator Config.(!sink_lid_gen)
 
 type kind =
-  | Literal
+  | Literal of Literal.t
   | Object of string
   | Function of string
   | Parameter of string
@@ -38,7 +38,8 @@ type t =
 let default =
   let id = Location.invalid () in
   let at = Region.default () in
-  let dflt = { uid = id; lid = id; kind = Literal; parent = None; at } in
+  let kind = Literal (Literal.default ()) in
+  let dflt = { uid = id; lid = id; kind; parent = None; at } in
   fun () -> dflt
 
 let create (uid : Location.t) (lid : Location.t) (kind : kind)
@@ -56,7 +57,8 @@ let compare (node1 : t) (node2 : t) : int = Location.compare node1.uid node2.uid
 
 let pp (ppf : Fmt.t) (node : t) : unit =
   match node.kind with
-  | Literal -> Fmt.pp_str ppf "[[literal]]"
+  | Literal lit when Literal.is_default lit -> Literal.pp ppf lit
+  | Literal lit -> Fmt.fmt ppf "%a[l_%a]" Literal.pp lit Location.pp node.lid
   | Object name -> Fmt.fmt ppf "%s[l_%a]" name Location.pp node.lid
   | Function name -> Fmt.fmt ppf "%s[f_%a]" name Location.pp node.lid
   | Parameter name -> Fmt.fmt ppf "%s[p_%a]" name Location.pp node.lid
@@ -83,21 +85,22 @@ module Set = struct
   let str (nodes : t) : string = Fmt.str "%a" pp nodes
 end
 
-let create_literal () : t =
+let create_default_literal () : t =
   let uid = Location.create Config.(!uid_gen) in
   let lid = Location.literal () in
-  create uid lid Literal None (Region.default ())
+  let kind = Literal (Literal.default ()) in
+  create uid lid kind None (Region.default ())
+
+let create_literal (literal : Literal.t) : t option -> Region.t -> t =
+ fun parent at ->
+  let uid = Location.create Config.(!uid_gen) in
+  let lid = Location.literal () in
+  create uid lid (Literal literal) parent at
 
 let create_object (name : string) : t option -> Region.t -> t =
  fun parent at ->
   let uid = Location.create Config.(!uid_gen) in
   let lid = Location.create Config.(!obj_lid_gen) in
-  create uid lid (Object name) parent at
-
-let create_literal_object (name : string) : t option -> Region.t -> t =
- fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.literal () in
   create uid lid (Object name) parent at
 
 let create_function (name : string) : t option -> Region.t -> t =
@@ -165,16 +168,11 @@ let concretize (node : t) : t =
 let is_invalid (node : t) : bool = Location.equal node.lid (Location.invalid ())
 
 let is_literal (node : t) : bool =
-  match node.kind with Literal -> true | _ -> false
+  match node.kind with Literal _ -> true | _ -> false
 
 let is_object (node : t) : bool =
   match node.kind with
   | Object _ -> not (Location.equal node.lid (Location.literal ()))
-  | _ -> false
-
-let is_literal_object (node : t) : bool =
-  match node.kind with
-  | Object _ -> Location.equal node.lid (Location.literal ())
   | _ -> false
 
 let is_function (node : t) : bool =

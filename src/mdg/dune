@@ -4,6 +4,7 @@
  (name graphjs_mdg)
  (modules
   location
+  literal
   property
   tainted
   node

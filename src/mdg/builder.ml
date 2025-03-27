@@ -9,6 +9,15 @@ type cid = Registry.cid
 let newcid (el : 'a el) : cid = Registry.cid el
 let offset (cid : cid) (ofs : int) : cid = Registry.offset cid ofs
 
+let convert_literal (literal : LiteralValue.t) : Literal.t =
+  match literal.value with
+  | Null -> Literal.create Null literal.raw
+  | String _ -> Literal.create String literal.raw
+  | Number _ -> Literal.create Number literal.raw
+  | Boolean _ -> Literal.create Boolean literal.raw
+  | Regex _ -> Literal.create Regex literal.raw
+  | BigInt _ -> Literal.create BigInt literal.raw
+
 let object_name (ls_obj : Node.Set.t) (obj : 'm Expression.t) : string =
   if Node.Set.cardinal ls_obj == 1 then
     try Node.name (Node.Set.choose ls_obj) with _ -> Expression.str obj
@@ -23,20 +32,6 @@ let lookup_property (state : State.t) (ls_obj : Node.Set.t) (prop : Property.t)
     : Node.Set.t =
   Fun.flip Node.Set.map_flat ls_obj (fun l_obj ->
       Mdg.object_lookup state.mdg l_obj prop )
-
-let wrap_literal_properties (state : State.t) (right : 'm Expression.t)
-    (ls_right : Node.Set.t) (cid : cid) : Node.Set.t =
-  (* this function prevents new versions from being created from the literal object *)
-  if not state.env.unsafe_literal_properties then
-    Fun.flip2 Node.Set.fold ls_right Node.Set.empty (fun l_right acc ->
-        if Node.is_literal l_right then (
-          let name = Expression.str right in
-          let cid' = offset cid (Node.Set.cardinal acc + 1) in
-          let l_wrapper = State.add_literal_object_node state cid' name in
-          State.add_dependency_edge state l_right l_wrapper;
-          Node.Set.add l_wrapper acc )
-        else Node.Set.add l_right acc )
-  else ls_right
 
 let add_static_orig_object_property (state : State.t) (name : string)
     (ls_obj : Node.Set.t) (prop : Property.t) (cid : cid) : unit =
@@ -149,13 +144,19 @@ let call_interceptor (state : State.t) (ls_func : Node.Set.t) (l_call : Node.t)
 let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   let exprs_f acc expr = Node.Set.union acc (eval_expr state expr) in
   match expr.el with
-  | `LiteralValue _ -> eval_literal_expr state
+  | `LiteralValue literal -> eval_literal_expr state literal (newcid expr)
   | `TemplateLiteral { exprs; _ } -> List.fold_left exprs_f Node.Set.empty exprs
   | `Identifier id -> eval_store_expr state (Identifier.name' id)
   | `This _ -> eval_store_expr state "this"
 
-and eval_literal_expr (state : State.t) : Node.Set.t =
-  Node.Set.singleton state.mdg.literal
+and eval_literal_expr (state : State.t) (literal : LiteralValue.t) (cid : cid) :
+    Node.Set.t =
+  match (state.env.unsafe_literal_properties, state.curr_eval) with
+  | (false, PropUpdateRight) ->
+    let literal' = convert_literal literal in
+    let l_literal = State.add_literal_node state cid literal' in
+    Node.Set.singleton l_literal
+  | _ -> Node.Set.singleton state.mdg.literal
 
 and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
   let nodes = Store.find state.store id in
@@ -251,12 +252,11 @@ and build_static_update (state : State.t) (obj : 'm Expression.t)
   let prop' = Property.Static (Prop.name prop) in
   let ls_obj = eval_expr state obj in
   let ls_obj' = Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_obj in
-  let ls_right = eval_expr state right in
-  let ls_right' = wrap_literal_properties state right ls_right cid in
+  let ls_right = eval_expr (State.eval_prop_update_right state) right in
   let obj_name = object_name ls_obj obj in
   let ls_new = add_static_object_version state obj_name ls_obj' prop' cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
-      Fun.flip Node.Set.iter ls_right' (fun l_right ->
+      Fun.flip Node.Set.iter ls_right (fun l_right ->
           State.add_property_edge state l_new l_right prop' ) );
   state
 
@@ -266,12 +266,11 @@ and build_dynamic_update (state : State.t) (obj : 'm Expression.t)
   let ls_obj = eval_expr state obj in
   let ls_obj' = Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_obj in
   let ls_prop = eval_expr state prop in
-  let ls_right = eval_expr state right in
-  let ls_right' = wrap_literal_properties state right ls_right cid in
+  let ls_right = eval_expr (State.eval_prop_update_right state) right in
   let obj_name = object_name ls_obj obj in
   let ls_new = add_dynamic_object_version state obj_name ls_obj' ls_prop cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
-      Fun.flip Node.Set.iter ls_right' (fun l_right ->
+      Fun.flip Node.Set.iter ls_right (fun l_right ->
           State.add_property_edge state l_new l_right prop' ) );
   state
 

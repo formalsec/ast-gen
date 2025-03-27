@@ -29,7 +29,8 @@ module Dot = struct
 
   let node_label (node : Node.t) : string =
     match node.kind with
-    | Literal -> Fmt.str "{ Literal Object }"
+    | Literal lit when Literal.is_default lit -> Fmt.str "{ Literal Object }"
+    | Literal lit -> Fmt.str "%s" (String.escaped (Literal.str lit))
     | Object name -> Fmt.str "%s" (String.escaped name)
     | Function name -> Fmt.str "function %s" (String.escaped name)
     | Parameter name -> Fmt.str "%s" (String.escaped name)
@@ -83,9 +84,7 @@ module Dot = struct
       `Label (node_label node)
       ::
       ( match node.kind with
-      | Literal -> [ `Color 26214; `Fillcolor 13434879 ]
-      | Object _ when Node.is_literal_object node ->
-        [ `Color 26214; `Fillcolor 13434879 ]
+      | Literal _ -> [ `Color 26214; `Fillcolor 13434879 ]
       | Object _ -> [ `Color 2105376; `Fillcolor 12632256 ]
       | Function _ -> [ `Color 26112; `Fillcolor 52224 ]
       | Parameter "this" -> [ `Color 6684723; `Fillcolor 16764133 ]
