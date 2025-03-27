@@ -209,13 +209,18 @@ module MdgOpts = struct
     let parser = Fs.Parser.valid_file in
     Arg.(value & opt (some parser) None & info [ "config" ] ~docv ~doc)
 
-  let unsafe_literal_properties =
+  let literal_mode =
     let doc =
-      "Builds the MDG without safety assurances for literal properties, such \
-       as preventing new versions from being created from literal objects. \
-       Enabling this flag may increase construction speed and reduce the graph \
-       size, but will introduce graph construction errors." in
-    Arg.(value & flag & info [ "unsafe-literal-properties" ] ~doc)
+      "Configures the handling of literal values in MDG construction. Options \
+       include (1) 'Single' for a graph with a single literal object; (2) \
+       'PropWrap' for wrapping literal property values in a new object rather \
+       than using the main literal object; and (3) 'Multiple' [default] for \
+       creating a new literal node for each occurrence of a literal value. \
+       Using the 'Single' mode may increase construction speed and reduce the \
+       graph size, but will introduce graph construction errors." in
+
+    let modes = Arg.enum Enums.LiteralMode.(args all) in
+    Arg.(value & opt modes Multiple & info [ "literal-mode" ] ~doc)
 
   let no_export =
     let doc = "Run without generating the .svg graph representation." in
@@ -237,8 +242,7 @@ module MdgOpts = struct
        the node at location <#loc>; and (6) 'sinks' for exporting the subgraph \
        that reaches every tainted sink of the program." in
     let parse_f = Enums.ExportView.parse in
-    let default = Enums.ExportView.default () in
-    Arg.(value & opt parse_f default & info [ "export-view" ] ~docv ~doc)
+    Arg.(value & opt parse_f Full & info [ "export-view" ] ~docv ~doc)
 
   let export_timeout =
     let doc = "Timeout for exporting the graph into the .svg representation." in

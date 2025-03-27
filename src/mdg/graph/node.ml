@@ -5,6 +5,7 @@ module Config = struct
   include Config
 
   let uid_gen = constant (Location.make_generator ())
+  let lit_lid_gen = constant (Location.make_generator ())
   let obj_lid_gen = constant (Location.make_generator ())
   let func_lid_gen = constant (Location.make_generator ())
   let sink_lid_gen = constant (Location.make_generator ())
@@ -12,6 +13,7 @@ end
 
 let reset_generators () : unit =
   Location.reset_generator Config.(!uid_gen);
+  Location.reset_generator Config.(!lit_lid_gen);
   Location.reset_generator Config.(!obj_lid_gen);
   Location.reset_generator Config.(!func_lid_gen);
   Location.reset_generator Config.(!sink_lid_gen)
@@ -58,7 +60,7 @@ let compare (node1 : t) (node2 : t) : int = Location.compare node1.uid node2.uid
 let pp (ppf : Fmt.t) (node : t) : unit =
   match node.kind with
   | Literal lit when Literal.is_default lit -> Literal.pp ppf lit
-  | Literal lit -> Fmt.fmt ppf "%a[l_%a]" Literal.pp lit Location.pp node.lid
+  | Literal lit -> Fmt.fmt ppf "%a[v_%a]" Literal.pp lit Location.pp node.lid
   | Object name -> Fmt.fmt ppf "%s[l_%a]" name Location.pp node.lid
   | Function name -> Fmt.fmt ppf "%s[f_%a]" name Location.pp node.lid
   | Parameter name -> Fmt.fmt ppf "%s[p_%a]" name Location.pp node.lid
@@ -87,14 +89,14 @@ end
 
 let create_default_literal () : t =
   let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.literal () in
+  let lid = Location.create Config.(!lit_lid_gen) in
   let kind = Literal (Literal.default ()) in
   create uid lid kind None (Region.default ())
 
 let create_literal (literal : Literal.t) : t option -> Region.t -> t =
  fun parent at ->
   let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.literal () in
+  let lid = Location.create Config.(!lit_lid_gen) in
   create uid lid (Literal literal) parent at
 
 let create_object (name : string) : t option -> Region.t -> t =
@@ -143,23 +145,33 @@ let create_taint_sink (sink : Tainted.sink) : t option -> Region.t -> t =
   let lid = Location.create Config.(!obj_lid_gen) in
   create uid lid (TaintSink sink) parent at
 
-let create_candidate_object (name : string) : t =
+let create_candidate_literal (literal : Literal.t) : t option -> Region.t -> t =
+ fun parent at ->
   let uid = Location.create Config.(!uid_gen) in
   let lid = Location.invalid () in
-  create uid lid (Object name) None (Region.default ())
+  create uid lid (Literal literal) parent at
 
-let create_candidate_function (name : string) : t =
+let create_candidate_object (name : string) : t option -> Region.t -> t =
+ fun parent at ->
   let uid = Location.create Config.(!uid_gen) in
   let lid = Location.invalid () in
-  create uid lid (Function name) None (Region.default ())
+  create uid lid (Object name) parent at
 
-let create_candidate_sink (sink : Tainted.sink) : t =
+let create_candidate_function (name : string) : t option -> Region.t -> t =
+ fun parent at ->
   let uid = Location.create Config.(!uid_gen) in
   let lid = Location.invalid () in
-  create uid lid (TaintSink sink) None (Region.default ())
+  create uid lid (Function name) parent at
+
+let create_candidate_sink (sink : Tainted.sink) : t option -> Region.t -> t =
+ fun parent at ->
+  let uid = Location.create Config.(!uid_gen) in
+  let lid = Location.invalid () in
+  create uid lid (TaintSink sink) parent at
 
 let concretize (node : t) : t =
   match node.kind with
+  | Literal _ -> { node with lid = Location.create Config.(!lit_lid_gen) }
   | Object _ -> { node with lid = Location.create Config.(!obj_lid_gen) }
   | Function _ -> { node with lid = Location.create Config.(!func_lid_gen) }
   | TaintSink _ -> { node with lid = Location.create Config.(!sink_lid_gen) }
@@ -171,9 +183,7 @@ let is_literal (node : t) : bool =
   match node.kind with Literal _ -> true | _ -> false
 
 let is_object (node : t) : bool =
-  match node.kind with
-  | Object _ -> not (Location.equal node.lid (Location.literal ()))
-  | _ -> false
+  match node.kind with Object _ -> true | _ -> false
 
 let is_function (node : t) : bool =
   match node.kind with Function _ -> true | _ -> false

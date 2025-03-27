@@ -75,7 +75,7 @@ let add_tainted_sink (make_generic_sink_f : 'a -> Tainted.sink)
     (state : State.t) (generic_sink : 'a) : State.t =
   let sink = make_generic_sink_f generic_sink in
   let name = Tainted.(name !sink) in
-  let l_sink = Node.create_candidate_sink sink in
+  let l_sink = Node.create_candidate_sink sink None (Region.default ()) in
   Mdg.add_jslib state.mdg name l_sink;
   Store.replace state.store name (Node.Set.singleton l_sink);
   state
@@ -90,7 +90,7 @@ let initialize_tainted_sinks (state : State.t) (tconf : Taint_config.t) :
 
 let initialize_require (state : State.t) : State.t =
   let name = "require" in
-  let l_require = Node.create_candidate_function name in
+  let l_require = Node.create_candidate_function name None (Region.default ()) in
   Mdg.add_jslib state.mdg name l_require;
   Store.replace state.store name (Node.Set.singleton l_require);
   State.set_call_interceptor state l_require CallInterceptor.require;
@@ -98,7 +98,7 @@ let initialize_require (state : State.t) : State.t =
 
 let initialize_module (state : State.t) : State.t =
   let name = "module" in
-  let l_module = Node.create_candidate_object name in
+  let l_module = Node.create_candidate_object name None (Region.default ()) in
   Mdg.add_jslib state.mdg name l_module;
   Store.replace state.store name (Node.Set.singleton l_module);
   State.set_lookup_interceptor state l_module LookupInterceptor.nodejs;
@@ -107,7 +107,7 @@ let initialize_module (state : State.t) : State.t =
 let initialize_exports (state : State.t) : State.t =
   let name = "exports" in
   let name' = "module.exports" in
-  let l_exports = Node.create_candidate_object name' in
+  let l_exports = Node.create_candidate_object name' None (Region.default ()) in
   let ls_exports = Node.Set.singleton l_exports in
   Mdg.add_jslib state.mdg name l_exports;
   Store.replace state.store name ls_exports;

@@ -62,9 +62,9 @@ let js_parser (path : Fpath.t) (mrel : Fpath.t) () :
     (Loc.t, Loc.t) Flow_ast.Program.t =
   Flow_parser.parse path mrel
 
-let js_normalizer (env : Normalizer.Env.t)
+let js_normalizer (ctx : Normalizer.Ctx.t)
     (file : (Loc.t, Loc.t) Flow_ast.Program.t) () : Normalizer.n_stmt =
-  Normalizer.normalize_file ~env file
+  Normalizer.normalize_file ctx file
 
 let normalizer_env (env : Options.env) : Normalizer.Env.t =
   { always_fresh = env.always_fresh
@@ -74,12 +74,12 @@ let normalizer_env (env : Options.env) : Normalizer.Env.t =
   ; disable_aliases = env.disable_aliases
   }
 
-let normalize_program_modules (env : Normalizer.Env.t) (w : Workspace.t)
+let normalize_program_modules (normalizer : Normalizer.Ctx.t) (w : Workspace.t)
     (dt : Dependency_tree.t) : (Fpath.t * 'm File.t) Exec.status list =
   Fun.flip Dependency_tree.bottom_up_visit dt (fun (path, mrel) ->
       Output.source_file w path mrel;
       let* js_file = Exec.graphjs (js_parser path mrel) in
-      let* normalized_file = Exec.graphjs (js_normalizer env js_file) in
+      let* normalized_file = Exec.graphjs (js_normalizer normalizer js_file) in
       Output.normalized_file w mrel normalized_file;
       Ok (path, normalized_file) )
 
@@ -88,7 +88,8 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   let* dt = Cmd_dependencies.generate_dep_tree env.deps_env w env.mode input in
   Identifier.reset_generator ();
   let normalizer_env = normalizer_env env in
-  let* files = Result.extract (normalize_program_modules normalizer_env w dt) in
+  let normalizer = Normalizer.initialize_normalizer normalizer_env in
+  let* files = Result.extract (normalize_program_modules normalizer w dt) in
   let prog = Prog.create files in
   Output.main w prog;
   Ok (dt, prog)

@@ -39,6 +39,23 @@ module AnalysisMode = struct
     List.map (fun mode -> (str mode, mode)) modes
 end
 
+module LiteralMode = struct
+  type t = Graphjs_mdg.Literal.mode
+
+  let all = Graphjs_mdg.Literal.[ Single; PropWrap; Multiple ]
+
+  let pp (ppf : Fmt.t) (mode : t) : unit =
+    match mode with
+    | Single -> Fmt.pp_str ppf "single"
+    | PropWrap -> Fmt.pp_str ppf "propwrap"
+    | Multiple -> Fmt.pp_str ppf "multiple"
+
+  let str (mode : t) : string = Fmt.str "%a" pp mode
+
+  let args (modes : t list) : (string * t) list =
+    List.map (fun mode -> (str mode, mode)) modes
+end
+
 module ExportView = struct
   type t = Graphjs_mdg.Export_view.t
 
@@ -46,10 +63,6 @@ module ExportView = struct
     [ `Ok of t
     | `Error of string
     ]
-
-  let default =
-    let dflt = Graphjs_mdg.Export_view.Full in
-    fun () -> dflt
 
   let pp (ppf : Fmt.t) (view : t) : unit =
     match view with
