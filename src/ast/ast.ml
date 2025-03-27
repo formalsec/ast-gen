@@ -1,5 +1,5 @@
 module rec Identifier : sig
-  type 'm t = ('m, t') Metadata.t
+  type 'm t = (t', 'm) Metadata.t
 
   and t' =
     { name : string
@@ -17,7 +17,7 @@ and LeftValue : sig
       | None
   end
 
-  type 'm t = ('m, t') Metadata.t
+  type 'm t = (t', 'm) Metadata.t
 
   and t' =
     { id : Identifier.t'
@@ -27,7 +27,7 @@ end =
   LeftValue
 
 and Prop : sig
-  type 'm t = ('m, t') Metadata.t
+  type 'm t = (t', 'm) Metadata.t
 
   and t' =
     | IProp of Identifier.t'
@@ -67,7 +67,7 @@ and Expression : sig
           }
       end
 
-      type 'm t = ('m, t') Metadata.t
+      type 'm t = (t', 'm) Metadata.t
 
       and t' =
         { value : Value.t
@@ -85,7 +85,7 @@ and Expression : sig
     type t = unit
   end
 
-  type 'm t = ('m, 'm t') Metadata.t
+  type 'm t = ('m t', 'm) Metadata.t
 
   and 'm t' =
     [ `LiteralValue of LiteralValue.t
@@ -254,7 +254,7 @@ and Statement : sig
 
   module Switch : sig
     module Case : sig
-      type 'm t = ('m, 'm t') Metadata.t
+      type 'm t = ('m t', 'm) Metadata.t
 
       and 'm t' =
         { test : 'm Expression.t option
@@ -310,7 +310,7 @@ and Statement : sig
 
   module Try : sig
     module Catch : sig
-      type 'm t = ('m, 'm t') Metadata.t
+      type 'm t = ('m t', 'm) Metadata.t
 
       and 'm t' =
         { param : 'm Identifier.t option
@@ -374,7 +374,7 @@ and Statement : sig
       }
   end
 
-  type 'm t = ('m, 'm t') Metadata.t
+  type 'm t = ('m t', 'm) Metadata.t
 
   and 'm t' =
     [ `ExprStmt of 'm Expression.t'

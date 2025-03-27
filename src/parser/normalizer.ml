@@ -168,7 +168,7 @@ let get_property_expr (n_prop : prop) : expr' =
 
 let get_stmt_lvals (n_stmts : n_stmt) : lval list =
   Fun.flip List.filter_map n_stmts (function
-    | { el = `VarDecl vdecl; md } -> Some (vdecl @> md)
+    | { el = `VarDecl vdecl; md; _ } -> Some (vdecl @> md)
     | { el = `Assignment assign; _ } -> Some assign.left
     | { el = `NewObject obj; _ } -> Some obj.left
     | { el = `NewArray arr; _ } -> Some arr.left
@@ -191,37 +191,37 @@ let initialize_stmts_lvals (n_stmts : n_stmt) : n_stmt =
   let ( @> ) el md = Some (el @> md) in
   Fun.flip List.filter_map n_stmts (function
     | { el = `VarDecl _; _ } -> None
-    | { el = `Assignment el; md } ->
+    | { el = `Assignment el; md; _ } ->
       `Assignment { el with left = LeftValue.initialize el.left } @> md
-    | { el = `NewObject el; md } ->
+    | { el = `NewObject el; md; _ } ->
       NewObject.create_stmt (LeftValue.initialize el.left) @> md
-    | { el = `NewArray el; md } ->
+    | { el = `NewArray el; md; _ } ->
       NewArray.create_stmt (LeftValue.initialize el.left) @> md
-    | { el = `Unopt el; md } ->
+    | { el = `Unopt el; md; _ } ->
       `Unopt { el with left = LeftValue.initialize el.left } @> md
-    | { el = `Binopt el; md } ->
+    | { el = `Binopt el; md; _ } ->
       `Binopt { el with left = LeftValue.initialize el.left } @> md
-    | { el = `Yield el; md } ->
+    | { el = `Yield el; md; _ } ->
       `Yield { el with left = LeftValue.initialize el.left } @> md
-    | { el = `StaticLookup el; md } ->
+    | { el = `StaticLookup el; md; _ } ->
       `StaticLookup { el with left = LeftValue.initialize el.left } @> md
-    | { el = `DynamicLookup el; md } ->
+    | { el = `DynamicLookup el; md; _ } ->
       `DynamicLookup { el with left = LeftValue.initialize el.left } @> md
-    | { el = `StaticDelete el; md } ->
+    | { el = `StaticDelete el; md; _ } ->
       `StaticDelete { el with left = LeftValue.initialize el.left } @> md
-    | { el = `DynamicDelete el; md } ->
+    | { el = `DynamicDelete el; md; _ } ->
       `DynamicDelete { el with left = LeftValue.initialize el.left } @> md
-    | { el = `NewCall el; md } ->
+    | { el = `NewCall el; md; _ } ->
       `NewCall { el with left = LeftValue.initialize el.left } @> md
-    | { el = `FunctionCall el; md } ->
+    | { el = `FunctionCall el; md; _ } ->
       `FunctionCall { el with left = LeftValue.initialize el.left } @> md
-    | { el = `StaticMethodCall el; md } ->
+    | { el = `StaticMethodCall el; md; _ } ->
       `StaticMethodCall { el with left = LeftValue.initialize el.left } @> md
-    | { el = `DynamicMethodCall el; md } ->
+    | { el = `DynamicMethodCall el; md; _ } ->
       `DynamicMethodCall { el with left = LeftValue.initialize el.left } @> md
-    | { el = `FunctionDefinition el; md } ->
+    | { el = `FunctionDefinition el; md; _ } ->
       `FunctionDefinition { el with left = LeftValue.initialize el.left } @> md
-    | { el = `DynamicImport el; md } ->
+    | { el = `DynamicImport el; md; _ } ->
       `DynamicImport { el with left = LeftValue.initialize el.left } @> md
     | n_stmt -> Some n_stmt )
 
@@ -231,7 +231,7 @@ let normalize_location (loc : Loc.t) : md =
   let rpos = Region.create_pos loc._end.line loc._end.column in
   Region.create file lpos rpos
 
-let ( @!> ) (el : 'e) (loc : Loc.t) : (md, 'e) Metadata.t =
+let ( @!> ) (el : 'e) (loc : Loc.t) : ('e, md) Metadata.t =
   el @> normalize_location loc
 
 let rec leftvalue_ctx (ctx : Ctx.t) :
