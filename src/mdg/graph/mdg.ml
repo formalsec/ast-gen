@@ -213,6 +213,47 @@ let get_function_returns (mdg : t) (node : Node.t) : Node.t list =
   |> Edge.Set.filter Edge.is_return
   |> Edge.Set.map_list Edge.tar
 
+let visit (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
+    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (nodes : Node.t list) (acc : 'a)
+    (forward : bool) : 'a =
+  let get_edges_f = if forward then get_edges else get_trans in
+  let worklist = Queue.create () in
+  let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
+  List.iter (fun node -> Queue.add node worklist) nodes;
+  List.iter (fun node -> Hashtbl.add visited (Node.uid node) ()) nodes;
+  let visit_edge edge acc =
+    if visit_f edge then (
+      if not (Hashtbl.mem visited edge.tar.uid) then (
+        Queue.add edge.tar worklist;
+        Hashtbl.add visited edge.tar.uid () );
+      edge_f edge acc )
+    else acc in
+  let visit_node node acc =
+    let acc' = node_f node acc in
+    Edge.Set.fold visit_edge (get_edges_f mdg node.uid) acc' in
+  let rec visit_nodes acc =
+    Option.fold (Queue.take_opt worklist) ~none:acc ~some:(fun node ->
+        visit_nodes (visit_node node acc) ) in
+  visit_nodes acc
+
+let visit_forwards (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
+    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (node : Node.t) (acc : 'a) : 'a =
+  visit visit_f node_f edge_f mdg [ node ] acc true
+
+let visit_backwards (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
+    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (node : Node.t) (acc : 'a) : 'a =
+  visit visit_f node_f edge_f mdg [ node ] acc false
+
+let visit_multiple_forwards (visit_f : Edge.t -> bool)
+    (node_f : Node.t -> 'a -> 'a) (edge_f : Edge.t -> 'a -> 'a) (mdg : t)
+    (nodes : Node.t list) (acc : 'a) : 'a =
+  visit visit_f node_f edge_f mdg nodes acc true
+
+let visit_multiple_backwards (visit_f : Edge.t -> bool)
+    (node_f : Node.t -> 'a -> 'a) (edge_f : Edge.t -> 'a -> 'a) (mdg : t)
+    (nodes : Node.t list) (acc : 'a) : 'a =
+  visit visit_f node_f edge_f mdg nodes acc false
+
 let object_parents_traversal (f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
     (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
   Fun.flip2 List.fold_left acc (get_parents mdg node) (fun acc (_, l_parent) ->
@@ -303,34 +344,3 @@ let object_lookup (mdg : t) (node : Node.t) (prop : Property.t) : Node.Set.t =
   match prop with
   | Static prop' -> object_static_lookup mdg node prop'
   | Dynamic -> object_dynamic_lookup mdg node
-
-let visit (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
-    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (node : Node.t) (acc : 'a)
-    (forward : bool) : 'a =
-  let get_edges = if forward then get_edges else get_trans in
-  let worklist = Queue.create () in
-  let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
-  Queue.add node worklist;
-  Hashtbl.add visited node.uid ();
-  let visit_edge edge acc =
-    if visit_f edge then (
-      if not (Hashtbl.mem visited edge.tar.uid) then (
-        Queue.add edge.tar worklist;
-        Hashtbl.add visited edge.tar.uid () );
-      edge_f edge acc )
-    else acc in
-  let visit_node node acc =
-    let acc' = node_f node acc in
-    Edge.Set.fold visit_edge (get_edges mdg node.uid) acc' in
-  let rec visit_nodes acc =
-    Option.fold (Queue.take_opt worklist) ~none:acc ~some:(fun node ->
-        visit_nodes (visit_node node acc) ) in
-  visit_nodes acc
-
-let visit_forwards (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
-    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (node : Node.t) (acc : 'a) : 'a =
-  visit visit_f node_f edge_f mdg node acc true
-
-let visit_backwards (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
-    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (node : Node.t) (acc : 'a) : 'a =
-  visit visit_f node_f edge_f mdg node acc false

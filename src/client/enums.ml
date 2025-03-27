@@ -55,9 +55,10 @@ module ExportView = struct
     match view with
     | Full -> Fmt.pp_str ppf "full"
     | Calls -> Fmt.pp_str ppf "calls"
-    | Function _ -> Fmt.pp_str ppf "function"
     | Object _ -> Fmt.pp_str ppf "object"
+    | Function _ -> Fmt.pp_str ppf "function"
     | Reaches _ -> Fmt.pp_str ppf "reaches"
+    | Sinks -> Fmt.pp_str ppf "sinks"
 
   let conv_param_view (view : string) (prefix : string) : bool =
     let regex = Str.regexp (Fmt.str "^%s:\\([0-9]+\\)" prefix) in
@@ -67,10 +68,11 @@ module ExportView = struct
     match view with
     | "full" -> `Ok Full
     | "calls" -> `Ok Calls
-    | view' when conv_param_view view "function" ->
-      `Ok (Function (int_of_string (Str.matched_group 1 view')))
+    | "sinks" -> `Ok Sinks
     | view' when conv_param_view view "object" ->
       `Ok (Object (int_of_string (Str.matched_group 1 view')))
+    | view' when conv_param_view view "function" ->
+      `Ok (Function (int_of_string (Str.matched_group 1 view')))
     | view' when conv_param_view view "reaches" ->
       `Ok (Reaches (int_of_string (Str.matched_group 1 view')))
     | _ -> `Error "Invalid export-view argument."
