@@ -148,7 +148,7 @@ let call_interceptor (state : State.t) (ls_func : Node.Set.t) (l_call : Node.t)
 let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   let exprs_f acc expr = Node.Set.union acc (eval_expr state expr) in
   match expr.el with
-  | `Literal _ -> eval_literal_expr state
+  | `LiteralValue _ -> eval_literal_expr state
   | `TemplateLiteral { exprs; _ } -> List.fold_left exprs_f Node.Set.empty exprs
   | `Identifier id -> eval_store_expr state (Identifier.name' id)
   | `This _ -> eval_store_expr state "this"
