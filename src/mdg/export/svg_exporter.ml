@@ -145,9 +145,10 @@ let build_graph (env : Env.t) (mdg : Mdg.t) : Export_view.G.t =
   match env.view with
   | Full -> Export_view.Full.build_graph mdg
   | Calls -> Export_view.Calls.build_graph mdg
-  | Function loc -> Export_view.Function.build_graph mdg loc
   | Object loc -> Export_view.Object.build_graph mdg loc
+  | Function loc -> Export_view.Function.build_graph mdg loc
   | Reaches loc -> Export_view.Reaches.build_graph mdg loc
+  | Sinks -> Export_view.Sinks.build_graph mdg
 
 let svg_cmd (env : Env.t) (svg : string) (dot : string) : string =
   Fmt.str "timeout %d dot -Tsvg %s -o %s 2>/dev/null" env.timeout dot svg

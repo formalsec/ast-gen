@@ -32,9 +32,10 @@ module G =
 type t =
   | Full
   | Calls
-  | Function of Location.t
   | Object of Location.t
+  | Function of Location.t
   | Reaches of Location.t
+  | Sinks
 
 module Full = struct
   let build_graph_node (node : Node.t) (graph : G.t) : G.t =
@@ -64,6 +65,26 @@ module Calls = struct
     |> Hashtbl.fold (fun _ -> Edge.Set.fold build_graph_edge) mdg.edges
 end
 
+module Object = struct
+  let get_object (mdg : Mdg.t) (uid : Location.t) : Node.t =
+    let l_obj = get_node mdg uid in
+    match l_obj.kind with
+    | Object _ | Function _ | Parameter _ | Return _ -> l_obj
+    | _ -> raise "Unexpected non-object node '%a'" Node.pp l_obj
+
+  let visit_f (edge : Edge.t) : bool =
+    match edge.kind with Property _ | Version _ -> true | _ -> false
+
+  let node_f (node : Node.t) (graph : G.t) : G.t = G.add_vertex graph node
+
+  let edge_f (edge : Edge.t) (graph : G.t) : G.t =
+    G.add_edge_e graph (G.E.create edge.src edge edge.tar)
+
+  let build_graph (mdg : Mdg.t) (loc : Location.t) : G.t =
+    let node = get_object mdg loc in
+    Mdg.visit_forwards visit_f node_f edge_f mdg node G.empty
+end
+
 module Function = struct
   let get_function (mdg : Mdg.t) (uid : Location.t) : Node.t =
     let l_func = get_node mdg uid in
@@ -88,26 +109,6 @@ module Function = struct
     |> Hashtbl.fold (fun _ -> Edge.Set.fold (build_graph_edge l_node)) mdg.edges
 end
 
-module Object = struct
-  let get_object (mdg : Mdg.t) (uid : Location.t) : Node.t =
-    let l_obj = get_node mdg uid in
-    match l_obj.kind with
-    | Object _ | Function _ | Parameter _ | Return _ -> l_obj
-    | _ -> raise "Unexpected non-object node '%a'" Node.pp l_obj
-
-  let visit_f (edge : Edge.t) : bool =
-    match edge.kind with Property _ | Version _ -> true | _ -> false
-
-  let node_f (node : Node.t) (graph : G.t) : G.t = G.add_vertex graph node
-
-  let edge_f (edge : Edge.t) (graph : G.t) : G.t =
-    G.add_edge_e graph (G.E.create edge.src edge edge.tar)
-
-  let build_graph (mdg : Mdg.t) (loc : Location.t) : G.t =
-    let node = get_object mdg loc in
-    Mdg.visit_forwards visit_f node_f edge_f mdg node G.empty
-end
-
 module Reaches = struct
   let visit_f (_ : Edge.t) : bool = true
   let node_f (node : Node.t) (graph : G.t) : G.t = G.add_vertex graph node
@@ -119,4 +120,22 @@ module Reaches = struct
   let build_graph (mdg : Mdg.t) (loc : Location.t) : G.t =
     let node = get_node mdg loc in
     Mdg.visit_backwards visit_f node_f edge_f mdg node G.empty
+end
+
+module Sinks = struct
+  let get_sinks (mdg : Mdg.t) : Node.t list =
+    Hashtbl.to_seq_values mdg.nodes
+    |> Seq.filter Node.is_taint_sink
+    |> List.of_seq
+
+  let visit_f (_ : Edge.t) : bool = true
+  let node_f (node : Node.t) (graph : G.t) : G.t = G.add_vertex graph node
+
+  let edge_f (tran : Edge.t) (graph : G.t) : G.t =
+    let edge = Edge.transpose tran in
+    G.add_edge_e graph (G.E.create edge.src edge edge.tar)
+
+  let build_graph (mdg : Mdg.t) : G.t =
+    let nodes = get_sinks mdg in
+    Mdg.visit_multiple_backwards visit_f node_f edge_f mdg nodes G.empty
 end

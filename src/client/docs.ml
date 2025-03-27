@@ -230,11 +230,12 @@ module MdgOpts = struct
     let doc =
       "Export view when exporting the graph into the .svg representation. \
        Options include (1) 'full' [default] for exporting the complete graph; \
-       (2) 'calls' for exporting the program's call graph; (3) \
+       (2) 'calls' for exporting the program's call graph; (3) 'object:<#loc>' \
+       for exporting the graph of the object at location <#loc>; (4) \
        'function:<#loc>' for exporting the graph of the function at location \
-       <#loc>; (4) 'object:<#loc>' for exporting the graph of the object at \
-       location <#loc>; and (5) 'reaches:<#loc>' for exporting the subgraph \
-       that reaches the node at location <#loc>." in
+       <#loc>; (5) 'reaches:<#loc>' for exporting the subgraph that reaches \
+       the node at location <#loc>; and (6) 'sinks' for exporting the subgraph \
+       that reaches every tainted sink of the program." in
     let parse_f = Enums.ExportView.parse in
     let default = Enums.ExportView.default () in
     Arg.(value & opt parse_f default & info [ "export-view" ] ~docv ~doc)
