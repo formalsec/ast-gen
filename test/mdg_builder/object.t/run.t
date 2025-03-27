@@ -14,7 +14,6 @@
 
   $ graphjs mdg --no-export this.js
   [[literal]] --< Arg(1) >--> this.bar(...)[l_3]
-  [[literal]] --< D >--> 10[l_0]
   [[literal]] --< Arg(1) >--> bar(...)[l_8]
   [[literal]] --< Arg(1) >--> obj.bar(...)[l_11]
   bar[f_1] --< Param(0) >--> this[p_0]

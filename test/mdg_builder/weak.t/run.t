@@ -18,11 +18,7 @@
   obj.null[l_8] -
 
   $ graphjs mdg --no-export property_update.js
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
+  [[literal]] -
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(bar) >--> obj.bar[l_6]
   $v2[l_2] --< V(foo) >--> obj[l_3]
@@ -46,7 +42,7 @@
   obj[l_10] --< P(null) >--> 10[l_0]
 
   $ graphjs mdg --no-export property_access.js
-  [[literal]] --< D >--> 10[l_0]
+  [[literal]] -
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(foo) >--> obj.foo[l_6]
   $v1[l_1] --< P(bar) >--> obj.bar[l_8]
@@ -115,7 +111,7 @@
   $v7[l_13] -
 
   $ graphjs mdg --no-export property_value.js
-  [[literal]] --< D >--> 10[l_0]
+  [[literal]] -
   $v1[l_1] --< V(foo) >--> obj[l_3]
   $v1[l_1] --< P(foo) >--> obj.foo[l_8]
   $v2[l_2] --< V(foo) >--> obj[l_3]
