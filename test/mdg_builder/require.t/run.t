@@ -40,7 +40,7 @@
   $v9[l_22] -
 
   $ graphjs mdg --no-export --mode=multifile main.js
-  [[literal]] --< D >--> 10[l_0]
+  [[literal]] -
   module[l_8] --< V(exports) >--> module[l_9]
   obj[l_1] --< V(foo) >--> obj[l_2]
   10[l_0] -

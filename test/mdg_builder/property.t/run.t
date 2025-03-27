@@ -22,12 +22,7 @@
   $v9[l_6] --< D >--> obj.*.*[l_3]
 
   $ graphjs mdg --no-export static_update.js
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
+  [[literal]] -
   obj[l_1] --< V(foo) >--> obj[l_2]
   obj[l_1] --< P(bar) >--> obj.bar[l_5]
   10[l_0] -
@@ -50,13 +45,7 @@
   10[l_0] -
 
   $ graphjs mdg --no-export dynamic_update.js
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> $v4[l_9]
-  [[literal]] --< D >--> true[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
   obj[l_1] --< V(*) >--> obj[l_2]
   obj[l_1] --< P(*) >--> obj.*[l_5]
   10[l_0] --< V(*) >--> $v2[l_6]
@@ -82,8 +71,7 @@
   10[l_0] -
 
   $ graphjs mdg --no-export static_access.js
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
+  [[literal]] -
   obj[l_1] --< V(foo) >--> obj[l_2]
   obj[l_1] --< P(baz) >--> obj.baz[l_5]
   obj[l_1] --< P(foo) >--> obj.foo[l_7]
@@ -104,8 +92,7 @@
   obj[l_10] --< P(qux) >--> $v1[l_3]
 
   $ graphjs mdg --no-export dynamic_access.js
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
+  [[literal]] -
   obj[l_1] --< V(*) >--> obj[l_2]
   obj[l_1] --< P(*) >--> obj.*[l_5]
   10[l_0] --< V(*) >--> $v2[l_6]

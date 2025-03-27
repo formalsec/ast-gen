@@ -1,7 +1,4 @@
   $ graphjs mdg --no-export while.js
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> $v2[l_21]
   x1[l_1] --< V(p1) >--> x1[l_2]
   10[l_0] -
@@ -47,7 +44,7 @@
   w1[l_22] --< V(p1) >--> w1[l_22]
 
   $ graphjs mdg --no-export forin.js
-  [[literal]] --< D >--> 10[l_0]
+  [[literal]] -
   $v1[l_1] -
   y1[l_2] --< V(p1) >--> y1[l_3]
   y1[l_3] --< V(p1) >--> y1[l_3]
@@ -67,9 +64,6 @@
   y4[l_9] --< V(p4) >--> y4[l_9]
 
   $ graphjs mdg --no-export forof.js
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
-  [[literal]] --< D >--> 10[l_0]
   [[literal]] --< D >--> $v7[l_26]
   $v1[l_1] -
   x1[l_2] --< V(p1) >--> x1[l_3]
