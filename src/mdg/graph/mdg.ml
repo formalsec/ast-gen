@@ -15,7 +15,7 @@ let create () : t =
   let edges = Hashtbl.create Config.(!dflt_htbl_sz) in
   let trans = Hashtbl.create Config.(!dflt_htbl_sz) in
   let jslib = Hashtbl.create Config.(!dflt_htbl_sz) in
-  let literal = Node.create_literal () in
+  let literal = Node.create_default_literal () in
   let calls = Node.Set.empty in
   let imports = Node.Set.empty in
   { nodes; edges; trans; literal; jslib; calls; imports }

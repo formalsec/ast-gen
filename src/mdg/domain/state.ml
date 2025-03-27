@@ -9,6 +9,10 @@ module Env = struct
     fun () -> dflt
 end
 
+type eval_ctx =
+  | General
+  | PropUpdateRight
+
 type t =
   { env : Env.t
   ; mdg : Mdg.t
@@ -17,6 +21,7 @@ type t =
   ; lookup_interceptors : (Location.t, lookup_interceptor) Hashtbl.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
   ; curr_func : Node.t option
+  ; curr_eval : eval_ctx
   }
 
 and lookup_interceptor =
@@ -40,6 +45,7 @@ let create (env' : Env.t) : t =
   ; lookup_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; curr_func = None
+  ; curr_eval = General
   }
 
 let initialize (state : t) : t =
@@ -65,6 +71,9 @@ let lub (state1 : t) (state2 : t) : t =
   let store = Store.lub state1.store state2.store in
   let registry = Registry.lub state1.registry state2.registry in
   { state1 with mdg; store; registry }
+
+let eval_prop_update_right (state : t) : t =
+  { state with curr_eval = PropUpdateRight }
 
 let get_node (state : t) (id : Registry.cid) : Node.t =
   match Registry.find_opt state.registry id with
@@ -92,9 +101,9 @@ let add_edge (state : t) (src : Node.t) (tar : Node.t)
 let add_object_node (st : t) (id : Registry.cid) (name : string) : Node.t =
   add_node st id (Node.create_object name)
 
-let add_literal_object_node (state : t) (id : Registry.cid) (name : string) :
+let add_literal_node (state : t) (id : Registry.cid) (literal : Literal.t) :
     Node.t =
-  add_node state id (Node.create_literal_object name)
+  add_node state id (Node.create_literal literal)
 
 let add_function_node (state : t) (id : Registry.cid) (name : string) : Node.t =
   add_node state id (Node.create_function name)
