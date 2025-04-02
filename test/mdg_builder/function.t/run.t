@@ -1,5 +1,4 @@
   $ graphjs mdg --no-export header.js
-  [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   this[p_0] -
   bar[f_2] --< Param(0) >--> this[p_0]
@@ -20,7 +19,6 @@
   w1[p_1] -
 
   $ graphjs mdg --no-export body.js
-  [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x1[p_1]
   this[p_0] -
@@ -61,16 +59,16 @@
   $v8[l_15] --< P(q) >--> w1.p1[l_11]
 
   $ graphjs mdg --no-export return.js
-  [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x1[p_1]
   this[p_0] -
   x1[p_1] -
-  bar[f_2] --< Retn >--> [[literal]]
   bar[f_2] --< Param(0) >--> this[p_0]
   bar[f_2] --< Param(1) >--> y1[p_1]
+  bar[f_2] --< Retn >--> 10[v_2]
   this[p_0] -
   y1[p_1] -
+  10[v_2] -
   baz[f_3] --< Param(0) >--> this[p_0]
   baz[f_3] --< Param(1) >--> z1[p_1]
   baz[f_3] --< Retn >--> $v1[l_1]
@@ -84,7 +82,6 @@
   w1[p_1] -
 
   $ graphjs mdg --no-export scope.js
-  [[literal]] -
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x[p_1]
   this[p_0] -
@@ -99,15 +96,6 @@
   $v1[l_3] --< P(p2) >--> y[p_1]
 
   $ graphjs mdg --no-export call.js
-  [[literal]] --< Arg(1) >--> foo(...)[l_1]
-  [[literal]] --< Arg(1) >--> bar(...)[l_3]
-  [[literal]] --< Arg(1) >--> foo(...)[l_5]
-  [[literal]] --< Arg(2) >--> foo(...)[l_5]
-  [[literal]] --< Arg(3) >--> foo(...)[l_5]
-  [[literal]] --< Arg(1) >--> bar(...)[l_7]
-  [[literal]] --< Arg(2) >--> bar(...)[l_7]
-  [[literal]] --< Arg(3) >--> bar(...)[l_7]
-  [[literal]] --< Arg(1) >--> baz(...)[l_9]
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x1[p_1]
   this[p_0] -
@@ -120,31 +108,31 @@
   y1[p_1] -
   y2[p_2] -
   y3[p_3] -
+  10[v_2] --< Arg(1) >--> foo(...)[l_1]
   foo(...)[l_1] --< Call >--> foo[f_1]
   foo(...)[l_1] --< D >--> $v1[l_2]
   $v1[l_2] -
+  10[v_3] --< Arg(1) >--> bar(...)[l_3]
   bar(...)[l_3] --< Call >--> bar[f_2]
   bar(...)[l_3] --< D >--> $v2[l_4]
   $v2[l_4] -
+  10[v_4] --< Arg(1) >--> foo(...)[l_5]
+  "abc"[v_5] --< Arg(2) >--> foo(...)[l_5]
+  true[v_6] --< Arg(3) >--> foo(...)[l_5]
   foo(...)[l_5] --< Call >--> foo[f_1]
   foo(...)[l_5] --< D >--> $v3[l_6]
   $v3[l_6] -
+  10[v_7] --< Arg(1) >--> bar(...)[l_7]
+  "abc"[v_8] --< Arg(2) >--> bar(...)[l_7]
+  true[v_9] --< Arg(3) >--> bar(...)[l_7]
   bar(...)[l_7] --< Call >--> bar[f_2]
   bar(...)[l_7] --< D >--> $v4[l_8]
   $v4[l_8] -
+  10[v_10] --< Arg(1) >--> baz(...)[l_9]
   baz(...)[l_9] --< D >--> $v5[l_10]
   $v5[l_10] -
 
   $ graphjs mdg --no-export new.js
-  [[literal]] --< Arg(1) >--> foo(...)[l_1]
-  [[literal]] --< Arg(1) >--> bar(...)[l_3]
-  [[literal]] --< Arg(1) >--> foo(...)[l_5]
-  [[literal]] --< Arg(2) >--> foo(...)[l_5]
-  [[literal]] --< Arg(3) >--> foo(...)[l_5]
-  [[literal]] --< Arg(1) >--> bar(...)[l_7]
-  [[literal]] --< Arg(2) >--> bar(...)[l_7]
-  [[literal]] --< Arg(3) >--> bar(...)[l_7]
-  [[literal]] --< Arg(1) >--> baz(...)[l_9]
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x1[p_1]
   this[p_0] -
@@ -157,26 +145,31 @@
   y1[p_1] -
   y2[p_2] -
   y3[p_3] -
+  10[v_2] --< Arg(1) >--> foo(...)[l_1]
   foo(...)[l_1] --< Call >--> foo[f_1]
   foo(...)[l_1] --< D >--> $v1[l_2]
   $v1[l_2] -
+  10[v_3] --< Arg(1) >--> bar(...)[l_3]
   bar(...)[l_3] --< Call >--> bar[f_2]
   bar(...)[l_3] --< D >--> $v2[l_4]
   $v2[l_4] -
+  10[v_4] --< Arg(1) >--> foo(...)[l_5]
+  "abc"[v_5] --< Arg(2) >--> foo(...)[l_5]
+  true[v_6] --< Arg(3) >--> foo(...)[l_5]
   foo(...)[l_5] --< Call >--> foo[f_1]
   foo(...)[l_5] --< D >--> $v3[l_6]
   $v3[l_6] -
+  10[v_7] --< Arg(1) >--> bar(...)[l_7]
+  "abc"[v_8] --< Arg(2) >--> bar(...)[l_7]
+  true[v_9] --< Arg(3) >--> bar(...)[l_7]
   bar(...)[l_7] --< Call >--> bar[f_2]
   bar(...)[l_7] --< D >--> $v4[l_8]
   $v4[l_8] -
+  10[v_10] --< Arg(1) >--> baz(...)[l_9]
   baz(...)[l_9] --< D >--> $v5[l_10]
   $v5[l_10] -
 
   $ graphjs mdg --no-export hoisted.js
-  [[literal]] --< Arg(1) >--> foo(...)[l_1]
-  [[literal]] --< Arg(1) >--> bar(...)[l_3]
-  [[literal]] --< Arg(1) >--> foo(...)[l_17]
-  [[literal]] --< Arg(1) >--> bar(...)[l_19]
   foo[f_1] --< Param(0) >--> this[p_0]
   foo[f_1] --< Param(1) >--> x[p_1]
   this[p_0] -
@@ -187,9 +180,11 @@
   this[p_0] -
   w[p_1] --< Arg(1) >--> bar(...)[l_13]
   w[p_1] --< Arg(1) >--> foo(...)[l_15]
+  10[v_2] --< Arg(1) >--> foo(...)[l_1]
   foo(...)[l_1] --< Call >--> foo[f_1]
   foo(...)[l_1] --< D >--> $v1[l_2]
   $v1[l_2] -
+  "abc"[v_3] --< Arg(1) >--> bar(...)[l_3]
   bar(...)[l_3] --< Call >--> bar[f_2]
   bar(...)[l_3] --< D >--> $v2[l_4]
   $v2[l_4] -
@@ -219,9 +214,11 @@
   foo(...)[l_15] --< Call >--> foo[f_3]
   foo(...)[l_15] --< D >--> $v8[l_16]
   $v8[l_16] -
+  10[v_4] --< Arg(1) >--> foo(...)[l_17]
   foo(...)[l_17] --< Call >--> foo[f_3]
   foo(...)[l_17] --< D >--> $v9[l_18]
   $v9[l_18] -
+  "abc"[v_5] --< Arg(1) >--> bar(...)[l_19]
   bar(...)[l_19] --< Call >--> bar[f_4]
   bar(...)[l_19] --< D >--> $v10[l_20]
   $v10[l_20] -
