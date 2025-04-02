@@ -1,13 +1,13 @@
   $ graphjs mdg --no-export --mode=singlefile main.js
-  [[literal]] --< Arg(1) >--> require(...)[l_1]
-  [[literal]] --< Arg(1) >--> require(...)[l_4]
   require[f_1] -
+  './foo.js'[v_2] --< Arg(1) >--> require(...)[l_1]
   require(...)[l_1] --< Call >--> require[f_1]
   require(...)[l_1] --< D >--> foo[l_2]
   foo[l_2] --< P(obj) >--> foo.obj[l_7]
   foo[l_2] --< P(foo) >--> foo.foo[l_8]
   foo[l_2] --< Arg(0) >--> foo.foo(...)[l_9]
   import(./foo.js)[l_3] --< D >--> foo[l_2]
+  './deps/bar.js'[v_3] --< Arg(1) >--> require(...)[l_4]
   require(...)[l_4] --< Call >--> require[f_1]
   require(...)[l_4] --< D >--> bar[l_5]
   bar[l_5] --< P(bar1) >--> bar.bar1[l_11]
@@ -40,11 +40,10 @@
   $v9[l_22] -
 
   $ graphjs mdg --no-export --mode=multifile main.js
-  [[literal]] -
   module[l_8] --< V(exports) >--> module[l_9]
   obj[l_1] --< V(foo) >--> obj[l_2]
-  10[l_0] -
-  obj[l_2] --< P(foo) >--> 10[l_0]
+  10[v_2] -
+  obj[l_2] --< P(foo) >--> 10[v_2]
   obj[l_2] --< Arg(1) >--> foo.foo(...)[l_46]
   obj[l_2] --< Arg(1) >--> bar.bar1.p(...)[l_50]
   foo[f_1] --< Param(0) >--> this[p_0]
@@ -63,6 +62,7 @@
   $v2[l_7] --< Arg(0) >--> foo.foo(...)[l_46]
   module[l_9] --< P(exports) >--> $v2[l_7]
   module[l_19] --< V(exports) >--> module[l_20]
+  '../foo'[v_3] -
   $v3[l_13] --< Arg(1) >--> foo.foo(...)[l_15]
   foo.foo(...)[l_15] --< Call >--> foo[f_1]
   foo.foo(...)[l_15] --< D >--> $v4[l_16]
@@ -79,6 +79,7 @@
   module.exports[l_34] --< P(bar3) >--> bar3[l_33]
   module.exports[l_34] --< V(bar1) >--> module.exports[l_35]
   module.exports[l_34] --< Arg(0) >--> bar.bar4(...)[l_58]
+  "./baz"[v_4] -
   bar1[l_24] --< V(p) >--> bar1[l_27]
   $v7[f_5] --< Param(0) >--> this[p_0]
   $v7[f_5] --< Param(1) >--> y[p_1]
@@ -103,6 +104,8 @@
   module.exports[l_36] --< P(bar2) >--> bar2[l_29]
   module.exports[l_36] --< V(bar3) >--> module.exports[l_37]
   module.exports[l_37] --< P(bar3) >--> bar3[l_33]
+  './foo.js'[v_5] -
+  './deps/bar.js'[v_6] -
   foo.foo(...)[l_46] --< Call >--> foo[f_1]
   foo.foo(...)[l_46] --< D >--> $v12[l_47]
   $v12[l_47] -
