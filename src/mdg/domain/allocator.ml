@@ -22,8 +22,8 @@ let cid (el : ('a, Region.t) Metadata.t) : cid =
 let offset (cid : cid) (offset : int) : cid = { cid with offset }
 let at (cid : cid) : Region.t = cid.at
 
-let lub (reg1 : 'a t) (reg2 : 'a t) : 'a t =
-  Fun.flip iter reg2 (fun stmt node2 ->
-      let el1 = find_opt reg1 stmt in
-      if Option.is_none el1 then replace reg1 stmt node2 );
-  reg1
+let lub (alloc1 : 'a t) (alloc2 : 'a t) : 'a t =
+  Fun.flip iter alloc2 (fun stmt node2 ->
+      let el1 = find_opt alloc1 stmt in
+      if Option.is_none el1 then replace alloc1 stmt node2 );
+  alloc1

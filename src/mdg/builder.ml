@@ -4,10 +4,10 @@ open Graphjs_ast
 open Metadata
 
 type 'a el = ('a, Region.t) Metadata.t
-type cid = Registry.cid
+type cid = Allocator.cid
 
-let newcid (el : 'a el) : cid = Registry.cid el
-let offset (cid : cid) (ofs : int) : cid = Registry.offset cid ofs
+let newcid (el : 'a el) : cid = Allocator.cid el
+let offset (cid : cid) (ofs : int) : cid = Allocator.offset cid ofs
 
 let convert_literal (literal : LiteralValue.t) : Literal.t =
   match literal.value with

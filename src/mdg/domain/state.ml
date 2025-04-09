@@ -13,7 +13,7 @@ type t =
   { env : Env.t
   ; mdg : Mdg.t
   ; store : Store.t
-  ; registry : Node.t Registry.t
+  ; allocator : Node.t Allocator.t
   ; lookup_interceptors : (Location.t, lookup_interceptor) Hashtbl.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
   ; curr_func : Node.t option
@@ -30,7 +30,7 @@ and call_interceptor =
   -> Node.t
   -> Node.Set.t list
   -> Region.t Expression.t list
-  -> Registry.cid
+  -> Allocator.cid
   -> t
 
 and literal_ctx =
@@ -42,7 +42,7 @@ let create (env' : Env.t) : t =
   { env = env'
   ; mdg = Mdg.create ()
   ; store = Store.create ()
-  ; registry = Registry.create Config.(!dflt_htbl_sz)
+  ; allocator = Allocator.create Config.(!dflt_htbl_sz)
   ; lookup_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; curr_func = None
@@ -52,57 +52,57 @@ let create (env' : Env.t) : t =
 let initialize (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
-  let registry = Registry.copy state.registry in
+  let allocator = Allocator.copy state.allocator in
   let curr_func = None in
-  { state with mdg; store; registry; curr_func }
+  { state with mdg; store; allocator; curr_func }
 
 let copy (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
-  let registry = Registry.copy state.registry in
-  { state with mdg; store; registry }
+  let allocator = Allocator.copy state.allocator in
+  { state with mdg; store; allocator }
 
 let join (state1 : t) (state2 : t) : t =
   let mdg = Mdg.join state1.mdg state2.mdg in
-  let registry = Registry.lub state1.registry state2.registry in
-  { state1 with mdg; registry }
+  let allocator = Allocator.lub state1.allocator state2.allocator in
+  { state1 with mdg; allocator }
 
 let lub (state1 : t) (state2 : t) : t =
   let mdg = Mdg.lub state1.mdg state2.mdg in
   let store = Store.lub state1.store state2.store in
-  let registry = Registry.lub state1.registry state2.registry in
-  { state1 with mdg; store; registry }
+  let allocator = Allocator.lub state1.allocator state2.allocator in
+  { state1 with mdg; store; allocator }
 
 let skip_literal (state : t) : t = { state with literal_ctx = Skip }
 let make_literal (state : t) : t = { state with literal_ctx = Make }
 let make_literal_prop (state : t) : t = { state with literal_ctx = MakeProp }
 
-type cid = Registry.cid
+type cid = Allocator.cid
 
 let get_node (state : t) (cid : cid) : Node.t =
-  match Registry.find_opt state.registry cid with
+  match Allocator.find_opt state.allocator cid with
   | None ->
-    let at = Registry.at cid in
-    Log.fail "expecting node of region '%a' in registry" Region.pp at
+    let at = Allocator.at cid in
+    Log.fail "expecting node of region '%a' in allocator" Region.pp at
   | Some node -> node
 
 let add_node (state : t) (cid : cid)
     (create_node_f : Node.t option -> Region.t -> Node.t) : Node.t =
-  match Registry.find_opt state.registry cid with
+  match Allocator.find_opt state.allocator cid with
   | Some node -> node
   | None ->
-    let node = create_node_f state.curr_func (Registry.at cid) in
-    Registry.replace state.registry cid node;
+    let node = create_node_f state.curr_func (Allocator.at cid) in
+    Allocator.replace state.allocator cid node;
     Mdg.add_node state.mdg node;
     node
 
 let add_candidate_node (state : t) (cid : cid)
     (create_node_f : Node.t option -> Region.t -> Node.t) : Node.t =
-  match Registry.find_opt state.registry cid with
+  match Allocator.find_opt state.allocator cid with
   | Some node -> node
   | None ->
-    let node = create_node_f state.curr_func (Registry.at cid) in
-    Registry.replace state.registry cid node;
+    let node = create_node_f state.curr_func (Allocator.at cid) in
+    Allocator.replace state.allocator cid node;
     node
 
 let add_edge (state : t) (src : Node.t) (tar : Node.t)

@@ -2,7 +2,7 @@ open Graphjs_base
 open Graphjs_share
 open Graphjs_ast
 
-type cid = Registry.cid
+type cid = Allocator.cid
 
 module LookupInterceptor = struct
   let get_temp_exports (state : State.t) (l_exports : Node.t option)
