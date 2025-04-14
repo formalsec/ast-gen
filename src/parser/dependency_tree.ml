@@ -116,12 +116,22 @@ let pp (abs : bool) (ppf : Fmt.t) (dt : t) : unit =
 
 let str ?(abs : bool = false) (dt : t) : string = Fmt.str "%a" (pp abs) dt
 
-let bottom_up_visit (f : Fpath.t * Fpath.t -> 'a) (dt : t) : 'a list =
+let visit (f : Fpath.t * Fpath.t -> 'a -> 'a) (dt : t) (acc : 'a) : 'a =
   let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
-  let rec bottom_up_visit' { path; mrel; deps; _ } acc =
+  let rec visit' { path; mrel; deps; _ } acc =
     if not (Hashtbl.mem visited mrel) then
       let _ = Hashtbl.add visited mrel () in
-      let deps_acc = DepSet.fold bottom_up_visit' deps [] in
+      let acc' = DepSet.fold visit' deps acc in
+      f (path, mrel) acc'
+    else acc in
+  visit' dt acc
+
+let visit_list (f : Fpath.t * Fpath.t -> 'a) (dt : t) : 'a list =
+  let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
+  let rec visit' { path; mrel; deps; _ } acc =
+    if not (Hashtbl.mem visited mrel) then
+      let _ = Hashtbl.add visited mrel () in
+      let deps_acc = DepSet.fold visit' deps [] in
       acc @ deps_acc @ [ f (path, mrel) ]
     else acc in
-  bottom_up_visit' dt []
+  visit' dt []

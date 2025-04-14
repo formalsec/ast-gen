@@ -13,6 +13,7 @@ type stmt' = md Statement.t'
 type stmt = md Statement.t
 type case = md SwitchCase.t
 type catch = md Catch.t
+type file = md File.t
 
 type prop =
   | Static of md Prop.t
@@ -32,6 +33,8 @@ module Env = struct
     ; disable_defaults : bool
     ; disable_short_circuit : bool
     ; disable_aliases : bool
+    ; cb_source : Fpath.t -> Fpath.t -> unit
+    ; cb_normalized : Fpath.t -> file -> unit
     }
 
   let default =
@@ -41,6 +44,8 @@ module Env = struct
       ; disable_defaults = false
       ; disable_short_circuit = false
       ; disable_aliases = false
+      ; cb_source = (fun _ _ -> ())
+      ; cb_normalized = (fun _ _ -> ())
       } in
     fun () -> dflt
 end
@@ -1696,3 +1701,15 @@ and requires_expr_stmt (expr : (Loc.t, Loc.t) Flow.Expression.t) : bool =
   | (_, JSXElement _)
   | (_, JSXFragment _) ->
     false
+
+let normalize_program (env : Env.t) (dt : Dependency_tree.t) : Region.t Prog.t =
+  Identifier.reset_generator ();
+  let ctx = initialize_normalizer env in
+  let prog = Prog.create [] in
+  Fun.flip2 Dependency_tree.visit dt () (fun (path, mrel) () ->
+      env.cb_source path mrel;
+      let js_file = Flow_parser.parse path mrel in
+      let normalized_file = normalize_file ctx js_file in
+      env.cb_normalized mrel normalized_file;
+      Prog.add prog path normalized_file );
+  prog
