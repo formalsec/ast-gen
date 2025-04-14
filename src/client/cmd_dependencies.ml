@@ -33,12 +33,15 @@ module Output = struct
     | _ -> ()
 end
 
-let dep_tree (path : Fpath.t) (mode : Analysis_mode.t) () : Dependency_tree.t =
-  Dependency_tree.generate mode path
+module Graphjs = struct
+  let dep_tree (mode : Analysis_mode.t) (path : Fpath.t) :
+      Dependency_tree.t Exec.result =
+    Exec.graphjs (fun () -> Dependency_tree.generate mode path)
+end
 
 let generate_dep_tree (env : Options.env) (w : Workspace.t)
     (mode : Analysis_mode.t) (path : Fpath.t) : Dependency_tree.t Exec.result =
-  let* dt = Exec.graphjs (dep_tree path mode) in
+  let* dt = Graphjs.dep_tree mode path in
   Output.dep_tree env.absolute_dependency_paths w dt;
   Ok dt
 
