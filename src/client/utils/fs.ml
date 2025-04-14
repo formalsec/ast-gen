@@ -29,35 +29,35 @@ module Parser = struct
   let valid_fpath = Fun.(parse Bos.OS.Path.exists "Path" << fix_dir << v, pp)
 end
 
-let handle_error ~(default : 'a) (f : t -> 'a Exec.status) (path : t) : 'a =
+let handle_error ~(default : 'a) (f : t -> 'a Exec.result) (path : t) : 'a =
   match f path with
   | Ok v -> v
   | Error err ->
     Log.warn "Unable to output to \"%a\".@\n%a" pp path Exec.pp_err err;
     default
 
-let mkdir (path : t) : unit Exec.status =
+let mkdir (path : t) : unit Exec.result =
   let path' = if is_dir_path path then path else parent path in
   Result.map (fun _ -> ()) (Exec.bos (Bos.OS.Dir.create path'))
 
-let delete ?(recurse : bool = false) (path : t) : unit Exec.status =
+let delete ?(recurse : bool = false) (path : t) : unit Exec.result =
   if is_dir_path path then
     Result.map (fun _ -> ()) (Exec.bos (Bos.OS.Dir.delete ~recurse path))
   else Result.map (fun _ -> ()) (Exec.bos (Bos.OS.File.delete path))
 
-let exists (path : t) : bool Exec.status =
+let exists (path : t) : bool Exec.result =
   if is_dir_path path then Exec.bos (Bos.OS.Dir.exists path)
   else Exec.bos (Bos.OS.File.exists path)
 
-let copy (path : t) (src : t) : unit Exec.status =
+let copy (path : t) (src : t) : unit Exec.result =
   let open Result in
   let* data = Exec.bos (Bos.OS.File.read src) in
   Exec.bos (Bos.OS.File.write path data)
 
-let output (path : t) (pp_v : Fmt.t -> 'a -> unit) (v : 'a) : unit Exec.status =
+let output (path : t) (pp_v : Fmt.t -> 'a -> unit) (v : 'a) : unit Exec.result =
   Exec.bos (Bos.OS.File.writef path "%a" pp_v v)
 
-let write (path : t) (fmt : ('a, Fmt.t, unit, 'b) format4) : unit Exec.status =
+let write (path : t) (fmt : ('a, Fmt.t, unit, 'b) format4) : unit Exec.result =
   Exec.bos (Bos.OS.File.writef path fmt)
 
 let mkdir_noerr (path : t) : unit = handle_error ~default:() mkdir path

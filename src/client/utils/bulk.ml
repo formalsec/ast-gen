@@ -72,7 +72,7 @@ module InputTree = struct
     trim' [] tree true []
 
   let generate (inputs : Fpath.t list) :
-      (string list * Fpath.t) list Exec.status =
+      (string list * Fpath.t) list Exec.result =
     create () |> fill inputs |> trim |> Result.ok
 end
 
@@ -87,14 +87,14 @@ module Instance = struct
   type 'm t =
     { input : Fpath.t
     ; workspace : Workspace.t
-    ; result : 'm Exec.status
+    ; result : 'm Exec.result
     ; outcome : outcome
     ; time : Time.t
     ; streams : Log.Redirect.t
     }
 
   let create (input : Fpath.t) (workspace : Workspace.t)
-      (result : 'm Exec.status) (outcome : outcome) (time : Time.t)
+      (result : 'm Exec.result) (outcome : outcome) (time : Time.t)
       (streams : Log.Redirect.t) : 'm t =
     { input; workspace; result; outcome; time; streams }
 
@@ -252,8 +252,8 @@ module type CmdInterface = sig
   type t
 
   val cmd : string
-  val run : Workspace.t -> Fpath.t -> t Exec.status
-  val outcome : t Exec.status -> Instance.outcome
+  val run : Workspace.t -> Fpath.t -> t Exec.result
+  val outcome : t Exec.result -> Instance.outcome
 end
 
 module Executor (CmdInterface : CmdInterface) = struct
@@ -285,7 +285,7 @@ module Executor (CmdInterface : CmdInterface) = struct
     Workspace.output_noerr Main w' pp_tree tree
 
   let run_instance (input : Fpath.t) (w : Workspace.t) () :
-      CmdInterface.t Exec.status * Instance.outcome =
+      CmdInterface.t Exec.result * Instance.outcome =
     match CmdInterface.run w input with
     | Error (`Generic _) as result -> (result, Anomaly)
     | Error (`Failure _) as result -> (result, Anomaly)
@@ -299,7 +299,7 @@ module Executor (CmdInterface : CmdInterface) = struct
     Log.stdout "%a@." (Instance.pp_simple dflt_width) instance
 
   let run_instances (dflt_width : int) (tree : CmdInterface.t InstanceTree.t)
-      (inputs : (string list * Fpath.t) list) : unit Exec.status =
+      (inputs : (string list * Fpath.t) list) : unit Exec.result =
     Fun.flip2 List.fold_left (Ok ()) inputs (fun acc (offset, input) ->
         let (tree', w, name) = InstanceTree.extend tree offset in
         let streams = Log.Redirect.capture Shared in
@@ -312,7 +312,7 @@ module Executor (CmdInterface : CmdInterface) = struct
         | Error _ as err -> err )
 
   let execute (w : Workspace.t) (inputs : (string list * Fpath.t) list) :
-      unit Exec.status =
+      unit Exec.result =
     match inputs with
     | [] -> Log.fail "unexpected empty input list"
     | [ (_, input) ] -> Result.map ignore (CmdInterface.run w input)

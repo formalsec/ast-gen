@@ -2,7 +2,7 @@ open Graphjs_base
 open Graphjs_client
 open Cmdliner
 
-type status = (unit Exec.status Cmd.eval_ok, Cmd.eval_error) Result.t
+type status = (unit Exec.result Cmd.eval_ok, Cmd.eval_error) Result.t
 
 let set_copts (colorless : bool) (lvl : Enums.DebugLvl.t) (verbose : bool)
     (override' : bool) : unit =

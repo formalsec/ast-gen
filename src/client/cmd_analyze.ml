@@ -42,7 +42,7 @@ module Output = struct
 end
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
-    unit Exec.status =
+    unit Exec.result =
   let* mdg = Cmd_mdg.run env.mdg_env (Workspace.side_perm w) input in
   let _engine = Analysis_engine.initialize mdg in
   (* Output.tainted w engine; *)
@@ -50,7 +50,7 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   (* Output.main w input vulns; *)
   Ok ()
 
-let outcome (result : 'a Exec.status) : Bulk.Instance.outcome =
+let outcome (result : 'a Exec.result) : Bulk.Instance.outcome =
   match result with
   | Ok _ -> Success
   | Error (`DepTree _) -> Anomaly
@@ -67,7 +67,7 @@ let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
     let outcome = outcome
   end )
 
-let main (opts : Options.t) () : unit Exec.status =
+let main (opts : Options.t) () : unit Exec.result =
   let w = Workspace.create ~default:`None opts.inputs opts.output in
   let* _ = Workspace.prepare w in
   let* inputs = Bulk.InputTree.generate opts.inputs in

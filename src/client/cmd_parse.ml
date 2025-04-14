@@ -75,7 +75,7 @@ let normalizer_env (env : Options.env) : Normalizer.Env.t =
   }
 
 let normalize_program_modules (normalizer : Normalizer.Ctx.t) (w : Workspace.t)
-    (dt : Dependency_tree.t) : (Fpath.t * 'm File.t) Exec.status list =
+    (dt : Dependency_tree.t) : (Fpath.t * 'm File.t) Exec.result list =
   Fun.flip Dependency_tree.bottom_up_visit dt (fun (path, mrel) ->
       Output.source_file w path mrel;
       let* js_file = Exec.graphjs (js_parser path mrel) in
@@ -84,7 +84,7 @@ let normalize_program_modules (normalizer : Normalizer.Ctx.t) (w : Workspace.t)
       Ok (path, normalized_file) )
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
-    (Dependency_tree.t * 'm Prog.t) Exec.status =
+    (Dependency_tree.t * 'm Prog.t) Exec.result =
   let* dt = Cmd_dependencies.generate_dep_tree env.deps_env w env.mode input in
   Identifier.reset_generator ();
   let normalizer_env = normalizer_env env in
@@ -94,7 +94,7 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   Output.main w prog;
   Ok (dt, prog)
 
-let outcome (result : (Dependency_tree.t * 'm Prog.t) Exec.status) :
+let outcome (result : (Dependency_tree.t * 'm Prog.t) Exec.result) :
     Bulk.Instance.outcome =
   match result with
   | Ok _ -> Success
@@ -111,7 +111,7 @@ let interface (env : Options.env) : (module Bulk.CmdInterface) =
     let outcome = outcome
   end )
 
-let main (opts : Options.t) () : unit Exec.status =
+let main (opts : Options.t) () : unit Exec.result =
   let w = Workspace.create ~default:`Bundle opts.inputs opts.output in
   let* _ = Workspace.prepare w in
   let* inputs = Bulk.InputTree.generate opts.inputs in

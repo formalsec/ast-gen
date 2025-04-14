@@ -9,7 +9,7 @@ type error =
   | `ExportMDG of Fmt.t -> unit
   ]
 
-type 'a status = ('a, error) Result.t
+type 'a result = ('a, error) Result.t
 
 let pp_err (ppf : Fmt.t) (err : error) : unit =
   match err with
@@ -22,24 +22,24 @@ let pp_err (ppf : Fmt.t) (err : error) : unit =
 
 let log_err (err : error) : unit = Log.stderr "%a" pp_err err
 
-let exn (err : error) : 'a status =
+let exn (err : error) : 'a result =
   log_err err;
   Error err
 
-let error (fmt : ('b, Fmt.t, unit, 'a status) format4) : 'b =
+let error (fmt : ('b, Fmt.t, unit, 'a result) format4) : 'b =
   Fmt.kdly (fun acc -> exn (`Generic acc)) fmt
 
-let fail (fmt : ('b, Fmt.t, unit, 'a status) format4) : 'b =
+let fail (fmt : ('b, Fmt.t, unit, 'a result) format4) : 'b =
   Fmt.kdly (fun acc -> exn (`Failure acc)) fmt
 
 let timeout () : 'b = exn `Timeout
 
-let bos (res : ('a, [< `Msg of string ]) result) : 'a status =
+let bos (res : ('a, [< `Msg of string ]) Result.t) : 'a result =
   match res with
   | Ok _ as res' -> res'
   | Error (`Msg err) -> exn (`Generic (Fmt.dly "%s" err))
 
-let graphjs (exec_f : unit -> 'a) : 'a status =
+let graphjs (exec_f : unit -> 'a) : 'a result =
   try Ok (exec_f ()) with
   | Graphjs_parser.Dependency_tree.Exn fmt -> exn (`DepTree fmt)
   | Graphjs_parser.Flow_parser.Exn fmt -> exn (`ParseJS fmt)
