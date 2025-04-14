@@ -63,12 +63,12 @@ module Output = struct
   let url (path : Fpath.t) : string = Console.url (Fpath.to_string path)
 
   let export_dot (env : Svg_exporter.Env.t) (mdg : Mdg.t) (path : Fpath.t) :
-      unit Exec.status =
+      unit Exec.result =
     Exec.graphjs (fun () -> Svg_exporter.export_dot ~env path mdg)
 
   let export_svg (env : Svg_exporter.Env.t)
       (kind : [ `Dot of Fpath.t | `Mdg of Mdg.t ]) (path : Fpath.t) :
-      unit Exec.status =
+      unit Exec.result =
     Exec.graphjs (fun () -> Svg_exporter.export_svg ~env path kind)
 
   let taint_config (w : Workspace.t) (path : Fpath.t) (tc : Taint_config.t) :
@@ -79,7 +79,7 @@ module Output = struct
     Workspace.output_noerr Side w' Taint_config.pp tc
 
   let mdg (env : Svg_exporter.Env.t) (w : Workspace.t) (mrel : Fpath.t)
-      (mdg : Mdg.t) : unit Exec.status =
+      (mdg : Mdg.t) : unit Exec.result =
     let w' = Workspace.(w -+ "mdg") in
     Log.info "Module MDG '%a' built successfully." Fpath.pp mrel;
     Log.verbose "%a" Mdg.pp mdg;
@@ -96,7 +96,7 @@ module Output = struct
     | _ -> Ok ()
 
   let main (env : Svg_exporter.Env.t) (export : bool) (w : Workspace.t)
-      (path : Fpath.t) (mdg : Mdg.t) : unit Exec.status =
+      (path : Fpath.t) (mdg : Mdg.t) : unit Exec.result =
     let w' = Workspace.(w -+ "mdg") in
     Log.info "MDGs \"%a\" merged successfully." Fpath.pp path;
     Log.verbose "%a" Mdg.pp mdg;
@@ -138,14 +138,14 @@ let export_env (env : Options.env) : Svg_exporter.Env.t =
   }
 
 let read_taint_config (env : Options.env) (w : Workspace.t) :
-    Taint_config.t Exec.status =
+    Taint_config.t Exec.result =
   let* tc = Exec.graphjs (taint_config env.taint_config) in
   Output.taint_config w env.taint_config tc;
   Ok tc
 
 let build_program_mdgs (env : Options.env) (w : Workspace.t)
     (dt : Dependency_tree.t) (builder : State.t) (prog : 'm Prog.t) :
-    (Fpath.t * Mdg.t) Exec.status list =
+    (Fpath.t * Mdg.t) Exec.result list =
   let export_env = export_env env in
   Fun.flip Dependency_tree.bottom_up_visit dt (fun (path, mrel) ->
       let file = Prog.find prog path in
@@ -155,7 +155,7 @@ let build_program_mdgs (env : Options.env) (w : Workspace.t)
       Ok (path, mdg) )
 
 let merge_program_mdgs (env : Options.env) (w : Workspace.t)
-    (dt : Dependency_tree.t) (merger : Merger.t) : Mdg.t Exec.status =
+    (dt : Dependency_tree.t) (merger : Merger.t) : Mdg.t Exec.result =
   let export_env = export_env env in
   let* mdg = Exec.graphjs (mdg_merger merger) in
   let w' = Workspace.mdg env w dt.mrel true in
@@ -163,7 +163,7 @@ let merge_program_mdgs (env : Options.env) (w : Workspace.t)
   Ok mdg
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
-    Mdg.t Exec.status =
+    Mdg.t Exec.result =
   let* (dt, prog) = Cmd_parse.run env.parse_env (Workspace.side_perm w) input in
   let* tc = read_taint_config env w in
   let builder_env = builder_env env in
@@ -172,7 +172,7 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   let merger = Merger.create tc mdgs in
   merge_program_mdgs env w dt merger
 
-let outcome (result : Mdg.t Exec.status) : Bulk.Instance.outcome =
+let outcome (result : Mdg.t Exec.result) : Bulk.Instance.outcome =
   match result with
   | Ok _ -> Success
   | Error (`DepTree _) -> Failure
@@ -189,7 +189,7 @@ let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
     let outcome = outcome
   end )
 
-let main (opts : Options.t) () : unit Exec.status =
+let main (opts : Options.t) () : unit Exec.result =
   let ext = Some (if opts.env.export_graph then "svg" else "mdg") in
   let w = Workspace.create ~default:(`Single ext) opts.inputs opts.output in
   let* _ = Workspace.prepare w in

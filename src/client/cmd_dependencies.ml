@@ -37,18 +37,18 @@ let dep_tree (path : Fpath.t) (mode : Analysis_mode.t) () : Dependency_tree.t =
   Dependency_tree.generate mode path
 
 let generate_dep_tree (env : Options.env) (w : Workspace.t)
-    (mode : Analysis_mode.t) (path : Fpath.t) : Dependency_tree.t Exec.status =
+    (mode : Analysis_mode.t) (path : Fpath.t) : Dependency_tree.t Exec.result =
   let* dt = Exec.graphjs (dep_tree path mode) in
   Output.dep_tree env.absolute_dependency_paths w dt;
   Ok dt
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
-    Dependency_tree.t Exec.status =
+    Dependency_tree.t Exec.result =
   let* dt = generate_dep_tree env w MultiFile input in
   Output.main env.absolute_dependency_paths w dt;
   Ok dt
 
-let outcome (result : Dependency_tree.t Exec.status) : Bulk.Instance.outcome =
+let outcome (result : Dependency_tree.t Exec.result) : Bulk.Instance.outcome =
   match result with
   | Ok _ -> Success
   | Error (`DepTree _) -> Failure
@@ -63,7 +63,7 @@ let interface (env : Options.env) : (module Bulk.CmdInterface) =
     let outcome = outcome
   end )
 
-let main (opts : Options.t) () : unit Exec.status =
+let main (opts : Options.t) () : unit Exec.result =
   let ext = Some "json" in
   let w = Workspace.create ~default:(`Single ext) opts.inputs opts.output in
   let* _ = Workspace.prepare w in

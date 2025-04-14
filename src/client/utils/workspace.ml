@@ -70,8 +70,8 @@ let ( // ) (w : t) (rel : Fpath.t) : t = map Fpath.(fun path -> path // rel) w
 let ( + ) (w : t) (ext : string) : t = map Fpath.(fun path -> path + ext) w
 let ( -+ ) (w : t) (ext : string) : t = map Fpath.(fun path -> path -+ ext) w
 
-let execute (p : perm) (w : t) (f : Fpath.t -> 'a Exec.status) :
-    unit Exec.status =
+let execute (p : perm) (w : t) (f : Fpath.t -> 'a Exec.result) :
+    unit Exec.result =
   match (p, w.path) with
   | (Main, Single path) | (Main, Bundle path) | (Side, Bundle path) ->
     Result.map ignore (f path)
@@ -88,30 +88,30 @@ let log (w : t) (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
   | Main when not Log.Config.(!log_verbose) -> Log.stdout fmt
   | _ -> Log.ignore fmt
 
-let mkdir (p : perm) (w : t) : unit Exec.status = execute p w Fs.mkdir
+let mkdir (p : perm) (w : t) : unit Exec.result = execute p w Fs.mkdir
 let mkdir_noerr (p : perm) (w : t) : unit = execute_noerr p w Fs.mkdir_noerr
 
-let copy (p : perm) (w : t) (src : Fpath.t) : unit Exec.status =
+let copy (p : perm) (w : t) (src : Fpath.t) : unit Exec.result =
   execute p w (Fun.flip Fs.copy src)
 
 let copy_noerr (p : perm) (w : t) (src : Fpath.t) : unit =
   execute_noerr p w (Fun.flip Fs.copy_noerr src)
 
 let output (p : perm) (w : t) (pp : Fmt.t -> 'a -> unit) (v : 'a) :
-    unit Exec.status =
+    unit Exec.result =
   execute p w (Fun.flip2 Fs.output pp v)
 
 let output_noerr (p : perm) (w : t) (pp : Fmt.t -> 'a -> unit) (v : 'a) : unit =
   execute_noerr p w (Fun.flip2 Fs.output_noerr pp v)
 
 let write (p : perm) (w : t) (fmt : ('a, Fmt.t, unit, 'b) format4) :
-    unit Exec.status =
+    unit Exec.result =
   execute p w (Fun.flip Fs.write fmt)
 
 let write_noerr (p : perm) (w : t) (fm : ('a, Fmt.t, unit, 'b) format4) : unit =
   execute_noerr p w (Fun.flip Fs.write_noerr fm)
 
-let clean (w : t) : unit Exec.status =
+let clean (w : t) : unit Exec.result =
   let open Result in
   let create_dir_template dir_path manifest_path =
     let* _ = Fs.mkdir dir_path in
@@ -144,7 +144,7 @@ let clean (w : t) : unit Exec.status =
       else error_dir dir_path
     else create_dir_template dir_path manifest_path
 
-let prepare (w : t) : unit Exec.status =
+let prepare (w : t) : unit Exec.result =
   Fun.flip Result.map (clean w) (fun res ->
       Log.info "Workspace \"%a\" generated successfully." pp_path w;
       res )
