@@ -82,6 +82,7 @@ let ( ! ) (ctx : Ctx.t) : Ctx.t = Ctx.reset ctx
 
 let initialize_normalizer (env : Env.t) : Ctx.t =
   Metadata.reset_generator ();
+  Identifier.reset_generator ();
   Ctx.create env
 
 module FlowUtils = struct
@@ -1703,13 +1704,13 @@ and requires_expr_stmt (expr : (Loc.t, Loc.t) Flow.Expression.t) : bool =
     false
 
 let normalize_program (env : Env.t) (dt : Dependency_tree.t) : Region.t Prog.t =
-  Identifier.reset_generator ();
   let ctx = initialize_normalizer env in
-  let prog = Prog.create [] in
+  let prog = Prog.create dt.path [] in
   Fun.flip2 Dependency_tree.visit dt () (fun (path, mrel) () ->
       env.cb_source path mrel;
       let js_file = Flow_parser.parse path mrel in
       let normalized_file = normalize_file ctx js_file in
-      env.cb_normalized mrel normalized_file;
-      Prog.add prog path normalized_file );
+      let file = File.create path mrel normalized_file in
+      env.cb_normalized mrel file;
+      Prog.add prog path file );
   prog
