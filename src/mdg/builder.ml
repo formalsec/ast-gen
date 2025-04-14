@@ -511,6 +511,6 @@ and build_sequence_opt (state : State.t) (stmts : 'm Statement.t list option) :
   Option.fold ~none:state ~some:(build_sequence state) stmts
 
 let build_file (state : State.t) (file : 'm File.t) : Mdg.t =
-  let state' = initialize_state state file in
-  let state'' = build_sequence state' file in
+  let state' = initialize_state state file.body in
+  let state'' = build_sequence state' file.body in
   state''.mdg

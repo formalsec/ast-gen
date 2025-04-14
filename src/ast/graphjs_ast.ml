@@ -740,6 +740,10 @@ end
 module File = struct
   type 'm t = 'm Ast.File.t
 
+  let create (path : Fpath.t) (mrel : Fpath.t) (body : 'm Ast.Statement.t list)
+      : 'm t =
+    { path; mrel; body }
+
   let pp (ppf : Fmt.t) (file : 'm t) : unit = Printer.pp_file ppf file
   let str (file : 'm t) : string = Fmt.str "%a" pp file
 end
@@ -747,20 +751,22 @@ end
 module Prog = struct
   type 'm t = 'm Ast.Prog.t
 
-  let create (files : (Fpath.t * 'm File.t) list) : 'm t =
-    files |> List.to_seq |> Hashtbl.of_seq
-
-  let is_multifile (prog : 'm t) : bool = Hashtbl.length prog > 1
+  let create (main : Fpath.t) (files' : (Fpath.t * 'm File.t) list) : 'm t =
+    let files = files' |> List.to_seq |> Hashtbl.of_seq in
+    { main; files }
 
   let find (prog : 'm t) (path : Fpath.t) : 'm Ast.File.t =
-    Hashtbl.find prog path
+    Hashtbl.find prog.files path
 
   let add (prog : 'm t) (path : Fpath.t) (file : 'm Ast.File.t) : unit =
-    Hashtbl.add prog path file
+    Hashtbl.add prog.files path file
 
   let pp ?(filename = false) (ppf : Fmt.t) (prog : 'm t) : unit =
     Printer.pp_prog ~filename ppf prog
 
   let str ?(filename = false) (prog : 'm t) : string =
     Fmt.str "%a" (pp ~filename) prog
+
+  let main (prog : 'm t) : 'm Ast.File.t = find prog prog.main
+  let is_multifile (prog : 'm t) : bool = Hashtbl.length prog.files > 1
 end

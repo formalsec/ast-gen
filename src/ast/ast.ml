@@ -457,11 +457,18 @@ end =
   Operator
 
 and File : sig
-  type 'm t = 'm Statement.t list
+  type 'm t =
+    { path : Fpath.t
+    ; mrel : Fpath.t
+    ; body : 'm Statement.t list
+    }
 end =
   File
 
 and Prog : sig
-  type 'm t = (Fpath.t, 'm File.t) Hashtbl.t
+  type 'm t =
+    { main : Fpath.t
+    ; files : (Fpath.t, 'm File.t) Hashtbl.t
+    }
 end =
   Prog
