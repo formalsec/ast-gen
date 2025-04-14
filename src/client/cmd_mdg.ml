@@ -147,7 +147,7 @@ let build_program_mdgs (env : Options.env) (w : Workspace.t)
     (dt : Dependency_tree.t) (builder : State.t) (prog : 'm Prog.t) :
     (Fpath.t * Mdg.t) Exec.result list =
   let export_env = export_env env in
-  Fun.flip Dependency_tree.bottom_up_visit dt (fun (path, mrel) ->
+  Fun.flip Dependency_tree.visit_list dt (fun (path, mrel) ->
       let file = Prog.find prog path in
       let* mdg = Exec.graphjs (mdg_builder builder file) in
       let w' = Workspace.mdg env w mrel false in

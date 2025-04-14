@@ -53,44 +53,32 @@ module Output = struct
     Workspace.mkdir_noerr Side w';
     Workspace.output_noerr Side w' File.pp file
 
-  let main (w : Workspace.t) (p : 'm Prog.t) : unit =
-    let multifile = Prog.length p > 1 in
-    Workspace.log w "%a@." (Prog.pp ~filename:multifile) p
+  let main (w : Workspace.t) (prog : 'm Prog.t) : unit =
+    let multifile = Prog.is_multifile prog in
+    Workspace.log w "%a@." (Prog.pp ~filename:multifile) prog
 end
 
-let js_parser (path : Fpath.t) (mrel : Fpath.t) () :
-    (Loc.t, Loc.t) Flow_ast.Program.t =
-  Flow_parser.parse path mrel
+module Graphjs = struct
+  let normalize_program (env : Normalizer.Env.t) (dt : Dependency_tree.t) :
+      Region.t Prog.t Exec.result =
+    Exec.graphjs (fun () -> Normalizer.normalize_program env dt)
+end
 
-let js_normalizer (ctx : Normalizer.Ctx.t)
-    (file : (Loc.t, Loc.t) Flow_ast.Program.t) () : Normalizer.n_stmt =
-  Normalizer.normalize_file ctx file
-
-let normalizer_env (env : Options.env) : Normalizer.Env.t =
+let normalizer_env (env : Options.env) (w : Workspace.t) : Normalizer.Env.t =
   { always_fresh = env.always_fresh
   ; disable_hoisting = env.disable_hoisting
   ; disable_defaults = env.disable_defaults
   ; disable_short_circuit = env.disable_short_circuit
   ; disable_aliases = env.disable_aliases
+  ; cb_source = Output.source_file w
+  ; cb_normalized = Output.normalized_file w
   }
-
-let normalize_program_modules (normalizer : Normalizer.Ctx.t) (w : Workspace.t)
-    (dt : Dependency_tree.t) : (Fpath.t * 'm File.t) Exec.result list =
-  Fun.flip Dependency_tree.bottom_up_visit dt (fun (path, mrel) ->
-      Output.source_file w path mrel;
-      let* js_file = Exec.graphjs (js_parser path mrel) in
-      let* normalized_file = Exec.graphjs (js_normalizer normalizer js_file) in
-      Output.normalized_file w mrel normalized_file;
-      Ok (path, normalized_file) )
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     (Dependency_tree.t * 'm Prog.t) Exec.result =
+  let normalizer_env = normalizer_env env w in
   let* dt = Cmd_dependencies.generate_dep_tree env.deps_env w env.mode input in
-  Identifier.reset_generator ();
-  let normalizer_env = normalizer_env env in
-  let normalizer = Normalizer.initialize_normalizer normalizer_env in
-  let* files = Result.extract (normalize_program_modules normalizer w dt) in
-  let prog = Prog.create files in
+  let* prog = Graphjs.normalize_program normalizer_env dt in
   Output.main w prog;
   Ok (dt, prog)
 
