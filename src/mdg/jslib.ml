@@ -118,7 +118,7 @@ let initialize_builder (state : State.t) (tconf : Taint_config.t) : State.t =
   let state'' = initialize_require state' in
   state''
 
-let initialize_state (state : State.t) : State.t =
+let initialize_file (state : State.t) : State.t =
   let state' = initialize_module state in
   let state'' = initialize_exports state' in
   state''

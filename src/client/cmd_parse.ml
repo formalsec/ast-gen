@@ -38,6 +38,12 @@ module Options = struct
     { inputs; output; env }
 end
 
+module Graphjs = struct
+  let normalize_program (env : Normalizer.Env.t) (dt : Dependency_tree.t) :
+      Region.t Prog.t Exec.result =
+    Exec.graphjs (fun () -> Normalizer.normalize_program env dt)
+end
+
 module Output = struct
   let source_file (w : Workspace.t) (path : Fpath.t) (mrel : Fpath.t) : unit =
     let w' = Workspace.(w / "input" // mrel) in
@@ -58,12 +64,6 @@ module Output = struct
     Workspace.log w "%a@." (Prog.pp ~filename:multifile) prog
 end
 
-module Graphjs = struct
-  let normalize_program (env : Normalizer.Env.t) (dt : Dependency_tree.t) :
-      Region.t Prog.t Exec.result =
-    Exec.graphjs (fun () -> Normalizer.normalize_program env dt)
-end
-
 let normalizer_env (env : Options.env) (w : Workspace.t) : Normalizer.Env.t =
   { always_fresh = env.always_fresh
   ; disable_hoisting = env.disable_hoisting
@@ -75,15 +75,14 @@ let normalizer_env (env : Options.env) (w : Workspace.t) : Normalizer.Env.t =
   }
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
-    (Dependency_tree.t * 'm Prog.t) Exec.result =
+    'm Prog.t Exec.result =
   let normalizer_env = normalizer_env env w in
   let* dt = Cmd_dependencies.generate_dep_tree env.deps_env w env.mode input in
   let* prog = Graphjs.normalize_program normalizer_env dt in
   Output.main w prog;
-  Ok (dt, prog)
+  Ok prog
 
-let outcome (result : (Dependency_tree.t * 'm Prog.t) Exec.result) :
-    Bulk.Instance.outcome =
+let outcome (result : 'm Prog.t Exec.result) : Bulk.Instance.outcome =
   match result with
   | Ok _ -> Success
   | Error (`DepTree _) -> Failure
@@ -92,7 +91,7 @@ let outcome (result : (Dependency_tree.t * 'm Prog.t) Exec.result) :
 
 let interface (env : Options.env) : (module Bulk.CmdInterface) =
   ( module struct
-    type t = Dependency_tree.t * Region.t Prog.t
+    type t = Region.t Prog.t
 
     let cmd = Docs.ParseCmd.name
     let run = run env

@@ -88,6 +88,9 @@ let log (w : t) (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
   | Main when not Log.Config.(!log_verbose) -> Log.stdout fmt
   | _ -> Log.ignore fmt
 
+let print (w : t) (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
+  match w.perm with Main -> Log.stdout fmt | _ -> Log.ignore fmt
+
 let mkdir (p : perm) (w : t) : unit Exec.result = execute p w Fs.mkdir
 let mkdir_noerr (p : perm) (w : t) : unit = execute_noerr p w Fs.mkdir_noerr
 
@@ -104,12 +107,13 @@ let output (p : perm) (w : t) (pp : Fmt.t -> 'a -> unit) (v : 'a) :
 let output_noerr (p : perm) (w : t) (pp : Fmt.t -> 'a -> unit) (v : 'a) : unit =
   execute_noerr p w (Fun.flip2 Fs.output_noerr pp v)
 
-let write (p : perm) (w : t) (fmt : ('a, Fmt.t, unit, 'b) format4) :
-    unit Exec.result =
-  execute p w (Fun.flip Fs.write fmt)
+let write (p : perm) (w : t) (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
+  let write_f acc path = Fs.write path "%t" acc in
+  Fmt.kdly (fun acc -> execute p w (write_f acc)) fmt
 
-let write_noerr (p : perm) (w : t) (fm : ('a, Fmt.t, unit, 'b) format4) : unit =
-  execute_noerr p w (Fun.flip Fs.write_noerr fm)
+let write_noerr (p : perm) (w : t) (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
+  let write_f acc path = Fs.write_noerr path "%t" acc in
+  Fmt.kdly (fun acc -> execute_noerr p w (write_f acc)) fmt
 
 let clean (w : t) : unit Exec.result =
   let open Result in

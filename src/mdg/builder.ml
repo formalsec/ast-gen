@@ -167,18 +167,17 @@ and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
   Fun.flip Node.Set.map nodes (fun node ->
       if Node.is_invalid node then State.concretize_node state id node else node )
 
-let initialize_builder ?(env = State.Env.default ())
-    (taint_config : Taint_config.t) : State.t =
+let rec initialize_builder (env : State.Env.t) (taint_config : Taint_config.t) :
+    State.t =
   Node.reset_generators ();
   let state = State.create env in
   if not (Literal.is_multiple env.literal_mode) then
     Mdg.add_node state.mdg state.mdg.literal;
   Jslib.initialize_builder state taint_config
 
-let rec initialize_state (state : State.t) (stmts : 'm Statement.t list) :
-    State.t =
+and initialize_file (state : State.t) (stmts : 'm Statement.t list) : State.t =
   let state' = State.initialize state in
-  let state'' = Jslib.initialize_state state' in
+  let state'' = Jslib.initialize_file state' in
   initialize_hoisted_functions state'' stmts
 
 and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
@@ -510,7 +509,15 @@ and build_sequence_opt (state : State.t) (stmts : 'm Statement.t list option) :
     State.t =
   Option.fold ~none:state ~some:(build_sequence state) stmts
 
-let build_file (state : State.t) (file : 'm File.t) : Mdg.t =
-  let state' = initialize_state state file.body in
+let build_file (state : State.t) (file : 'm File.t) : State.t =
+  let state' = initialize_file state file.body in
   let state'' = build_sequence state' file.body in
-  state''.mdg
+  state''.env.cb_mdg file.mrel state'.mdg;
+  state''
+
+let build_program (env : State.Env.t) (taint_config : Taint_config.t)
+    (prog : 'm Prog.t) : Mdg.t =
+  let main = Prog.main prog in
+  let state = initialize_builder env taint_config in
+  let state' = build_file state main in
+  state'.mdg
