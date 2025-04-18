@@ -57,8 +57,9 @@ let copy (path : t) (src : t) : unit Exec.result =
 let output (path : t) (pp_v : Fmt.t -> 'a -> unit) (v : 'a) : unit Exec.result =
   Exec.bos (Bos.OS.File.writef path "%a" pp_v v)
 
-let write (path : t) (fmt : ('a, Fmt.t, unit, 'b) format4) : unit Exec.result =
-  Exec.bos (Bos.OS.File.writef path fmt)
+let write (path : t) (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
+  let write_f acc = Exec.bos (Bos.OS.File.writef path "%t" acc) in
+  Fmt.kdly (fun acc -> write_f acc) fmt
 
 let mkdir_noerr (path : t) : unit = handle_error ~default:() mkdir path
 
@@ -73,5 +74,6 @@ let copy_noerr (path : t) (src : t) : unit =
 let output_noerr (path : t) (pp_v : Fmt.t -> 'a -> unit) (v : 'a) : unit =
   handle_error ~default:() (Fun.flip2 output pp_v v) path
 
-let write_noerr (path : t) (fmt : ('a, Fmt.t, unit, 'b) format4) : unit =
-  handle_error ~default:() (Fun.flip write fmt) path
+let write_noerr (path : t) (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
+  let write_f acc path = write path "%t" acc in
+  Fmt.kdly (fun acc -> handle_error ~default:() (write_f acc) path) fmt

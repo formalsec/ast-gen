@@ -19,6 +19,12 @@ module Options = struct
     { inputs; output; env }
 end
 
+module Graphjs = struct
+  let dep_tree (mode : Analysis_mode.t) (path : Fpath.t) :
+      Dependency_tree.t Exec.result =
+    Exec.graphjs (fun () -> Dependency_tree.generate mode path)
+end
+
 module Output = struct
   let dep_tree (abs : bool) (w : Workspace.t) (dt : Dependency_tree.t) : unit =
     let w' = Workspace.(w / "dep_tree.json") in
@@ -31,12 +37,6 @@ module Output = struct
     match w.path with
     | Single _ -> Workspace.output_noerr Main w (Dependency_tree.pp abs) dt
     | _ -> ()
-end
-
-module Graphjs = struct
-  let dep_tree (mode : Analysis_mode.t) (path : Fpath.t) :
-      Dependency_tree.t Exec.result =
-    Exec.graphjs (fun () -> Dependency_tree.generate mode path)
 end
 
 let generate_dep_tree (env : Options.env) (w : Workspace.t)

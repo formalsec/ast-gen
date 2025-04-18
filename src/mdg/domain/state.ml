@@ -2,10 +2,13 @@ open Graphjs_base
 open Graphjs_ast
 
 module Env = struct
-  type t = { literal_mode : Literal.mode }
+  type t =
+    { literal_mode : Literal.mode
+    ; cb_mdg : Fpath.t -> Mdg.t -> unit
+    }
 
   let default =
-    let dflt = { literal_mode = Multiple } in
+    let dflt = { literal_mode = Multiple; cb_mdg = (fun _ _ -> ()) } in
     fun () -> dflt
 end
 
