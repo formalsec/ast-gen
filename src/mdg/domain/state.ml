@@ -4,11 +4,11 @@ open Graphjs_ast
 module Env = struct
   type t =
     { literal_mode : Literal.mode
-    ; cb_mdg : Fpath.t -> Mdg.t -> unit
+    ; cb_mdg : Fpath.t -> unit
     }
 
   let default =
-    let dflt = { literal_mode = Multiple; cb_mdg = (fun _ _ -> ()) } in
+    let dflt = { literal_mode = Multiple; cb_mdg = (fun _ -> ()) } in
     fun () -> dflt
 end
 
@@ -17,8 +17,11 @@ type t =
   ; mdg : Mdg.t
   ; store : Store.t
   ; allocator : Node.t Allocator.t
+  ; pcontext : Region.t Pcontext.t
   ; lookup_interceptors : (Location.t, lookup_interceptor) Hashtbl.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
+  ; curr_path : Fpath.t
+  ; curr_file : Fpath.t option
   ; curr_func : Node.t option
   ; literal_ctx : literal_ctx
   }
@@ -27,37 +30,35 @@ and lookup_interceptor =
   t -> Node.t -> string -> Node.Set.t -> Property.t -> Node.Set.t -> t
 
 and call_interceptor =
-     t
-  -> Node.t
-  -> Node.t
-  -> Node.t
-  -> Node.Set.t list
-  -> Region.t Expression.t list
-  -> Allocator.cid
-  -> t
+  t -> string -> Node.t -> Node.t -> Node.t -> Node.Set.t list -> t
 
 and literal_ctx =
   | Skip
   | Make
   | MakeProp
 
-let create (env' : Env.t) : t =
+let create (env' : Env.t) (prog : 'm Prog.t) : t =
+  let store' = Store.create () in
   { env = env'
+  ; store = store'
   ; mdg = Mdg.create ()
-  ; store = Store.create ()
   ; allocator = Allocator.create Config.(!dflt_htbl_sz)
+  ; pcontext = Pcontext.create prog store'
   ; lookup_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
+  ; curr_path = Fpath.v "."
+  ; curr_file = None
   ; curr_func = None
   ; literal_ctx = Make
   }
 
-let initialize (state : t) : t =
-  let mdg = Mdg.copy state.mdg in
-  let store = Store.copy state.store in
-  let allocator = Allocator.copy state.allocator in
+let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t option) : t =
+  let store = Store.copy state.pcontext.initial_store in
+  let curr_path = path in
+  let curr_file = mrel in
   let curr_func = None in
-  { state with mdg; store; allocator; curr_func }
+  let literal_ctx = Make in
+  { state with store; curr_path; curr_file; curr_func; literal_ctx }
 
 let copy (state : t) : t =
   let mdg = Mdg.copy state.mdg in

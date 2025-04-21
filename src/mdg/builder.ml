@@ -109,11 +109,11 @@ let add_dynamic_object_version (state : State.t) (name : string)
   | 1 -> dynamic_strong_nv state name (Node.Set.choose ls_obj) ls_prop cid
   | _ -> dynamic_weak_nv state name ls_obj ls_prop cid
 
-let add_function_call (state : State.t) (name_call : string)
-    (name_retn : string) (ls_func : Node.Set.t) (ls_args : Node.Set.t list)
-    (cid_call : cid) (cid_retn : cid) : State.t * Node.t * Node.t =
-  let l_call = State.add_call_node state cid_call name_call in
-  let l_retn = State.add_return_node state cid_retn name_retn in
+let add_function_call (state : State.t) (call_name : string)
+    (retn_name : string) (ls_func : Node.Set.t) (ls_args : Node.Set.t list)
+    (call_cid : cid) (retn_cid : cid) : State.t * Node.t * Node.t =
+  let l_call = State.add_call_node state call_cid call_name in
+  let l_retn = State.add_return_node state retn_cid retn_name in
   let state' = { state with mdg = Mdg.add_call state.mdg l_call } in
   let add_arg_f = Fun.flip2 (State.add_argument_edge state) l_call in
   Fun.flip Node.Set.iter ls_func (fun l_func ->
@@ -132,14 +132,13 @@ let lookup_interceptor (state : State.t) (name : string) (ls_obj : Node.Set.t)
       | Some interceptor_f ->
         interceptor_f state l_orig name ls_obj prop ls_lookup )
 
-let call_interceptor (state : State.t) (ls_func : Node.Set.t) (l_call : Node.t)
-    (l_retn : Node.t) (ls_args : Node.Set.t list) (args : 'm Expression.t list)
-    (cid : cid) : State.t =
+let call_interceptor (state : State.t) (name : string) (ls_func : Node.Set.t)
+    (l_call : Node.t) (l_retn : Node.t) (ls_args : Node.Set.t list) : State.t =
   Fun.flip2 Node.Set.fold ls_func state (fun l_func state ->
       match State.get_call_interceptor state l_func with
       | None -> state
       | Some interceptor_f ->
-        interceptor_f state l_func l_call l_retn ls_args args cid )
+        interceptor_f state name l_func l_call l_retn ls_args )
 
 let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   let exprs_f acc expr = Node.Set.union acc (eval_expr state expr) in
@@ -167,18 +166,20 @@ and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
   Fun.flip Node.Set.map nodes (fun node ->
       if Node.is_invalid node then State.concretize_node state id node else node )
 
-let rec initialize_builder (env : State.Env.t) (taint_config : Taint_config.t) :
-    State.t =
+let rec initialize_builder (env : State.Env.t) (taint_config : Taint_config.t)
+    (prog : 'm Prog.t) : State.t =
   Node.reset_generators ();
-  let state = State.create env in
+  let state = State.create env prog in
+  let cbs_builder = Jslib.builder_cbs build_file in
   if not (Literal.is_multiple env.literal_mode) then
     Mdg.add_node state.mdg state.mdg.literal;
-  Jslib.initialize_builder state taint_config
+  Jslib.initialize_builder state taint_config cbs_builder
 
-and initialize_file (state : State.t) (stmts : 'm Statement.t list) : State.t =
-  let state' = State.initialize state in
+and initialize_file (state : State.t) (f : 'm File.t) (main : bool) : State.t =
+  let mrel = if main then None else Some f.mrel in
+  let state' = State.initialize state f.path mrel in
   let state'' = Jslib.initialize_file state' in
-  initialize_hoisted_functions state'' stmts
+  initialize_hoisted_functions state'' f.body
 
 and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
     : State.t =
@@ -294,55 +295,52 @@ and build_function_call (state : State.t) (left : 'm LeftValue.t)
     (callee : 'm Identifier.t) (args : 'm Expression.t list) (cid : cid) :
     State.t =
   let cid1 = newcid left in
-  let cid2 = offset cid 1 in
-  let name_call = Identifier.name callee in
-  let name_retn = LeftValue.name left in
-  let ls_func = eval_store_expr state name_call in
+  let call_name = Identifier.name callee in
+  let retn_name = LeftValue.name left in
+  let ls_func = eval_store_expr state call_name in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = Node.Set.empty :: ls_args in
-  let (state', l_call, l_retn) =
-    add_function_call state name_call name_retn ls_func ls_args' cid cid1 in
-  Store.replace state'.store name_retn (Node.Set.singleton l_retn);
-  call_interceptor state' ls_func l_call l_retn ls_args args cid2
+  let add_f = add_function_call state call_name retn_name in
+  let (state', l_call, l_retn) = add_f ls_func ls_args' cid cid1 in
+  Store.replace state'.store retn_name (Node.Set.singleton l_retn);
+  call_interceptor state' retn_name ls_func l_call l_retn ls_args'
 
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
     (cid : cid) : State.t =
   let cid1 = newcid left in
   let cid2 = newcid prop in
-  let cid3 = offset cid 1 in
-  let name = LeftValue.name left in
+  let retn_name = LeftValue.name left in
   let prop' = Property.Static (Prop.str prop) in
   let ls_obj = eval_expr state obj in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = ls_obj :: ls_args in
-  let method_name = object_property_name ls_obj obj prop' in
-  add_static_orig_object_property state method_name ls_obj prop' cid2;
+  let call_name = object_property_name ls_obj obj prop' in
+  add_static_orig_object_property state call_name ls_obj prop' cid2;
   let ls_method = lookup_property state ls_obj prop' in
-  let (state', l_call, l_retn) =
-    add_function_call state method_name name ls_method ls_args' cid cid1 in
-  Store.replace state'.store name (Node.Set.singleton l_retn);
-  call_interceptor state' ls_method l_call l_retn ls_args' args cid3
+  let add_f = add_function_call state call_name retn_name in
+  let (state', l_call, l_retn) = add_f ls_method ls_args' cid cid1 in
+  Store.replace state'.store retn_name (Node.Set.singleton l_retn);
+  call_interceptor state' retn_name ls_method l_call l_retn ls_args'
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
     (args : 'm Expression.t list) (cid : cid) : State.t =
   let cid1 = newcid left in
   let cid2 = newcid prop in
-  let cid3 = offset cid 1 in
-  let name = LeftValue.name left in
+  let retn_name = LeftValue.name left in
   let prop' = Property.Dynamic in
   let ls_obj = eval_expr state obj in
   let ls_prop = eval_expr state prop in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = ls_obj :: ls_args in
-  let method_name = object_property_name ls_obj obj prop' in
-  add_dynamic_orig_object_property state method_name ls_obj ls_prop cid2;
+  let call_name = object_property_name ls_obj obj prop' in
+  add_dynamic_orig_object_property state call_name ls_obj ls_prop cid2;
   let ls_method = lookup_property state ls_obj prop' in
-  let (state', l_call, l_retn) =
-    add_function_call state method_name name ls_method ls_args' cid cid1 in
-  Store.replace state'.store name (Node.Set.singleton l_retn);
-  call_interceptor state' ls_method l_call l_retn ls_args' args cid3
+  let add_f = add_function_call state call_name retn_name in
+  let (state', l_call, l_retn) = add_f ls_method ls_args' cid cid1 in
+  Store.replace state'.store retn_name (Node.Set.singleton l_retn);
+  call_interceptor state' retn_name ls_method l_call l_retn ls_args'
 
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =
@@ -509,15 +507,16 @@ and build_sequence_opt (state : State.t) (stmts : 'm Statement.t list option) :
     State.t =
   Option.fold ~none:state ~some:(build_sequence state) stmts
 
-let build_file (state : State.t) (file : 'm File.t) : State.t =
-  let state' = initialize_file state file.body in
+and build_file (state : State.t) (file : 'm File.t) (main : bool) : State.t =
+  let state' = initialize_file state file main in
   let state'' = build_sequence state' file.body in
-  state''.env.cb_mdg file.mrel state'.mdg;
+  Pcontext.file_built state.pcontext file.path;
+  state''.env.cb_mdg file.mrel;
   state''
 
 let build_program (env : State.Env.t) (taint_config : Taint_config.t)
     (prog : 'm Prog.t) : Mdg.t =
   let main = Prog.main prog in
-  let state = initialize_builder env taint_config in
-  let state' = build_file state main in
+  let state = initialize_builder env taint_config prog in
+  let state' = build_file state main true in
   state'.mdg
