@@ -6,8 +6,6 @@ type t =
   ; trans : (Location.t, Edge.Set.t) Hashtbl.t
   ; jslib : (string, Node.t) Hashtbl.t
   ; literal : Node.t
-  ; calls : Node.Set.t
-  ; imports : Node.Set.t
   }
 
 let create () : t =
@@ -16,9 +14,7 @@ let create () : t =
   let trans = Hashtbl.create Config.(!dflt_htbl_sz) in
   let jslib = Hashtbl.create Config.(!dflt_htbl_sz) in
   let literal = Node.create_default_literal () in
-  let calls = Node.Set.empty in
-  let imports = Node.Set.empty in
-  { nodes; edges; trans; literal; jslib; calls; imports }
+  { nodes; edges; trans; literal; jslib }
 
 let copy (mdg : t) : t =
   let nodes = Hashtbl.copy mdg.nodes in
@@ -77,18 +73,6 @@ let add_edge (mdg : t) (edge : Edge.t) : unit =
 let set_jslib (mdg : t) (name : string) (l_jslib : Node.t) : unit =
   Hashtbl.replace mdg.jslib name l_jslib
 
-let add_call (mdg : t) (l_call : Node.t) : t =
-  { mdg with calls = Node.Set.add l_call mdg.calls }
-
-let add_imports (mdg : t) (l_import : Node.t) : t =
-  { mdg with imports = Node.Set.add l_import mdg.imports }
-
-let remove_node_meta (mdg : t) (node : Node.t) : t =
-  match node.kind with
-  | Call _ -> { mdg with calls = Node.Set.remove node mdg.calls }
-  | Import _ -> { mdg with imports = Node.Set.remove node mdg.imports }
-  | _ -> mdg
-
 let remove_node (mdg : t) (node : Node.t) : t =
   let edges = get_edges mdg node.uid in
   let trans = get_trans mdg node.uid in
@@ -103,7 +87,7 @@ let remove_node (mdg : t) (node : Node.t) : t =
   Hashtbl.remove mdg.nodes node.uid;
   Hashtbl.remove mdg.edges node.uid;
   Hashtbl.remove mdg.trans node.uid;
-  remove_node_meta mdg node
+  mdg
 
 let remove_nodes (mdg : t) (nodes : Node.t list) : t =
   List.fold_left remove_node mdg nodes
@@ -118,11 +102,6 @@ let remove_edge (mdg : t) (edge : Edge.t) : unit =
 let remove_edges (mdg : t) (edges : Edge.t list) : unit =
   List.iter (remove_edge mdg) edges
 
-let join (mdg1 : t) (mdg2 : t) : t =
-  let calls = Node.Set.union mdg1.calls mdg2.calls in
-  let imports = Node.Set.union mdg1.imports mdg2.imports in
-  { mdg1 with calls; imports }
-
 let lub (mdg1 : t) (mdg2 : t) : t =
   Fun.flip Hashtbl.iter mdg2.edges (fun loc edges2 ->
       let node2 = get_node mdg2 loc in
@@ -135,7 +114,7 @@ let lub (mdg1 : t) (mdg2 : t) : t =
       if Option.is_none node1 then Hashtbl.replace mdg1.nodes loc node2;
       Hashtbl.replace mdg1.edges loc (Edge.Set.union edges1' edges2);
       Hashtbl.replace mdg1.trans loc (Edge.Set.union trans1' trans2) );
-  join mdg1 mdg2
+  mdg1
 
 let get_dependencies (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.uid

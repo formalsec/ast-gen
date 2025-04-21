@@ -1,4 +1,4 @@
-open Graphjs_base
+(* open Graphjs_base
 open Graphjs_mdg
 
 module Source = struct
@@ -109,4 +109,4 @@ let compute (mdg : Mdg.t) : t =
   let queue = Queue.create () in
   enqueue_nodes flow mdg queue;
   compute_nodes flow mdg queue;
-  flow
+  flow *)

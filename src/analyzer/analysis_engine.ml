@@ -1,4 +1,4 @@
-open Graphjs_base
+(* open Graphjs_base
 open Graphjs_ast
 open Graphjs_mdg
 
@@ -111,4 +111,4 @@ let vulnerability (engine : t) (sink : Tainted.sink) (node : Node.t) :
     Mdg.get_property_owners engine.mdg node
     |> List.hd_opt
     |> Option.fold ~none:vuln ~some:(Vulnerability.update vuln)
-  else vuln
+  else vuln *)

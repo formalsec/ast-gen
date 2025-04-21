@@ -1,4 +1,4 @@
-open Graphjs_base
+(* open Graphjs_base
 open Graphjs_mdg
 module Worklist = Analysis_engine.Worklist
 
@@ -55,4 +55,4 @@ let run (engine : Analysis_engine.t) : Vulnerability.t list =
   (* Log.debug "Sources:@\n%a@\n" Sources.pp engine.sources; *)
   let injection_vulns = run_injection engine in
   let prototype_vulns = run_prototype engine in
-  injection_vulns @ prototype_vulns
+  injection_vulns @ prototype_vulns *)

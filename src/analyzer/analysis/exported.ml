@@ -1,4 +1,4 @@
-open Graphjs_base
+(* open Graphjs_base
 open Graphjs_mdg
 
 module Interaction = struct
@@ -117,4 +117,4 @@ let compute (mdg : Mdg.t) : t =
   else (
     compute_object mdg cache [] ls_exported;
     set_tainted_sources mdg cache;
-    cache )
+    cache ) *)

@@ -36,7 +36,6 @@ module Dot = struct
     | Parameter name -> Fmt.str "%s" (String.escaped name)
     | Call name -> Fmt.str "%s(...)" (String.escaped name)
     | Return name -> Fmt.str "%s" (String.escaped name)
-    | Import name -> Fmt.str "import %s" (String.escaped name)
     | TaintSource -> Fmt.str "{ Taint Source }"
     | TaintSink sink -> Fmt.str "sink %s" Tainted.(name !sink)
 
@@ -91,7 +90,6 @@ module Dot = struct
       | Parameter _ -> [ `Color 26112; `Fillcolor 13434828 ]
       | Call _ -> [ `Color 6697728; `Fillcolor 13395456 ]
       | Return _ -> [ `Color 6697728; `Fillcolor 16770508 ]
-      | Import _ -> [ `Color 3342438; `Fillcolor 15060223 ]
       | TaintSource -> [ `Color 6684672; `Fillcolor 16764108 ]
       | TaintSink _ -> [ `Color 6684672; `Fillcolor 16724787 ] )
 
@@ -103,8 +101,6 @@ module Dot = struct
         [ `Style `Dotted; `Color 26214; `Fontcolor 26214 ]
       | Dependency when Node.is_return edge.tar ->
         [ `Style `Dotted; `Color 6697728; `Fontcolor 6697728 ]
-      | Dependency when Node.is_import edge.src ->
-        [ `Style `Dotted; `Color 3342438; `Fontcolor 3342438 ]
       | Dependency when Node.is_taint_source edge.src ->
         [ `Style `Dotted; `Color 6684672; `Fontcolor 6684672 ]
       | Parameter 0 -> [ `Color 6684723; `Fontcolor 6684723 ]
