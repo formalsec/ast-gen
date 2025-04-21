@@ -25,7 +25,6 @@ type kind =
   | Parameter of string
   | Call of string
   | Return of string
-  | Import of string
   | TaintSource
   | TaintSink of Tainted.sink
 
@@ -66,7 +65,6 @@ let pp (ppf : Fmt.t) (node : t) : unit =
   | Parameter name -> Fmt.fmt ppf "%s[p_%a]" name Location.pp node.lid
   | Call name -> Fmt.fmt ppf "%s(...)[l_%a]" name Location.pp node.lid
   | Return name -> Fmt.fmt ppf "%s[l_%a]" name Location.pp node.lid
-  | Import name -> Fmt.fmt ppf "import(%s)[l_%a]" name Location.pp node.lid
   | TaintSource -> Fmt.pp_str ppf "[[taint]]"
   | TaintSink sink ->
     Fmt.fmt ppf "%s[s_%a]" Tainted.(name !sink) Location.pp node.lid
@@ -127,12 +125,6 @@ let create_return (name : string) : t option -> Region.t -> t =
   let uid = Location.create Config.(!uid_gen) in
   let lid = Location.create Config.(!obj_lid_gen) in
   create uid lid (Return name) parent at
-
-let create_import (name : string) : t option -> Region.t -> t =
- fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.create Config.(!obj_lid_gen) in
-  create uid lid (Import name) parent at
 
 let create_taint_source () : t =
   let uid = Location.create Config.(!uid_gen) in
@@ -196,9 +188,6 @@ let is_call (node : t) : bool =
 
 let is_return (node : t) : bool =
   match node.kind with Return _ -> true | _ -> false
-
-let is_import (node : t) : bool =
-  match node.kind with Import _ -> true | _ -> false
 
 let is_taint_source (node : t) : bool =
   match node.kind with TaintSource -> true | _ -> false

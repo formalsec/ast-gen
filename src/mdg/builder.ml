@@ -114,14 +114,13 @@ let add_function_call (state : State.t) (call_name : string)
     (call_cid : cid) (retn_cid : cid) : State.t * Node.t * Node.t =
   let l_call = State.add_call_node state call_cid call_name in
   let l_retn = State.add_return_node state retn_cid retn_name in
-  let state' = { state with mdg = Mdg.add_call state.mdg l_call } in
   let add_arg_f = Fun.flip2 (State.add_argument_edge state) l_call in
   Fun.flip Node.Set.iter ls_func (fun l_func ->
       State.add_caller_edge state l_call l_func );
   State.add_dependency_edge state l_call l_retn;
   Fun.flip List.iteri ls_args (fun idx ls_arg ->
       Node.Set.iter (add_arg_f idx) ls_arg );
-  (state', l_call, l_retn)
+  (state, l_call, l_retn)
 
 let lookup_interceptor (state : State.t) (name : string) (ls_obj : Node.Set.t)
     (prop : Property.t) (ls_lookup : Node.Set.t) : State.t =
@@ -402,8 +401,8 @@ and build_function_definition (state : State.t) (left : 'm LeftValue.t)
       let name = Identifier.name param in
       let l_param = State.get_node state cid' in
       Store.replace state'''.store name (Node.Set.singleton l_param) );
-  let state''' = build_sequence state''' body in
-  State.join state state'''
+  let _ = build_sequence state''' body in
+  state
 
 and build_loop_break (state : State.t) (_label : 'm Identifier.t option) :
     State.t =

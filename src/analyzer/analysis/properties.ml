@@ -1,4 +1,4 @@
-open Graphjs_base
+(* open Graphjs_base
 open Graphjs_mdg
 
 type t = (Location.t * Property.t, Node.t * Node.Set.t) Hashtbl.t
@@ -49,4 +49,4 @@ and compute_property (mdg : Mdg.t) (cache : t) (l_obj : Node.t)
 
 let compute (mdg : Mdg.t) (cache : t) (l_obj : Node.t) (props : Property.t list)
     : Node.Set.t =
-  compute_properties mdg cache l_obj props Node.Set.empty
+  compute_properties mdg cache l_obj props Node.Set.empty *)

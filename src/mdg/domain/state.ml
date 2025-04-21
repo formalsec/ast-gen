@@ -63,13 +63,7 @@ let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t option) : t =
 let copy (state : t) : t =
   let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
-  let allocator = Allocator.copy state.allocator in
-  { state with mdg; store; allocator }
-
-let join (state1 : t) (state2 : t) : t =
-  let mdg = Mdg.join state1.mdg state2.mdg in
-  let allocator = Allocator.lub state1.allocator state2.allocator in
-  { state1 with mdg; allocator }
+  { state with mdg; store }
 
 let lub (state1 : t) (state2 : t) : t =
   let mdg = Mdg.lub state1.mdg state2.mdg in
@@ -133,10 +127,6 @@ let add_call_node (state : t) (cid : cid) (name : string) : Node.t =
 
 let add_return_node (st : t) (cid : cid) (name : string) : Node.t =
   add_node st cid (Node.create_return name)
-
-let add_import_node (state : t) (cid : cid) (name : string) : t * Node.t =
-  let node = add_node state cid (Node.create_import name) in
-  ({ state with mdg = Mdg.add_imports state.mdg node }, node)
 
 let add_candidate_literal_node (state : t) (cid : cid) (literal : Literal.t) :
     Node.t =

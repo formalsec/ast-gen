@@ -1,4 +1,4 @@
-open Graphjs_base
+(* open Graphjs_base
 open Graphjs_mdg
 
 type t = (Location.t, Node.t * Node.Set.t) Hashtbl.t
@@ -43,4 +43,4 @@ let compute_call (mdg : Mdg.t) (cache : t) (l_call : Node.t) : unit =
 let compute (mdg : Mdg.t) : t =
   let cache = create () in
   Node.Set.iter (compute_call mdg cache) mdg.calls;
-  cache
+  cache *)

@@ -1,5 +1,5 @@
 open Graphjs_base
-open Graphjs_analyzer
+(* open Graphjs_analyzer *)
 open Result
 
 module Options = struct
@@ -43,8 +43,8 @@ end
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     unit Exec.result =
-  let* mdg = Cmd_mdg.run env.mdg_env (Workspace.side_perm w) input in
-  let _engine = Analysis_engine.initialize mdg in
+  let* _mdg = Cmd_mdg.run env.mdg_env (Workspace.side_perm w) input in
+  (* let _engine = Analysis_engine.initialize mdg in *)
   (* Output.tainted w engine; *)
   (* ignore (Analyzer.run engine); *)
   (* Output.main w input vulns; *)
