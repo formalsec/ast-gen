@@ -12,10 +12,10 @@
   mdg
   store
   allocator
+  pcontext
   state
   export_view
   svg_exporter
   builder
-  merger
   jslib)
  (libraries graphjs_base graphjs_share graphjs_ast ocamlgraph))

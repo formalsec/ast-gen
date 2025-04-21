@@ -45,17 +45,15 @@ end
 module Workspace = struct
   include Workspace
 
-  let mdg (w : t) (export : bool) (main : bool) (mrel : Fpath.t) : t =
+  let mdg (w : t) (export : bool) (mrel : Fpath.t) : t =
     let temp_f rel = Filename.temp_file "graphjs" (Fpath.to_string rel) in
     let dir_f w = Fs.mkdir_noerr (Fpath.parent (path w)) |> fun () -> w in
     let rel' = Fpath.rem_ext mrel in
-    match (main, w.path, export) with
-    | (true, None, true) -> single ~w Fpath.(v (temp_f rel') + "svg")
-    | (true, None, false) -> w
-    | (true, Single _, _) -> w
-    | (true, Bundle _, _) -> dir_f ((w / "mdg" // rel') + "svg")
-    | (false, Bundle _, _) -> dir_f ((w / "mdg" // rel' // rel') + "svg")
-    | (false, _, _) -> none
+    match (w.path, export) with
+    | (None, true) -> single ~w Fpath.(v (temp_f rel') + "svg")
+    | (None, false) -> w
+    | (Single _, _) -> w
+    | (Bundle _, _) -> dir_f ((w / "mdg" // rel') + "svg")
 end
 
 module Graphjs = struct
@@ -84,26 +82,13 @@ module Output = struct
     Log.verbose "%a" Taint_config.pp tc;
     Workspace.output_noerr Side w' Taint_config.pp tc
 
-  let mdg (w : Workspace.t) (env : Svg_exporter.Env.t) (export : bool)
-      (main : bool) (mrel : Fpath.t) (mdg : Mdg.t) : unit =
-    let w' = Workspace.mdg w export main mrel in
-    let w'' = Workspace.(w' -+ "mdg") in
-    Log.info "Module MDG '%a' built successfully." Fpath.pp mrel;
-    Log.verbose "%a" Mdg.pp mdg;
-    Workspace.output_noerr Side w'' Mdg.pp mdg;
-    match w'.path with
-    | Bundle svg_path ->
-      let w''' = Workspace.(w' -+ "dot") in
-      let dot = `Dot (Workspace.path w''') in
-      Workspace.execute_noerr Side w''' (Graphjs.export_dot env mdg);
-      Workspace.execute_noerr Side w' (Graphjs.export_svg env dot);
-      Log.verbose "%s" (Console.url (Fpath.to_string svg_path))
-    | _ -> ()
+  let mdg (mrel : Fpath.t) : unit =
+    Log.info "Module MDG '%a' built successfully." Fpath.pp mrel
 
   let main (w : Workspace.t) (env : Svg_exporter.Env.t) (export : bool)
       (prog : 'm Prog.t) (mdg : Mdg.t) : unit Exec.result =
     let main = Prog.main prog in
-    let w' = Workspace.mdg w export true main.mrel in
+    let w' = Workspace.mdg w export main.mrel in
     Log.verbose "%a" Mdg.pp mdg;
     match (export, w'.path) with
     | (false, _) ->
@@ -126,11 +111,8 @@ module Output = struct
     | _ -> Ok ()
 end
 
-let builder_env (env : Options.env) (w : Workspace.t)
-    (exported_env : Svg_exporter.Env.t) : State.Env.t =
-  { literal_mode = env.literal_mode
-  ; cb_mdg = Output.mdg w exported_env env.export_graph false
-  }
+let builder_env (env : Options.env) : State.Env.t =
+  { literal_mode = env.literal_mode; cb_mdg = Output.mdg }
 
 let export_env (env : Options.env) : Svg_exporter.Env.t =
   { subgraphs = env.export_subgraphs
@@ -141,7 +123,7 @@ let export_env (env : Options.env) : Svg_exporter.Env.t =
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     Mdg.t Exec.result =
   let export_env = export_env env in
-  let builder_env = builder_env env w export_env in
+  let builder_env = builder_env env in
   let* prog = Cmd_parse.run env.parse_env (Workspace.side_perm w) input in
   let* tc = Graphjs.taint_config env.taint_config in
   Output.taint_config w env.taint_config tc;
