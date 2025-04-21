@@ -24,6 +24,7 @@ type t =
   ; curr_file : Fpath.t option
   ; curr_func : Node.t option
   ; literal_ctx : literal_ctx
+  ; literal_node : Node.t
   }
 
 and lookup_interceptor =
@@ -50,6 +51,7 @@ let create (env' : Env.t) (prog : 'm Prog.t) : t =
   ; curr_file = None
   ; curr_func = None
   ; literal_ctx = Make
+  ; literal_node = Node.create_default_literal ()
   }
 
 let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t option) : t =

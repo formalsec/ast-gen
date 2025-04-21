@@ -158,7 +158,7 @@ and eval_literal_expr (state : State.t) (literal : LiteralValue.t) (cid : cid) :
     let literal' = convert_literal literal in
     let l_literal = State.add_literal_node state cid literal' in
     Node.Set.singleton l_literal
-  | _ -> Node.Set.singleton state.mdg.literal
+  | _ -> Node.Set.singleton state.literal_node
 
 and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
   let nodes = Store.find state.store id in
@@ -171,7 +171,7 @@ let rec initialize_builder (env : State.Env.t) (taint_config : Taint_config.t)
   let state = State.create env prog in
   let cbs_builder = Jslib.builder_cbs build_file in
   if not (Literal.is_multiple env.literal_mode) then
-    Mdg.add_node state.mdg state.mdg.literal;
+    Mdg.add_node state.mdg state.literal_node;
   Jslib.initialize_builder state taint_config cbs_builder
 
 and initialize_file (state : State.t) (f : 'm File.t) (main : bool) : State.t =

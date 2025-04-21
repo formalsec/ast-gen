@@ -5,7 +5,6 @@ type t =
   ; edges : (Location.t, Edge.Set.t) Hashtbl.t
   ; trans : (Location.t, Edge.Set.t) Hashtbl.t
   ; jslib : (string, Node.t) Hashtbl.t
-  ; literal : Node.t
   }
 
 let create () : t =
@@ -13,15 +12,14 @@ let create () : t =
   let edges = Hashtbl.create Config.(!dflt_htbl_sz) in
   let trans = Hashtbl.create Config.(!dflt_htbl_sz) in
   let jslib = Hashtbl.create Config.(!dflt_htbl_sz) in
-  let literal = Node.create_default_literal () in
-  { nodes; edges; trans; literal; jslib }
+  { nodes; edges; trans; jslib }
 
 let copy (mdg : t) : t =
   let nodes = Hashtbl.copy mdg.nodes in
   let edges = Hashtbl.copy mdg.edges in
   let trans = Hashtbl.copy mdg.trans in
   let jslib = Hashtbl.copy mdg.jslib in
-  { mdg with nodes; edges; trans; jslib }
+  { nodes; edges; trans; jslib }
 
 let get_node (mdg : t) (loc : Location.t) : Node.t =
   match Hashtbl.find_opt mdg.nodes loc with
