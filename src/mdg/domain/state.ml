@@ -2,13 +2,27 @@ open Graphjs_base
 open Graphjs_ast
 
 module Env = struct
+  type literal_mode =
+    | Single
+    | PropWrap
+    | Multiple
+
+  type func_eval_mode =
+    | Opaque
+    | Unfold
+
   type t =
-    { literal_mode : Literal.mode
+    { literal_mode : literal_mode
+    ; func_eval_mode : func_eval_mode
     ; cb_mdg : Fpath.t -> unit
     }
 
   let default =
-    let dflt = { literal_mode = Multiple; cb_mdg = (fun _ -> ()) } in
+    let dflt =
+      { literal_mode = Multiple
+      ; func_eval_mode = Opaque
+      ; cb_mdg = (fun _ -> ())
+      } in
     fun () -> dflt
 end
 

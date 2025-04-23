@@ -40,9 +40,9 @@ module AnalysisMode = struct
 end
 
 module LiteralMode = struct
-  type t = Graphjs_mdg.Literal.mode
+  type t = Graphjs_mdg.State.Env.literal_mode
 
-  let all = Graphjs_mdg.Literal.[ Single; PropWrap; Multiple ]
+  let all = Graphjs_mdg.State.Env.[ Single; PropWrap; Multiple ]
 
   let pp (ppf : Fmt.t) (mode : t) : unit =
     match mode with

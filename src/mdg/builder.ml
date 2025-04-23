@@ -9,6 +9,12 @@ type cid = Allocator.cid
 let newcid (el : 'a el) : cid = Allocator.cid el
 let offset (cid : cid) (ofs : int) : cid = Allocator.offset cid ofs
 
+let multiple_literal_mode (env : State.Env.t) : bool =
+  match env.literal_mode with Multiple -> true | _ -> false
+
+let opaque_function_eval (env : State.Env.t) : bool =
+  match env.func_eval_mode with Opaque -> true | Unfold -> false
+
 let convert_literal (literal : LiteralValue.t) : Literal.t =
   match literal.value with
   | Null -> Literal.create Null literal.raw
@@ -109,8 +115,6 @@ let add_dynamic_object_version (state : State.t) (name : string)
   | 1 -> dynamic_strong_nv state name (Node.Set.choose ls_obj) ls_prop cid
   | _ -> dynamic_weak_nv state name ls_obj ls_prop cid
 
-let blackbox_function_call (_state : State.t) : bool = true
-
 let add_function_call (state : State.t) (call_name : string)
     (retn_name : string) (ls_func : Node.Set.t) (ls_args : Node.Set.t list)
     (call_cid : cid) (retn_cid : cid) : State.t * Node.t * Node.t =
@@ -171,7 +175,7 @@ let rec initialize_builder (env : State.Env.t) (taint_config : Taint_config.t)
   Node.reset_generators ();
   let state = State.create env prog in
   let cbs_builder = Jslib.builder_cbs build_file in
-  if not (Literal.is_multiple env.literal_mode) then
+  if not (multiple_literal_mode env) then
     Mdg.add_node state.mdg state.literal_node;
   Jslib.initialize_builder state taint_config cbs_builder
 
@@ -316,21 +320,21 @@ and build_dynamic_delete (state : State.t) (_left : 'm LeftValue.t)
 and build_function_call (state : State.t) (left : 'm LeftValue.t)
     (callee : 'm Identifier.t) (args : 'm Expression.t list) (cid : cid) :
     State.t =
-  ( if blackbox_function_call state then build_function_call_closed
+  ( if opaque_function_eval state.env then build_function_call_closed
     else build_function_call_opened )
     state left callee args cid
 
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
     (cid : cid) : State.t =
-  ( if blackbox_function_call state then build_static_method_call_closed
+  ( if opaque_function_eval state.env then build_static_method_call_closed
     else build_static_method_call_opened )
     state left obj prop args cid
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
     (args : 'm Expression.t list) (cid : cid) : State.t =
-  ( if blackbox_function_call state then build_dynamic_method_call_closed
+  ( if opaque_function_eval state.env then build_dynamic_method_call_closed
     else build_dynamic_method_call_opened )
     state left obj prop args cid
 
@@ -457,13 +461,13 @@ and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
 
 and build_function_declaration (state : State.t)
     (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
-  ( if blackbox_function_call state then build_function_declaration_closed
+  ( if opaque_function_eval state.env then build_function_declaration_closed
     else build_function_declaration_opened )
     state func cid
 
 and build_function_definition (state : State.t) (func : 'm FunctionDefinition.t)
     (cid : cid) : State.t =
-  ( if blackbox_function_call state then build_function_definition_closed
+  ( if opaque_function_eval state.env then build_function_definition_closed
     else build_function_definition_hoisted )
     state func cid
 
@@ -528,7 +532,7 @@ and build_return (state : State.t) (arg : 'm Expression.t option) : State.t =
   match (state.curr_func, ls_arg) with
   | (None, _) | (Some _, None) -> state
   | (Some l_func, Some ls_arg') ->
-    if blackbox_function_call state then
+    if opaque_function_eval state.env then
       Node.Set.iter (State.add_return_edge state l_func) ls_arg';
     let curr_retn = Node.Set.union state.curr_retn ls_arg' in
     { state with curr_retn }
