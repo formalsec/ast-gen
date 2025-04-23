@@ -1,19 +1,5 @@
 open Graphjs_base
 
-type mode =
-  | Single
-  | PropWrap
-  | Multiple
-
-let is_single (mode : mode) : bool =
-  match mode with Single -> true | _ -> false
-
-let is_propwrap (mode : mode) : bool =
-  match mode with PropWrap -> true | _ -> false
-
-let is_multiple (mode : mode) : bool =
-  match mode with Multiple -> true | _ -> false
-
 type kind =
   | Default
   | Null

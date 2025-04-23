@@ -7,7 +7,7 @@ open Result
 module Options = struct
   type env =
     { taint_config : Fpath.t
-    ; literal_mode : Literal.mode
+    ; literal_mode : Enums.LiteralMode.t
     ; export_graph : bool
     ; export_subgraphs : bool
     ; export_view : Export_view.t
@@ -26,7 +26,7 @@ module Options = struct
     | Some taint_config' -> taint_config'
     | None -> Properties.default_taint_config ()
 
-  let env (taint_config' : Fpath.t option) (literal_mode' : Literal.mode)
+  let env (taint_config' : Fpath.t option) (literal_mode' : Enums.LiteralMode.t)
       (no_export : bool) (no_subgraphs : bool) (export_view' : Export_view.t)
       (export_timeout' : int) (parse_env' : Cmd_parse.Options.env) : env =
     { taint_config = parse_taint_config taint_config'
@@ -112,7 +112,10 @@ module Output = struct
 end
 
 let builder_env (env : Options.env) : State.Env.t =
-  { literal_mode = env.literal_mode; cb_mdg = Output.mdg }
+  { (State.Env.default ()) with
+    literal_mode = env.literal_mode
+  ; cb_mdg = Output.mdg
+  }
 
 let export_env (env : Options.env) : Svg_exporter.Env.t =
   { subgraphs = env.export_subgraphs
