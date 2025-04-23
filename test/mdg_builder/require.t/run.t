@@ -51,11 +51,11 @@
   require(...)[l_12] --< Call >--> require[f_1]
   require(...)[l_12] --< D >--> bar[l_13]
   bar[l_13] -
-  module.exports[l_36] --< V(bar1) >--> module.exports[l_37]
-  module.exports[l_36] --< P(bar1) >--> module.exports.bar1[l_43]
-  module.exports[l_36] --< P(bar3) >--> module.exports.bar3[l_47]
-  module.exports[l_36] --< P(bar4) >--> module.exports.bar4[l_52]
-  module.exports[l_36] --< Arg(0) >--> module.exports.bar4(...)[l_53]
+  exports[l_36] --< V(bar1) >--> exports[l_37]
+  exports[l_36] --< P(bar1) >--> exports.bar1[l_43]
+  exports[l_36] --< P(bar3) >--> exports.bar3[l_47]
+  exports[l_36] --< P(bar4) >--> exports.bar4[l_52]
+  exports[l_36] --< Arg(0) >--> exports.bar4(...)[l_53]
   "./baz"[v_5] --< Arg(1) >--> require(...)[l_14]
   require(...)[l_14] --< Call >--> require[f_3]
   require(...)[l_14] --< D >--> baz[l_15]
@@ -100,26 +100,26 @@
   $v10[l_34] --< P(q) >--> $v5[f_5]
   $v10[l_34] --< Arg(0) >--> $v10.q(...)[l_50]
   bar3[l_35] --< P(p) >--> $v10[l_34]
-  module.exports[l_37] --< P(bar1) >--> bar1[l_29]
-  module.exports[l_37] --< V(bar2) >--> module.exports[l_38]
-  module.exports[l_38] --< P(bar2) >--> bar2[l_31]
-  module.exports[l_38] --< V(bar3) >--> module.exports[l_39]
-  module.exports[l_39] --< P(bar3) >--> bar3[l_35]
+  exports[l_37] --< P(bar1) >--> bar1[l_29]
+  exports[l_37] --< V(bar2) >--> exports[l_38]
+  exports[l_38] --< P(bar2) >--> bar2[l_31]
+  exports[l_38] --< V(bar3) >--> exports[l_39]
+  exports[l_39] --< P(bar3) >--> bar3[l_35]
   $v2.obj[l_40] -
   $v2.foo(...)[l_41] --< Call >--> foo[f_2]
   $v2.foo(...)[l_41] --< D >--> $v12[l_42]
   $v12[l_42] -
-  module.exports.bar1[l_43] -
+  exports.bar1[l_43] -
   bar1.p[l_44] -
   bar1.p(...)[l_45] --< Call >--> $v7[f_6]
   bar1.p(...)[l_45] --< D >--> $v15[l_46]
   $v15[l_46] -
-  module.exports.bar3[l_47] -
+  exports.bar3[l_47] -
   bar3.p[l_48] -
   $v10.q[l_49] -
   $v10.q(...)[l_50] --< Call >--> $v5[f_5]
   $v10.q(...)[l_50] --< D >--> $v18[l_51]
   $v18[l_51] -
-  module.exports.bar4[l_52] -
-  module.exports.bar4(...)[l_53] --< D >--> $v19[l_54]
+  exports.bar4[l_52] -
+  exports.bar4(...)[l_53] --< D >--> $v19[l_54]
   $v19[l_54] -

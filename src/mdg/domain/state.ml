@@ -20,18 +20,17 @@ type t =
   ; pcontext : Region.t Pcontext.t
   ; lookup_interceptors : (Location.t, lookup_interceptor) Hashtbl.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
-  ; curr_path : Fpath.t
-  ; curr_file : Fpath.t option
+  ; curr_floc : Pcontext.Floc.t
   ; curr_func : Node.t option
-  ; literal_ctx : literal_ctx
+  ; curr_retn : Node.Set.t
   ; literal_node : Node.t
+  ; literal_ctx : literal_ctx
   }
 
 and lookup_interceptor =
   t -> Node.t -> string -> Node.Set.t -> Property.t -> Node.Set.t -> t
 
-and call_interceptor =
-  t -> string -> Node.t -> Node.t -> Node.t -> Node.Set.t list -> t
+and call_interceptor = t -> string -> Node.t -> Node.Set.t list -> t
 
 and literal_ctx =
   | Skip
@@ -47,20 +46,21 @@ let create (env' : Env.t) (prog : 'm Prog.t) : t =
   ; pcontext = Pcontext.create prog store'
   ; lookup_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
-  ; curr_path = Fpath.v "."
-  ; curr_file = None
+  ; curr_floc = Pcontext.Floc.default ()
   ; curr_func = None
-  ; literal_ctx = Make
+  ; curr_retn = Node.Set.empty
   ; literal_node = Node.create_default_literal ()
+  ; literal_ctx = Make
   }
 
-let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t option) : t =
-  let store = Store.copy state.pcontext.initial_store in
-  let curr_path = path in
-  let curr_file = mrel in
-  let curr_func = None in
-  let literal_ctx = Make in
-  { state with store; curr_path; curr_file; curr_func; literal_ctx }
+let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool) : t =
+  { state with
+    store = Store.copy state.pcontext.initial_store
+  ; curr_floc = Pcontext.Floc.create path mrel main
+  ; curr_func = None
+  ; curr_retn = Node.Set.empty
+  ; literal_ctx = Make
+  }
 
 let copy (state : t) : t =
   let mdg = Mdg.copy state.mdg in
@@ -70,8 +70,8 @@ let copy (state : t) : t =
 let lub (state1 : t) (state2 : t) : t =
   let mdg = Mdg.lub state1.mdg state2.mdg in
   let store = Store.lub state1.store state2.store in
-  let allocator = Allocator.lub state1.allocator state2.allocator in
-  { state1 with mdg; store; allocator }
+  let curr_retn = Node.Set.union state1.curr_retn state2.curr_retn in
+  { state1 with mdg; store; curr_retn }
 
 let skip_literal (state : t) : t = { state with literal_ctx = Skip }
 let make_literal (state : t) : t = { state with literal_ctx = Make }
@@ -81,10 +81,10 @@ type cid = Allocator.cid
 
 let get_node (state : t) (cid : cid) : Node.t =
   match Allocator.find_opt state.allocator cid with
+  | Some node -> node
   | None ->
     let at = Allocator.at cid in
     Log.fail "expecting node of region '%a' in allocator" Region.pp at
-  | Some node -> node
 
 let add_node (state : t) (cid : cid)
     (create_node_f : Node.t option -> Region.t -> Node.t) : Node.t =
