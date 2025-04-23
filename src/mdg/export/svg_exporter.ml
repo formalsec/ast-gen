@@ -24,8 +24,17 @@ end
 module Dot = struct
   let env = ref (Env.default ())
   let mdg = ref (Mdg.create ())
-  let set_env (env' : Env.t) : unit = env := env'
-  let set_mdg (mdg' : Mdg.t) : unit = mdg := mdg'
+  let func_sz = Hashtbl.create Config.(!dflt_htbl_sz)
+
+  let initialize (env' : Env.t) (mdg' : Mdg.t) : unit =
+    env := env';
+    mdg := mdg';
+    Fun.flip Hashtbl.iter mdg'.nodes (fun _ node ->
+        Option.fold (Node.func node) ~none:() ~some:(fun l_func' ->
+            let loc = Node.uid l_func' in
+            match Hashtbl.find_opt func_sz loc with
+            | None -> Hashtbl.replace func_sz loc 1
+            | Some sz -> Hashtbl.replace func_sz loc (sz + 1) ) )
 
   let node_label (node : Node.t) : string =
     match node.kind with
@@ -53,8 +62,9 @@ module Dot = struct
 
   let get_function (node : Node.t) : Node.t option =
     Option.bind (Node.func node) (fun l_func ->
-        if Edge.Set.is_empty (Mdg.get_edges !mdg l_func.uid) then None
-        else Some l_func )
+        match Hashtbl.find_opt func_sz l_func.uid with
+        | Some sz when sz > 1 -> Some l_func
+        | _ -> None )
 
   let rec function_depth (l_func : Node.t) : int =
     Option.fold l_func.parent ~none:1 ~some:(fun l_func ->
@@ -151,8 +161,7 @@ let svg_cmd (env : Env.t) (svg : string) (dot : string) : string =
 let output_dot (env : Env.t) (mdg : Mdg.t) (dot : string)
     (graph : Export_view.G.t) : unit =
   let oc = open_out_bin dot in
-  Dot.set_env env;
-  Dot.set_mdg mdg;
+  Dot.initialize env mdg;
   Dot.output_graph oc graph;
   close_out_noerr oc
 
