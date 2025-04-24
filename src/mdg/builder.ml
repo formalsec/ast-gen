@@ -13,7 +13,7 @@ let multiple_literal_mode (env : State.Env.t) : bool =
   match env.literal_mode with Multiple -> true | _ -> false
 
 let opaque_function_eval (env : State.Env.t) : bool =
-  match env.func_eval_mode with Opaque -> true | Unfold -> false
+  match env.func_eval_mode with Opaque -> true | _ -> false
 
 let convert_literal (literal : LiteralValue.t) : Literal.t =
   match literal.value with
@@ -192,21 +192,31 @@ and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
         build_function_declaration state func (newcid stmt)
       | _ -> state )
 
+and unfoldable_function_call (state : State.t) (l_func : Node.t) : bool =
+  match state.env.func_eval_mode with
+  | Opaque -> Log.fail "unexpected function evaluation mode"
+  | Unfold -> Log.fail "not implemented (use 'unfold:rec' or 'unfold:<depth>')"
+  | UnfoldRec -> not (List.mem l_func state.curr_stack)
+  | UnfoldDepth depth -> List.length state.curr_stack < depth
+
 and unfold_function_call (state : State.t) (ls_func : Node.Set.t)
     (ls_args : Node.Set.t list) : State.t * Node.Set.t =
   Fun.flip2 Node.Set.fold ls_func (state, Node.Set.empty)
     (fun l_func (state, ls_retn) ->
-      match Pcontext.func state.pcontext l_func with
-      | None ->
+      let func = Pcontext.func state.pcontext l_func in
+      let unfoldable = unfoldable_function_call state l_func in
+      match (unfoldable, func) with
+      | (false, _) | (true, None) ->
         let add_arg_f = Fun.flip2 (State.add_argument_edge state) l_func in
         let add_args_f idx ls_arg = Node.Set.iter (add_arg_f idx) ls_arg in
         List.iteri add_args_f ls_args;
         (state, ls_retn)
-      | Some { floc; func; eval_store; _ } ->
+      | (true, Some { floc; func; eval_store; _ }) ->
         let store = Store.copy eval_store in
         let curr_floc = floc in
+        let curr_stack = l_func :: state.curr_stack in
         let curr_func = Some l_func in
-        let state' = { state with store; curr_floc; curr_func } in
+        let state' = { state with store; curr_floc; curr_stack; curr_func } in
         let state'' = initialize_hoisted_functions state' func.body in
         Store.replace state''.store "this" (List.hd ls_args);
         Fun.flip List.iteri (List.tl ls_args) (fun idx ls_arg ->
@@ -657,9 +667,8 @@ and build_file (state : State.t) (file : 'm File.t) (main : bool) : State.t =
   state''
 
 let build_exported_analysis (state : State.t) : Exported.t =
-  ( match state.env.func_eval_mode with
-  | Opaque -> Exported.compute_from_graph
-  | Unfold -> Exported.compute_and_unfold build_exported_function )
+  ( if opaque_function_eval state.env then Exported.compute_from_graph
+    else Exported.compute_and_unfold build_exported_function )
     state.env.mark_tainted_sources state
 
 let build_analysis (state : State.t) : unit =

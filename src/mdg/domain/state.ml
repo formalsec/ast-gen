@@ -10,6 +10,8 @@ module Env = struct
   type func_eval_mode =
     | Opaque
     | Unfold
+    | UnfoldRec
+    | UnfoldDepth of int
 
   type t =
     { literal_mode : literal_mode
@@ -37,6 +39,7 @@ type t =
   ; lookup_interceptors : (Location.t, lookup_interceptor) Hashtbl.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
   ; curr_floc : Pcontext.Floc.t
+  ; curr_stack : Node.t list
   ; curr_func : Node.t option
   ; curr_retn : Node.Set.t
   ; literal_node : Node.t
@@ -56,13 +59,14 @@ and literal_ctx =
 let create (env' : Env.t) (prog : 'm Prog.t) : t =
   let store' = Store.create () in
   { env = env'
-  ; store = store'
   ; mdg = Mdg.create ()
+  ; store = store'
   ; allocator = Allocator.create Config.(!dflt_htbl_sz)
   ; pcontext = Pcontext.create prog store'
   ; lookup_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; curr_floc = Pcontext.Floc.default ()
+  ; curr_stack = []
   ; curr_func = None
   ; curr_retn = Node.Set.empty
   ; literal_node = Node.create_default_literal ()
@@ -73,6 +77,7 @@ let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool) : t =
   { state with
     store = Store.copy state.pcontext.initial_store
   ; curr_floc = Pcontext.Floc.create path mrel main
+  ; curr_stack = []
   ; curr_func = None
   ; curr_retn = Node.Set.empty
   ; literal_ctx = Make
