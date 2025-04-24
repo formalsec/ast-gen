@@ -8,6 +8,8 @@ module Options = struct
   type env =
     { taint_config : Fpath.t
     ; literal_mode : Enums.LiteralMode.t
+    ; func_eval_mode : Enums.FuncEvalMode.t
+    ; mark_tainted_sources : bool
     ; export_graph : bool
     ; export_subgraphs : bool
     ; export_view : Export_view.t
@@ -27,10 +29,13 @@ module Options = struct
     | None -> Properties.default_taint_config ()
 
   let env (taint_config' : Fpath.t option) (literal_mode' : Enums.LiteralMode.t)
+      (func_eval_mode' : Enums.FuncEvalMode.t) (no_tainted_sources : bool)
       (no_export : bool) (no_subgraphs : bool) (export_view' : Export_view.t)
       (export_timeout' : int) (parse_env' : Cmd_parse.Options.env) : env =
     { taint_config = parse_taint_config taint_config'
     ; literal_mode = literal_mode'
+    ; func_eval_mode = func_eval_mode'
+    ; mark_tainted_sources = not no_tainted_sources
     ; export_graph = not no_export
     ; export_subgraphs = not no_subgraphs
     ; export_view = export_view'
@@ -112,8 +117,9 @@ module Output = struct
 end
 
 let builder_env (env : Options.env) : State.Env.t =
-  { (State.Env.default ()) with
-    literal_mode = env.literal_mode
+  { literal_mode = env.literal_mode
+  ; func_eval_mode = env.func_eval_mode
+  ; mark_tainted_sources = env.mark_tainted_sources
   ; cb_mdg = Output.mdg
   }
 

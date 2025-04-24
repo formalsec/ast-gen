@@ -212,15 +212,28 @@ module MdgOpts = struct
   let literal_mode =
     let doc =
       "Configures the handling of literal values in MDG construction. Options \
-       include (1) 'Single' for a graph with a single literal object; (2) \
-       'PropWrap' for wrapping literal property values in a new object rather \
-       than using the main literal object; and (3) 'Multiple' [default] for \
+       include (1) 'single' for a graph with a single literal object; (2) \
+       'propwrap' for wrapping literal property values in a new object rather \
+       than using the main literal object; and (3) 'multiple' [default] for \
        creating a new literal node for each occurrence of a literal value. \
        Using the 'Single' mode may increase construction speed and reduce the \
        graph size, but will introduce graph construction errors." in
-
     let modes = Arg.enum Enums.LiteralMode.(args all) in
     Arg.(value & opt modes Multiple & info [ "literal-mode" ] ~doc)
+
+  let func_eval_mode =
+    let doc =
+      "Configures the evaluation of function calls during the MDG \
+       construction. Options include (1) 'opaque' [default] for treating each \
+       function as a blackbox, creating a call edge from every call-site to \
+       the function's entry point; and (2) 'unfold' for opening each call-site \
+       by re-evaluating the function body in the current context." in
+    let modes = Arg.enum Enums.FuncEvalMode.(args all) in
+    Arg.(value & opt modes Opaque & info [ "eval-func" ] ~doc)
+
+  let no_tainted_sources =
+    let doc = "Run without marking exported values as tainted sources." in
+    Arg.(value & flag & info [ "no-tainted-sources" ] ~doc)
 
   let no_export =
     let doc = "Run without generating the .svg graph representation." in

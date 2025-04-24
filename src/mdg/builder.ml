@@ -652,11 +652,20 @@ and build_file (state : State.t) (file : 'm File.t) (main : bool) : State.t =
   state''.env.cb_mdg file.mrel;
   state''
 
+let build_exported_analysis (state : State.t) : Exported.t =
+  ( match state.env.func_eval_mode with
+  | Opaque -> Exported.compute_from_graph
+  | Unfold -> Exported.compute_and_unfold build_exported_function )
+    state.env.mark_tainted_sources state
+
+let build_analysis (state : State.t) : unit =
+  (* FIXME: these values should be returned... *)
+  ignore (build_exported_analysis state)
+
 let build_program (env : State.Env.t) (taint_config : Taint_config.t)
     (prog : 'm Prog.t) : Mdg.t =
   let main = Prog.main prog in
   let state = initialize_builder env taint_config prog in
   let state' = build_file state main true in
-  (* FIXME: temporary line *)
-  ignore (Exported.compute_and_unfold build_exported_function true state');
+  build_analysis state';
   state'.mdg

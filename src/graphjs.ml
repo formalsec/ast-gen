@@ -66,6 +66,8 @@ let mdg_env =
   const Cmd_mdg.Options.env
   $ Docs.MdgOpts.taint_config
   $ Docs.MdgOpts.literal_mode
+  $ Docs.MdgOpts.func_eval_mode
+  $ Docs.MdgOpts.no_tainted_sources
   $ Docs.MdgOpts.no_export
   $ Docs.MdgOpts.no_subgraphs
   $ Docs.MdgOpts.export_view
