@@ -135,12 +135,12 @@ module ParseOpts = struct
   let mode =
     let docv = "MODE" in
     let doc =
-      "Analysis mode used in a Graph.js execution. Options include (1) 'basic' \
-       where the attacker controlls all the parameters from all the functions; \
-       (2): 'singlefile' [default] where the attacker controlls the functions \
-       exported by the input file; and (3) 'multifile' where the attacker \
-       controlls the functions that were exported by the 'main' file of the \
-       module." in
+      "Analysis mode used in a Graph.js execution. Options include: (1) \
+       'basic' where the attacker controlls all the parameters from all the \
+       functions; (2): 'singlefile' [default] where the attacker controlls the \
+       functions exported by the input file; and (3) 'multifile' where the \
+       attacker controlls the functions that were exported by the 'main' file \
+       of the module." in
     let modes = Arg.enum Enums.AnalysisMode.(args all) in
     Arg.(value & opt modes SingleFile & info [ "mode" ] ~docv ~doc)
 
@@ -216,7 +216,7 @@ module MdgOpts = struct
        'propwrap' for wrapping literal property values in a new object rather \
        than using the main literal object; and (3) 'multiple' [default] for \
        creating a new literal node for each occurrence of a literal value. \
-       Using the 'Single' mode may increase construction speed and reduce the \
+       Using the 'single' mode may increase construction speed and reduce the \
        graph size, but will introduce graph construction errors." in
     let modes = Arg.enum Enums.LiteralMode.(args all) in
     Arg.(value & opt modes Multiple & info [ "literal-mode" ] ~doc)
@@ -224,12 +224,16 @@ module MdgOpts = struct
   let func_eval_mode =
     let doc =
       "Configures the evaluation of function calls during the MDG \
-       construction. Options include (1) 'opaque' [default] for treating each \
+       construction. Options include: (1) 'opaque' [default] for treating each \
        function as a blackbox, creating a call edge from every call-site to \
        the function's entry point; and (2) 'unfold' for opening each call-site \
-       by re-evaluating the function body in the current context." in
-    let modes = Arg.enum Enums.FuncEvalMode.(args all) in
-    Arg.(value & opt modes Opaque & info [ "eval-func" ] ~doc)
+       by re-evaluating the function body. The unfold mode also accepts an \
+       optional modifier in the form unfold[:<mod>] to control how far to \
+       unfold: (1) [absent] for unfolding until the fixpoint is reached; (2) \
+       'unfold:rec' for unfolding until a recursive call is reached; (3) \
+       'unfold:<depth>' for unfolding until the maximum depth is reached." in
+    let parse_f = Enums.FuncEvalMode.parse in
+    Arg.(value & opt parse_f Opaque & info [ "eval-func" ] ~doc)
 
   let no_tainted_sources =
     let doc = "Run without marking exported values as tainted sources." in
@@ -244,10 +248,9 @@ module MdgOpts = struct
     Arg.(value & flag & info [ "no-subgraphs" ] ~doc)
 
   let export_view =
-    let docv = "VIEW" in
     let doc =
       "Export view when exporting the graph into the .svg representation. \
-       Options include (1) 'full' [default] for exporting the complete graph; \
+       Options include: (1) 'full' [default] for exporting the complete graph; \
        (2) 'calls' for exporting the program's call graph; (3) 'object:<#loc>' \
        for exporting the graph of the object at location <#loc>; (4) \
        'function:<#loc>' for exporting the graph of the function at location \
@@ -255,7 +258,7 @@ module MdgOpts = struct
        the node at location <#loc>; and (6) 'sinks' for exporting the subgraph \
        that reaches every tainted sink of the program." in
     let parse_f = Enums.ExportView.parse in
-    Arg.(value & opt parse_f Full & info [ "export-view" ] ~docv ~doc)
+    Arg.(value & opt parse_f Full & info [ "export-view" ] ~doc)
 
   let export_timeout =
     let doc = "Timeout for exporting the graph into the .svg representation." in

@@ -59,17 +59,32 @@ end
 module FuncEvalMode = struct
   type t = Graphjs_mdg.State.Env.func_eval_mode
 
-  let all = Graphjs_mdg.State.Env.[ Opaque; Unfold ]
+  type conv =
+    [ `Ok of t
+    | `Error of string
+    ]
 
   let pp (ppf : Fmt.t) (mode : t) : unit =
     match mode with
     | Opaque -> Fmt.pp_str ppf "opaque"
     | Unfold -> Fmt.pp_str ppf "unfold"
+    | UnfoldRec -> Fmt.pp_str ppf "unfold:rec"
+    | UnfoldDepth _ -> Fmt.pp_str ppf "unfold:<depth>"
 
-  let str (mode : t) : string = Fmt.str "%a" pp mode
+  let conv_unfold_depth (mode : string) : bool =
+    let regex = Str.regexp (Fmt.str "^unfold:\\([0-9]+\\)") in
+    Str.string_match regex mode 0
 
-  let args (modes : t list) : (string * t) list =
-    List.map (fun mode -> (str mode, mode)) modes
+  let conv (mode : string) : conv =
+    match mode with
+    | "opaque" -> `Ok Opaque
+    | "unfold" -> `Ok Unfold
+    | "unfold:rec" -> `Ok UnfoldRec
+    | mode' when conv_unfold_depth mode ->
+      `Ok (UnfoldDepth (int_of_string (Str.matched_group 1 mode')))
+    | _ -> `Error "Invalid eval-func argument."
+
+  let parse = (conv, pp)
 end
 
 module ExportView = struct
