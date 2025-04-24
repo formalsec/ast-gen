@@ -21,6 +21,15 @@
   this[p_0] -
   x3[p_1] -
   exports[l_5] --< P(baz) >--> $v3[f_3]
+  [[taint]] --< D >--> exports[l_1]
+  [[taint]] --< D >--> $v1[f_1]
+  [[taint]] --< D >--> this[p_0]
+  [[taint]] --< D >--> x1[p_1]
+  [[taint]] --< D >--> $v2[f_2]
+  [[taint]] --< D >--> this[p_0]
+  [[taint]] --< D >--> x2[p_1]
+  [[taint]] --< D >--> y2[p_2]
+  [[taint]] --< D >--> z2[p_3]
 
   $ graphjs mdg --no-export module.js
   module[l_1] --< P(exports) >--> exports[l_3]
@@ -48,6 +57,10 @@
   this[p_0] -
   x3[p_1] -
   $v5[l_8] --< P(baz) >--> $v6[f_3]
+  [[taint]] --< D >--> $v5[l_6]
+  [[taint]] --< D >--> $v6[f_3]
+  [[taint]] --< D >--> this[p_0]
+  [[taint]] --< D >--> x3[p_1]
 
   $ graphjs mdg --no-export dynamic.js
   module[l_1] --< P(exports) >--> exports[l_3]
@@ -75,6 +88,19 @@
   this[p_0] -
   x3[p_1] -
   $v6[l_7] --< P(*) >--> $v5[f_3]
+  [[taint]] --< D >--> exports[l_3]
+  [[taint]] --< D >--> $v1[f_1]
+  [[taint]] --< D >--> this[p_0]
+  [[taint]] --< D >--> x1[p_1]
+  [[taint]] --< D >--> $v3[f_2]
+  [[taint]] --< D >--> this[p_0]
+  [[taint]] --< D >--> x2[p_1]
+  [[taint]] --< D >--> y2[p_2]
+  [[taint]] --< D >--> z2[p_3]
+  [[taint]] --< D >--> module.*[l_5]
+  [[taint]] --< D >--> $v5[f_3]
+  [[taint]] --< D >--> this[p_0]
+  [[taint]] --< D >--> x3[p_1]
 
   $ graphjs mdg --no-export mixed.js
   module[l_3] --< P(exports) >--> exports[l_1]
@@ -94,3 +120,12 @@
   y2[p_2] -
   z2[p_3] -
   exports[l_5] --< P(bar) >--> $v2[f_2]
+  [[taint]] --< D >--> exports[l_1]
+  [[taint]] --< D >--> $v1[f_1]
+  [[taint]] --< D >--> this[p_0]
+  [[taint]] --< D >--> x1[p_1]
+  [[taint]] --< D >--> $v2[f_2]
+  [[taint]] --< D >--> this[p_0]
+  [[taint]] --< D >--> x2[p_1]
+  [[taint]] --< D >--> y2[p_2]
+  [[taint]] --< D >--> z2[p_3]
