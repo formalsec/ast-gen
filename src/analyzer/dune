@@ -6,7 +6,6 @@
   vulnerability
   properties
   callers
-  exported
   sources
   analysis_engine
   analyzer)

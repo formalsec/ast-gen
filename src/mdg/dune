@@ -14,6 +14,7 @@
   allocator
   pcontext
   state
+  exported
   export_view
   svg_exporter
   builder

@@ -198,20 +198,20 @@ and unfold_function_call (state : State.t) (ls_func : Node.Set.t)
     (fun l_func (state, ls_retn) ->
       match Pcontext.func state.pcontext l_func with
       | None -> (state, ls_retn)
-      | Some func ->
-        let store = Store.copy func.eval_store in
-        let curr_floc = func.floc in
+      | Some { floc; func; eval_store; _ } ->
+        let store = Store.copy eval_store in
+        let curr_floc = floc in
         let curr_func = Some l_func in
         let state' = { state with store; curr_floc; curr_func } in
-        let state'' = initialize_hoisted_functions state' func.func.body in
+        let state'' = initialize_hoisted_functions state' func.body in
         Store.replace state''.store "this" (List.hd ls_args);
         Fun.flip List.iteri (List.tl ls_args) (fun idx ls_arg ->
-            match List.nth_opt func.func.params idx with
+            match List.nth_opt func.params idx with
             | None -> ()
             | Some param ->
               let name = Identifier.name param in
               Store.replace state''.store name ls_arg );
-        let state''' = build_sequence state'' func.func.body in
+        let state''' = build_sequence state'' func.body in
         let ls_retn' = Node.Set.union ls_retn state'''.curr_retn in
         (state, ls_retn') )
 
@@ -519,6 +519,28 @@ and build_function_definition_hoisted (state : State.t)
   if FunctionHoisting.hoisted func.hoisted then state
   else build_function_declaration state func cid
 
+and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
+  match Pcontext.func state.pcontext l_func with
+  | None -> state
+  | Some { floc; func; eval_store; _ } ->
+    let store = Store.copy eval_store in
+    let curr_floc = floc in
+    let curr_func = Some l_func in
+    let state' = { state with store; curr_floc; curr_func } in
+    let state'' = initialize_hoisted_functions state' func.body in
+    let this_cid = newcid func.left in
+    let l_this = State.add_parameter_node state' this_cid 0 "this" in
+    State.add_parameter_edge state' l_func l_this 0;
+    Store.replace state''.store "this" (Node.Set.singleton l_this);
+    Fun.flip List.iteri func.params (fun idx param ->
+        let idx' = idx + 1 in
+        let param_cid = newcid param in
+        let name = Identifier.name param in
+        let l_param = State.add_parameter_node state' param_cid idx' name in
+        State.add_parameter_edge state' l_func l_param idx';
+        Store.replace state''.store name (Node.Set.singleton l_param) );
+    build_sequence state'' func.body
+
 and build_loop_break (state : State.t) (_label : 'm Identifier.t option) :
     State.t =
   (* TODO: implement flow control to the builder *)
@@ -635,4 +657,6 @@ let build_program (env : State.Env.t) (taint_config : Taint_config.t)
   let main = Prog.main prog in
   let state = initialize_builder env taint_config prog in
   let state' = build_file state main true in
+  (* FIXME: temporary line *)
+  ignore (Exported.compute_and_unfold build_exported_function true state');
   state'.mdg
