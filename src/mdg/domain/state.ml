@@ -14,13 +14,15 @@ module Env = struct
   type t =
     { literal_mode : literal_mode
     ; func_eval_mode : func_eval_mode
+    ; mark_tainted_sources : bool
     ; cb_mdg : Fpath.t -> unit
     }
 
   let default =
     let dflt =
       { literal_mode = Multiple
-      ; func_eval_mode = Unfold
+      ; func_eval_mode = Opaque
+      ; mark_tainted_sources = true
       ; cb_mdg = (fun _ -> ())
       } in
     fun () -> dflt

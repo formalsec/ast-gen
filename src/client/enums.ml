@@ -56,6 +56,22 @@ module LiteralMode = struct
     List.map (fun mode -> (str mode, mode)) modes
 end
 
+module FuncEvalMode = struct
+  type t = Graphjs_mdg.State.Env.func_eval_mode
+
+  let all = Graphjs_mdg.State.Env.[ Opaque; Unfold ]
+
+  let pp (ppf : Fmt.t) (mode : t) : unit =
+    match mode with
+    | Opaque -> Fmt.pp_str ppf "opaque"
+    | Unfold -> Fmt.pp_str ppf "unfold"
+
+  let str (mode : t) : string = Fmt.str "%a" pp mode
+
+  let args (modes : t list) : (string * t) list =
+    List.map (fun mode -> (str mode, mode)) modes
+end
+
 module ExportView = struct
   type t = Graphjs_mdg.Export_view.t
 
