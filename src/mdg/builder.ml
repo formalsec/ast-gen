@@ -197,7 +197,11 @@ and unfold_function_call (state : State.t) (ls_func : Node.Set.t)
   Fun.flip2 Node.Set.fold ls_func (state, Node.Set.empty)
     (fun l_func (state, ls_retn) ->
       match Pcontext.func state.pcontext l_func with
-      | None -> (state, ls_retn)
+      | None ->
+        let add_arg_f = Fun.flip2 (State.add_argument_edge state) l_func in
+        let add_args_f idx ls_arg = Node.Set.iter (add_arg_f idx) ls_arg in
+        List.iteri add_args_f ls_args;
+        (state, ls_retn)
       | Some { floc; func; eval_store; _ } ->
         let store = Store.copy eval_store in
         let curr_floc = floc in
