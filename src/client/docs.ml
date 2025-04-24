@@ -272,8 +272,10 @@ module MdgCmd = struct
 
   let description =
     [| "Given a Node.js package, generates the Multiversion Dependency Graph \
-        (MDG) of each module of the package. Then merges all generated MDGs \
-        into a single graph that describes the entire package." |]
+        (MDG) of the package. In addition to the generated graph, this command \
+        returns a set of analyses computed on top of that graph. Example \
+        analyses include the detection of values exported by the package and \
+        tainted locations." |]
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
