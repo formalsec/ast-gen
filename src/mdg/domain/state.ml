@@ -20,7 +20,7 @@ module Env = struct
   let default =
     let dflt =
       { literal_mode = Multiple
-      ; func_eval_mode = Opaque
+      ; func_eval_mode = Unfold
       ; cb_mdg = (fun _ -> ())
       } in
     fun () -> dflt
