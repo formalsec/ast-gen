@@ -151,9 +151,6 @@ let name (node : t) : string =
   | TaintSink sink -> Tainted.(name !sink)
   | _ -> Log.fail "unexpected node '%a' without name" pp node
 
-let func (node : t) : t option =
-  match node.kind with Function _ -> Some node | _ -> node.parent
-
 let sink (node : t) : Tainted.sink =
   match node.kind with
   | TaintSink sink -> sink
