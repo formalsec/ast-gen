@@ -138,10 +138,16 @@ and compute_returns_rec (env : Env.t) (state : State.t) (exported : t)
       if not (mem exported l_retn) then
         compute_object env state exported scheme (Node.Set.singleton l_retn) )
 
+let has_exports (state : State.t) (ls_exported : Node.Set.t) : bool =
+  let count_exports_f l_exported acc =
+    let loc = Node.loc l_exported in
+    Edge.Set.cardinal (Mdg.get_edges state.mdg loc) + acc in
+  Node.Set.fold count_exports_f ls_exported 0 > 0
+
 let compute (env : Env.t) (state : State.t) : t =
   let exported = create () in
   let ls_exported = Jslib.exported_object state.mdg in
-  if not (Node.Set.is_empty ls_exported) then (
+  if has_exports state ls_exported then (
     compute_object env state exported [] ls_exported;
     mark_tainted_sources env state exported );
   exported
