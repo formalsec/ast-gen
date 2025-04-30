@@ -667,9 +667,9 @@ let run_exported_analysis (state : State.t) : Exported.t =
     state.env.run_tainted_analysis state
 
 let run_analyses (state : State.t) : unit =
-  run_cleaner_analysis state;
-  (* FIXME: these values should be returned... *)
-  ignore (run_exported_analysis state)
+  ignore (run_exported_analysis state);
+  run_cleaner_analysis state
+(* FIXME: these values should be returned... *)
 
 let build_program (env : State.Env.t) (taint_config : Taint_config.t)
     (prog : 'm Prog.t) : Mdg.t =
