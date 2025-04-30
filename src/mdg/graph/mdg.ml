@@ -68,7 +68,7 @@ let add_edge (mdg : t) (edge : Edge.t) : unit =
   Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.add edge edges);
   Hashtbl.replace mdg.trans edge.tar.uid (Edge.Set.add tran trans)
 
-let set_jslib (mdg : t) (name : string) (l_jslib : Node.t) : unit =
+let add_jslib (mdg : t) (name : string) (l_jslib : Node.t) : unit =
   Hashtbl.replace mdg.jslib name l_jslib
 
 let remove_node (mdg : t) (node : Node.t) : t =
