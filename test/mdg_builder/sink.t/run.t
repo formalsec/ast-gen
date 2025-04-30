@@ -1,16 +1,16 @@
   $ graphjs mdg --no-export eval.js
-  eval[s_1] -
-  foo[f_1] --< Param(0) >--> this[p_0]
-  foo[f_1] --< Param(1) >--> x1[p_1]
-  this[p_0] -
-  x1[p_1] --< Arg(1) >--> eval(...)[l_1]
-  eval(...)[l_1] --< Call >--> eval[s_1]
-  eval(...)[l_1] --< D >--> $v1[l_2]
-  $v1[l_2] -
-  10[v_2] --< Arg(1) >--> eval(...)[l_3]
-  eval(...)[l_3] --< Call >--> eval[s_1]
-  eval(...)[l_3] --< D >--> $v2[l_4]
-  $v2[l_4] -
+  eval[#2] -
+  foo[#11] --< Param(0) >--> this[#12]
+  foo[#11] --< Param(1) >--> x1[#13]
+  this[#12] -
+  x1[#13] --< Arg(1) >--> eval(...)[#14]
+  eval(...)[#14] --< Call >--> eval[#2]
+  eval(...)[#14] --< D >--> $v1[#15]
+  $v1[#15] -
+  10[#16] --< Arg(1) >--> eval(...)[#17]
+  eval(...)[#17] --< Call >--> eval[#2]
+  eval(...)[#17] --< D >--> $v2[#18]
+  $v2[#18] -
 
 $ graphjs mdg --no-export stdlib.js
 [[literal]] --< Arg(1) >--> require(...)[l_1]

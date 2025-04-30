@@ -1,4 +1,4 @@
-  $ graphjs parse --mode=multifile --verbose dir/main.js 2>&1 | sed '/^\[info\] Dependency tree.*$/d'
+  $ graphjs parse --mode multifile --verbose dir/main.js 2>&1 | sed '/^\[info\] Dependency tree.*$/d'
   [info] Workspace "" generated successfully.
   {
     "main.js": {

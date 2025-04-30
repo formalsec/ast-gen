@@ -1,73 +1,73 @@
 Flag for using unsafe literal properties
   $ graphjs mdg --no-export literal_mode.js
-  obj[l_1] --< V(*) >--> obj[l_2]
-  obj[l_1] --< P(*) >--> obj.*[l_3]
-  10[v_2] --< V(*) >--> $v1[l_4]
-  obj[l_2] --< P(*) >--> 10[v_2]
-  obj.*[l_3] --< V(*) >--> $v1[l_4]
-  20[v_3] -
-  $v1[l_4] --< P(*) >--> 20[v_3]
-  10[v_4] --< D >--> $v2[l_5]
-  "abc"[v_5] --< D >--> $v2[l_5]
-  $v2[l_5] -
+  obj[#11] --< V(*) >--> obj[#13]
+  obj[#11] --< P(*) >--> obj.*[#14]
+  10[#12] --< V(*) >--> $v1[#16]
+  obj[#13] --< P(*) >--> 10[#12]
+  obj.*[#14] --< V(*) >--> $v1[#16]
+  20[#15] -
+  $v1[#16] --< P(*) >--> 20[#15]
+  10[#17] --< D >--> $v2[#19]
+  "abc"[#18] --< D >--> $v2[#19]
+  $v2[#19] -
 
   $ graphjs mdg --no-export literal_mode.js --literal-mode single
-  [[literal]] --< V(*) >--> $v1[l_4]
-  [[literal]] --< D >--> $v2[l_5]
-  obj[l_1] --< V(*) >--> obj[l_2]
-  obj[l_1] --< P(*) >--> obj.*[l_3]
-  obj[l_2] --< P(*) >--> [[literal]]
-  obj.*[l_3] --< V(*) >--> $v1[l_4]
-  $v1[l_4] --< P(*) >--> [[literal]]
-  $v2[l_5] -
+  [[literal]] --< V(*) >--> $v1[#14]
+  [[literal]] --< D >--> $v2[#15]
+  obj[#11] --< V(*) >--> obj[#12]
+  obj[#11] --< P(*) >--> obj.*[#13]
+  obj[#12] --< P(*) >--> [[literal]]
+  obj.*[#13] --< V(*) >--> $v1[#14]
+  $v1[#14] --< P(*) >--> [[literal]]
+  $v2[#15] -
 
   $ graphjs mdg --no-export literal_mode.js --literal-mode propwrap
-  [[literal]] --< D >--> $v2[l_5]
-  obj[l_1] --< V(*) >--> obj[l_2]
-  obj[l_1] --< P(*) >--> obj.*[l_3]
-  10[v_2] --< V(*) >--> $v1[l_4]
-  obj[l_2] --< P(*) >--> 10[v_2]
-  obj.*[l_3] --< V(*) >--> $v1[l_4]
-  20[v_3] -
-  $v1[l_4] --< P(*) >--> 20[v_3]
-  $v2[l_5] -
+  [[literal]] --< D >--> $v2[#17]
+  obj[#11] --< V(*) >--> obj[#13]
+  obj[#11] --< P(*) >--> obj.*[#14]
+  10[#12] --< V(*) >--> $v1[#16]
+  obj[#13] --< P(*) >--> 10[#12]
+  obj.*[#14] --< V(*) >--> $v1[#16]
+  20[#15] -
+  $v1[#16] --< P(*) >--> 20[#15]
+  $v2[#17] -
 
 
 
-Flag for marking exported values as tainted sources
+Flag for running the tainted analysis, marking exported values as tainted sources
   $ graphjs mdg --no-export no_tainted_sources.js
-  module[l_2] --< P(exports) >--> exports[l_4]
-  exports[l_4] --< V(foo) >--> exports[l_5]
-  foo[f_1] --< Param(0) >--> this[p_0]
-  foo[f_1] --< Param(1) >--> x[p_1]
-  foo[f_1] --< Param(2) >--> y[p_2]
-  this[p_0] -
-  x[p_1] -
-  y[p_2] --< P(p) >--> y.p[l_1]
-  y.p[l_1] -
-  exports[l_5] --< P(foo) >--> foo[f_1]
-  exports[l_5] --< V(foo) >--> exports[l_9]
-  $v2[l_6] --< V(q) >--> $v2[l_8]
-  $v3[l_7] -
-  $v2[l_8] --< P(q) >--> $v3[l_7]
-  exports[l_9] --< P(foo) >--> $v2[l_8]
-  [[taint]] --< D >--> exports[l_4]
-  [[taint]] --< D >--> $v3[l_7]
-  [[taint]] --< D >--> $v2[l_8]
+  module[#9] --< P(exports) >--> exports[#10]
+  exports[#10] --< V(foo) >--> exports[#16]
+  foo[#11] --< Param(0) >--> this[#12]
+  foo[#11] --< Param(1) >--> x[#13]
+  foo[#11] --< Param(2) >--> y[#14]
+  this[#12] -
+  x[#13] -
+  y[#14] --< P(p) >--> y.p[#15]
+  y.p[#15] -
+  exports[#16] --< P(foo) >--> foo[#11]
+  exports[#16] --< V(foo) >--> exports[#20]
+  $v2[#17] --< V(q) >--> $v2[#19]
+  $v3[#18] -
+  $v2[#19] --< P(q) >--> $v3[#18]
+  exports[#20] --< P(foo) >--> $v2[#19]
+  [[taint]] --< D >--> exports[#10]
+  [[taint]] --< D >--> $v3[#18]
+  [[taint]] --< D >--> $v2[#19]
 
-  $ graphjs mdg --no-export no_tainted_sources.js --no-tainted-sources
-  module[l_2] --< P(exports) >--> exports[l_4]
-  exports[l_4] --< V(foo) >--> exports[l_5]
-  foo[f_1] --< Param(0) >--> this[p_0]
-  foo[f_1] --< Param(1) >--> x[p_1]
-  foo[f_1] --< Param(2) >--> y[p_2]
-  this[p_0] -
-  x[p_1] -
-  y[p_2] --< P(p) >--> y.p[l_1]
-  y.p[l_1] -
-  exports[l_5] --< P(foo) >--> foo[f_1]
-  exports[l_5] --< V(foo) >--> exports[l_9]
-  $v2[l_6] --< V(q) >--> $v2[l_8]
-  $v3[l_7] -
-  $v2[l_8] --< P(q) >--> $v3[l_7]
-  exports[l_9] --< P(foo) >--> $v2[l_8]
+  $ graphjs mdg --no-export no_tainted_sources.js --no-tainted-analysis
+  module[#9] --< P(exports) >--> exports[#10]
+  exports[#10] --< V(foo) >--> exports[#16]
+  foo[#11] --< Param(0) >--> this[#12]
+  foo[#11] --< Param(1) >--> x[#13]
+  foo[#11] --< Param(2) >--> y[#14]
+  this[#12] -
+  x[#13] -
+  y[#14] --< P(p) >--> y.p[#15]
+  y.p[#15] -
+  exports[#16] --< P(foo) >--> foo[#11]
+  exports[#16] --< V(foo) >--> exports[#20]
+  $v2[#17] --< V(q) >--> $v2[#19]
+  $v3[#18] -
+  $v2[#19] --< P(q) >--> $v3[#18]
+  exports[#20] --< P(foo) >--> $v2[#19]
