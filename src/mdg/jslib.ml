@@ -125,10 +125,10 @@ let add_tainted_sink (make_generic_sink_f : 'a -> Tainted.sink)
 let initialize_tainted_sinks (state : State.t) (tconf : Taint_config.t) :
     State.t =
   let make_fun_sink_f = add_tainted_sink (fun sink -> `FunctionSink sink) in
-  let make_new_sink_f = add_tainted_sink (fun sink -> `NewSink sink) in
+  (* let make_new_sink_f = add_tainted_sink (fun sink -> `NewSink sink) in *)
   let state' = List.fold_left make_fun_sink_f state tconf.function_sinks in
-  let state'' = List.fold_left make_new_sink_f state' tconf.new_sinks in
-  state''
+  (* let state'' = List.fold_left make_new_sink_f state' tconf.new_sinks in *)
+  state'
 
 let initialize_require (state : State.t) (cb : cb_build_file) : State.t =
   let name = "require" in
