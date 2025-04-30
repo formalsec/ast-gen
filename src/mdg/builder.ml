@@ -145,26 +145,19 @@ let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
 
 and eval_literal_expr (state : State.t) (literal : LiteralValue.t) (cid : cid) :
     Node.Set.t =
-  match (state.env.literal_mode, state.literal_ctx) with
-  | (Multiple, Skip) ->
-    let literal' = convert_literal literal in
-    let l_literal = State.add_candidate_literal_node state cid literal' in
-    Node.Set.singleton l_literal
-  | (Multiple, Make) | (Multiple, MakeProp) | (PropWrap, MakeProp) ->
+  match (state.env.literal_mode, state.stmt_ctx) with
+  | (Multiple, _) | (PropWrap, PropUpd) ->
     let literal' = convert_literal literal in
     let l_literal = State.add_literal_node state cid literal' in
     Node.Set.singleton l_literal
   | _ -> Node.Set.singleton state.literal_node
 
 and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
-  let nodes = Store.find state.store id in
-  Fun.flip Node.Set.map nodes (fun l_node ->
-      if Node.is_invalid l_node then State.concretize_node state id l_node
-      else l_node )
+  Store.find state.store id
 
 let rec initialize_builder (env : State.Env.t) (taint_config : Taint_config.t)
     (prog : 'm Prog.t) : State.t =
-  Node.reset_generators ();
+  Location.reset_generator ();
   let state = State.create env prog in
   let cbs_builder = Jslib.cbs_builder build_file in
   if not (multiple_literal_mode env) then
@@ -225,7 +218,7 @@ and unfold_function_call (state : State.t) (call_name : string)
 and build_assignment (state : State.t) (left : 'm LeftValue.t)
     (right : 'm Expression.t) : State.t =
   let name = LeftValue.name left in
-  let ls_right = eval_expr (State.skip_literal state) right in
+  let ls_right = eval_expr state right in
   Store.replace state.store name ls_right;
   state
 
@@ -290,7 +283,7 @@ and build_static_update (state : State.t) (obj : 'm Expression.t)
   let prop' = Property.Static (Prop.name prop) in
   let ls_obj = eval_expr state obj in
   let ls_obj' = Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_obj in
-  let ls_right = eval_expr (State.make_literal_prop state) right in
+  let ls_right = eval_expr (State.stmt_ctx_prop_upd state) right in
   let obj_name = object_name ls_obj obj in
   let ls_new = add_static_object_version state obj_name ls_obj' prop' cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
@@ -304,7 +297,7 @@ and build_dynamic_update (state : State.t) (obj : 'm Expression.t)
   let ls_obj = eval_expr state obj in
   let ls_obj' = Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_obj in
   let ls_prop = eval_expr state prop in
-  let ls_right = eval_expr (State.make_literal_prop state) right in
+  let ls_right = eval_expr (State.stmt_ctx_prop_upd state) right in
   let obj_name = object_name ls_obj obj in
   let ls_new = add_dynamic_object_version state obj_name ls_obj' ls_prop cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
@@ -491,13 +484,13 @@ and build_function_declaration_closed (state : State.t)
   Store.replace state.store func_name (Node.Set.singleton l_func);
   let this_cid = newcid func.left in
   let state' = { state with curr_func = Some l_func } in
-  let l_this = State.add_parameter_node state' this_cid 0 "this" in
+  let l_this = State.add_parameter_node state' this_cid "this" in
   State.add_parameter_edge state' l_func l_this 0;
   Fun.flip List.iteri func.params (fun idx param ->
       let idx' = idx + 1 in
       let param_cid = newcid param in
       let param_name = Identifier.name param in
-      let l_param = State.add_parameter_node state' param_cid idx' param_name in
+      let l_param = State.add_parameter_node state' param_cid param_name in
       State.add_parameter_edge state' l_func l_param idx' );
   state
 
@@ -542,14 +535,14 @@ and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
     let state' = { state with store; curr_floc; curr_func } in
     let state'' = initialize_hoisted_functions state' func.body in
     let this_cid = newcid func.left in
-    let l_this = State.add_parameter_node state' this_cid 0 "this" in
+    let l_this = State.add_parameter_node state' this_cid "this" in
     State.add_parameter_edge state' l_func l_this 0;
     Store.replace state''.store "this" (Node.Set.singleton l_this);
     Fun.flip List.iteri func.params (fun idx param ->
         let idx' = idx + 1 in
         let param_cid = newcid param in
         let name = Identifier.name param in
-        let l_param = State.add_parameter_node state' param_cid idx' name in
+        let l_param = State.add_parameter_node state' param_cid name in
         State.add_parameter_edge state' l_func l_param idx';
         Store.replace state''.store name (Node.Set.singleton l_param) );
     build_sequence state'' func.body

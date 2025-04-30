@@ -66,8 +66,8 @@ module Calls = struct
 end
 
 module Object = struct
-  let get_object (mdg : Mdg.t) (uid : Location.t) : Node.t =
-    let l_obj = get_node mdg uid in
+  let get_object (mdg : Mdg.t) (loc : Location.t) : Node.t =
+    let l_obj = get_node mdg loc in
     match l_obj.kind with
     | Object _ | Function _ | Parameter _ | Return _ -> l_obj
     | _ -> raise "Unexpected non-object node '%a'" Node.pp l_obj
@@ -86,8 +86,8 @@ module Object = struct
 end
 
 module Function = struct
-  let get_function (mdg : Mdg.t) (uid : Location.t) : Node.t =
-    let l_func = get_node mdg uid in
+  let get_function (mdg : Mdg.t) (loc : Location.t) : Node.t =
+    let l_func = get_node mdg loc in
     match l_func.kind with
     | Function _ -> l_func
     | _ -> raise "Unexpected non-function node '%a'" Node.pp l_func

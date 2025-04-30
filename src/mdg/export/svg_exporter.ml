@@ -31,7 +31,7 @@ module Dot = struct
     mdg := mdg';
     Fun.flip Hashtbl.iter mdg'.nodes (fun _ node ->
         Option.fold (Node.func node) ~none:() ~some:(fun l_func' ->
-            let loc = Node.uid l_func' in
+            let loc = Node.loc l_func' in
             match Hashtbl.find_opt func_sz loc with
             | None -> Hashtbl.replace func_sz loc 1
             | Some sz -> Hashtbl.replace func_sz loc (sz + 1) ) )
@@ -62,7 +62,7 @@ module Dot = struct
 
   let get_function (node : Node.t) : Node.t option =
     Option.bind (Node.func node) (fun l_func ->
-        match Hashtbl.find_opt func_sz l_func.uid with
+        match Hashtbl.find_opt func_sz l_func.loc with
         | Some sz when sz > 1 -> Some l_func
         | _ -> None )
 
@@ -87,7 +87,7 @@ module Dot = struct
     let default_edge_attributes (_ : t) : edge_attrs =
       [ `Arrowhead `Normal; `Fontsize 12; `Fontname "Times-Roman" ]
 
-    let vertex_name (node : V.t) : string = Fmt.str "%d" node.uid
+    let vertex_name (node : V.t) : string = string_of_int node.loc
 
     let vertex_attributes (node : V.t) : vertex_attrs =
       `Label (node_label node)

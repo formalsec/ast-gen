@@ -56,8 +56,8 @@ let file_built (pcontext : 'm t) (path : Fpath.t) : unit =
   | None -> ()
 
 let func (pcontext : 'm t) (l_func : Node.t) : 'm func option =
-  Hashtbl.find_opt pcontext.funcs l_func.uid
+  Hashtbl.find_opt pcontext.funcs l_func.loc
 
 let func_decl (pcontext : 'm t) (l_func : Node.t) (floc : Floc.t)
     (func : 'm FunctionDefinition.t) (eval_store : Store.t) : unit =
-  Hashtbl.replace pcontext.funcs l_func.uid { floc; func; eval_store }
+  Hashtbl.replace pcontext.funcs l_func.loc { floc; func; eval_store }
