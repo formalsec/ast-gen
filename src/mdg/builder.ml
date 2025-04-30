@@ -262,8 +262,10 @@ and build_static_lookup (state : State.t) (left : 'm LeftValue.t)
   let ls_obj = eval_expr state obj in
   let field_name = object_property_name ls_obj obj prop' in
   add_static_orig_object_property state field_name ls_obj prop' cid;
+  let tail_lookup_f = Mdg.object_tail_versions state.mdg in
   let ls_lookup = lookup_property state ls_obj prop' in
-  Store.replace state.store name ls_lookup;
+  let ls_lookup' = Node.Set.map_flat tail_lookup_f ls_lookup in
+  Store.replace state.store name ls_lookup';
   state
 
 and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
@@ -274,18 +276,19 @@ and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
   let ls_prop = eval_expr state prop in
   let field_name = object_property_name ls_obj obj prop' in
   add_dynamic_orig_object_property state field_name ls_obj ls_prop cid;
+  let tail_lookup_f = Mdg.object_tail_versions state.mdg in
   let ls_lookup = lookup_property state ls_obj prop' in
-  Store.replace state.store name ls_lookup;
+  let ls_lookup' = Node.Set.map_flat tail_lookup_f ls_lookup in
+  Store.replace state.store name ls_lookup';
   state
 
 and build_static_update (state : State.t) (obj : 'm Expression.t)
     (prop : 'm Prop.t) (right : 'm Expression.t) (cid : cid) : State.t =
   let prop' = Property.Static (Prop.name prop) in
   let ls_obj = eval_expr state obj in
-  let ls_obj' = Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_obj in
   let ls_right = eval_expr (State.stmt_ctx_prop_upd state) right in
   let obj_name = object_name ls_obj obj in
-  let ls_new = add_static_object_version state obj_name ls_obj' prop' cid in
+  let ls_new = add_static_object_version state obj_name ls_obj prop' cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
       Fun.flip Node.Set.iter ls_right (fun l_right ->
           State.add_property_edge state l_new l_right prop' ) );
@@ -295,11 +298,10 @@ and build_dynamic_update (state : State.t) (obj : 'm Expression.t)
     (prop : 'm Expression.t) (right : 'm Expression.t) (cid : cid) : State.t =
   let prop' = Property.Dynamic in
   let ls_obj = eval_expr state obj in
-  let ls_obj' = Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_obj in
   let ls_prop = eval_expr state prop in
   let ls_right = eval_expr (State.stmt_ctx_prop_upd state) right in
   let obj_name = object_name ls_obj obj in
-  let ls_new = add_dynamic_object_version state obj_name ls_obj' ls_prop cid in
+  let ls_new = add_dynamic_object_version state obj_name ls_obj ls_prop cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
       Fun.flip Node.Set.iter ls_right (fun l_right ->
           State.add_property_edge state l_new l_right prop' ) );
