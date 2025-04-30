@@ -9,7 +9,7 @@ module Options = struct
     { taint_config : Fpath.t
     ; literal_mode : Enums.LiteralMode.t
     ; func_eval_mode : Enums.FuncEvalMode.t
-    ; mark_tainted_sources : bool
+    ; run_tainted_analysis : bool
     ; export_graph : bool
     ; export_subgraphs : bool
     ; export_view : Export_view.t
@@ -29,13 +29,13 @@ module Options = struct
     | None -> Properties.default_taint_config ()
 
   let env (taint_config' : Fpath.t option) (literal_mode' : Enums.LiteralMode.t)
-      (func_eval_mode' : Enums.FuncEvalMode.t) (no_tainted_sources : bool)
+      (func_eval_mode' : Enums.FuncEvalMode.t) (no_tainted_analysis : bool)
       (no_export : bool) (no_subgraphs : bool) (export_view' : Export_view.t)
       (export_timeout' : int) (parse_env' : Cmd_parse.Options.env) : env =
     { taint_config = parse_taint_config taint_config'
     ; literal_mode = literal_mode'
     ; func_eval_mode = func_eval_mode'
-    ; mark_tainted_sources = not no_tainted_sources
+    ; run_tainted_analysis = not no_tainted_analysis
     ; export_graph = not no_export
     ; export_subgraphs = not no_subgraphs
     ; export_view = export_view'
@@ -119,7 +119,7 @@ end
 let builder_env (env : Options.env) : State.Env.t =
   { literal_mode = env.literal_mode
   ; func_eval_mode = env.func_eval_mode
-  ; mark_tainted_sources = env.mark_tainted_sources
+  ; run_tainted_analysis = env.run_tainted_analysis
   ; cb_mdg = Output.mdg
   }
 

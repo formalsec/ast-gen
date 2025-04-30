@@ -16,7 +16,7 @@ module Env = struct
   type t =
     { literal_mode : literal_mode
     ; func_eval_mode : func_eval_mode
-    ; mark_tainted_sources : bool
+    ; run_tainted_analysis : bool
     ; cb_mdg : Fpath.t -> unit
     }
 
@@ -24,7 +24,7 @@ module Env = struct
     let dflt =
       { literal_mode = Multiple
       ; func_eval_mode = Opaque
-      ; mark_tainted_sources = true
+      ; run_tainted_analysis = true
       ; cb_mdg = (fun _ -> ())
       } in
     fun () -> dflt

@@ -235,9 +235,11 @@ module MdgOpts = struct
     let parse_f = Enums.FuncEvalMode.parse in
     Arg.(value & opt parse_f Opaque & info [ "eval-func" ] ~doc)
 
-  let no_tainted_sources =
-    let doc = "Run without marking exported values as tainted sources." in
-    Arg.(value & flag & info [ "no-tainted-sources" ] ~doc)
+  let no_tainted_analysis =
+    let doc =
+      "Run without the tainted analysis. This analysis marks exported values \
+       as tainted sources." in
+    Arg.(value & flag & info [ "no-tainted-analysis" ] ~doc)
 
   let no_export =
     let doc = "Run without generating the .svg graph representation." in
