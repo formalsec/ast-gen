@@ -70,7 +70,7 @@ let add_tainted_sink (make_generic_sink_f : 'a -> Tainted.sink)
   let sink = make_generic_sink_f generic_sink in
   let name = Tainted.(name !sink) in
   let name_jslib = NameResolver.sink name in
-  let l_sink = Node.create_candidate_sink sink None (Region.default ()) in
+  let l_sink = Node.create_taint_sink sink None (Region.default ()) in
   Mdg.add_jslib state.mdg name_jslib l_sink;
   Store.replace state.store name (Node.Set.singleton l_sink);
   state
@@ -86,7 +86,7 @@ let initialize_tainted_sinks (state : State.t) (tconf : Taint_config.t) :
 let initialize_require (state : State.t) (cb : cb_build_file) : State.t =
   let name = "require" in
   let name_jslib = NameResolver.func name in
-  let l_require = Node.create_candidate_function name None (Region.default ()) in
+  let l_require = Node.create_function name None (Region.default ()) in
   Mdg.add_jslib state.mdg name_jslib l_require;
   Store.replace state.store name (Node.Set.singleton l_require);
   State.set_call_interceptor state l_require (CallInterceptor.require cb);
@@ -96,7 +96,6 @@ let initialize_module (state : State.t) : State.t =
   let name = "module" in
   let name_jslib = NameResolver.curr_file "module" state in
   let l_module = Node.create_object name None (Region.default ()) in
-  Mdg.add_node state.mdg l_module;
   Mdg.add_jslib state.mdg name_jslib l_module;
   Store.replace state.store name (Node.Set.singleton l_module);
   state
@@ -110,7 +109,6 @@ let initialize_exports (state : State.t) : State.t =
   let l_module = Option.get (Mdg.get_jslib_node state.mdg name_module) in
   let prop = Property.Static "exports" in
   let edge = Edge.create_property prop l_module l_exports in
-  Mdg.add_node state.mdg l_exports;
   Mdg.add_jslib state.mdg name_jslib l_exports;
   Mdg.add_edge state.mdg edge;
   Store.replace state.store name ls_exports;

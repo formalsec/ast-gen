@@ -1,12 +1,10 @@
 open Graphjs_base
 
-module Config = struct
-  include Config
-
-  let id_gen = constant (Generator.of_numbers ~init:1 ())
+open struct
+  let id_gen = Generator.of_numbers ~init:1 ()
 end
 
-let reset_generator () : unit = Config.(!id_gen.reset ())
+let reset_generator () : unit = id_gen.reset ()
 
 type ('e, 'm) t =
   { id : int
@@ -15,7 +13,7 @@ type ('e, 'm) t =
   }
 
 let ( @> ) (el : 'e) (md : 'm) : ('e, 'm) t =
-  let id = Config.(!id_gen.next ()) in
+  let id = id_gen.next () in
   { id; el; md }
 
 let el (x : ('e, 'm) t) : 'e = x.el

@@ -42,15 +42,14 @@ type t =
   ; curr_func : Node.t option
   ; curr_retn : Node.Set.t
   ; literal_node : Node.t
-  ; literal_ctx : literal_ctx
+  ; stmt_ctx : stmt_ctx
   }
 
 and call_interceptor = t -> string -> Node.t -> Node.Set.t list -> t
 
-and literal_ctx =
-  | Skip
-  | Make
-  | MakeProp
+and stmt_ctx =
+  | General
+  | PropUpd
 
 let create (env' : Env.t) (prog : 'm Prog.t) : t =
   let store' = Store.create () in
@@ -65,7 +64,7 @@ let create (env' : Env.t) (prog : 'm Prog.t) : t =
   ; curr_func = None
   ; curr_retn = Node.Set.empty
   ; literal_node = Node.create_default_literal ()
-  ; literal_ctx = Make
+  ; stmt_ctx = General
   }
 
 let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool) : t =
@@ -75,7 +74,7 @@ let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool) : t =
   ; curr_stack = []
   ; curr_func = None
   ; curr_retn = Node.Set.empty
-  ; literal_ctx = Make
+  ; stmt_ctx = General
   }
 
 let copy (state : t) : t =
@@ -89,9 +88,8 @@ let lub (state1 : t) (state2 : t) : t =
   let curr_retn = Node.Set.union state1.curr_retn state2.curr_retn in
   { state1 with mdg; store; curr_retn }
 
-let skip_literal (state : t) : t = { state with literal_ctx = Skip }
-let make_literal (state : t) : t = { state with literal_ctx = Make }
-let make_literal_prop (state : t) : t = { state with literal_ctx = MakeProp }
+let stmt_ctx_general (state : t) : t = { state with stmt_ctx = General }
+let stmt_ctx_prop_upd (state : t) : t = { state with stmt_ctx = PropUpd }
 
 type cid = Allocator.cid
 
@@ -127,8 +125,8 @@ let add_edge (state : t) (src : Node.t) (tar : Node.t)
   Mdg.add_edge state.mdg edge;
   edge
 
-let add_object_node (st : t) (cid : cid) (name : string) : Node.t =
-  add_node st cid (Node.create_object name)
+let add_object_node (state : t) (cid : cid) (name : string) : Node.t =
+  add_node state cid (Node.create_object name)
 
 let add_literal_node (state : t) (cid : cid) (literal : Literal.t) : Node.t =
   add_node state cid (Node.create_literal literal)
@@ -136,19 +134,14 @@ let add_literal_node (state : t) (cid : cid) (literal : Literal.t) : Node.t =
 let add_function_node (state : t) (cid : cid) (name : string) : Node.t =
   add_node state cid (Node.create_function name)
 
-let add_parameter_node (state : t) (cid : cid) (idx : int) (name : string) :
-    Node.t =
-  add_node state cid (Node.create_parameter idx name)
+let add_parameter_node (state : t) (cid : cid) (name : string) : Node.t =
+  add_node state cid (Node.create_parameter name)
 
 let add_call_node (state : t) (cid : cid) (name : string) : Node.t =
   add_node state cid (Node.create_call name)
 
-let add_return_node (st : t) (cid : cid) (name : string) : Node.t =
-  add_node st cid (Node.create_return name)
-
-let add_candidate_literal_node (state : t) (cid : cid) (literal : Literal.t) :
-    Node.t =
-  add_candidate_node state cid (Node.create_candidate_literal literal)
+let add_return_node (state : t) (cid : cid) (name : string) : Node.t =
+  add_node state cid (Node.create_return name)
 
 let add_dependency_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state src tar (Edge.create_dependency ()) |> ignore
@@ -175,15 +168,9 @@ let add_caller_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
 let add_return_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state src tar (Edge.create_return ()) |> ignore
 
-let concretize_node (state : t) (id : string) (node : Node.t) : Node.t =
-  let node' = Node.concretize node in
-  Mdg.add_node state.mdg node';
-  Store.replace state.store id (Node.Set.singleton node');
-  node'
-
 let get_call_interceptor (state : t) (node : Node.t) : call_interceptor option =
-  Hashtbl.find_opt state.call_interceptors node.uid
+  Hashtbl.find_opt state.call_interceptors node.loc
 
 let set_call_interceptor (state : t) (node : Node.t)
     (interceptor : call_interceptor) : unit =
-  Hashtbl.replace state.call_interceptors node.uid interceptor
+  Hashtbl.replace state.call_interceptors node.loc interceptor

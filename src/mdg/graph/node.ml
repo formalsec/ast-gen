@@ -1,23 +1,6 @@
 open Graphjs_base
 open Graphjs_ast
 
-module Config = struct
-  include Config
-
-  let uid_gen = constant (Location.make_generator ())
-  let lit_lid_gen = constant (Location.make_generator ())
-  let obj_lid_gen = constant (Location.make_generator ())
-  let func_lid_gen = constant (Location.make_generator ())
-  let sink_lid_gen = constant (Location.make_generator ())
-end
-
-let reset_generators () : unit =
-  Location.reset_generator Config.(!uid_gen);
-  Location.reset_generator Config.(!lit_lid_gen);
-  Location.reset_generator Config.(!obj_lid_gen);
-  Location.reset_generator Config.(!func_lid_gen);
-  Location.reset_generator Config.(!sink_lid_gen)
-
 type kind =
   | Literal of Literal.t
   | Object of string
@@ -29,45 +12,43 @@ type kind =
   | TaintSink of Tainted.sink
 
 type t =
-  { uid : Location.t
-  ; lid : Location.t
+  { loc : Location.t
   ; kind : kind
   ; parent : t option
   ; at : Region.t
   }
 
 let default =
-  let id = Location.invalid () in
+  let loc = Location.invalid () in
   let at = Region.default () in
   let kind = Literal (Literal.default ()) in
-  let dflt = { uid = id; lid = id; kind; parent = None; at } in
+  let dflt = { loc; kind; parent = None; at } in
   fun () -> dflt
 
-let create (uid : Location.t) (lid : Location.t) (kind : kind)
-    (parent : t option) (at : Region.t) : t =
-  { uid; lid; kind; parent; at }
+let create (loc : Location.t) (kind : kind) (parent : t option) (at : Region.t)
+    : t =
+  { loc; kind; parent; at }
 
-let uid (node : t) : Location.t = node.uid
-let lid (node : t) : Location.t = node.lid
+let loc (node : t) : Location.t = node.loc
 let kind (node : t) : kind = node.kind
 let parent (node : t) : t option = node.parent
 let at (node : t) : Region.t = node.at
-let hash (node : t) : int = Location.hash node.uid
-let equal (node1 : t) (node2 : t) : bool = Location.equal node1.uid node2.uid
-let compare (node1 : t) (node2 : t) : int = Location.compare node1.uid node2.uid
+let hash (node : t) : int = Location.hash node.loc
+let equal (node1 : t) (node2 : t) : bool = Location.equal node1.loc node2.loc
+let compare (node1 : t) (node2 : t) : int = Location.compare node1.loc node2.loc
 
 let pp (ppf : Fmt.t) (node : t) : unit =
   match node.kind with
-  | Literal lit when Literal.is_default lit -> Literal.pp ppf lit
-  | Literal lit -> Fmt.fmt ppf "%a[%a]" Literal.pp lit Location.pp node.uid
-  | Object name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.uid
-  | Function name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.uid
-  | Parameter name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.uid
-  | Call name -> Fmt.fmt ppf "%s(...)[%a]" name Location.pp node.uid
-  | Return name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.uid
+  | Literal lit when Literal.is_default lit -> Fmt.fmt ppf "%a" Literal.pp lit
+  | Literal lit -> Fmt.fmt ppf "%a[%a]" Literal.pp lit Location.pp node.loc
+  | Object name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
+  | Function name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
+  | Parameter name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
+  | Call name -> Fmt.fmt ppf "%s(...)[%a]" name Location.pp node.loc
+  | Return name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
   | TaintSource -> Fmt.pp_str ppf "[[taint]]"
   | TaintSink sink ->
-    Fmt.fmt ppf "%s[%a]" Tainted.(name !sink) Location.pp node.uid
+    Fmt.fmt ppf "%s[%a]" Tainted.(name !sink) Location.pp node.loc
 
 let str (node : t) : string = Fmt.str "%a" pp node
 
@@ -86,90 +67,48 @@ module Set = struct
 end
 
 let create_default_literal () : t =
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.create Config.(!lit_lid_gen) in
+  let loc = Location.create () in
   let kind = Literal (Literal.default ()) in
-  create uid lid kind None (Region.default ())
+  create loc kind None (Region.default ())
 
 let create_literal (literal : Literal.t) : t option -> Region.t -> t =
  fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.create Config.(!lit_lid_gen) in
-  create uid lid (Literal literal) parent at
+  let loc = Location.create () in
+  create loc (Literal literal) parent at
 
 let create_object (name : string) : t option -> Region.t -> t =
  fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.create Config.(!obj_lid_gen) in
-  create uid lid (Object name) parent at
+  let loc = Location.create () in
+  create loc (Object name) parent at
 
 let create_function (name : string) : t option -> Region.t -> t =
  fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.create Config.(!func_lid_gen) in
-  create uid lid (Function name) parent at
+  let loc = Location.create () in
+  create loc (Function name) parent at
 
-let create_parameter (idx : int) (name : string) : t option -> Region.t -> t =
+let create_parameter (name : string) : t option -> Region.t -> t =
  fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  create uid idx (Parameter name) parent at
+  let loc = Location.create () in
+  create loc (Parameter name) parent at
 
 let create_call (name : string) : t option -> Region.t -> t =
  fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.create Config.(!obj_lid_gen) in
-  create uid lid (Call name) parent at
+  let loc = Location.create () in
+  create loc (Call name) parent at
 
 let create_return (name : string) : t option -> Region.t -> t =
  fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.create Config.(!obj_lid_gen) in
-  create uid lid (Return name) parent at
+  let loc = Location.create () in
+  create loc (Return name) parent at
 
 let create_taint_source () : t =
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.taint_source () in
-  create uid lid TaintSource None (Region.default ())
+  let loc = Location.create () in
+  create loc TaintSource None (Region.default ())
 
 let create_taint_sink (sink : Tainted.sink) : t option -> Region.t -> t =
  fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.create Config.(!obj_lid_gen) in
-  create uid lid (TaintSink sink) parent at
-
-let create_candidate_literal (literal : Literal.t) : t option -> Region.t -> t =
- fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.invalid () in
-  create uid lid (Literal literal) parent at
-
-let create_candidate_object (name : string) : t option -> Region.t -> t =
- fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.invalid () in
-  create uid lid (Object name) parent at
-
-let create_candidate_function (name : string) : t option -> Region.t -> t =
- fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.invalid () in
-  create uid lid (Function name) parent at
-
-let create_candidate_sink (sink : Tainted.sink) : t option -> Region.t -> t =
- fun parent at ->
-  let uid = Location.create Config.(!uid_gen) in
-  let lid = Location.invalid () in
-  create uid lid (TaintSink sink) parent at
-
-let concretize (node : t) : t =
-  match node.kind with
-  | Literal _ -> { node with lid = Location.create Config.(!lit_lid_gen) }
-  | Object _ -> { node with lid = Location.create Config.(!obj_lid_gen) }
-  | Function _ -> { node with lid = Location.create Config.(!func_lid_gen) }
-  | TaintSink _ -> { node with lid = Location.create Config.(!sink_lid_gen) }
-  | _ -> Log.fail "unexpected kind for the candidate node"
-
-let is_invalid (node : t) : bool = Location.equal node.lid (Location.invalid ())
+  let loc = Location.create () in
+  create loc (TaintSink sink) parent at
 
 let is_literal (node : t) : bool =
   match node.kind with Literal _ -> true | _ -> false

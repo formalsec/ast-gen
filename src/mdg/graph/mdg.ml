@@ -42,10 +42,10 @@ let get_jslib_template (mdg : t) (name : string) : Node.t =
   | Some node -> node
 
 let get_jslib_node (mdg : t) (name : string) : Node.t option =
-  Hashtbl.find_opt mdg.nodes (get_jslib_template mdg name).uid
+  Hashtbl.find_opt mdg.nodes (get_jslib_template mdg name).loc
 
 let pp_node (mdg : t) (ppf : Fmt.t) (node : Node.t) : unit =
-  let edges = get_edges mdg node.uid in
+  let edges = get_edges mdg node.loc in
   if Edge.Set.is_empty edges then Fmt.fmt ppf "%a -" Node.pp node
   else Edge.Set.pp ppf edges
 
@@ -57,34 +57,35 @@ let pp (ppf : Fmt.t) (mdg : t) : unit =
 let str (mdg : t) : string = Fmt.str "%a" pp mdg
 
 let add_node (mdg : t) (node : Node.t) : unit =
-  Hashtbl.replace mdg.nodes node.uid node;
-  Hashtbl.replace mdg.edges node.uid Edge.Set.empty;
-  Hashtbl.replace mdg.trans node.uid Edge.Set.empty
+  Hashtbl.replace mdg.nodes node.loc node;
+  Hashtbl.replace mdg.edges node.loc Edge.Set.empty;
+  Hashtbl.replace mdg.trans node.loc Edge.Set.empty
 
 let add_edge (mdg : t) (edge : Edge.t) : unit =
   let tran = Edge.transpose edge in
-  let edges = get_edges mdg edge.src.uid in
-  let trans = get_trans mdg edge.tar.uid in
-  Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.add edge edges);
-  Hashtbl.replace mdg.trans edge.tar.uid (Edge.Set.add tran trans)
+  let edges = get_edges mdg edge.src.loc in
+  let trans = get_trans mdg edge.tar.loc in
+  Hashtbl.replace mdg.edges edge.src.loc (Edge.Set.add edge edges);
+  Hashtbl.replace mdg.trans edge.tar.loc (Edge.Set.add tran trans)
 
 let add_jslib (mdg : t) (name : string) (l_jslib : Node.t) : unit =
-  Hashtbl.replace mdg.jslib name l_jslib
+  Hashtbl.replace mdg.jslib name l_jslib;
+  add_node mdg l_jslib
 
 let remove_node (mdg : t) (node : Node.t) : t =
-  let edges = get_edges mdg node.uid in
-  let trans = get_trans mdg node.uid in
+  let edges = get_edges mdg node.loc in
+  let trans = get_trans mdg node.loc in
   Fun.flip Edge.Set.iter edges (fun edge ->
       let edge' = Edge.transpose edge in
-      let trans = get_trans mdg edge'.src.uid in
-      Hashtbl.replace mdg.trans edge'.src.uid (Edge.Set.remove edge' trans) );
+      let trans = get_trans mdg edge'.src.loc in
+      Hashtbl.replace mdg.trans edge'.src.loc (Edge.Set.remove edge' trans) );
   Fun.flip Edge.Set.iter trans (fun edge ->
       let edge' = Edge.transpose edge in
-      let edges = get_edges mdg edge'.src.uid in
-      Hashtbl.replace mdg.edges edge'.src.uid (Edge.Set.remove edge' edges) );
-  Hashtbl.remove mdg.nodes node.uid;
-  Hashtbl.remove mdg.edges node.uid;
-  Hashtbl.remove mdg.trans node.uid;
+      let edges = get_edges mdg edge'.src.loc in
+      Hashtbl.replace mdg.edges edge'.src.loc (Edge.Set.remove edge' edges) );
+  Hashtbl.remove mdg.nodes node.loc;
+  Hashtbl.remove mdg.edges node.loc;
+  Hashtbl.remove mdg.trans node.loc;
   mdg
 
 let remove_nodes (mdg : t) (nodes : Node.t list) : t =
@@ -92,10 +93,10 @@ let remove_nodes (mdg : t) (nodes : Node.t list) : t =
 
 let remove_edge (mdg : t) (edge : Edge.t) : unit =
   let tran = Edge.transpose edge in
-  let edges = get_edges mdg edge.src.uid in
-  let trans = get_trans mdg tran.src.uid in
-  Hashtbl.replace mdg.edges edge.src.uid (Edge.Set.remove edge edges);
-  Hashtbl.replace mdg.trans tran.src.uid (Edge.Set.remove tran trans)
+  let edges = get_edges mdg edge.src.loc in
+  let trans = get_trans mdg tran.src.loc in
+  Hashtbl.replace mdg.edges edge.src.loc (Edge.Set.remove edge edges);
+  Hashtbl.replace mdg.trans tran.src.loc (Edge.Set.remove tran trans)
 
 let remove_edges (mdg : t) (edges : Edge.t list) : unit =
   List.iter (remove_edge mdg) edges
@@ -115,78 +116,78 @@ let lub (mdg1 : t) (mdg2 : t) : t =
   mdg1
 
 let get_dependencies (mdg : t) (node : Node.t) : Node.t list =
-  get_edges mdg node.uid
+  get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_dependency
   |> Edge.Set.map_list Edge.tar
 
 let has_property (mdg : t) (node : Node.t) (prop : Property.t) : bool =
-  get_edges mdg node.uid |> Edge.Set.exists (Edge.is_property ~prop)
+  get_edges mdg node.loc |> Edge.Set.exists (Edge.is_property ~prop)
 
 let get_property (mdg : t) (node : Node.t) (prop : Property.t) : Node.t list =
-  get_edges mdg node.uid
+  get_edges mdg node.loc
   |> Edge.Set.filter (Edge.is_property ~prop)
   |> Edge.Set.map_list Edge.tar
 
 let get_properties (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
-  get_edges mdg node.uid
+  get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_property
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
 let get_property_owners (mdg : t) (node : Node.t) : Node.t list =
-  get_trans mdg node.uid
+  get_trans mdg node.loc
   |> Edge.Set.filter Edge.is_property
   |> Edge.Set.map_list Edge.tar
 
 let get_versions (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
-  get_edges mdg node.uid
+  get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_version
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
 let get_parents (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
-  get_trans mdg node.uid
+  get_trans mdg node.loc
   |> Edge.Set.filter Edge.is_version
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
 let get_parameter (mdg : t) (node : Node.t) (idx : int) : Node.t =
-  get_edges mdg node.uid
+  get_edges mdg node.loc
   |> Edge.Set.filter (Edge.is_parameter ~idx)
   |> Edge.Set.choose (* functions can only have a single parameter per index *)
   |> Edge.tar
 
 let get_parameters (mdg : t) (node : Node.t) : (int * Node.t) list =
-  get_edges mdg node.uid
+  get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_parameter
   |> Edge.Set.map_list (fun edge -> (Edge.argument edge, Edge.tar edge))
 
 let get_argument (mdg : t) (node : Node.t) (idx : int) : Node.t list =
-  get_trans mdg node.uid
+  get_trans mdg node.loc
   |> Edge.Set.filter (Edge.is_argument ~idx)
   |> Edge.Set.map_list Edge.tar
 
 let get_arguments (mdg : t) (node : Node.t) : (int * Node.t) list =
-  get_trans mdg node.uid
+  get_trans mdg node.loc
   |> Edge.Set.filter Edge.is_argument
   |> Edge.Set.map_list (fun edge -> (Edge.argument edge, Edge.tar edge))
 
 let get_called_functions (mdg : t) (node : Node.t) : Node.t list =
-  get_edges mdg node.uid
+  get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_caller
   |> Edge.Set.map_list Edge.tar
 
 let get_return_of_call (mdg : t) (node : Node.t) : Node.t =
-  get_edges mdg node.uid
+  get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_dependency
   |> Edge.Set.choose (* calls can only have a single return *)
   |> Edge.tar
 
 let get_call_of_return (mdg : t) (node : Node.t) : Node.t =
-  get_trans mdg node.uid
+  get_trans mdg node.loc
   |> Edge.Set.filter Edge.is_dependency
   |> Edge.Set.choose (* returns can only have a single call *)
   |> Edge.tar
 
 let get_function_returns (mdg : t) (node : Node.t) : Node.t list =
-  get_edges mdg node.uid
+  get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_return
   |> Edge.Set.map_list Edge.tar
 
@@ -197,17 +198,17 @@ let visit (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
   let worklist = Queue.create () in
   let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
   List.iter (fun node -> Queue.add node worklist) nodes;
-  List.iter (fun node -> Hashtbl.add visited (Node.uid node) ()) nodes;
+  List.iter (fun node -> Hashtbl.add visited (Node.loc node) ()) nodes;
   let visit_edge edge acc =
     if visit_f edge then (
-      if not (Hashtbl.mem visited edge.tar.uid) then (
+      if not (Hashtbl.mem visited edge.tar.loc) then (
         Queue.add edge.tar worklist;
-        Hashtbl.add visited edge.tar.uid () );
+        Hashtbl.add visited edge.tar.loc () );
       edge_f edge acc )
     else acc in
   let visit_node node acc =
     let acc' = node_f node acc in
-    Edge.Set.fold visit_edge (get_edges_f mdg node.uid) acc' in
+    Edge.Set.fold visit_edge (get_edges_f mdg node.loc) acc' in
   let rec visit_nodes acc =
     Option.fold (Queue.take_opt worklist) ~none:acc ~some:(fun node ->
         visit_nodes (visit_node node acc) ) in

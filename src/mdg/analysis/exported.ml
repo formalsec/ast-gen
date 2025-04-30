@@ -49,13 +49,13 @@ type acc = (Node.t * Scheme.t) list
 let create () : t = Hashtbl.create Config.(!dflt_htbl_sz)
 
 let mem (exported : t) (l_node : Node.t) : bool =
-  Hashtbl.mem exported l_node.uid
+  Hashtbl.mem exported l_node.loc
 
 let find (exported : t) (l_node : Node.t) : Scheme.t option =
-  Option.map snd (Hashtbl.find_opt exported l_node.uid)
+  Option.map snd (Hashtbl.find_opt exported l_node.loc)
 
 let replace (exported : t) (l_node : Node.t) (scheme : Scheme.t) : unit =
-  Hashtbl.replace exported l_node.uid (l_node, scheme)
+  Hashtbl.replace exported l_node.loc (l_node, scheme)
 
 let pp (ppf : Fmt.t) (exported : t) : unit =
   let pp_itx ppf (_, (l_node, scheme)) =
