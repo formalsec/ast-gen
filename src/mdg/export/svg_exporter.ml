@@ -87,7 +87,7 @@ module Dot = struct
     let default_edge_attributes (_ : t) : edge_attrs =
       [ `Arrowhead `Normal; `Fontsize 12; `Fontname "Times-Roman" ]
 
-    let vertex_name (node : V.t) : string = Location.str node.uid
+    let vertex_name (node : V.t) : string = Fmt.str "%d" node.uid
 
     let vertex_attributes (node : V.t) : vertex_attrs =
       `Label (node_label node)
@@ -120,8 +120,6 @@ module Dot = struct
       | Return -> [ `Style `Dotted; `Color 26112; `Fontcolor 26112 ]
       | _ -> [ `Color 2105376 ] )
 
-    let subgraph_name (l_func : V.t) : string = Fmt.str "%d" (Node.uid l_func)
-
     let subgraph_color (l_func : V.t) : int =
       let depth = function_depth l_func in
       let factor = 0.2 +. (0.497 *. log (float_of_int depth)) in
@@ -139,9 +137,9 @@ module Dot = struct
       match (!env.subgraphs, get_function node) with
       | (false, _) | (true, None) -> None
       | (true, Some l_func) ->
-        let sg_name = subgraph_name l_func in
+        let sg_name = vertex_name l_func in
         let sg_attributes = subgraph_attrs l_func in
-        let sg_parent = Option.map subgraph_name l_func.parent in
+        let sg_parent = Option.map vertex_name l_func.parent in
         Some { sg_name; sg_attributes; sg_parent }
   end)
 end
@@ -155,8 +153,12 @@ let build_graph (env : Env.t) (mdg : Mdg.t) : Export_view.G.t =
   | Reaches loc -> Export_view.Reaches.build_graph mdg loc
   | Sinks -> Export_view.Sinks.build_graph mdg
 
+let pp_svg_out (ppf : Fmt.t) () : unit =
+  Log.info "Starting SVG exporter.";
+  if Log.Config.(!log_debugs) then Fmt.pp_str ppf " 2>/dev/null" else ()
+
 let svg_cmd (env : Env.t) (svg : string) (dot : string) : string =
-  Fmt.str "timeout %d dot -Tsvg %s -o %s 2>/dev/null" env.timeout dot svg
+  Fmt.str "timeout %d dot -Tsvg %s -o %s%a" env.timeout dot svg pp_svg_out ()
 
 let output_dot (env : Env.t) (mdg : Mdg.t) (dot : string)
     (graph : Export_view.G.t) : unit =

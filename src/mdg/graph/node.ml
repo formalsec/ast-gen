@@ -59,15 +59,15 @@ let compare (node1 : t) (node2 : t) : int = Location.compare node1.uid node2.uid
 let pp (ppf : Fmt.t) (node : t) : unit =
   match node.kind with
   | Literal lit when Literal.is_default lit -> Literal.pp ppf lit
-  | Literal lit -> Fmt.fmt ppf "%a[v_%a]" Literal.pp lit Location.pp node.lid
-  | Object name -> Fmt.fmt ppf "%s[l_%a]" name Location.pp node.lid
-  | Function name -> Fmt.fmt ppf "%s[f_%a]" name Location.pp node.lid
-  | Parameter name -> Fmt.fmt ppf "%s[p_%a]" name Location.pp node.lid
-  | Call name -> Fmt.fmt ppf "%s(...)[l_%a]" name Location.pp node.lid
-  | Return name -> Fmt.fmt ppf "%s[l_%a]" name Location.pp node.lid
+  | Literal lit -> Fmt.fmt ppf "%a[%a]" Literal.pp lit Location.pp node.uid
+  | Object name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.uid
+  | Function name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.uid
+  | Parameter name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.uid
+  | Call name -> Fmt.fmt ppf "%s(...)[%a]" name Location.pp node.uid
+  | Return name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.uid
   | TaintSource -> Fmt.pp_str ppf "[[taint]]"
   | TaintSink sink ->
-    Fmt.fmt ppf "%s[s_%a]" Tainted.(name !sink) Location.pp node.lid
+    Fmt.fmt ppf "%s[%a]" Tainted.(name !sink) Location.pp node.uid
 
 let str (node : t) : string = Fmt.str "%a" pp node
 
