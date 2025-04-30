@@ -67,6 +67,7 @@ let mdg_env =
   $ Docs.MdgOpts.taint_config
   $ Docs.MdgOpts.literal_mode
   $ Docs.MdgOpts.func_eval_mode
+  $ Docs.MdgOpts.no_cleaner_analysis
   $ Docs.MdgOpts.no_tainted_analysis
   $ Docs.MdgOpts.no_export
   $ Docs.MdgOpts.no_subgraphs

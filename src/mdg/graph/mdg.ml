@@ -72,7 +72,7 @@ let add_jslib (mdg : t) (name : string) (l_jslib : Node.t) : unit =
   Hashtbl.replace mdg.jslib name l_jslib;
   add_node mdg l_jslib
 
-let remove_node (mdg : t) (node : Node.t) : t =
+let remove_node (mdg : t) (node : Node.t) : unit =
   let edges = get_edges mdg node.loc in
   let trans = get_trans mdg node.loc in
   Fun.flip Edge.Set.iter edges (fun edge ->
@@ -85,11 +85,10 @@ let remove_node (mdg : t) (node : Node.t) : t =
       Hashtbl.replace mdg.edges edge'.src.loc (Edge.Set.remove edge' edges) );
   Hashtbl.remove mdg.nodes node.loc;
   Hashtbl.remove mdg.edges node.loc;
-  Hashtbl.remove mdg.trans node.loc;
-  mdg
+  Hashtbl.remove mdg.trans node.loc
 
-let remove_nodes (mdg : t) (nodes : Node.t list) : t =
-  List.fold_left remove_node mdg nodes
+let remove_nodes (mdg : t) (nodes : Node.t list) : unit =
+  List.iter (remove_node mdg) nodes
 
 let remove_edge (mdg : t) (edge : Edge.t) : unit =
   let tran = Edge.transpose edge in
