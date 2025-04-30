@@ -661,7 +661,7 @@ and build_file (state : State.t) (file : 'm File.t) (main : bool) : State.t =
 let build_exported_analysis (state : State.t) : Exported.t =
   ( if opaque_function_eval state.env then Exported.compute_from_graph
     else Exported.compute_and_unfold build_exported_function )
-    state.env.mark_tainted_sources state
+    state.env.run_tainted_analysis state
 
 let build_analysis (state : State.t) : unit =
   (* FIXME: these values should be returned... *)
