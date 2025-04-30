@@ -36,7 +36,6 @@ type t =
   ; store : Store.t
   ; allocator : Node.t Allocator.t
   ; pcontext : Region.t Pcontext.t
-  ; lookup_interceptors : (Location.t, lookup_interceptor) Hashtbl.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
   ; curr_floc : Pcontext.Floc.t
   ; curr_stack : Node.t list
@@ -45,9 +44,6 @@ type t =
   ; literal_node : Node.t
   ; literal_ctx : literal_ctx
   }
-
-and lookup_interceptor =
-  t -> Node.t -> string -> Node.Set.t -> Property.t -> Node.Set.t -> t
 
 and call_interceptor = t -> string -> Node.t -> Node.Set.t list -> t
 
@@ -63,7 +59,6 @@ let create (env' : Env.t) (prog : 'm Prog.t) : t =
   ; store = store'
   ; allocator = Allocator.create Config.(!dflt_htbl_sz)
   ; pcontext = Pcontext.create prog store'
-  ; lookup_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; curr_floc = Pcontext.Floc.default ()
   ; curr_stack = []
@@ -185,14 +180,6 @@ let concretize_node (state : t) (id : string) (node : Node.t) : Node.t =
   Mdg.add_node state.mdg node';
   Store.replace state.store id (Node.Set.singleton node');
   node'
-
-let get_lookup_interceptor (state : t) (node : Node.t) :
-    lookup_interceptor option =
-  Hashtbl.find_opt state.lookup_interceptors node.uid
-
-let set_lookup_interceptor (state : t) (node : Node.t)
-    (interceptor : lookup_interceptor) : unit =
-  Hashtbl.replace state.lookup_interceptors node.uid interceptor
 
 let get_call_interceptor (state : t) (node : Node.t) : call_interceptor option =
   Hashtbl.find_opt state.call_interceptors node.uid

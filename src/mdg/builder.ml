@@ -128,14 +128,6 @@ let add_function_call (state : State.t) (call_name : string)
       Node.Set.iter (add_arg_f idx) ls_arg );
   (state, l_call, l_retn)
 
-let lookup_interceptor (state : State.t) (name : string) (ls_obj : Node.Set.t)
-    (prop : Property.t) (ls_lookup : Node.Set.t) : State.t =
-  let ls_orig = Node.Set.map_flat (Mdg.object_orig_versions state.mdg) ls_obj in
-  Fun.flip2 Node.Set.fold ls_orig state (fun l_orig state ->
-      match State.get_lookup_interceptor state l_orig with
-      | Some lookup_f -> lookup_f state l_orig name ls_obj prop ls_lookup
-      | None -> state )
-
 let call_interceptor (state : State.t) (retn_name : string)
     (ls_func : Node.Set.t) (ls_args : Node.Set.t list) : State.t =
   Fun.flip2 Node.Set.fold ls_func state (fun l_func state ->
@@ -174,7 +166,7 @@ let rec initialize_builder (env : State.Env.t) (taint_config : Taint_config.t)
     (prog : 'm Prog.t) : State.t =
   Node.reset_generators ();
   let state = State.create env prog in
-  let cbs_builder = Jslib.builder_cbs build_file in
+  let cbs_builder = Jslib.cbs_builder build_file in
   if not (multiple_literal_mode env) then
     Mdg.add_node state.mdg state.literal_node;
   Jslib.initialize_builder state taint_config cbs_builder
@@ -278,7 +270,7 @@ and build_static_lookup (state : State.t) (left : 'm LeftValue.t)
   add_static_orig_object_property state field_name ls_obj prop' cid;
   let ls_lookup = lookup_property state ls_obj prop' in
   Store.replace state.store name ls_lookup;
-  lookup_interceptor state name ls_obj prop' ls_lookup
+  state
 
 and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t) (cid : cid) : State.t =
@@ -290,7 +282,7 @@ and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
   add_dynamic_orig_object_property state field_name ls_obj ls_prop cid;
   let ls_lookup = lookup_property state ls_obj prop' in
   Store.replace state.store name ls_lookup;
-  lookup_interceptor state name ls_obj prop' ls_lookup
+  state
 
 and build_static_update (state : State.t) (obj : 'm Expression.t)
     (prop : 'm Prop.t) (right : 'm Expression.t) (cid : cid) : State.t =
