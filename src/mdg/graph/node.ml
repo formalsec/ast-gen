@@ -8,6 +8,7 @@ type kind =
   | Parameter of string
   | Call of string
   | Return of string
+  | Module of string
   | TaintSource
   | TaintSink of Tainted.sink
 
@@ -46,6 +47,7 @@ let pp (ppf : Fmt.t) (node : t) : unit =
   | Parameter name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
   | Call name -> Fmt.fmt ppf "%s(...)[%a]" name Location.pp node.loc
   | Return name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
+  | Module name -> Fmt.fmt ppf "[[module]] %s[%a]" name Location.pp node.loc
   | TaintSource -> Fmt.pp_str ppf "[[taint]]"
   | TaintSink sink ->
     Fmt.fmt ppf "%s[%a]" Tainted.(name !sink) Location.pp node.loc
@@ -100,6 +102,11 @@ let create_return (name : string) : t option -> Region.t -> t =
  fun parent at ->
   let loc = Location.create () in
   create loc (Return name) parent at
+
+let create_module (name : string) : t =
+  let loc = Location.create () in
+  let kind = Module name in
+  create loc kind None (Region.default ())
 
 let create_taint_source () : t =
   let loc = Location.create () in
