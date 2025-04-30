@@ -235,6 +235,12 @@ module MdgOpts = struct
     let parse_f = Enums.FuncEvalMode.parse in
     Arg.(value & opt parse_f Opaque & info [ "eval-func" ] ~doc)
 
+  let no_cleaner_analysis =
+    let doc =
+      "Run without the cleaner analysis. This analysis removes unused nodes \
+       from the graph, according to their type and purpose." in
+    Arg.(value & flag & info [ "no-cleaner-analysis" ] ~doc)
+
   let no_tainted_analysis =
     let doc =
       "Run without the tainted analysis. This analysis marks exported values \

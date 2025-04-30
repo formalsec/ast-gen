@@ -658,19 +658,23 @@ and build_file (state : State.t) (file : 'm File.t) (main : bool) : State.t =
   state''.env.cb_mdg file.mrel;
   state''
 
-let build_exported_analysis (state : State.t) : Exported.t =
+let run_cleaner_analysis (state : State.t) : unit =
+  if state.env.run_cleaner_analysis then Cleaner.compute state
+
+let run_exported_analysis (state : State.t) : Exported.t =
   ( if opaque_function_eval state.env then Exported.compute_from_graph
     else Exported.compute_and_unfold build_exported_function )
     state.env.run_tainted_analysis state
 
-let build_analysis (state : State.t) : unit =
+let run_analyses (state : State.t) : unit =
+  run_cleaner_analysis state;
   (* FIXME: these values should be returned... *)
-  ignore (build_exported_analysis state)
+  ignore (run_exported_analysis state)
 
 let build_program (env : State.Env.t) (taint_config : Taint_config.t)
     (prog : 'm Prog.t) : Mdg.t =
   let main = Prog.main prog in
   let state = initialize_builder env taint_config prog in
   let state' = build_file state main true in
-  build_analysis state';
+  run_analyses state';
   state'.mdg
