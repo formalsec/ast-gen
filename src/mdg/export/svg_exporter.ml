@@ -45,6 +45,7 @@ module Dot = struct
     | Parameter name -> Fmt.str "%s" (String.escaped name)
     | Call name -> Fmt.str "%s(...)" (String.escaped name)
     | Return name -> Fmt.str "%s" (String.escaped name)
+    | Module name -> Fmt.str "%s" (String.escaped name)
     | TaintSource -> Fmt.str "{ Taint Source }"
     | TaintSink sink -> Fmt.str "sink %s" Tainted.(name !sink)
 
@@ -100,6 +101,7 @@ module Dot = struct
       | Parameter _ -> [ `Color 26112; `Fillcolor 13434828 ]
       | Call _ -> [ `Color 6697728; `Fillcolor 13395456 ]
       | Return _ -> [ `Color 6697728; `Fillcolor 16770508 ]
+      | Module _ -> [ `Color 3342438; `Fillcolor 15060223 ]
       | TaintSource -> [ `Color 6684672; `Fillcolor 16764108 ]
       | TaintSink _ -> [ `Color 6684672; `Fillcolor 16724787 ] )
 
