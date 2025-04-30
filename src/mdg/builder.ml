@@ -191,18 +191,19 @@ and unfoldable_function_call (state : State.t) (l_func : Node.t) : bool =
   | UnfoldRec -> not (List.mem l_func state.curr_stack)
   | UnfoldDepth depth -> List.length state.curr_stack < depth
 
-and unfold_function_call (state : State.t) (ls_func : Node.Set.t)
-    (ls_args : Node.Set.t list) : State.t * Node.Set.t =
+and unfold_function_call (state : State.t) (call_name : string)
+    (retn_name : string) (ls_func : Node.Set.t) (ls_args : Node.Set.t list)
+    (call_cid : cid) (retn_cid : cid) : State.t * Node.Set.t =
   Fun.flip2 Node.Set.fold ls_func (state, Node.Set.empty)
     (fun l_func (state, ls_retn) ->
       let func = Pcontext.func state.pcontext l_func in
       let unfoldable = unfoldable_function_call state l_func in
       match (unfoldable, func) with
       | (false, _) | (true, None) ->
-        let add_arg_f = Fun.flip2 (State.add_argument_edge state) l_func in
-        let add_args_f idx ls_arg = Node.Set.iter (add_arg_f idx) ls_arg in
-        List.iteri add_args_f ls_args;
-        (state, ls_retn)
+        let add_call_f = add_function_call state call_name retn_name in
+        let (state', _, l_retn) = add_call_f ls_func ls_args call_cid retn_cid in
+        let ls_retn' = Node.Set.add l_retn ls_retn in
+        (state', ls_retn')
       | (true, Some { floc; func; eval_store; _ }) ->
         let store = Store.copy eval_store in
         let curr_floc = floc in
@@ -359,14 +360,16 @@ and build_function_call_closed (state : State.t) (left : 'm LeftValue.t)
   call_interceptor state' retn_name ls_func ls_args'
 
 and build_function_call_opened (state : State.t) (left : 'm LeftValue.t)
-    (callee : 'm Identifier.t) (args : 'm Expression.t list) (_call_cid : cid) :
+    (callee : 'm Identifier.t) (args : 'm Expression.t list) (call_cid : cid) :
     State.t =
+  let retn_cid = newcid left in
   let call_name = Identifier.name callee in
   let retn_name = LeftValue.name left in
   let ls_func = eval_store_expr state call_name in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = Node.Set.empty :: ls_args in
-  let (state', ls_retn) = unfold_function_call state ls_func ls_args' in
+  let unfold_call_f = unfold_function_call state call_name retn_name in
+  let (state', ls_retn) = unfold_call_f ls_func ls_args' call_cid retn_cid in
   Store.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
@@ -390,8 +393,9 @@ and build_static_method_call_closed (state : State.t) (left : 'm LeftValue.t)
 
 and build_static_method_call_opened (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
-    (_call_cid : cid) : State.t =
+    (call_cid : cid) : State.t =
   let prop_cid = newcid prop in
+  let retn_cid = newcid left in
   let retn_name = LeftValue.name left in
   let prop' = Property.Static (Prop.str prop) in
   let ls_obj = eval_expr state obj in
@@ -400,7 +404,8 @@ and build_static_method_call_opened (state : State.t) (left : 'm LeftValue.t)
   let call_name = object_property_name ls_obj obj prop' in
   add_static_orig_object_property state call_name ls_obj prop' prop_cid;
   let ls_func = lookup_property state ls_obj prop' in
-  let (state', ls_retn) = unfold_function_call state ls_func ls_args' in
+  let unfold_call_f = unfold_function_call state call_name retn_name in
+  let (state', ls_retn) = unfold_call_f ls_func ls_args' call_cid retn_cid in
   Store.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
@@ -425,8 +430,9 @@ and build_dynamic_method_call_closed (state : State.t) (left : 'm LeftValue.t)
 
 and build_dynamic_method_call_opened (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
-    (args : 'm Expression.t list) (_call_cid : cid) : State.t =
+    (args : 'm Expression.t list) (call_cid : cid) : State.t =
   let prop_cid = newcid prop in
+  let retn_cid = newcid left in
   let retn_name = LeftValue.name left in
   let prop' = Property.Dynamic in
   let ls_obj = eval_expr state obj in
@@ -436,7 +442,8 @@ and build_dynamic_method_call_opened (state : State.t) (left : 'm LeftValue.t)
   let call_name = object_property_name ls_obj obj prop' in
   add_dynamic_orig_object_property state call_name ls_obj ls_prop prop_cid;
   let ls_func = lookup_property state ls_obj prop' in
-  let (state', ls_retn) = unfold_function_call state ls_func ls_args' in
+  let unfold_call_f = unfold_function_call state call_name retn_name in
+  let (state', ls_retn) = unfold_call_f ls_func ls_args' call_cid retn_cid in
   Store.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
