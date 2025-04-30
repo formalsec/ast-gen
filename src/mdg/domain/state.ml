@@ -41,8 +41,8 @@ type t =
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
   ; curr_floc : Pcontext.Floc.t
   ; curr_stack : Node.t list
-  ; curr_func : Node.t option
-  ; curr_retn : Node.Set.t
+  ; curr_parent : Node.t option
+  ; curr_return : Node.Set.t
   ; literal_node : Node.t
   ; stmt_ctx : stmt_ctx
   }
@@ -63,8 +63,8 @@ let create (env' : Env.t) (prog : 'm Prog.t) : t =
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; curr_floc = Pcontext.Floc.default ()
   ; curr_stack = []
-  ; curr_func = None
-  ; curr_retn = Node.Set.empty
+  ; curr_parent = None
+  ; curr_return = Node.Set.empty
   ; literal_node = Node.create_default_literal ()
   ; stmt_ctx = General
   }
@@ -74,8 +74,8 @@ let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool) : t =
     store = Store.copy state.pcontext.initial_store
   ; curr_floc = Pcontext.Floc.create path mrel main
   ; curr_stack = []
-  ; curr_func = None
-  ; curr_retn = Node.Set.empty
+  ; curr_parent = None
+  ; curr_return = Node.Set.empty
   ; stmt_ctx = General
   }
 
@@ -87,8 +87,8 @@ let copy (state : t) : t =
 let lub (state1 : t) (state2 : t) : t =
   let mdg = Mdg.lub state1.mdg state2.mdg in
   let store = Store.lub state1.store state2.store in
-  let curr_retn = Node.Set.union state1.curr_retn state2.curr_retn in
-  { state1 with mdg; store; curr_retn }
+  let curr_return = Node.Set.union state1.curr_return state2.curr_return in
+  { state1 with mdg; store; curr_return }
 
 let stmt_ctx_general (state : t) : t = { state with stmt_ctx = General }
 let stmt_ctx_prop_upd (state : t) : t = { state with stmt_ctx = PropUpd }
@@ -107,7 +107,7 @@ let add_node (state : t) (cid : cid)
   match Allocator.find_opt state.allocator cid with
   | Some node -> node
   | None ->
-    let node = create_node_f state.curr_func (Allocator.at cid) in
+    let node = create_node_f state.curr_parent (Allocator.at cid) in
     Allocator.replace state.allocator cid node;
     Mdg.add_node state.mdg node;
     node
@@ -117,7 +117,7 @@ let add_candidate_node (state : t) (cid : cid)
   match Allocator.find_opt state.allocator cid with
   | Some node -> node
   | None ->
-    let node = create_node_f state.curr_func (Allocator.at cid) in
+    let node = create_node_f state.curr_parent (Allocator.at cid) in
     Allocator.replace state.allocator cid node;
     node
 

@@ -110,7 +110,7 @@ let compute_returns_graph (state : State.t) (l_func : Node.t)
 let compute_returns_unfold (cb_unfold_func : Env.cb_unfold_func)
     (state : State.t) (l_func : Node.t) (scheme : Scheme.t) (acc : acc) : acc =
   let state' = cb_unfold_func state l_func in
-  Fun.flip2 Node.Set.fold state'.curr_retn acc (fun l_retn acc ->
+  Fun.flip2 Node.Set.fold state'.curr_return acc (fun l_retn acc ->
       let scheme' = Scheme.extend scheme [ Call ] in
       (l_retn, scheme') :: acc )
 

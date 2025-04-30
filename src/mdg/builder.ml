@@ -201,8 +201,8 @@ and unfold_function_call (state : State.t) (call_name : string)
         let store = Store.copy eval_store in
         let curr_floc = floc in
         let curr_stack = l_func :: state.curr_stack in
-        let curr_func = Some l_func in
-        let state' = { state with store; curr_floc; curr_stack; curr_func } in
+        let curr_parent = Some l_func in
+        let state' = { state with store; curr_floc; curr_stack; curr_parent } in
         let state'' = initialize_hoisted_functions state' func.body in
         Store.replace state''.store "this" (List.hd ls_args);
         Fun.flip List.iteri (List.tl ls_args) (fun idx ls_arg ->
@@ -212,7 +212,7 @@ and unfold_function_call (state : State.t) (call_name : string)
               let name = Identifier.name param in
               Store.replace state''.store name ls_arg );
         let state''' = build_sequence state'' func.body in
-        let ls_retn' = Node.Set.union ls_retn state'''.curr_retn in
+        let ls_retn' = Node.Set.union ls_retn state'''.curr_return in
         (state, ls_retn') )
 
 and build_assignment (state : State.t) (left : 'm LeftValue.t)
@@ -485,7 +485,7 @@ and build_function_declaration_closed (state : State.t)
   let l_func = State.add_function_node state func_cid func_name in
   Store.replace state.store func_name (Node.Set.singleton l_func);
   let this_cid = newcid func.left in
-  let state' = { state with curr_func = Some l_func } in
+  let state' = { state with curr_parent = Some l_func } in
   let l_this = State.add_parameter_node state' this_cid "this" in
   State.add_parameter_edge state' l_func l_this 0;
   Fun.flip List.iteri func.params (fun idx param ->
@@ -509,7 +509,7 @@ and build_function_definition_closed (state : State.t)
   let state' = build_function_definition_hoisted state func cid in
   let l_func = State.get_node state cid in
   let store' = Store.copy state'.store in
-  let state'' = { state' with store = store'; curr_func = Some l_func } in
+  let state'' = { state' with store = store'; curr_parent = Some l_func } in
   let state''' = initialize_hoisted_functions state'' func.body in
   let this_cid = newcid func.left in
   let l_this = State.get_node state this_cid in
@@ -533,8 +533,8 @@ and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
   | Some { floc; func; eval_store; _ } ->
     let store = Store.copy eval_store in
     let curr_floc = floc in
-    let curr_func = Some l_func in
-    let state' = { state with store; curr_floc; curr_func } in
+    let curr_parent = Some l_func in
+    let state' = { state with store; curr_floc; curr_parent } in
     let state'' = initialize_hoisted_functions state' func.body in
     let this_cid = newcid func.left in
     let l_this = State.add_parameter_node state' this_cid "this" in
@@ -559,13 +559,13 @@ and build_return (state : State.t) (arg : 'm Expression.t option) : State.t =
   (* TODO: implement flow control to the builder *)
   (* the return statement should prevent all code afterwards from being analyzed *)
   let ls_arg = Option.map (eval_expr state) arg in
-  match (state.curr_func, ls_arg) with
+  match (state.curr_parent, ls_arg) with
   | (None, _) | (Some _, None) -> state
   | (Some l_func, Some ls_arg') ->
     if opaque_function_eval state.env then
       Node.Set.iter (State.add_return_edge state l_func) ls_arg';
-    let curr_retn = Node.Set.union state.curr_retn ls_arg' in
-    { state with curr_retn }
+    let curr_return = Node.Set.union state.curr_return ls_arg' in
+    { state with curr_return }
 
 and build_throw (state : State.t) (_arg : 'm Expression.t) : State.t =
   (* TODO: implement the throw construct *)
