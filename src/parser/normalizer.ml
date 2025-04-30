@@ -363,7 +363,9 @@ and normalize_property_key (ctx : Ctx.t) :
     ([], Static (Prop.LProp (LiteralValue.number lit.value lit.raw) @!> loc))
   | BigIntLiteral (loc, lit) ->
     ([], Static (Prop.LProp (LiteralValue.bigint lit.value lit.raw) @!> loc))
-  | PrivateName _ -> Log.fail "[not implemented]: private property"
+  | PrivateName (loc, _) ->
+    Log.warn "[not implemented]: private property";
+    ([], Static (Prop.LProp (LiteralValue.null ()) @!> loc))
   | Computed (_, { expression = expr; _ }) ->
     let (n_expr_s, n_expr) = (normalize_expr ctx) expr in
     (n_expr_s, Dynamic n_expr)
@@ -378,7 +380,9 @@ and normalize_object_property (ctx : Ctx.t) (n_obj : expr) :
     normalize_getter_setter_property ctx loc "get" n_obj key value
   | Property (loc, Set { key; value; _ }) ->
     normalize_getter_setter_property ctx loc "set" n_obj key value
-  | SpreadProperty (_, _) -> Log.fail "[not implemented]: spread property"
+  | SpreadProperty (_, _) ->
+    Log.warn "[not implemented]: spread property";
+    []
 
 and normalize_init_property (ctx : Ctx.t) (loc : Loc.t) (n_obj : expr)
     (key : (Loc.t, Loc.t) Flow.Expression.Object.Property.key)
@@ -442,7 +446,9 @@ and normalize_array_element (ctx : Ctx.t) (n_arr : expr) (idx : int) :
   | Hole _ -> []
   | Expression ((loc, _) as expr) ->
     normalize_expr_element ctx loc n_arr idx expr
-  | Spread _ -> Log.fail "[not implemented]: spread element"
+  | Spread _ ->
+    Log.warn "[not implemented]: spread element";
+    []
 
 and normalize_expr_element (ctx : Ctx.t) (loc : Loc.t) (n_arr : expr)
     (idx : int) (value : (Loc.t, Loc.t) Flow.Expression.t) : n_stmt =
@@ -552,7 +558,8 @@ and normalize_assignment_with_object (ctx : Ctx.t) (_ : Loc.t)
         n_key_s @ n_arg_s @ n_pattern_s
       else n_key_s @ n_arg_s
     | Flow.Pattern.Object.RestElement (_loc, _) ->
-      Log.fail "[not implemented]: rest element" )
+      Log.warn "[not implemented]: rest element";
+      [] )
 
 and normalize_assignment_with_array (ctx : Ctx.t) (_ : Loc.t)
     (elems : (Loc.t, Loc.t) Flow.Pattern.Array.element list) (n_right : expr) :
@@ -571,7 +578,8 @@ and normalize_assignment_with_array (ctx : Ctx.t) (_ : Loc.t)
         n_arg_s @ n_pattern_s
       else n_arg_s
     | Flow.Pattern.Array.RestElement (_loc, _) ->
-      Log.fail "[not implemented]: rest element" )
+      Log.warn "[not implemented]: rest element";
+      [] )
 
 and normalize_assignment_with_member (ctx : Ctx.t) (loc : Loc.t)
     (obj : (Loc.t, Loc.t) Flow.Expression.t)
@@ -805,8 +813,9 @@ and normalize_member_property (ctx : Ctx.t) :
   | PropertyExpression expr ->
     let (n_expr_s, n_expr) = normalize_expr ctx expr in
     (n_expr_s, Dynamic n_expr)
-  | PropertyPrivateName _ ->
-    Log.fail "[not implemented]: private property member"
+  | PropertyPrivateName (loc, _) ->
+    Log.warn "[not implemented]: private property member";
+    ([], Static (Prop.LProp (LiteralValue.null ()) @!> loc))
 
 and normalize_meta_property (ctx : Ctx.t) (loc : Loc.t)
     (metaprop : Loc.t Flow.Expression.MetaProperty.t) : n_expr =
@@ -887,7 +896,9 @@ and normalize_call_arguments (ctx : Ctx.t)
     n_stmt list * expr list =
   Fun.(List.split << flip List.map args.arguments) (function
     | Expression expr -> normalize_expr ctx expr
-    | Spread _ -> Log.fail "[not implemented]: spread argument" )
+    | Spread (loc, _) ->
+      Log.warn "[not implemented]: spread argument";
+      ([], LiteralValue.(to_expr @@ null ()) @!> loc) )
 
 and normalize_tagged_template (ctx : Ctx.t) (loc : Loc.t)
     (tagged : (Loc.t, Loc.t) Flow.Expression.TaggedTemplate.t) : n_expr =
@@ -1433,8 +1444,9 @@ and normalize_function_param (ctx : Ctx.t)
   else (n_dflt_s, n_param_id)
 
 and normalize_function_rest_param (_ : Ctx.t)
-    (_ : ('M, 'T) Flow_ast.Function.RestParam.t) : n_id =
-  Log.fail "[not implemented]: rest parameter"
+    ((loc, _) : ('M, 'T) Flow_ast.Function.RestParam.t) : n_id =
+  Log.warn "[not implemented]: rest parameter";
+  ([], Identifier.create "" @!> loc)
 
 and normalize_function_body (ctx : Ctx.t) :
     (Loc.t, Loc.t) Flow.Function.body -> n_stmt = function
@@ -1484,7 +1496,9 @@ and normalize_class_body (ctx : Ctx.t)
       normalize_class_getter_setter ctx loc "set" static key value
     | Property (loc, { static; key; value; _ }) ->
       normalize_class_property ctx loc static key value
-    | PrivateField _ -> Log.fail "[not implemented]: private class element" )
+    | PrivateField _ ->
+      Log.warn "[not implemented]: private class element";
+      [] )
 
 and process_class_constructor (ctx : Ctx.t) (md : md) (ext : bool)
     ((_, body) : (Loc.t, Loc.t) Flow.Class.Body.t) : n_lval =
