@@ -95,22 +95,24 @@ let initialize_require (state : State.t) (cb : cb_build_file) : State.t =
 let initialize_module (state : State.t) : State.t =
   let name = "module" in
   let name_jslib = NameResolver.curr_file "module" state in
-  let l_module = Node.create_object name None (Region.default ()) in
+  let l_parent = state.curr_parent in
+  let l_module = Node.create_object name l_parent (Region.default ()) in
+  let module_dep_f = Fun.flip (State.add_dependency_edge state) l_module in
   Mdg.add_jslib state.mdg name_jslib l_module;
   Store.replace state.store name (Node.Set.singleton l_module);
+  Option.iter module_dep_f state.curr_parent;
   state
 
 let initialize_exports (state : State.t) : State.t =
   let name = "exports" in
   let name_jslib = NameResolver.curr_file "exports" state in
   let name_module = NameResolver.curr_file "module" state in
-  let l_exports = Node.create_object name None (Region.default ()) in
+  let l_parent = state.curr_parent in
+  let l_exports = Node.create_object name l_parent (Region.default ()) in
   let ls_exports = Node.Set.singleton l_exports in
   let l_module = Option.get (Mdg.get_jslib_node state.mdg name_module) in
-  let prop = Property.Static "exports" in
-  let edge = Edge.create_property prop l_module l_exports in
   Mdg.add_jslib state.mdg name_jslib l_exports;
-  Mdg.add_edge state.mdg edge;
+  State.add_property_edge state l_module l_exports (Property.Static "exports");
   Store.replace state.store name ls_exports;
   state
 

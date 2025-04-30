@@ -69,12 +69,20 @@ let create (env' : Env.t) (prog : 'm Prog.t) : t =
   ; stmt_ctx = General
   }
 
+let module_parent (state : t) (mrel : Fpath.t) (main : bool) : Node.t option =
+  if not main then (
+    let l_module = Node.create_module (Fpath.to_string mrel) in
+    Mdg.add_node state.mdg l_module;
+    Some l_module )
+  else None
+
 let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool) : t =
+  let curr_parent' = module_parent state mrel main in
   { state with
     store = Store.copy state.pcontext.initial_store
   ; curr_floc = Pcontext.Floc.create path mrel main
   ; curr_stack = []
-  ; curr_parent = None
+  ; curr_parent = curr_parent'
   ; curr_return = Node.Set.empty
   ; stmt_ctx = General
   }

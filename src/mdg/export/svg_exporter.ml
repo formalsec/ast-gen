@@ -24,17 +24,17 @@ end
 module Dot = struct
   let env = ref (Env.default ())
   let mdg = ref (Mdg.create ())
-  let func_sz = Hashtbl.create Config.(!dflt_htbl_sz)
+  let cluster_sz = Hashtbl.create Config.(!dflt_htbl_sz)
 
   let initialize (env' : Env.t) (mdg' : Mdg.t) : unit =
     env := env';
     mdg := mdg';
     Fun.flip Hashtbl.iter mdg'.nodes (fun _ node ->
-        Option.fold (Node.func node) ~none:() ~some:(fun l_func' ->
+        Option.fold (Node.parent node) ~none:() ~some:(fun l_func' ->
             let loc = Node.loc l_func' in
-            match Hashtbl.find_opt func_sz loc with
-            | None -> Hashtbl.replace func_sz loc 1
-            | Some sz -> Hashtbl.replace func_sz loc (sz + 1) ) )
+            match Hashtbl.find_opt cluster_sz loc with
+            | None -> Hashtbl.replace cluster_sz loc 1
+            | Some sz -> Hashtbl.replace cluster_sz loc (sz + 1) ) )
 
   let node_label (node : Node.t) : string =
     match node.kind with
@@ -61,11 +61,15 @@ module Dot = struct
     | Caller -> Fmt.str "Call"
     | Return -> Fmt.str "Return"
 
-  let get_function (node : Node.t) : Node.t option =
-    Option.bind (Node.func node) (fun l_func ->
-        match Hashtbl.find_opt func_sz l_func.loc with
-        | Some sz when sz > 1 -> Some l_func
-        | _ -> None )
+  let valid_parent (node : Node.t) : bool =
+    match Hashtbl.find_opt cluster_sz node.loc with
+    | Some sz when sz > 1 -> true
+    | _ -> false
+
+  let get_parent (node : Node.t) : Node.t option =
+    match Node.parent node with
+    | Some l_parent when valid_parent l_parent -> Some l_parent
+    | _ -> None
 
   let rec function_depth (l_func : Node.t) : int =
     Option.fold l_func.parent ~none:1 ~some:(fun l_func ->
@@ -136,12 +140,12 @@ module Dot = struct
       ; `Fillcolor (subgraph_color l_func) ]
 
     let get_subgraph (node : V.t) : subgraph option =
-      match (!env.subgraphs, get_function node) with
+      match (!env.subgraphs, get_parent node) with
       | (false, _) | (true, None) -> None
-      | (true, Some l_func) ->
-        let sg_name = vertex_name l_func in
-        let sg_attributes = subgraph_attrs l_func in
-        let sg_parent = Option.map vertex_name l_func.parent in
+      | (true, Some l_parent) ->
+        let sg_name = vertex_name l_parent in
+        let sg_attributes = subgraph_attrs l_parent in
+        let sg_parent = Option.map vertex_name l_parent.parent in
         Some { sg_name; sg_attributes; sg_parent }
   end)
 end
