@@ -71,6 +71,8 @@ let mdg_env =
   $ Docs.MdgOpts.no_tainted_analysis
   $ Docs.MdgOpts.no_export
   $ Docs.MdgOpts.no_subgraphs
+  $ Docs.MdgOpts.no_func_subgraphs
+  $ Docs.MdgOpts.no_module_subgraphs
   $ Docs.MdgOpts.export_view
   $ Docs.MdgOpts.export_timeout
   $ parse_env
