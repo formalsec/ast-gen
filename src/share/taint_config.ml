@@ -52,6 +52,9 @@ let default =
     } in
   fun () -> dflt
 
+let find_package (name : string) (packages : package list) : package =
+  List.find (fun package -> String.equal name package.package) packages
+
 let pp_indent (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (vs : 'a list) : unit =
   if List.length vs == 0 then ()
   else Fmt.fmt ppf "@\n@[<v 2>  %a@]" Fmt.(pp_lst !>"@\n" pp_v) vs

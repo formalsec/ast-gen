@@ -52,7 +52,7 @@ module Dot = struct
     | Return name -> Fmt.str "%s" (String.escaped name)
     | Module name -> Fmt.str "%s" (String.escaped name)
     | TaintSource -> Fmt.str "{ Taint Source }"
-    | TaintSink sink -> Fmt.str "sink %s" Tainted.(name !sink)
+    | TaintSink sink -> Fmt.str "sink %s" (String.escaped sink.name)
 
   let edge_label (edge : Edge.t) : string =
     match edge.kind with

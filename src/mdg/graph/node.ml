@@ -49,8 +49,7 @@ let pp (ppf : Fmt.t) (node : t) : unit =
   | Return name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
   | Module name -> Fmt.fmt ppf "[[module]] %s[%a]" name Location.pp node.loc
   | TaintSource -> Fmt.pp_str ppf "[[taint]]"
-  | TaintSink sink ->
-    Fmt.fmt ppf "%s[%a]" Tainted.(name !sink) Location.pp node.loc
+  | TaintSink sink -> Fmt.fmt ppf "%s[%a]" sink.name Location.pp node.loc
 
 let str (node : t) : string = Fmt.str "%a" pp node
 
@@ -151,7 +150,7 @@ let name (node : t) : string =
   | Parameter name -> name
   | Call name -> name
   | Return name -> name
-  | TaintSink sink -> Tainted.(name !sink)
+  | TaintSink sink -> sink.name
   | _ -> Log.fail "unexpected node '%a' without name" pp node
 
 let sink (node : t) : Tainted.sink =
