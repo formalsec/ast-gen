@@ -12,8 +12,8 @@ let timeout () : 'a = Stdlib.raise Timeout
 module Env = struct
   type t =
     { subgraphs : bool
-    ; subgraphs_module : bool
     ; subgraphs_func : bool
+    ; subgraphs_file : bool
     ; view : Export_view.t
     ; timeout : int
     }
@@ -21,8 +21,8 @@ module Env = struct
   let default =
     let dflt =
       { subgraphs = true
-      ; subgraphs_module = true
       ; subgraphs_func = true
+      ; subgraphs_file = true
       ; view = Full
       ; timeout = 30
       } in
@@ -37,7 +37,7 @@ module Dot = struct
   let rec node_parent (node : Node.t) : Node.t option =
     match (node.kind, node.parent) with
     | (Function _, _) when !env.subgraphs_func -> Some node
-    | (Module _, _) when !env.subgraphs_module -> Some node
+    | (Module _, _) when !env.subgraphs_file -> Some node
     | (_, Some l_parent) -> node_parent l_parent
     | (_, None) -> None
 

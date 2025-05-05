@@ -14,7 +14,7 @@ module Options = struct
     ; export_graph : bool
     ; export_subgraphs : bool
     ; export_func_subgraphs : bool
-    ; export_module_subgraphs : bool
+    ; export_file_subgraphs : bool
     ; export_view : Export_view.t
     ; export_timeout : int
     ; parse_env : Cmd_parse.Options.env
@@ -34,7 +34,7 @@ module Options = struct
   let env (taint_config' : Fpath.t option) (literal_mode' : Enums.LiteralMode.t)
       (func_eval_mode' : Enums.FuncEvalMode.t) (no_cleaner_analysis : bool)
       (no_tainted_analysis : bool) (no_export : bool) (no_subgraphs : bool)
-      (no_func_subgraphs : bool) (no_module_subgraphs : bool)
+      (no_func_subgraphs : bool) (no_file_subgraphs : bool)
       (export_view' : Export_view.t) (export_timeout' : int)
       (parse_env' : Cmd_parse.Options.env) : env =
     { taint_config = parse_taint_config taint_config'
@@ -45,7 +45,7 @@ module Options = struct
     ; export_graph = not no_export
     ; export_subgraphs = not no_subgraphs
     ; export_func_subgraphs = not no_func_subgraphs
-    ; export_module_subgraphs = not no_module_subgraphs
+    ; export_file_subgraphs = not no_file_subgraphs
     ; export_view = export_view'
     ; export_timeout = export_timeout'
     ; parse_env = parse_env'
@@ -135,7 +135,7 @@ let builder_env (env : Options.env) : State.Env.t =
 let export_env (env : Options.env) : Svg_exporter.Env.t =
   { subgraphs = env.export_subgraphs
   ; subgraphs_func = env.export_func_subgraphs
-  ; subgraphs_module = env.export_module_subgraphs
+  ; subgraphs_file = env.export_file_subgraphs
   ; view = env.export_view
   ; timeout = env.export_timeout
   }
