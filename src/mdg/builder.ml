@@ -155,14 +155,15 @@ and eval_literal_expr (state : State.t) (literal : LiteralValue.t) (cid : cid) :
 and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
   Store.find state.store id
 
-let rec initialize_builder (env : State.Env.t) (taint_config : Taint_config.t)
+let rec initialize_builder (env : State.Env.t) (tconf : Taint_config.t)
     (prog : 'm Prog.t) : State.t =
   Location.reset_generator ();
-  let state = State.create env prog in
+  let npm = Npm.create tconf in
+  let state = State.create env npm prog in
   let cbs_builder = Jslib.cbs_builder build_file in
   if not (multiple_literal_mode env) then
     Mdg.add_node state.mdg state.literal_node;
-  Jslib.initialize_builder state taint_config cbs_builder
+  Jslib.initialize_builder state tconf cbs_builder
 
 and initialize_file (state : State.t) (f : 'm File.t) (main : bool) : State.t =
   let state' = State.initialize state f.path f.mrel main in
@@ -673,10 +674,10 @@ let run_analyses (state : State.t) : unit =
   run_cleaner_analysis state
 (* FIXME: these values should be returned... *)
 
-let build_program (env : State.Env.t) (taint_config : Taint_config.t)
-    (prog : 'm Prog.t) : Mdg.t =
+let build_program (env : State.Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t)
+    : Mdg.t =
   let main = Prog.main prog in
-  let state = initialize_builder env taint_config prog in
+  let state = initialize_builder env tconf prog in
   let state' = build_file state main true in
   run_analyses state';
   state'.mdg

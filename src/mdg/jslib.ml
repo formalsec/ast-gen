@@ -43,12 +43,18 @@ module CallInterceptor = struct
       | _ -> None )
     | _ -> None
 
+  let resolve_npm (state : State.t) (retn_name : string) (package : string) :
+      Node.Set.t =
+    match Npm.resolve state.npm state.mdg package with
+    | Some l_npm -> Node.Set.singleton l_npm
+    | None -> Store.find state.store retn_name
+
   let process_module (cb_build_file : cb_build_file) (state : State.t)
       (retn_name : string) (path : Fpath.t) : Node.Set.t =
     match Pcontext.file state.pcontext path with
     | None ->
-      Log.warn "TODO: check for npm modules";
-      Store.find state.store retn_name
+      let package = Fpath.filename path in
+      resolve_npm state retn_name package
     | Some file when file.built ->
       exported_object ~mrel:file.file.mrel state.mdg
     | Some file ->
