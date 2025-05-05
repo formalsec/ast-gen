@@ -248,19 +248,30 @@ module MdgOpts = struct
     Arg.(value & flag & info [ "no-tainted-analysis" ] ~doc)
 
   let no_export =
-    let doc = "Run without generating the .svg graph representation." in
+    let doc = "Run without generating the .svg graph format." in
     Arg.(value & flag & info [ "no-export" ] ~doc)
 
   let no_subgraphs =
-    let doc = "Run without generating subgraphs in the .svg representation." in
+    let doc =
+      "Run without generating subgraphs in the .svg format. This flag is \
+       equivalent to using both --no-func-subgraphs and --no-module-subgraphs."
+    in
     Arg.(value & flag & info [ "no-subgraphs" ] ~doc)
+
+  let no_func_subgraphs =
+    let doc = "Run without generating function subgraphs in the .svg format." in
+    Arg.(value & flag & info [ "no-func-subgraphs" ] ~doc)
+
+  let no_module_subgraphs =
+    let doc = "Run without generating module subgraphs in the .svg format." in
+    Arg.(value & flag & info [ "no-module-subgraphs" ] ~doc)
 
   let export_view =
     let doc =
-      "Export view when exporting the graph into the .svg representation. \
-       Options include: (1) 'full' [default] for exporting the complete graph; \
-       (2) 'calls' for exporting the program's call graph; (3) 'object:<#loc>' \
-       for exporting the graph of the object at location <#loc>; (4) \
+      "Export view when exporting the graph into the .svg format. Options \
+       include: (1) 'full' [default] for exporting the complete graph; (2) \
+       'calls' for exporting the program's call graph; (3) 'object:<#loc>' for \
+       exporting the graph of the object at location <#loc>; (4) \
        'function:<#loc>' for exporting the graph of the function at location \
        <#loc>; (5) 'reaches:<#loc>' for exporting the subgraph that reaches \
        the node at location <#loc>; and (6) 'sinks' for exporting the subgraph \
@@ -269,7 +280,7 @@ module MdgOpts = struct
     Arg.(value & opt parse_f Full & info [ "export-view" ] ~doc)
 
   let export_timeout =
-    let doc = "Timeout for exporting the graph into the .svg representation." in
+    let doc = "Timeout for exporting the graph into the .svg format." in
     Arg.(value & opt int 30 & info [ "export-timeout" ] ~doc)
 end
 
