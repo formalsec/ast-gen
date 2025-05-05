@@ -9,6 +9,7 @@
   tainted
   node
   edge
+  npm
   mdg
   store
   allocator

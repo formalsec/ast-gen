@@ -34,6 +34,7 @@ end
 
 type t =
   { env : Env.t
+  ; npm : Npm.t
   ; mdg : Mdg.t
   ; store : Store.t
   ; allocator : Node.t Allocator.t
@@ -53,9 +54,10 @@ and stmt_ctx =
   | General
   | PropUpd
 
-let create (env' : Env.t) (prog : 'm Prog.t) : t =
+let create (env' : Env.t) (npm' : Npm.t) (prog : 'm Prog.t) : t =
   let store' = Store.create () in
   { env = env'
+  ; npm = npm'
   ; mdg = Mdg.create ()
   ; store = store'
   ; allocator = Allocator.create Config.(!dflt_htbl_sz)
