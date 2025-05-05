@@ -44,11 +44,11 @@ module CallInterceptor = struct
     | _ -> None
 
   let process_module (cb_build_file : cb_build_file) (state : State.t)
-      (path : Fpath.t) : Node.Set.t =
+      (retn_name : string) (path : Fpath.t) : Node.Set.t =
     match Pcontext.file state.pcontext path with
     | None ->
       Log.warn "TODO: check for npm modules";
-      Node.Set.empty
+      Store.find state.store retn_name
     | Some file when file.built ->
       exported_object ~mrel:file.file.mrel state.mdg
     | Some file ->
@@ -60,7 +60,7 @@ module CallInterceptor = struct
     match get_module_path state ls_args with
     | None -> state
     | Some path ->
-      let ls_exports = process_module cb_build_file state path in
+      let ls_exports = process_module cb_build_file state retn_name path in
       Store.replace state.store retn_name ls_exports;
       state
 end
