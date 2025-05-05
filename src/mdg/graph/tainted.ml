@@ -1,47 +1,49 @@
 open Graphjs_base
 open Graphjs_share
 
-type package = Taint_config.package
-type package_source = Taint_config.package_source
-type package_sink = Taint_config.package_sink
-type function_sink = Taint_config.function_sink
-type new_sink = Taint_config.new_sink
-type source = [ `PackageSource of package_source ]
+type source =
+  { name : string
+  ; args : int list
+  }
 
 type sink =
-  [ `PackageSink of package_sink
-  | `FunctionSink of function_sink
-  | `NewSink of new_sink
-  ]
+  { name : string
+  ; kind : Sink_kind.t
+  ; args : int list
+  }
 
 type t =
-  [ source
-  | sink
-  ]
+  | Source of source
+  | Sink of sink
 
-let ( ! ) tainted : t = (tainted :> t)
+let package_source (name : string) (source : Taint_config.package_source) :
+    source =
+  let package = Taint_config.find_package name source.packages in
+  { name = source.source; args = package.args }
 
-let name (tainted : t) : string =
+let package_sink (name : string) (sink : Taint_config.package_sink) : sink =
+  let package = Taint_config.find_package name sink.packages in
+  { name = sink.sink; kind = sink.kind; args = package.args }
+
+let function_sink (sink : Taint_config.function_sink) : sink =
+  { name = sink.sink; kind = sink.kind; args = sink.args }
+
+let new_sink (sink : Taint_config.new_sink) : sink =
+  { name = sink.sink; kind = sink.kind; args = sink.args }
+
+let pp_args (ppf : Fmt.t) (args : int list) : unit =
+  Fmt.(pp_lst !>", " pp_int) ppf args
+
+let pp_source (ppf : Fmt.t) (source : source) : unit =
+  Fmt.fmt ppf "{ source: %S, args: [%a] }" source.name pp_args source.args
+
+let pp_sink (ppf : Fmt.t) (sink : sink) : unit =
+  Fmt.fmt ppf "{ sink: %S, kind: \"%a\" args: [%a] }" sink.name Sink_kind.pp
+    sink.kind pp_args sink.args
+
+let pp (ppf : Fmt.t) (tainted : t) : unit =
   match tainted with
-  | `PackageSource package_source -> package_source.source
-  | `PackageSink package_sink -> package_sink.sink
-  | `FunctionSink function_sink -> function_sink.sink
-  | `NewSink new_sink -> new_sink.sink
+  | Source source -> pp_source ppf source
+  | Sink sink -> pp_sink ppf sink
 
-let packages (tainted : t) : package list =
-  match tainted with
-  | `PackageSource package_source -> package_source.packages
-  | `PackageSink package_sink -> package_sink.packages
-  | _ -> Log.fail "unexpected tainted element"
-
-let kind (sink : sink) : Sink_kind.t =
-  match sink with
-  | `PackageSink package_sink -> package_sink.kind
-  | `FunctionSink function_sink -> function_sink.kind
-  | `NewSink new_sink -> new_sink.kind
-
-let args (sink : sink) : int list =
-  match sink with
-  | `PackageSink _ -> Log.fail "unexpected sink kind"
-  | `FunctionSink function_sink -> function_sink.args
-  | `NewSink new_sink -> new_sink.args
+let str (tainted : t) : string = Fmt.str "%a" pp tainted
