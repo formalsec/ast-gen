@@ -135,6 +135,9 @@ let is_call (node : t) : bool =
 let is_return (node : t) : bool =
   match node.kind with Return _ -> true | _ -> false
 
+let is_module (node : t) : bool =
+  match node.kind with Module _ -> true | _ -> false
+
 let is_taint_source (node : t) : bool =
   match node.kind with TaintSource -> true | _ -> false
 
