@@ -1,14 +1,14 @@
   $ graphjs mdg --no-export eval.js
-  eval[#2] -
+  [[sink]] eval[#2] -
   foo[#11] --< Param(0) >--> this[#12]
   foo[#11] --< Param(1) >--> x1[#13]
   this[#12] -
   x1[#13] --< Arg(1) >--> eval(...)[#14]
-  eval(...)[#14] --< Call >--> eval[#2]
+  eval(...)[#14] --< Call >--> [[sink]] eval[#2]
   eval(...)[#14] --< D >--> $v1[#15]
   $v1[#15] -
   10[#16] --< Arg(1) >--> eval(...)[#17]
-  eval(...)[#17] --< Call >--> eval[#2]
+  eval(...)[#17] --< Call >--> [[sink]] eval[#2]
   eval(...)[#17] --< D >--> $v2[#18]
   $v2[#18] -
 
