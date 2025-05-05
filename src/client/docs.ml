@@ -262,8 +262,8 @@ module MdgOpts = struct
     let doc = "Run without generating function subgraphs in the .svg format." in
     Arg.(value & flag & info [ "no-func-subgraphs" ] ~doc)
 
-  let no_module_subgraphs =
-    let doc = "Run without generating module subgraphs in the .svg format." in
+  let no_file_subgraphs =
+    let doc = "Run without generating file subgraphs in the .svg format." in
     Arg.(value & flag & info [ "no-module-subgraphs" ] ~doc)
 
   let export_view =
