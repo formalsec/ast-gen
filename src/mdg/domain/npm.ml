@@ -1,5 +1,6 @@
 open Graphjs_base
 open Graphjs_share
+open Graphjs_ast
 
 module Template = struct
   type el =
@@ -12,11 +13,12 @@ module Template = struct
     | Sink sink -> Tainted.pp_sink ppf sink
 
   type t =
-    { sources : Tainted.source list
+    { name : string
+    ; sources : Tainted.source list
     ; sinks : Tainted.sink list
     }
 
-  let create () : t = { sources = []; sinks = [] }
+  let create (name : string) : t = { name; sources = []; sinks = [] }
 
   let add_source (source : Tainted.source) (template : t) : t =
     { template with sources = source :: template.sources }
@@ -42,27 +44,30 @@ type t = (string, package) Hashtbl.t
 
 let set_source (npm : t) (package_source : Taint_config.package_source) : unit =
   Fun.flip List.iter package_source.packages (fun package ->
-      let source = Tainted.package_source package.package package_source in
-      match Hashtbl.find_opt npm package.package with
+      let name = package.package in
+      let source = Tainted.package_source name package_source in
+      match Hashtbl.find_opt npm name with
       | None ->
-        let template = Template.create () |> Template.add_source source in
-        Hashtbl.replace npm package.package (Template template)
+        let template = Template.create name |> Template.add_source source in
+        Hashtbl.replace npm name (Template template)
       | Some (Template template) ->
         let template' = Template.add_source source template in
-        Hashtbl.replace npm package.package (Template template')
+        Hashtbl.replace npm name (Template template')
       | Some (Built _) ->
         Log.fail "unexpected built npm package during initialization" )
 
 let set_sink (npm : t) (package_sink : Taint_config.package_sink) : unit =
   Fun.flip List.iter package_sink.packages (fun package ->
-      let sink = Tainted.package_sink package.package package_sink in
-      match Hashtbl.find_opt npm package.package with
+      let name = package.package in
+
+      let sink = Tainted.package_sink name package_sink in
+      match Hashtbl.find_opt npm name with
       | None ->
-        let template = Template.create () |> Template.add_sink sink in
-        Hashtbl.replace npm package.package (Template template)
+        let template = Template.create name |> Template.add_sink sink in
+        Hashtbl.replace npm name (Template template)
       | Some (Template template) ->
         let template' = Template.add_sink sink template in
-        Hashtbl.replace npm package.package (Template template')
+        Hashtbl.replace npm name (Template template')
       | Some (Built _) ->
         Log.fail "unexpected built npm package during initialization" )
 
@@ -84,6 +89,21 @@ let pp (ppf : Fmt.t) (npm : t) : unit =
 
 let str (npm : t) : string = Fmt.str "%a" pp npm
 
-let resolve (_npm : t) (_mdg : Mdg.t) (package : string) : Node.t option =
-  Log.debug "Resolving package %S..." package;
-  None
+let build_package_template (mdg : Mdg.t) (template : Template.t) : Node.t =
+  let l_npm = Node.create_module template.name in
+  Mdg.add_node mdg l_npm;
+  Fun.flip List.iter template.sinks (fun sink ->
+      let prop = Property.Static sink.name in
+      let l_sink = Node.create_taint_sink sink None (Region.default ()) in
+      Mdg.add_node mdg l_sink;
+      Mdg.add_edge mdg (Edge.create_property prop l_npm l_sink) );
+  l_npm
+
+let resolve (npm : t) (mdg : Mdg.t) (package : string) : Node.t option =
+  match Hashtbl.find_opt npm package with
+  | None -> None
+  | Some (Built l_npm) -> Some l_npm
+  | Some (Template template) ->
+    let l_npm = build_package_template mdg template in
+    Hashtbl.replace npm package (Built l_npm);
+    Some l_npm

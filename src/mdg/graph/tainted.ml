@@ -2,12 +2,14 @@ open Graphjs_base
 open Graphjs_share
 
 type source =
-  { name : string
+  { mrel : string option
+  ; name : string
   ; args : int list
   }
 
 type sink =
-  { name : string
+  { mrel : string option
+  ; name : string
   ; kind : Sink_kind.t
   ; args : int list
   }
@@ -19,17 +21,17 @@ type t =
 let package_source (name : string) (source : Taint_config.package_source) :
     source =
   let package = Taint_config.find_package name source.packages in
-  { name = source.source; args = package.args }
+  { mrel = Some name; name = source.source; args = package.args }
 
 let package_sink (name : string) (sink : Taint_config.package_sink) : sink =
   let package = Taint_config.find_package name sink.packages in
-  { name = sink.sink; kind = sink.kind; args = package.args }
+  { mrel = Some name; name = sink.sink; kind = sink.kind; args = package.args }
 
 let function_sink (sink : Taint_config.function_sink) : sink =
-  { name = sink.sink; kind = sink.kind; args = sink.args }
+  { mrel = None; name = sink.sink; kind = sink.kind; args = sink.args }
 
 let new_sink (sink : Taint_config.new_sink) : sink =
-  { name = sink.sink; kind = sink.kind; args = sink.args }
+  { mrel = None; name = sink.sink; kind = sink.kind; args = sink.args }
 
 let pp_args (ppf : Fmt.t) (args : int list) : unit =
   Fmt.(pp_lst !>", " pp_int) ppf args

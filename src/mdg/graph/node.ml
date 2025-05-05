@@ -49,7 +49,7 @@ let pp (ppf : Fmt.t) (node : t) : unit =
   | Return name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
   | Module name -> Fmt.fmt ppf "[[module]] %s[%a]" name Location.pp node.loc
   | TaintSource -> Fmt.pp_str ppf "[[taint]]"
-  | TaintSink sink -> Fmt.fmt ppf "%s[%a]" sink.name Location.pp node.loc
+  | TaintSink sink -> Fmt.fmt ppf "[[sink]] %s[%a]" sink.name Location.pp node.loc
 
 let str (node : t) : string = Fmt.str "%a" pp node
 
