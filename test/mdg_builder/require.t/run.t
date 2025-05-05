@@ -5,19 +5,39 @@
   './foo.js'[#11] --< Arg(1) >--> require(...)[#12]
   require(...)[#12] --< Call >--> require[#8]
   require(...)[#12] --< D >--> foo[#13]
-  foo[#13] -
+  foo[#13] --< P(obj) >--> foo.obj[#17]
+  foo[#13] --< P(foo) >--> foo.foo[#18]
+  foo[#13] --< Arg(0) >--> foo.foo(...)[#19]
   './deps/bar.js'[#14] --< Arg(1) >--> require(...)[#15]
   require(...)[#15] --< Call >--> require[#8]
   require(...)[#15] --< D >--> bar[#16]
-  bar[#16] -
-  foo.foo(...)[#17] --< D >--> $v2[#18]
-  $v2[#18] -
-  $v3.p(...)[#19] --< D >--> $v5[#20]
-  $v5[#20] -
-  $v7.q(...)[#21] --< D >--> $v8[#22]
-  $v8[#22] -
-  bar.bar4(...)[#23] --< D >--> $v9[#24]
-  $v9[#24] -
+  bar[#16] --< P(bar1) >--> bar.bar1[#21]
+  bar[#16] --< P(bar3) >--> bar.bar3[#25]
+  bar[#16] --< P(bar4) >--> bar.bar4[#30]
+  bar[#16] --< Arg(0) >--> bar.bar4(...)[#31]
+  foo.obj[#17] --< Arg(1) >--> foo.foo(...)[#19]
+  foo.obj[#17] --< Arg(1) >--> bar.bar1.p(...)[#23]
+  foo.foo[#18] -
+  foo.foo(...)[#19] --< Call >--> foo.foo[#18]
+  foo.foo(...)[#19] --< D >--> $v2[#20]
+  $v2[#20] -
+  bar.bar1[#21] --< P(p) >--> bar.bar1.p[#22]
+  bar.bar1[#21] --< Arg(0) >--> bar.bar1.p(...)[#23]
+  bar.bar1.p[#22] -
+  bar.bar1.p(...)[#23] --< Call >--> bar.bar1.p[#22]
+  bar.bar1.p(...)[#23] --< D >--> $v5[#24]
+  $v5[#24] -
+  bar.bar3[#25] --< P(p) >--> bar.bar3.p[#26]
+  bar.bar3.p[#26] --< P(q) >--> bar.bar3.p.q[#27]
+  bar.bar3.p[#26] --< Arg(0) >--> bar.bar3.p.q(...)[#28]
+  bar.bar3.p.q[#27] -
+  bar.bar3.p.q(...)[#28] --< Call >--> bar.bar3.p.q[#27]
+  bar.bar3.p.q(...)[#28] --< D >--> $v8[#29]
+  $v8[#29] -
+  bar.bar4[#30] -
+  bar.bar4(...)[#31] --< Call >--> bar.bar4[#30]
+  bar.bar4(...)[#31] --< D >--> $v9[#32]
+  $v9[#32] -
 
   $ graphjs mdg --no-export --mode multifile main.js
   require[#8] -
