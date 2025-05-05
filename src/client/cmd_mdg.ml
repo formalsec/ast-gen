@@ -129,6 +129,8 @@ let builder_env (env : Options.env) : State.Env.t =
 
 let export_env (env : Options.env) : Svg_exporter.Env.t =
   { subgraphs = env.export_subgraphs
+  ; subgraphs_func = true
+  ; subgraphs_module = true
   ; view = env.export_view
   ; timeout = env.export_timeout
   }
