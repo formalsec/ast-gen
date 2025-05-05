@@ -1,6 +1,4 @@
   $ graphjs mdg --no-export --mode singlefile main.js
-  [warn] TODO: check for npm modules
-  [warn] TODO: check for npm modules
   require[#8] -
   './foo.js'[#11] --< Arg(1) >--> require(...)[#12]
   require(...)[#12] --< Call >--> require[#8]

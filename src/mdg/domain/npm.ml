@@ -93,8 +93,9 @@ let build_package_template (mdg : Mdg.t) (template : Template.t) : Node.t =
   let l_npm = Node.create_module template.name in
   Mdg.add_node mdg l_npm;
   Fun.flip List.iter template.sinks (fun sink ->
+      let at = Region.default () in
       let prop = Property.Static sink.name in
-      let l_sink = Node.create_taint_sink sink None (Region.default ()) in
+      let l_sink = Node.create_taint_sink sink (Some l_npm) at in
       Mdg.add_node mdg l_sink;
       Mdg.add_edge mdg (Edge.create_property prop l_npm l_sink) );
   l_npm
