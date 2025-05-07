@@ -20,17 +20,17 @@ end
 module Output = struct
   let engine () : unit = Log.info "Analysis engine initialized successfully."
 
-  let main (w : Workspace.t) (path : Fpath.t) (vulns : Vulnerability.t list) :
+  let main (w : Workspace.t) (path : Fpath.t) (vulns : Vulnerability.Set.t) :
       unit =
     Log.info "Vulnerability queries ran successfully.";
-    Log.stdout "%a@." (Vulnerability.pp_result path) vulns;
+    Log.stdout "%a@." (Vulnerability.Set.pp path) vulns;
     match w.path with
     | None -> ()
     | Single _ ->
-      Workspace.output_noerr Main w (Vulnerability.pp_result path) vulns
+      Workspace.output_noerr Main w (Vulnerability.Set.pp path) vulns
     | Bundle _ ->
       let w' = Workspace.(w / "vulns.txt") in
-      Workspace.output_noerr Side w' (Vulnerability.pp_result path) vulns
+      Workspace.output_noerr Side w' (Vulnerability.Set.pp path) vulns
 end
 
 let validate_mdg_env (env : Cmd_mdg.Options.env) : Cmd_mdg.Options.env =
