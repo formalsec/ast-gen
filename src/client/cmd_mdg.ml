@@ -103,23 +103,29 @@ module Output = struct
     let main = Prog.main prog in
     let w' = Workspace.mdg w export main.mrel in
     Log.verbose "%a" Mdg.pp mdg;
-    match (export, w'.path) with
-    | (false, _) ->
+    match (export, w'.path, w'.perm) with
+    | (false, _, _) ->
       Workspace.output_noerr Main w' Mdg.pp mdg;
       Workspace.log w' "%a@." Mdg.pp mdg;
       Ok ()
-    | (true, Single svg_path) ->
+    | (true, Single svg_path, Main) ->
       let* _ = Workspace.execute Main w' (Graphjs.export_svg env (`Mdg mdg)) in
       Log.info "MDG exported successfully.";
-      Workspace.print w' "%s@." (Console.url (Fpath.to_string svg_path));
+      Log.stdout "%s@." (Console.url (Fpath.to_string svg_path));
       Ok ()
-    | (true, Bundle svg_path) ->
+    | (true, Single svg_path, Side) ->
+      let w'' = Workspace.main_perm w' in
+      let* _ = Workspace.execute Main w'' (Graphjs.export_svg env (`Mdg mdg)) in
+      Log.info "MDG exported successfully.";
+      Log.verbose "%s" (Console.url (Fpath.to_string svg_path));
+      Ok ()
+    | (true, Bundle svg_path, _) ->
       let w'' = Workspace.(w' -+ "dot") in
       let dot = `Dot (Workspace.path w'') in
       let* _ = Workspace.execute Side w'' (Graphjs.export_dot env mdg) in
       let* _ = Workspace.execute Main w' (Graphjs.export_svg env dot) in
       Log.info "MDG exported successfully.";
-      Workspace.print w' "%s@." (Console.url (Fpath.to_string svg_path));
+      Log.stdout "%s" (Console.url (Fpath.to_string svg_path));
       Ok ()
     | _ -> Ok ()
 end
