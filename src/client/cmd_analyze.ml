@@ -1,4 +1,5 @@
 open Graphjs_base
+
 (* open Graphjs_analyzer *)
 open Result
 
@@ -50,8 +51,8 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   (* Output.main w input vulns; *)
   Ok ()
 
-let outcome (result : 'a Exec.result) : Bulk.Instance.outcome =
-  match result with
+let outcome (res : 'a Exec.result) : Bulk.Instance.outcome =
+  match res with
   | Ok _ -> Success
   | Error (`DepTree _) -> Anomaly
   | Error (`ParseJS _) -> Anomaly

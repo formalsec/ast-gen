@@ -51,8 +51,8 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   Output.main env.absolute_dependency_paths w dt;
   Ok dt
 
-let outcome (result : Dependency_tree.t Exec.result) : Bulk.Instance.outcome =
-  match result with
+let outcome (res : Dependency_tree.t Exec.result) : Bulk.Instance.outcome =
+  match res with
   | Ok _ -> Success
   | Error (`DepTree _) -> Failure
   | Error _ -> Anomaly

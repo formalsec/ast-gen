@@ -82,8 +82,8 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   Output.main w prog;
   Ok prog
 
-let outcome (result : 'm Prog.t Exec.result) : Bulk.Instance.outcome =
-  match result with
+let outcome (res : 'm Prog.t Exec.result) : Bulk.Instance.outcome =
+  match res with
   | Ok _ -> Success
   | Error (`DepTree _) -> Failure
   | Error (`ParseJS _) -> Failure
