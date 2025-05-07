@@ -301,6 +301,7 @@ module Executor (CmdInterface : CmdInterface) = struct
   let run_instances (dflt_width : int) (tree : CmdInterface.t InstanceTree.t)
       (inputs : (string list * Fpath.t) list) : unit Exec.result =
     Fun.flip2 List.fold_left (Ok ()) inputs (fun acc (offset, input) ->
+        Log.info "Running instance '%a'..." Fpath.pp input;
         let (tree', w, name) = InstanceTree.extend tree offset in
         let streams = Log.Redirect.capture Shared in
         let (time, (result, outcome)) = Time.compute (run_instance input w) in
