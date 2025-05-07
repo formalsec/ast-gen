@@ -301,6 +301,23 @@ module MdgCmd = struct
   let exits = Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg
 end
 
+module QueryCmd = struct
+  let name = "query"
+  let doc = "Executes pre-defined queries on a Node.js package"
+  let sdocs = Manpage.s_common_options
+
+  let description =
+    [| "Given a Node.js package, executes a set of built-in queries to detect \
+        vulnerabilities in the package. Example vulnerabilities include code \
+        and command injection, path traversal, and prototype pollution. Note \
+        that these queries require the graph to be constructed using the \
+        unfold option." |]
+
+  let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
+  let man_xrefs = []
+  let exits = Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg
+end
+
 module Application = struct
   let name = "graphjs"
   let sdocs = Manpage.s_common_options
@@ -320,13 +337,12 @@ module Application = struct
         all redundant statements and expressions."
      ; "In the second phase, Graph.js builds a Multiversion Dependency Graph \
         (MDG) of the normalized package. This graph-based data structure \
-        merges into a single representation the abstract syntax tree, control \
-        flow graph, and data dependency graph."
-     ; "In the third phase, Graph.js runs several built-in analyzes on the \
-        graph using its internal analysis engine. These analyzes aim to \
-        identify vulnerable code patterns, such as data dependency paths \
-        connecting tainted sources to dangerous sinks. Graph.js allows for the \
-        configuration of both program sources and sinks."
+        combines in a single format the abstract syntax tree, control flow \
+        graph, and data dependency graph of the given package."
+     ; "In the third phase, Graph.js runs several built-in queries on the \
+        graph using its internal query engine. These queries aim to identify \
+        vulnerabilities, such as code and command injection, path traversal, \
+        and prototype pollution."
      ; "Use graphjs <command> --help for more information on a specific \
         command." |]
 

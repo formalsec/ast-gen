@@ -89,7 +89,23 @@ let mdg_cmd =
   let info = Cmd.info name ~doc ~sdocs ~man ~man_xrefs ~exits in
   Cmd.v info Term.(const Cmd_mdg.main $ mdg_opts $ copts)
 
-let cmd_list = [ dependencies_cmd; parse_cmd; mdg_cmd ]
+let query_env =
+  let open Term in
+  const Cmd_query.Options.env $ mdg_env
+
+let query_opts =
+  let open Term in
+  const Cmd_query.Options.cmd
+  $ Docs.FileOpts.input_paths
+  $ Docs.FileOpts.output_path
+  $ query_env
+
+let query_cmd =
+  let open Docs.QueryCmd in
+  let info = Cmd.info name ~doc ~sdocs ~man ~man_xrefs ~exits in
+  Cmd.v info Term.(const Cmd_query.main $ query_opts $ copts)
+
+let cmd_list = [ dependencies_cmd; parse_cmd; mdg_cmd; query_cmd ]
 
 let main_cmd =
   let open Docs.Application in
