@@ -151,8 +151,8 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   let* _ = Output.main w export_env env.export_graph prog mdg in
   Ok mdg
 
-let outcome (result : Mdg.t Exec.result) : Bulk.Instance.outcome =
-  match result with
+let outcome (res : Mdg.t Exec.result) : Bulk.Instance.outcome =
+  match res with
   | Ok _ -> Success
   | Error (`DepTree _) -> Failure
   | Error (`ParseJS _) -> Failure
