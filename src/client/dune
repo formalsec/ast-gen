@@ -11,7 +11,8 @@
   docs
   cmd_dependencies
   cmd_parse
-  cmd_mdg)
+  cmd_mdg
+  cmd_query)
  (libraries
   graphjs_base
   graphjs_share
