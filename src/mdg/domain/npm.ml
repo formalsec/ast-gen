@@ -4,26 +4,26 @@ open Graphjs_ast
 
 module Template = struct
   type el =
-    | Source of Tainted.source
-    | Sink of Tainted.sink
+    | Source of Taint.source
+    | Sink of Taint.sink
 
   let pp_el (ppf : Fmt.t) (el : el) : unit =
     match el with
-    | Source source -> Tainted.pp_source ppf source
-    | Sink sink -> Tainted.pp_sink ppf sink
+    | Source source -> Taint.pp_source ppf source
+    | Sink sink -> Taint.pp_sink ppf sink
 
   type t =
     { name : string
-    ; sources : Tainted.source list
-    ; sinks : Tainted.sink list
+    ; sources : Taint.source list
+    ; sinks : Taint.sink list
     }
 
   let create (name : string) : t = { name; sources = []; sinks = [] }
 
-  let add_source (source : Tainted.source) (template : t) : t =
+  let add_source (source : Taint.source) (template : t) : t =
     { template with sources = source :: template.sources }
 
-  let add_sink (sink : Tainted.sink) (template : t) : t =
+  let add_sink (sink : Taint.sink) (template : t) : t =
     { template with sinks = sink :: template.sinks }
 
   let to_list (template : t) : el list =
@@ -45,7 +45,7 @@ type t = (string, package) Hashtbl.t
 let set_source (npm : t) (package_source : Taint_config.package_source) : unit =
   Fun.flip List.iter package_source.packages (fun package ->
       let name = package.package in
-      let source = Tainted.package_source name package_source in
+      let source = Taint.package_source name package_source in
       match Hashtbl.find_opt npm name with
       | None ->
         let template = Template.create name |> Template.add_source source in
@@ -60,7 +60,7 @@ let set_sink (npm : t) (package_sink : Taint_config.package_sink) : unit =
   Fun.flip List.iter package_sink.packages (fun package ->
       let name = package.package in
 
-      let sink = Tainted.package_sink name package_sink in
+      let sink = Taint.package_sink name package_sink in
       match Hashtbl.find_opt npm name with
       | None ->
         let template = Template.create name |> Template.add_sink sink in
