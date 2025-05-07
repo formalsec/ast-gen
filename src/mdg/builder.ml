@@ -661,23 +661,30 @@ and build_file (state : State.t) (file : 'm File.t) (main : bool) : State.t =
   state''.env.cb_mdg file.mrel;
   state''
 
-let run_cleaner_analysis (state : State.t) : unit =
-  if state.env.run_cleaner_analysis then Cleaner.compute state
+module ExtendedMdg = struct
+  type t =
+    { mdg : Mdg.t
+    ; exported : Exported.t
+    }
 
-let run_exported_analysis (state : State.t) : Exported.t =
-  ( if opaque_function_eval state.env then Exported.compute_from_graph
-    else Exported.compute_and_unfold build_exported_function )
-    state.env.run_tainted_analysis state
+  let compute_cleaner_analysis (state : State.t) : unit =
+    if state.env.run_cleaner_analysis then Cleaner.compute state
 
-let run_analyses (state : State.t) : unit =
-  ignore (run_exported_analysis state);
-  run_cleaner_analysis state
-(* FIXME: these values should be returned... *)
+  let compute_exported_analysis (state : State.t) : Exported.t =
+    ( if opaque_function_eval state.env then Exported.compute_from_graph
+      else Exported.compute_and_unfold build_exported_function )
+      state.env.run_tainted_analysis state
+
+  let compute_analyses (state : State.t) : t =
+    let mdg = state.mdg in
+    let exported = compute_exported_analysis state in
+    compute_cleaner_analysis state;
+    { mdg; exported }
+end
 
 let build_program (env : State.Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t)
-    : Mdg.t =
+    : ExtendedMdg.t =
   let main = Prog.main prog in
   let state = initialize_builder env tconf prog in
   let state' = build_file state main true in
-  run_analyses state';
-  state'.mdg
+  ExtendedMdg.compute_analyses state'

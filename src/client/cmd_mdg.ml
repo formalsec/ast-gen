@@ -74,7 +74,7 @@ module Graphjs = struct
     Exec.graphjs (fun () -> Taint_config.read path)
 
   let mdg_builder (env : State.Env.t) (tc : Taint_config.t) (prog : 'm Prog.t) :
-      Mdg.t Exec.result =
+      Builder.ExtendedMdg.t Exec.result =
     Exec.graphjs (fun () -> Builder.build_program env tc prog)
 
   let export_dot (env : Svg_exporter.Env.t) (mdg : Mdg.t) (path : Fpath.t) :
@@ -141,17 +141,17 @@ let export_env (env : Options.env) : Svg_exporter.Env.t =
   }
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
-    Mdg.t Exec.result =
+    Builder.ExtendedMdg.t Exec.result =
   let export_env = export_env env in
   let builder_env = builder_env env in
   let* prog = Cmd_parse.run env.parse_env (Workspace.side_perm w) input in
   let* tc = Graphjs.taint_config env.taint_config in
   Output.taint_config w env.taint_config tc;
-  let* mdg = Graphjs.mdg_builder builder_env tc prog in
-  let* _ = Output.main w export_env env.export_graph prog mdg in
-  Ok mdg
+  let* e_mdg = Graphjs.mdg_builder builder_env tc prog in
+  let* _ = Output.main w export_env env.export_graph prog e_mdg.mdg in
+  Ok e_mdg
 
-let outcome (res : Mdg.t Exec.result) : Bulk.Instance.outcome =
+let outcome (res : Builder.ExtendedMdg.t Exec.result) : Bulk.Instance.outcome =
   match res with
   | Ok _ -> Success
   | Error (`DepTree _) -> Failure
@@ -161,7 +161,7 @@ let outcome (res : Mdg.t Exec.result) : Bulk.Instance.outcome =
 
 let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
   ( module struct
-    type t = Mdg.t
+    type t = Builder.ExtendedMdg.t
 
     let cmd = Docs.MdgCmd.name
     let run = run env
