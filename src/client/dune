@@ -11,14 +11,12 @@
   docs
   cmd_dependencies
   cmd_parse
-  cmd_mdg
-  cmd_analyze)
+  cmd_mdg)
  (libraries
   graphjs_base
   graphjs_share
   graphjs_parser
   graphjs_ast
   graphjs_mdg
-  graphjs_analyzer
-  bos
-  cmdliner))
+  cmdliner
+  bos))
