@@ -8,4 +8,5 @@
   graphjs_parser
   graphjs_ast
   graphjs_mdg
+  graphjs_query
   graphjs_client))
