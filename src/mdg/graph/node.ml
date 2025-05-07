@@ -10,7 +10,7 @@ type kind =
   | Return of string
   | Module of string
   | TaintSource
-  | TaintSink of Tainted.sink
+  | TaintSink of Taint.sink
 
 type t =
   { loc : Location.t
@@ -49,7 +49,8 @@ let pp (ppf : Fmt.t) (node : t) : unit =
   | Return name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
   | Module name -> Fmt.fmt ppf "[[module]] %s[%a]" name Location.pp node.loc
   | TaintSource -> Fmt.pp_str ppf "[[taint]]"
-  | TaintSink sink -> Fmt.fmt ppf "[[sink]] %s[%a]" sink.name Location.pp node.loc
+  | TaintSink sink ->
+    Fmt.fmt ppf "[[sink]] %s[%a]" sink.name Location.pp node.loc
 
 let str (node : t) : string = Fmt.str "%a" pp node
 
@@ -111,7 +112,7 @@ let create_taint_source () : t =
   let loc = Location.create () in
   create loc TaintSource None (Region.default ())
 
-let create_taint_sink (sink : Tainted.sink) : t option -> Region.t -> t =
+let create_taint_sink (sink : Taint.sink) : t option -> Region.t -> t =
  fun parent at ->
   let loc = Location.create () in
   create loc (TaintSink sink) parent at
@@ -153,7 +154,7 @@ let name (node : t) : string =
   | TaintSink sink -> sink.name
   | _ -> Log.fail "unexpected node '%a' without name" pp node
 
-let sink (node : t) : Tainted.sink =
+let sink (node : t) : Taint.sink =
   match node.kind with
   | TaintSink sink -> sink
   | _ -> Log.fail "unexpected node '%a' without tainted sink" pp node

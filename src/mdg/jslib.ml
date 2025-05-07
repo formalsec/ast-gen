@@ -71,8 +71,8 @@ module CallInterceptor = struct
       state
 end
 
-let add_tainted_sink (make_generic_sink_f : 'a -> Tainted.sink)
-    (state : State.t) (generic_sink : 'a) : State.t =
+let add_tainted_sink (make_generic_sink_f : 'a -> Taint.sink) (state : State.t)
+    (generic_sink : 'a) : State.t =
   let sink = make_generic_sink_f generic_sink in
   let name_jslib = NameResolver.sink sink.name in
   let l_sink = Node.create_taint_sink sink None (Region.default ()) in
@@ -82,8 +82,8 @@ let add_tainted_sink (make_generic_sink_f : 'a -> Tainted.sink)
 
 let initialize_tainted_sinks (state : State.t) (tconf : Taint_config.t) :
     State.t =
-  let make_fun_sink_f = add_tainted_sink Tainted.function_sink in
-  (* let make_new_sink_f = add_tainted_sink Tainted.new_sink in *)
+  let make_fun_sink_f = add_tainted_sink Taint.function_sink in
+  (* let make_new_sink_f = add_tainted_sink Taint.new_sink in *)
   let state' = List.fold_left make_fun_sink_f state tconf.function_sinks in
   (* let state'' = List.fold_left make_new_sink_f state' tconf.new_sinks in *)
   state'

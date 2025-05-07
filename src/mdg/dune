@@ -6,7 +6,7 @@
   location
   literal
   property
-  tainted
+  taint
   node
   edge
   npm

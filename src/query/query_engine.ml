@@ -15,7 +15,7 @@ let tainted_sink_calls (engine : t) : (Node.t * Node.t) list =
       let l_calls = Mdg.get_function_callers engine.mdg l_sink in
       List.map (fun l_call -> (l_call, l_sink)) l_calls @ acc )
 
-let tainted_sink_args (engine : t) (l_call : Node.t) (sink : Tainted.sink) :
+let tainted_sink_args (engine : t) (l_call : Node.t) (sink : Taint.sink) :
     Node.Set.t =
   Mdg.get_arguments engine.mdg l_call
   |> List.filter (fun (idx, _) -> List.mem idx sink.args)
