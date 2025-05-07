@@ -89,23 +89,7 @@ let mdg_cmd =
   let info = Cmd.info name ~doc ~sdocs ~man ~man_xrefs ~exits in
   Cmd.v info Term.(const Cmd_mdg.main $ mdg_opts $ copts)
 
-let analyze_env =
-  let open Term in
-  const Cmd_analyze.Options.env $ mdg_env
-
-let analyze_opts =
-  let open Term in
-  const Cmd_analyze.Options.cmd
-  $ Docs.FileOpts.input_paths
-  $ Docs.FileOpts.output_path
-  $ analyze_env
-
-let analyze_cmd =
-  let open Docs.AnalyzeCmd in
-  let info = Cmd.info name ~doc ~sdocs ~man ~man_xrefs ~exits in
-  Cmd.v info Term.(const Cmd_analyze.main $ analyze_opts $ copts)
-
-let cmd_list = [ dependencies_cmd; parse_cmd; mdg_cmd; analyze_cmd ]
+let cmd_list = [ dependencies_cmd; parse_cmd; mdg_cmd ]
 
 let main_cmd =
   let open Docs.Application in

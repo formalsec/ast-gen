@@ -301,22 +301,6 @@ module MdgCmd = struct
   let exits = Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg
 end
 
-module AnalyzeCmd = struct
-  let name = "analyze"
-  let doc = "Performs various static analyzes in a Node.js package"
-  let sdocs = Manpage.s_common_options
-
-  let description =
-    [| "Given a Node.js package, performs multiple static analyzes to the \
-        package. These analyzes include: caller analyses, exported values \
-        analyses, taint-style vulnerability detection, and prototype pollution \
-        detection." |]
-
-  let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
-  let man_xrefs = []
-  let exits = Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg
-end
-
 module Application = struct
   let name = "graphjs"
   let sdocs = Manpage.s_common_options
