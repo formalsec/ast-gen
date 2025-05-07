@@ -173,6 +173,11 @@ let get_called_functions (mdg : t) (node : Node.t) : Node.t list =
   |> Edge.Set.filter Edge.is_caller
   |> Edge.Set.map_list Edge.tar
 
+let get_function_callers (mdg : t) (node : Node.t) : Node.t list =
+  get_trans mdg node.loc
+  |> Edge.Set.filter Edge.is_caller
+  |> Edge.Set.map_list Edge.tar
+
 let get_return_of_call (mdg : t) (node : Node.t) : Node.t =
   get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_dependency
