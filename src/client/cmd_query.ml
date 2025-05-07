@@ -1,4 +1,5 @@
 open Graphjs_base
+open Graphjs_query
 open Result
 
 module Options = struct
@@ -16,8 +17,38 @@ module Options = struct
     { inputs; output; env }
 end
 
-let run (_env : Options.env) (_w : Workspace.t) (_input : Fpath.t) :
+module Output = struct
+  let engine () : unit = Log.info "Analysis engine initialized successfully."
+
+  let main (w : Workspace.t) (path : Fpath.t) (vulns : Vulnerability.t list) :
+      unit =
+    Log.info "Vulnerability queries ran successfully.";
+    Log.stdout "%a@." (Vulnerability.pp_result path) vulns;
+    match w.path with
+    | None -> ()
+    | Single _ ->
+      Workspace.output_noerr Main w (Vulnerability.pp_result path) vulns
+    | Bundle _ ->
+      let w' = Workspace.(w / "vulns.txt") in
+      Workspace.output_noerr Side w' (Vulnerability.pp_result path) vulns
+end
+
+let validate_mdg_env (env : Cmd_mdg.Options.env) : Cmd_mdg.Options.env =
+  match env.func_eval_mode with
+  | Opaque ->
+    Log.warn "Unable to run built-in queries with 'opaque' function evaluation.";
+    Log.warn "Defaulting function evaluation mode to 'unfold:rec'...";
+    { env with func_eval_mode = UnfoldRec }
+  | _ -> env
+
+let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     unit Exec.result =
+  let mdg_env = validate_mdg_env env.mdg_env in
+  let* e_mdg = Cmd_mdg.run mdg_env (Workspace.side_perm w) input in
+  let engine = Query_engine.initialize e_mdg.mdg in
+  Output.engine ();
+  let vulns = Builtin_queries.run engine in
+  Output.main w input vulns;
   Ok ()
 
 let outcome (res : 'a Exec.result) : Bulk.Instance.outcome =
