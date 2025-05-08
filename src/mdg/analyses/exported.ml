@@ -116,9 +116,8 @@ and compute_returns_rec (env : Env.t) (state : State.t) (exported : t)
 
 let empty_exports (state : State.t) (ls_exported : Node.Set.t) : bool =
   if Node.Set.cardinal ls_exported == 1 then
-    let name_jslib = Jslib.NameResolver.curr_file "exports" state in
     let l_exported = Node.Set.choose ls_exported in
-    let l_exported_orig = Option.get (Mdg.get_jslib_node state.mdg name_jslib) in
+    let l_exported_orig = Jslib.find state.mdg state.jslib "exports" in
     let l_exported_edges = Mdg.get_edges state.mdg l_exported.loc in
     Node.equal l_exported l_exported_orig
     && Edge.Set.cardinal l_exported_edges == 0
@@ -126,7 +125,7 @@ let empty_exports (state : State.t) (ls_exported : Node.Set.t) : bool =
 
 let compute (env : Env.t) (state : State.t) : t =
   let exported = create () in
-  let ls_exported = Jslib.exported_object state.mdg in
+  let ls_exported = Jslib.exported_object state.mdg state.jslib in
   if not (empty_exports state ls_exported) then
     compute_object env state exported [] ls_exported;
   exported

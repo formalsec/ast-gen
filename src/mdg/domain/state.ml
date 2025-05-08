@@ -39,6 +39,7 @@ type t =
   ; store : Store.t
   ; allocator : Node.t Allocator.t
   ; pcontext : Region.t Pcontext.t
+  ; jslib : Jslib.t
   ; npmlib : Npmlib.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
   ; curr_floc : Pcontext.Floc.t
@@ -56,12 +57,14 @@ and stmt_ctx =
   | PropUpd
 
 let create (env' : Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t) : t =
+  let mdg' = Mdg.create () in
   let store' = Store.create () in
   { env = env'
-  ; mdg = Mdg.create ()
+  ; mdg = mdg'
   ; store = store'
   ; allocator = Allocator.create Config.(!dflt_htbl_sz)
   ; pcontext = Pcontext.create prog store'
+  ; jslib = Jslib.create tconf mdg' store'
   ; npmlib = Npmlib.create tconf
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; curr_floc = Pcontext.Floc.default ()
@@ -72,20 +75,16 @@ let create (env' : Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t) : t =
   ; stmt_ctx = General
   }
 
-let module_parent (state : t) (mrel : Fpath.t) (main : bool) : Node.t option =
-  if not main then (
-    let l_module = Node.create_module (Fpath.to_string mrel) in
-    Mdg.add_node state.mdg l_module;
-    Some l_module )
-  else None
-
-let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool) : t =
-  let curr_parent' = module_parent state mrel main in
+let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
+    (l_parent : Node.t option) : t =
+  let file = if main then None else Some mrel in
+  let store' = Store.copy state.pcontext.initial_store in
+  Jslib.initialize state.mdg store' state.jslib file l_parent;
   { state with
-    store = Store.copy state.pcontext.initial_store
+    store = store'
   ; curr_floc = Pcontext.Floc.create path mrel main
   ; curr_stack = []
-  ; curr_parent = curr_parent'
+  ; curr_parent = l_parent
   ; curr_return = Node.Set.empty
   ; stmt_ctx = General
   }
