@@ -45,7 +45,7 @@ module CallInterceptor = struct
 
   let resolve_npm (state : State.t) (retn_name : string) (package : string) :
       Node.Set.t =
-    match Npm.resolve state.npm state.mdg package with
+    match Npmlib.resolve_package state.npmlib state.mdg package with
     | Some l_npm -> Node.Set.singleton l_npm
     | None -> Store.find state.store retn_name
 

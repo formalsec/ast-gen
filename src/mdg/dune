@@ -9,11 +9,11 @@
   taint
   node
   edge
-  npm
   mdg
   store
   allocator
   pcontext
+  npmlib
   state
   exported
   tainted

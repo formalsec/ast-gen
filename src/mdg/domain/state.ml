@@ -1,4 +1,5 @@
 open Graphjs_base
+open Graphjs_share
 open Graphjs_ast
 
 module Env = struct
@@ -34,11 +35,11 @@ end
 
 type t =
   { env : Env.t
-  ; npm : Npm.t
   ; mdg : Mdg.t
   ; store : Store.t
   ; allocator : Node.t Allocator.t
   ; pcontext : Region.t Pcontext.t
+  ; npmlib : Npmlib.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
   ; curr_floc : Pcontext.Floc.t
   ; curr_stack : Node.t list
@@ -54,14 +55,14 @@ and stmt_ctx =
   | General
   | PropUpd
 
-let create (env' : Env.t) (npm' : Npm.t) (prog : 'm Prog.t) : t =
+let create (env' : Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t) : t =
   let store' = Store.create () in
   { env = env'
-  ; npm = npm'
   ; mdg = Mdg.create ()
   ; store = store'
   ; allocator = Allocator.create Config.(!dflt_htbl_sz)
   ; pcontext = Pcontext.create prog store'
+  ; npmlib = Npmlib.create tconf
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; curr_floc = Pcontext.Floc.default ()
   ; curr_stack = []
