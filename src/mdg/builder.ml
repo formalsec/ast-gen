@@ -158,8 +158,7 @@ and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
 let rec initialize_builder (env : State.Env.t) (tconf : Taint_config.t)
     (prog : 'm Prog.t) : State.t =
   Location.reset_generator ();
-  let npm = Npm.create tconf in
-  let state = State.create env npm prog in
+  let state = State.create env tconf prog in
   let cbs_builder = Jslib.cbs_builder build_file in
   if not (multiple_literal_mode env) then
     Mdg.add_node state.mdg state.literal_node;
