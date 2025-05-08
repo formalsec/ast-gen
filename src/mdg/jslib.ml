@@ -84,7 +84,7 @@ let initialize_tainted_sinks (state : State.t) (tconf : Taint_config.t) :
     State.t =
   let make_fun_sink_f = add_tainted_sink Taint.function_sink in
   (* let make_new_sink_f = add_tainted_sink Taint.new_sink in *)
-  let state' = List.fold_left make_fun_sink_f state tconf.function_sinks in
+  let state' = List.fold_left make_fun_sink_f state tconf.f_sinks in
   (* let state'' = List.fold_left make_new_sink_f state' tconf.new_sinks in *)
   state'
 

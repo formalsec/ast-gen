@@ -18,20 +18,20 @@ type t =
   | Source of source
   | Sink of sink
 
-let package_source (name : string) (source : Taint_config.package_source) :
+let package_source (name : string) (p_source : Taint_config.package_source) :
     source =
-  let package = Taint_config.find_package name source.packages in
-  { mrel = Some name; name = source.source; args = package.args }
+  let pkg = Taint_config.find_package name p_source.pkgs in
+  { mrel = Some name; name = p_source.name; args = pkg.args }
 
-let package_sink (name : string) (sink : Taint_config.package_sink) : sink =
-  let package = Taint_config.find_package name sink.packages in
-  { mrel = Some name; name = sink.sink; kind = sink.kind; args = package.args }
+let package_sink (name : string) (p_sink : Taint_config.package_sink) : sink =
+  let pkg = Taint_config.find_package name p_sink.pkgs in
+  { mrel = Some name; name = p_sink.name; kind = p_sink.kind; args = pkg.args }
 
-let function_sink (sink : Taint_config.function_sink) : sink =
-  { mrel = None; name = sink.sink; kind = sink.kind; args = sink.args }
+let function_sink (f_sink : Taint_config.function_sink) : sink =
+  { mrel = None; name = f_sink.name; kind = f_sink.kind; args = f_sink.args }
 
-let new_sink (sink : Taint_config.new_sink) : sink =
-  { mrel = None; name = sink.sink; kind = sink.kind; args = sink.args }
+let new_sink (n_sink : Taint_config.new_sink) : sink =
+  { mrel = None; name = n_sink.name; kind = n_sink.kind; args = n_sink.args }
 
 let pp_args (ppf : Fmt.t) (args : int list) : unit =
   Fmt.(pp_lst !>", " pp_int) ppf args
