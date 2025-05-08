@@ -32,7 +32,6 @@ end
 module Dot = struct
   let env = ref (Env.default ())
   let mdg = ref (Mdg.create ())
-  let cluster_sz = Hashtbl.create Config.(!dflt_htbl_sz)
 
   let rec node_parent (node : Node.t) : Node.t option =
     match (node.kind, node.parent) with
@@ -68,19 +67,7 @@ module Dot = struct
 
   let initialize (env' : Env.t) (mdg' : Mdg.t) : unit =
     env := env';
-    mdg := mdg';
-    Fun.flip Hashtbl.iter mdg'.nodes (fun _ node ->
-        Option.fold (node_parent node) ~none:() ~some:(fun l_parent ->
-            let loc = Node.loc l_parent in
-            match Hashtbl.find_opt cluster_sz loc with
-            | None -> Hashtbl.replace cluster_sz loc 1
-            | Some sz -> Hashtbl.replace cluster_sz loc (sz + 1) ) )
-
-  let rec subgraph_node (node : Node.t) : Node.t option =
-    Option.bind (node_parent node) (fun l_parent ->
-        match Hashtbl.find_opt cluster_sz l_parent.loc with
-        | Some sz when sz > 1 -> Some l_parent
-        | _ -> Option.bind l_parent.parent subgraph_node )
+    mdg := mdg'
 
   let subgraph_parent (node : Node.t) : Node.t option =
     Option.bind node.parent node_parent
@@ -155,7 +142,7 @@ module Dot = struct
       ; `Fillcolor (subgraph_color l_subgraph) ]
 
     let get_subgraph (node : V.t) : subgraph option =
-      match (!env.subgraphs, subgraph_node node) with
+      match (!env.subgraphs, node_parent node) with
       | (false, _) | (true, None) -> None
       | (true, Some l_subgraph) ->
         let l_parent = subgraph_parent l_subgraph in
