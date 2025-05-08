@@ -6,20 +6,6 @@ let none () : t = Node.Set.empty
 let is_tainted (tainted : t) (node : Node.t) : bool = Node.Set.mem node tainted
 let taint (tainted : t) (node : Node.t) : Node.Set.t = Node.Set.add node tainted
 
-(* let rec set_tainted_node (mdg : Mdg.t) (l_taint : Node.t) (l_node : Node.t) :
-    unit =
-  let taint_f (_, l_node) () = set_tainted_node mdg l_taint l_node in
-  match l_node.kind with
-  | Object _ | Parameter _ | TaintSink _ ->
-    Mdg.add_edge mdg (Edge.create_dependency () l_taint l_node)
-  | Function _ ->
-    let ls_params = Mdg.get_parameters mdg l_node in
-    Mdg.add_edge mdg (Edge.create_dependency () l_taint l_node);
-    Fun.flip List.iter ls_params (fun (_, l_param) ->
-        set_tainted_node mdg l_taint l_param;
-        Mdg.object_nested_traversal ~final:false taint_f mdg l_param () )
-  | _ -> () *)
-
 let set_tainted_exports (mdg : Mdg.t) (exported : Exported.t) : Node.t =
   let l_taint = Node.create_taint_source () in
   Mdg.add_node mdg l_taint;
@@ -65,6 +51,8 @@ let mark_tainted (mdg : Mdg.t) (tainted : t) (l_taint : Node.t) : t =
   mark_nodes mdg queue tainted
 
 let compute (state : State.t) (exported : Exported.t) : t =
-  let tainted = Node.Set.empty in
-  let l_taint = set_tainted_exports state.mdg exported in
-  mark_tainted state.mdg tainted l_taint
+  if not (Exported.is_empty exported) then
+    let tainted = Node.Set.empty in
+    let l_taint = set_tainted_exports state.mdg exported in
+    mark_tainted state.mdg tainted l_taint
+  else Node.Set.empty

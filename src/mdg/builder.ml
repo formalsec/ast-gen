@@ -668,9 +668,6 @@ module ExtendedMdg = struct
     ; tainted : Tainted.t
     }
 
-  let compute_cleaner_analysis (state : State.t) : unit =
-    if state.env.run_cleaner_analysis then Cleaner.compute state
-
   let compute_exported_analysis (state : State.t) : Exported.t =
     ( if opaque_function_eval state.env then Exported.compute_from_graph
       else Exported.compute_and_unfold build_exported_function )
@@ -680,11 +677,14 @@ module ExtendedMdg = struct
     if state.env.run_tainted_analysis then Tainted.compute state exported
     else Tainted.none ()
 
+  let compute_cleaner_analysis (state : State.t) : unit =
+    if state.env.run_cleaner_analysis then Cleaner.compute state
+
   let compute_analyses (state : State.t) : t =
     let mdg = state.mdg in
     let exported = compute_exported_analysis state in
-    compute_cleaner_analysis state;
     let tainted = compute_tainted_analysis state exported in
+    compute_cleaner_analysis state;
     { mdg; exported; tainted }
 end
 

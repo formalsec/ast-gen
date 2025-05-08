@@ -24,13 +24,7 @@
   exports[#25] --< P(baz) >--> $v3[#22]
   [[taint]] --< D >--> exports[#10]
   [[taint]] --< D >--> $v1[#11]
-  [[taint]] --< D >--> this[#12]
-  [[taint]] --< D >--> x1[#13]
   [[taint]] --< D >--> $v2[#15]
-  [[taint]] --< D >--> this[#16]
-  [[taint]] --< D >--> x2[#17]
-  [[taint]] --< D >--> y2[#18]
-  [[taint]] --< D >--> z2[#19]
 
   $ graphjs mdg --no-export module.js
   module[#9] --< P(exports) >--> exports[#10]
@@ -60,8 +54,6 @@
   $v5[#26] --< P(baz) >--> $v6[#23]
   [[taint]] --< D >--> $v5[#21]
   [[taint]] --< D >--> $v6[#23]
-  [[taint]] --< D >--> this[#24]
-  [[taint]] --< D >--> x3[#25]
 
   $ graphjs mdg --no-export dynamic.js
   module[#9] --< P(exports) >--> exports[#10]
@@ -91,17 +83,9 @@
   $v4[#25] --< P(*) >--> $v5[#22]
   [[taint]] --< D >--> exports[#10]
   [[taint]] --< D >--> $v1[#11]
-  [[taint]] --< D >--> this[#12]
-  [[taint]] --< D >--> x1[#13]
   [[taint]] --< D >--> $v3[#15]
-  [[taint]] --< D >--> this[#16]
-  [[taint]] --< D >--> x2[#17]
-  [[taint]] --< D >--> y2[#18]
-  [[taint]] --< D >--> z2[#19]
   [[taint]] --< D >--> module.*[#20]
   [[taint]] --< D >--> $v5[#22]
-  [[taint]] --< D >--> this[#23]
-  [[taint]] --< D >--> x3[#24]
 
   $ graphjs mdg --no-export mixed.js
   module[#9] --< P(exports) >--> exports[#10]
@@ -123,10 +107,4 @@
   exports[#20] --< P(bar) >--> $v2[#15]
   [[taint]] --< D >--> exports[#10]
   [[taint]] --< D >--> $v1[#11]
-  [[taint]] --< D >--> this[#12]
-  [[taint]] --< D >--> x1[#13]
   [[taint]] --< D >--> $v2[#15]
-  [[taint]] --< D >--> this[#16]
-  [[taint]] --< D >--> x2[#17]
-  [[taint]] --< D >--> y2[#18]
-  [[taint]] --< D >--> z2[#19]
