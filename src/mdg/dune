@@ -13,6 +13,7 @@
   store
   allocator
   pcontext
+  jslib
   npmlib
   state
   exported
@@ -21,5 +22,5 @@
   export_view
   svg_exporter
   builder
-  jslib)
+  interceptor)
  (libraries graphjs_base graphjs_share graphjs_ast ocamlgraph))

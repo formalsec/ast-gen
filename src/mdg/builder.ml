@@ -159,15 +159,16 @@ let rec initialize_builder (env : State.Env.t) (tconf : Taint_config.t)
     (prog : 'm Prog.t) : State.t =
   Location.reset_generator ();
   let state = State.create env tconf prog in
-  let cbs_builder = Jslib.cbs_builder build_file in
+  let cbs_builder = Interceptor.cbs_builder build_file in
+  Interceptor.initialize state cbs_builder;
   if not (multiple_literal_mode env) then
     Mdg.add_node state.mdg state.literal_node;
-  Jslib.initialize_builder state tconf cbs_builder
+  state
 
-and initialize_file (state : State.t) (f : 'm File.t) (main : bool) : State.t =
-  let state' = State.initialize state f.path f.mrel main in
-  let state'' = Jslib.initialize_file state' in
-  initialize_hoisted_functions state'' f.body
+and initialize_file (state : State.t) (f : 'm File.t) (main : bool)
+    (l_parent : Node.t option) : State.t =
+  let state' = State.initialize state f.path f.mrel main l_parent in
+  initialize_hoisted_functions state' f.body
 
 and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
     : State.t =
@@ -653,8 +654,9 @@ and build_sequence_opt (state : State.t) (stmts : 'm Statement.t list option) :
     State.t =
   Option.fold ~none:state ~some:(build_sequence state) stmts
 
-and build_file (state : State.t) (file : 'm File.t) (main : bool) : State.t =
-  let state' = initialize_file state file main in
+and build_file (state : State.t) (file : 'm File.t) (main : bool)
+    (l_parent : Node.t option) : State.t =
+  let state' = initialize_file state file main l_parent in
   let state'' = build_sequence state' file.body in
   Pcontext.file_built state''.pcontext file.path;
   state''.env.cb_mdg file.mrel;
@@ -691,5 +693,5 @@ let build_program (env : State.Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t
     : ExtendedMdg.t =
   let main = Prog.main prog in
   let state = initialize_builder env tconf prog in
-  let state' = build_file state main true in
+  let state' = build_file state main true None in
   ExtendedMdg.compute_analyses state'

@@ -4,22 +4,19 @@ type t =
   { nodes : (Location.t, Node.t) Hashtbl.t
   ; edges : (Location.t, Edge.Set.t) Hashtbl.t
   ; trans : (Location.t, Edge.Set.t) Hashtbl.t
-  ; jslib : (string, Node.t) Hashtbl.t
   }
 
 let create () : t =
   let nodes = Hashtbl.create Config.(!dflt_htbl_sz) in
   let edges = Hashtbl.create Config.(!dflt_htbl_sz) in
   let trans = Hashtbl.create Config.(!dflt_htbl_sz) in
-  let jslib = Hashtbl.create Config.(!dflt_htbl_sz) in
-  { nodes; edges; trans; jslib }
+  { nodes; edges; trans }
 
 let copy (mdg : t) : t =
   let nodes = Hashtbl.copy mdg.nodes in
   let edges = Hashtbl.copy mdg.edges in
   let trans = Hashtbl.copy mdg.trans in
-  let jslib = Hashtbl.copy mdg.jslib in
-  { nodes; edges; trans; jslib }
+  { nodes; edges; trans }
 
 let get_node (mdg : t) (loc : Location.t) : Node.t =
   match Hashtbl.find_opt mdg.nodes loc with
@@ -35,14 +32,6 @@ let get_trans (mdg : t) (loc : Location.t) : Edge.Set.t =
   match Hashtbl.find_opt mdg.trans loc with
   | None -> Log.fail "expecting edge to location '%a' in mdg" Location.pp loc
   | Some edges -> edges
-
-let get_jslib_template (mdg : t) (name : string) : Node.t =
-  match Hashtbl.find_opt mdg.jslib name with
-  | None -> Log.fail "expecting jslib location with name '%s' in mdg" name
-  | Some node -> node
-
-let get_jslib_node (mdg : t) (name : string) : Node.t option =
-  Hashtbl.find_opt mdg.nodes (get_jslib_template mdg name).loc
 
 let pp_node (mdg : t) (ppf : Fmt.t) (node : Node.t) : unit =
   let edges = get_edges mdg node.loc in
@@ -67,10 +56,6 @@ let add_edge (mdg : t) (edge : Edge.t) : unit =
   let trans = get_trans mdg edge.tar.loc in
   Hashtbl.replace mdg.edges edge.src.loc (Edge.Set.add edge edges);
   Hashtbl.replace mdg.trans edge.tar.loc (Edge.Set.add tran trans)
-
-let add_jslib (mdg : t) (name : string) (l_jslib : Node.t) : unit =
-  Hashtbl.replace mdg.jslib name l_jslib;
-  add_node mdg l_jslib
 
 let remove_node (mdg : t) (node : Node.t) : unit =
   let edges = get_edges mdg node.loc in
