@@ -45,7 +45,7 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     unit Exec.result =
   let mdg_env = validate_mdg_env env.mdg_env in
   let* e_mdg = Cmd_mdg.run mdg_env (Workspace.side_perm w) input in
-  let engine = Query_engine.initialize e_mdg.mdg in
+  let engine = Query_engine.initialize e_mdg in
   Output.engine ();
   let vulns = Builtin_queries.run engine in
   Output.main w input vulns;

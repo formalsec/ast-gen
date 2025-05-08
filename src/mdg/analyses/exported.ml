@@ -7,13 +7,9 @@ module Env = struct
     | GraphEdge
     | Unfold of cb_unfold_func
 
-  type t =
-    { return_handler : return_handler
-    ; mark_tainted : bool
-    }
+  type t = { return_handler : return_handler }
 
-  let create (return_handler : return_handler) (mark_tainted : bool) : t =
-    { return_handler; mark_tainted }
+  let create (return_handler : return_handler) : t = { return_handler }
 end
 
 module Interaction = struct
@@ -63,27 +59,6 @@ let pp (ppf : Fmt.t) (exported : t) : unit =
   Fmt.(pp_htbl !>"@\n") pp_itx ppf exported
 
 let str (exported : t) : string = Fmt.str "%a" pp exported
-
-let rec mark_tainted_node (state : State.t) (l_taint : Node.t) (l_node : Node.t)
-    : unit =
-  match l_node.kind with
-  | Object _ | Parameter _ | TaintSink _ ->
-    Mdg.add_edge state.mdg (Edge.create_dependency () l_taint l_node)
-  | Function _ ->
-    let ls_params = Mdg.get_parameters state.mdg l_node in
-    let taint_f (_, l_node) () = mark_tainted_node state l_taint l_node in
-    Mdg.add_edge state.mdg (Edge.create_dependency () l_taint l_node);
-    Fun.flip List.iter ls_params (fun (_, l_param) ->
-        mark_tainted_node state l_taint l_param;
-        Mdg.object_nested_traversal ~final:false taint_f state.mdg l_param () )
-  | _ -> ()
-
-let mark_tainted_sources (env : Env.t) (state : State.t) (exported : t) : unit =
-  if env.mark_tainted then (
-    let l_taint = Node.create_taint_source () in
-    Mdg.add_node state.mdg l_taint;
-    Fun.flip Hashtbl.iter exported (fun _ (l_node, _) ->
-        mark_tainted_node state l_taint l_node ) )
 
 let add_interactable (exported : t) (acc : acc) (l_node : Node.t)
     (scheme : Scheme.t) : acc =
@@ -151,16 +126,14 @@ let empty_exports (state : State.t) (ls_exported : Node.Set.t) : bool =
 let compute (env : Env.t) (state : State.t) : t =
   let exported = create () in
   let ls_exported = Jslib.exported_object state.mdg in
-  if not (empty_exports state ls_exported) then (
+  if not (empty_exports state ls_exported) then
     compute_object env state exported [] ls_exported;
-    mark_tainted_sources env state exported );
   exported
 
-let compute_from_graph (mark_tainted : bool) (state : State.t) : t =
-  let env = Env.create GraphEdge mark_tainted in
+let compute_from_graph (state : State.t) : t =
+  let env = Env.create GraphEdge in
   compute env state
 
-let compute_and_unfold (cb_unfold_func : Env.cb_unfold_func)
-    (mark_tainted : bool) (state : State.t) : t =
-  let env = Env.create (Unfold cb_unfold_func) mark_tainted in
+let compute_and_unfold (cb_unfold : Env.cb_unfold_func) (state : State.t) : t =
+  let env = Env.create (Unfold cb_unfold) in
   compute env state
