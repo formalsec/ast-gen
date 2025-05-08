@@ -665,6 +665,7 @@ module ExtendedMdg = struct
   type t =
     { mdg : Mdg.t
     ; exported : Exported.t
+    ; tainted : Tainted.t
     }
 
   let compute_cleaner_analysis (state : State.t) : unit =
@@ -673,13 +674,18 @@ module ExtendedMdg = struct
   let compute_exported_analysis (state : State.t) : Exported.t =
     ( if opaque_function_eval state.env then Exported.compute_from_graph
       else Exported.compute_and_unfold build_exported_function )
-      state.env.run_tainted_analysis state
+      state
+
+  let compute_tainted_analysis (state : State.t) exported : Tainted.t =
+    if state.env.run_tainted_analysis then Tainted.compute state exported
+    else Tainted.none ()
 
   let compute_analyses (state : State.t) : t =
     let mdg = state.mdg in
     let exported = compute_exported_analysis state in
     compute_cleaner_analysis state;
-    { mdg; exported }
+    let tainted = compute_tainted_analysis state exported in
+    { mdg; exported; tainted }
 end
 
 let build_program (env : State.Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t)

@@ -8,7 +8,9 @@ module InjectionUnfold = struct
     Fun.flip2 List.fold_left vulns l_sink_calls (fun vulns (l_call, l_sink) ->
         let sink = Node.sink l_sink in
         let ls_args = Query_engine.tainted_sink_args engine l_call sink in
-        if Node.Set.exists (Query_engine.is_tainted engine) ls_args then vulns
+        if Node.Set.exists (Query_engine.is_tainted engine) ls_args then
+          let vuln = Vulnerability.of_node l_call sink in
+          Vulnerability.Set.add vuln vulns
         else vulns )
 end
 

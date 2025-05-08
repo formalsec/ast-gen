@@ -1,9 +1,13 @@
 open Graphjs_base
 open Graphjs_mdg
 
-type t = { mdg : Mdg.t }
+type t =
+  { mdg : Mdg.t
+  ; tainted : Tainted.t
+  }
 
-let initialize (mdg : Mdg.t) : t = { mdg }
+let initialize (e_mdg : Builder.ExtendedMdg.t) : t =
+  { mdg = e_mdg.mdg; tainted = e_mdg.tainted }
 
 let tainted_sinks (engine : t) : Node.t list =
   Fun.flip2 Hashtbl.fold engine.mdg.nodes [] (fun _ l_node acc ->
@@ -22,4 +26,5 @@ let tainted_sink_args (engine : t) (l_call : Node.t) (sink : Taint.sink) :
   |> List.map (fun (_, l_arg) -> l_arg)
   |> Node.Set.of_list
 
-let is_tainted (_engine : t) (_l_node : Node.t) : bool = false
+let is_tainted (engine : t) (l_node : Node.t) : bool =
+  Tainted.is_tainted engine.tainted l_node
