@@ -43,8 +43,8 @@ type package =
 type t = (string, package) Hashtbl.t
 
 let set_source (npm : t) (package_source : Taint_config.package_source) : unit =
-  Fun.flip List.iter package_source.packages (fun package ->
-      let name = package.package in
+  Fun.flip List.iter package_source.pkgs (fun package ->
+      let name = package.name in
       let source = Taint.package_source name package_source in
       match Hashtbl.find_opt npm name with
       | None ->
@@ -57,8 +57,8 @@ let set_source (npm : t) (package_source : Taint_config.package_source) : unit =
         Log.fail "unexpected built npm package during initialization" )
 
 let set_sink (npm : t) (package_sink : Taint_config.package_sink) : unit =
-  Fun.flip List.iter package_sink.packages (fun package ->
-      let name = package.package in
+  Fun.flip List.iter package_sink.pkgs (fun package ->
+      let name = package.name in
 
       let sink = Taint.package_sink name package_sink in
       match Hashtbl.find_opt npm name with
@@ -73,8 +73,8 @@ let set_sink (npm : t) (package_sink : Taint_config.package_sink) : unit =
 
 let create (tconf : Taint_config.t) : t =
   let npm = Hashtbl.create Config.(!dflt_htbl_sz) in
-  List.iter (set_source npm) tconf.package_sources;
-  List.iter (set_sink npm) tconf.package_sinks;
+  List.iter (set_source npm) tconf.p_sources;
+  List.iter (set_sink npm) tconf.p_sinks;
   npm
 
 let pp_package (ppf : Fmt.t) (package : package) : unit =
