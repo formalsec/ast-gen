@@ -26,18 +26,13 @@ module RequireInterceptor = struct
     Mdg.add_node state.mdg l_module;
     l_module
 
-  let resolve_npm (state : State.t) (retn_name : string) (package : string) :
-      Node.Set.t =
-    match Npmlib.resolve_package state.npmlib state.mdg package with
-    | Some l_npm -> Node.Set.singleton l_npm
-    | None -> Store.find state.store retn_name
-
   let process_module (cb_build_file : cb_build_file) (state : State.t)
-      (retn_name : string) (path : Fpath.t) : Node.Set.t =
+      (path : Fpath.t) : Node.Set.t =
     match Pcontext.file state.pcontext path with
     | None ->
-      let package = Fpath.filename path in
-      resolve_npm state retn_name package
+      let name = Fpath.filename path in
+      let l_npmlib = Npmlib.resolve_package state.mdg state.npmlib name in
+      Node.Set.singleton l_npmlib
     | Some file when file.built ->
       Jslib.exported_object ~mrel:file.file.mrel state.mdg state.jslib
     | Some file ->
@@ -50,7 +45,7 @@ module RequireInterceptor = struct
     match get_module_path state ls_args with
     | None -> state
     | Some path ->
-      let ls_exports = process_module cb_build_file state retn_name path in
+      let ls_exports = process_module cb_build_file state path in
       Store.replace state.store retn_name ls_exports;
       state
 end

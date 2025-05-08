@@ -91,7 +91,14 @@ let pp (ppf : Fmt.t) (npmlib : t) : unit =
 
 let str (npmlib : t) : string = Fmt.str "%a" pp npmlib
 
-let build_package_template (mdg : Mdg.t) (template : Template.t) : Node.t =
+let build_unknown_package (mdg : Mdg.t) (npmlib : t) (name : string) : Node.t =
+  let l_npmlib = Node.create_module name in
+  Mdg.add_node mdg l_npmlib;
+  Hashtbl.replace npmlib name (Built l_npmlib);
+  l_npmlib
+
+let build_template_package (mdg : Mdg.t) (npmlib : t) (name : string)
+    (template : Template.t) : Node.t =
   let l_npmlib = Node.create_module template.name in
   Mdg.add_node mdg l_npmlib;
   Fun.flip List.iter template.sinks (fun sink ->
@@ -101,14 +108,11 @@ let build_package_template (mdg : Mdg.t) (template : Template.t) : Node.t =
       let l_sink = Node.create_taint_sink sink parent at in
       Mdg.add_node mdg l_sink;
       Mdg.add_edge mdg (Edge.create_property prop l_npmlib l_sink) );
+  Hashtbl.replace npmlib name (Built l_npmlib);
   l_npmlib
 
-let resolve_package (npmlib : t) (mdg : Mdg.t) (package : string) :
-    Node.t option =
-  match Hashtbl.find_opt npmlib package with
-  | None -> None
-  | Some (Built l_npmlib) -> Some l_npmlib
-  | Some (Template template) ->
-    let l_npmlib = build_package_template mdg template in
-    Hashtbl.replace npmlib package (Built l_npmlib);
-    Some l_npmlib
+let resolve_package (mdg : Mdg.t) (npmlib : t) (name : string) : Node.t =
+  match Hashtbl.find_opt npmlib name with
+  | None -> build_unknown_package mdg npmlib name
+  | Some (Built l_npmlib) -> l_npmlib
+  | Some (Template template) -> build_template_package mdg npmlib name template
