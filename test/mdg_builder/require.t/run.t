@@ -1,4 +1,4 @@
-  $ graphjs mdg --no-export --mode singlefile main.js
+  $ graphjs mdg --no-export main.js
   [[sink]] require[#4] -
   './foo.js'[#10] --< Arg(1) >--> require(...)[#11]
   require(...)[#11] --< Call >--> [[sink]] require[#4]
@@ -39,7 +39,7 @@
   bar.bar4(...)[#32] --< D >--> $v9[#33]
   $v9[#33] -
 
-  $ graphjs mdg --no-export --mode multifile main.js
+  $ graphjs mdg --no-export --multifile main.js
   [[sink]] require[#4] -
   './foo.js'[#10] --< Arg(1) >--> require(...)[#11]
   require(...)[#11] --< Call >--> [[sink]] require[#4]
