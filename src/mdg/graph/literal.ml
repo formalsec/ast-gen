@@ -7,6 +7,7 @@ type kind =
   | Boolean
   | Regex
   | BigInt
+  | Template
 
 type t =
   { kind : kind
@@ -36,6 +37,9 @@ let is_regex (literal : t) : bool =
 
 let is_bigint (literal : t) : bool =
   match literal.kind with BigInt -> true | _ -> false
+
+let is_template (literal : t) : bool =
+  match literal.kind with Template -> true | _ -> false
 
 let pp (ppf : Fmt.t) (literal : t) : unit = Fmt.pp_str ppf literal.raw
 let str (literal : t) : string = Fmt.str "%a" pp literal

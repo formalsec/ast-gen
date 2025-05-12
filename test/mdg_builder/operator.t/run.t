@@ -30,3 +30,8 @@
   $v11[#25] --< D >--> $v13[#27]
   $v12[#26] --< D >--> $v13[#27]
   $v13[#27] -
+
+  $ graphjs mdg --no-export template.js
+  `abc${10} def${true}`[#9] -
+  10[#10] --< D >--> `abc${10} def${true}`[#9]
+  true[#11] --< D >--> `abc${10} def${true}`[#9]
