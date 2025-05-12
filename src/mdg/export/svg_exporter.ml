@@ -43,12 +43,13 @@ module Dot = struct
   let node_label (node : Node.t) : string =
     match node.kind with
     | Literal lit -> Fmt.str "%s" (String.escaped (Literal.str lit))
+    | Blank name -> Fmt.str "%s" (String.escaped name)
     | Object name -> Fmt.str "%s" (String.escaped name)
     | Function name -> Fmt.str "function %s" (String.escaped name)
     | Parameter name -> Fmt.str "%s" (String.escaped name)
     | Call name -> Fmt.str "%s(...)" (String.escaped name)
     | Return name -> Fmt.str "%s" (String.escaped name)
-    | Module name -> Fmt.str "%s" (String.escaped name)
+    | Module name -> Fmt.str "module %s" (String.escaped name)
     | TaintSource -> Fmt.str "{ Taint Source }"
     | TaintSink sink -> Fmt.str "sink %s" (String.escaped sink.name)
 
@@ -100,6 +101,7 @@ module Dot = struct
       ::
       ( match node.kind with
       | Literal _ -> [ `Color 26214; `Fillcolor 13434879 ]
+      | Blank _ -> [ `Color 12632256; `Fillcolor 14737632; `Fontcolor 12632256 ]
       | Object _ -> [ `Color 2105376; `Fillcolor 12632256 ]
       | Function _ -> [ `Color 26112; `Fillcolor 52224 ]
       | Parameter "this" -> [ `Color 6684723; `Fillcolor 16764133 ]

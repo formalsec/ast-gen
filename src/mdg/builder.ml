@@ -135,8 +135,8 @@ let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
   match expr.el with
   | `LiteralValue literal -> eval_literal_expr state literal (newcid expr)
   | `TemplateLiteral { exprs; _ } -> eval_template_literal_expr state expr exprs
-  | `Identifier id -> eval_store_expr state (Identifier.name' id)
-  | `This _ -> eval_store_expr state "this"
+  | `Identifier id -> eval_store_expr state (Identifier.name' id) (newcid expr)
+  | `This _ -> eval_store_expr state "this" (newcid expr)
 
 and eval_literal_expr (state : State.t) (literal : LiteralValue.t) (cid : cid) :
     Node.Set.t =
@@ -146,16 +146,19 @@ and eval_literal_expr (state : State.t) (literal : LiteralValue.t) (cid : cid) :
 
 and eval_template_literal_expr (state : State.t) (expr : 'm Expression.t)
     (exprs : 'm Expression.t list) : Node.Set.t =
-  let raw = Expression.str expr in
-  let literal = Literal.create Template raw in
+  let literal = Literal.create Template (Expression.str expr) in
   let l_literal = State.add_literal_node state (newcid expr) literal in
   let add_dep_f = Fun.flip (State.add_dependency_edge state) l_literal in
   Fun.flip List.iter exprs (fun expr ->
       Node.Set.iter add_dep_f (eval_expr state expr) );
   Node.Set.singleton l_literal
 
-and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
-  Store.find state.store id
+and eval_store_expr (state : State.t) (id : string) (cid : cid) : Node.Set.t =
+  let ls_expr = Store.find state.store id in
+  if Node.Set.is_empty ls_expr then
+    let l_expr = State.add_blank_node state cid id in
+    Node.Set.singleton l_expr
+  else ls_expr
 
 let rec initialize_builder (env : State.Env.t) (tconf : Taint_config.t)
     (prog : 'm Prog.t) : State.t =
@@ -347,7 +350,7 @@ and build_function_call_closed (state : State.t) (left : 'm LeftValue.t)
   let retn_cid = newcid left in
   let call_name = Identifier.name callee in
   let retn_name = LeftValue.name left in
-  let ls_func = eval_store_expr state call_name in
+  let ls_func = eval_store_expr state call_name (newcid callee) in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = Node.Set.empty :: ls_args in
   let add_call_f = add_function_call state call_name retn_name in
@@ -361,7 +364,7 @@ and build_function_call_opened (state : State.t) (left : 'm LeftValue.t)
   let retn_cid = newcid left in
   let call_name = Identifier.name callee in
   let retn_name = LeftValue.name left in
-  let ls_func = eval_store_expr state call_name in
+  let ls_func = eval_store_expr state call_name (newcid callee) in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = Node.Set.empty :: ls_args in
   let unfold_call_f = unfold_function_call state call_name retn_name in
