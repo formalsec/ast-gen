@@ -203,18 +203,6 @@ module MdgOpts = struct
     let parser = Fs.Parser.valid_file in
     Arg.(value & opt (some parser) None & info [ "config" ] ~docv ~doc)
 
-  let literal_mode =
-    let doc =
-      "Configures the handling of literal values in MDG construction. Options \
-       include (1) 'single' for a graph with a single literal object; (2) \
-       'propwrap' for wrapping literal property values in a new object rather \
-       than using the main literal object; and (3) 'multiple' [default] for \
-       creating a new literal node for each occurrence of a literal value. \
-       Using the 'single' mode may increase construction speed and reduce the \
-       graph size, but will introduce graph construction errors." in
-    let modes = Arg.enum Enums.LiteralMode.(args all) in
-    Arg.(value & opt modes Multiple & info [ "literal-mode" ] ~doc)
-
   let func_eval_mode =
     let doc =
       "Configures the evaluation of function calls during the MDG \

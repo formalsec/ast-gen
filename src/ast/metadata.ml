@@ -16,5 +16,6 @@ let ( @> ) (el : 'e) (md : 'm) : ('e, 'm) t =
   let id = id_gen.next () in
   { id; el; md }
 
+let id (x : ('e, 'm) t) : int = x.id
 let el (x : ('e, 'm) t) : 'e = x.el
 let md (x : ('e, 'm) t) : 'm = x.md

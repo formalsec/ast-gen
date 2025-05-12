@@ -3,11 +3,6 @@ open Graphjs_share
 open Graphjs_ast
 
 module Env = struct
-  type literal_mode =
-    | Single
-    | PropWrap
-    | Multiple
-
   type func_eval_mode =
     | Opaque
     | Unfold
@@ -15,8 +10,7 @@ module Env = struct
     | UnfoldDepth of int
 
   type t =
-    { literal_mode : literal_mode
-    ; func_eval_mode : func_eval_mode
+    { func_eval_mode : func_eval_mode
     ; run_cleaner_analysis : bool
     ; run_tainted_analysis : bool
     ; cb_mdg : Fpath.t -> unit
@@ -24,8 +18,7 @@ module Env = struct
 
   let default =
     let dflt =
-      { literal_mode = Multiple
-      ; func_eval_mode = Opaque
+      { func_eval_mode = Opaque
       ; run_cleaner_analysis = true
       ; run_tainted_analysis = true
       ; cb_mdg = (fun _ -> ())
@@ -46,15 +39,9 @@ type t =
   ; curr_stack : Node.t list
   ; curr_parent : Node.t option
   ; curr_return : Node.Set.t
-  ; literal_node : Node.t
-  ; stmt_ctx : stmt_ctx
   }
 
 and call_interceptor = t -> string -> Node.t -> Node.Set.t list -> t
-
-and stmt_ctx =
-  | General
-  | PropUpd
 
 let create (env' : Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t) : t =
   let mdg' = Mdg.create () in
@@ -71,8 +58,6 @@ let create (env' : Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t) : t =
   ; curr_stack = []
   ; curr_parent = None
   ; curr_return = Node.Set.empty
-  ; literal_node = Node.create_default_literal ()
-  ; stmt_ctx = General
   }
 
 let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
@@ -86,7 +71,6 @@ let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
   ; curr_stack = []
   ; curr_parent = l_parent
   ; curr_return = Node.Set.empty
-  ; stmt_ctx = General
   }
 
 let copy (state : t) : t =
@@ -99,9 +83,6 @@ let lub (state1 : t) (state2 : t) : t =
   let store = Store.lub state1.store state2.store in
   let curr_return = Node.Set.union state1.curr_return state2.curr_return in
   { state1 with mdg; store; curr_return }
-
-let stmt_ctx_general (state : t) : t = { state with stmt_ctx = General }
-let stmt_ctx_prop_upd (state : t) : t = { state with stmt_ctx = PropUpd }
 
 type cid = Allocator.cid
 

@@ -40,7 +40,6 @@ let compare (node1 : t) (node2 : t) : int = Location.compare node1.loc node2.loc
 
 let pp (ppf : Fmt.t) (node : t) : unit =
   match node.kind with
-  | Literal lit when Literal.is_default lit -> Fmt.fmt ppf "%a" Literal.pp lit
   | Literal lit -> Fmt.fmt ppf "%a[%a]" Literal.pp lit Location.pp node.loc
   | Object name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
   | Function name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
@@ -67,11 +66,6 @@ module Set = struct
 
   let str (nodes : t) : string = Fmt.str "%a" pp nodes
 end
-
-let create_default_literal () : t =
-  let loc = Location.create () in
-  let kind = Literal (Literal.default ()) in
-  create loc kind None (Region.default ())
 
 let create_literal (literal : Literal.t) : t option -> Region.t -> t =
  fun parent at ->
