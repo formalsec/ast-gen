@@ -14,10 +14,6 @@ type t =
   ; raw : string
   }
 
-let default =
-  let dflt = { kind = Null; raw = "[[literal]]" } in
-  fun () -> dflt
-
 let create (kind : kind) (raw : string) : t = { kind; raw }
 
 let is_null (literal : t) : bool =

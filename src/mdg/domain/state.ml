@@ -103,26 +103,20 @@ let add_node (state : t) (cid : cid)
     Mdg.add_node state.mdg node;
     node
 
-let add_candidate_node (state : t) (cid : cid)
-    (create_node_f : Node.t option -> Region.t -> Node.t) : Node.t =
-  match Allocator.find_opt state.allocator cid with
-  | Some node -> node
-  | None ->
-    let node = create_node_f state.curr_parent (Allocator.at cid) in
-    Allocator.replace state.allocator cid node;
-    node
-
 let add_edge (state : t) (src : Node.t) (tar : Node.t)
     (create_edge_f : Node.t -> Node.t -> Edge.t) : Edge.t =
   let edge = create_edge_f src tar in
   Mdg.add_edge state.mdg edge;
   edge
 
-let add_object_node (state : t) (cid : cid) (name : string) : Node.t =
-  add_node state cid (Node.create_object name)
-
 let add_literal_node (state : t) (cid : cid) (literal : Literal.t) : Node.t =
   add_node state cid (Node.create_literal literal)
+
+let add_blank_node (state : t) (cid : cid) (name : string) : Node.t =
+  add_node state cid (Node.create_blank name)
+
+let add_object_node (state : t) (cid : cid) (name : string) : Node.t =
+  add_node state cid (Node.create_object name)
 
 let add_function_node (state : t) (cid : cid) (name : string) : Node.t =
   add_node state cid (Node.create_function name)

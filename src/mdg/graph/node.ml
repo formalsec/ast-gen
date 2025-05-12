@@ -3,6 +3,7 @@ open Graphjs_ast
 
 type kind =
   | Literal of Literal.t
+  | Blank of string
   | Object of string
   | Function of string
   | Parameter of string
@@ -22,8 +23,7 @@ type t =
 let default =
   let loc = Location.invalid () in
   let at = Region.default () in
-  let kind = Literal (Literal.default ()) in
-  let dflt = { loc; kind; parent = None; at } in
+  let dflt = { loc; kind = Blank ""; parent = None; at } in
   fun () -> dflt
 
 let create (loc : Location.t) (kind : kind) (parent : t option) (at : Region.t)
@@ -41,8 +41,9 @@ let compare (node1 : t) (node2 : t) : int = Location.compare node1.loc node2.loc
 let pp (ppf : Fmt.t) (node : t) : unit =
   match node.kind with
   | Literal lit -> Fmt.fmt ppf "%a[%a]" Literal.pp lit Location.pp node.loc
+  | Blank name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
   | Object name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
-  | Function name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
+  | Function name -> Fmt.fmt ppf "[[function]] %s[%a]" name Location.pp node.loc
   | Parameter name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
   | Call name -> Fmt.fmt ppf "%s(...)[%a]" name Location.pp node.loc
   | Return name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
@@ -71,6 +72,11 @@ let create_literal (literal : Literal.t) : t option -> Region.t -> t =
  fun parent at ->
   let loc = Location.create () in
   create loc (Literal literal) parent at
+
+let create_blank (name : string) : t option -> Region.t -> t =
+ fun parent at ->
+  let loc = Location.create () in
+  create loc (Blank name) parent at
 
 let create_object (name : string) : t option -> Region.t -> t =
  fun parent at ->
@@ -114,6 +120,9 @@ let create_taint_sink (sink : Taint.sink) : t option -> Region.t -> t =
 let is_literal (node : t) : bool =
   match node.kind with Literal _ -> true | _ -> false
 
+let is_blank (node : t) : bool =
+  match node.kind with Object _ -> true | _ -> false
+
 let is_object (node : t) : bool =
   match node.kind with Object _ -> true | _ -> false
 
@@ -140,11 +149,13 @@ let is_taint_sink (node : t) : bool =
 
 let name (node : t) : string =
   match node.kind with
+  | Blank name -> name
   | Object name -> name
   | Function name -> name
   | Parameter name -> name
   | Call name -> name
   | Return name -> name
+  | Module name -> name
   | TaintSink sink -> sink.name
   | _ -> Log.fail "unexpected node '%a' without name" pp node
 
