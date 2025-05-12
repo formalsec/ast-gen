@@ -1,10 +1,12 @@
 open Graphjs_base
-open Graphjs_share
 open Graphjs_parser
 open Result
 
 module Options = struct
-  type env = { absolute_dependency_paths : bool }
+  type env =
+    { multifile : bool
+    ; absolute_dependency_paths : bool
+    }
 
   type t =
     { inputs : Fpath.t list
@@ -13,16 +15,16 @@ module Options = struct
     }
 
   let env (absolute_dependency_paths : bool) : env =
-    { absolute_dependency_paths }
+    { multifile = true; absolute_dependency_paths }
 
   let cmd (inputs : Fpath.t list) (output : Fpath.t option) (env : env) : t =
     { inputs; output; env }
 end
 
 module Graphjs = struct
-  let dep_tree (mode : Analysis_mode.t) (path : Fpath.t) :
+  let dep_tree (multifile : bool) (path : Fpath.t) :
       Dependency_tree.t Exec.result =
-    Exec.graphjs (fun () -> Dependency_tree.generate mode path)
+    Exec.graphjs (fun () -> Dependency_tree.generate multifile path)
 end
 
 module Output = struct
@@ -39,15 +41,10 @@ module Output = struct
     | _ -> ()
 end
 
-let generate_dep_tree (env : Options.env) (w : Workspace.t)
-    (mode : Analysis_mode.t) (path : Fpath.t) : Dependency_tree.t Exec.result =
-  let* dt = Graphjs.dep_tree mode path in
-  Output.dep_tree env.absolute_dependency_paths w dt;
-  Ok dt
-
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     Dependency_tree.t Exec.result =
-  let* dt = generate_dep_tree env w MultiFile input in
+  let* dt = Graphjs.dep_tree env.multifile input in
+  Output.dep_tree env.absolute_dependency_paths w dt;
   Output.main env.absolute_dependency_paths w dt;
   Ok dt
 

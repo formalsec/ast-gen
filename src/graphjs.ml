@@ -41,7 +41,7 @@ let dependencies_cmd =
 let parse_env =
   let open Term in
   const Cmd_parse.Options.env
-  $ Docs.ParseOpts.mode
+  $ Docs.DependenciesOpts.multifile
   $ Docs.ParseOpts.always_fresh
   $ Docs.ParseOpts.disable_hoisting
   $ Docs.ParseOpts.disable_defaults

@@ -1,19 +1,17 @@
 open Graphjs_base
-open Graphjs_share
 open Graphjs_parser.Dependency_tree
 
 let expected (exp : string) (res : string) : bool =
   Log.stderr "Expected:@\n%s@\nResult:@\n%s@\n@." exp res;
   false
 
-let exec (mode : Analysis_mode.t) (path : string) : (t, string) Result.t =
-  match generate mode (Fpath.v path) with
+let exec (multi : bool) (path : string) : (t, string) Result.t =
+  match generate multi (Fpath.v path) with
   | dt -> Ok dt
   | exception Exn fmt -> Error (Fmt.str "%t" fmt)
 
-let test (mode : Analysis_mode.t) (path : string) (exp : (t, string) Result.t) :
-    bool =
-  let res = exec mode path in
+let test (multi : bool) (path : string) (exp : (t, string) Result.t) : bool =
+  let res = exec multi path in
   match (exp, res) with
   | (Ok dt_exp, Ok dt_res) ->
     if equal dt_exp dt_res then true else expected (str dt_exp) (str dt_res)
@@ -23,14 +21,8 @@ let test (mode : Analysis_mode.t) (path : string) (exp : (t, string) Result.t) :
   | (Error err_exp, Ok dt_res) -> expected err_exp (str dt_res)
 
 module Analysis = struct
-  let basic (path : string) (res : (t, string) Result.t) : bool =
-    test Analysis_mode.Basic path res
-
-  let single (path : string) (res : (t, string) Result.t) =
-    test Analysis_mode.SingleFile path res
-
-  let multi (path : string) (res : (t, string) Result.t) =
-    test Analysis_mode.MultiFile path res
+  let single (path : string) (res : (t, string) Result.t) = test false path res
+  let multi (path : string) (res : (t, string) Result.t) = test true path res
 end
 
 module Res = struct

@@ -111,6 +111,12 @@ module FileOpts = struct
 end
 
 module DependenciesOpts = struct
+  let multifile =
+    let doc =
+      "Enables multifile analysis mode for analysing a Node.js package rather \
+       than an individual JavaScript file." in
+    Arg.(value & flag & info [ "multifile" ] ~doc)
+
   let absolute_dependency_paths =
     let doc = "Outputs the dependency tree using absolute paths." in
     Arg.(value & flag & info [ "abs-dep-paths" ] ~doc)
@@ -132,18 +138,6 @@ module DependenciesCmd = struct
 end
 
 module ParseOpts = struct
-  let mode =
-    let docv = "MODE" in
-    let doc =
-      "Analysis mode used in a Graph.js execution. Options include: (1) \
-       'basic' where the attacker controlls all the parameters from all the \
-       functions; (2): 'singlefile' [default] where the attacker controlls the \
-       functions exported by the input file; and (3) 'multifile' where the \
-       attacker controlls the functions that were exported by the 'main' file \
-       of the module." in
-    let modes = Arg.enum Enums.AnalysisMode.(args all) in
-    Arg.(value & opt modes SingleFile & info [ "mode" ] ~docv ~doc)
-
   let always_fresh =
     let doc =
       "Always generates a fresh variable when evaluating the result of an \
