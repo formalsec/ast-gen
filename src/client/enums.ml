@@ -30,15 +30,6 @@ module DebugLvl = struct
   let ( >= ) (lvl1 : t) (lvl2 : t) : bool = Stdlib.(value lvl1 >= value lvl2)
 end
 
-module AnalysisMode = struct
-  include Graphjs_share.Analysis_mode
-
-  let all = [ Basic; SingleFile; MultiFile ]
-
-  let args (modes : t list) : (string * t) list =
-    List.map (fun mode -> (str mode, mode)) modes
-end
-
 module LiteralMode = struct
   type t = Graphjs_mdg.State.Env.literal_mode
 

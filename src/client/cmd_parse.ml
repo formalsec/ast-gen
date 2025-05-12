@@ -1,12 +1,11 @@
 open Graphjs_base
-open Graphjs_share
 open Graphjs_parser
 open Graphjs_ast
 open Result
 
 module Options = struct
   type env =
-    { mode : Analysis_mode.t
+    { multifile : bool
     ; always_fresh : bool
     ; disable_hoisting : bool
     ; disable_defaults : bool
@@ -21,11 +20,10 @@ module Options = struct
     ; env : env
     }
 
-  let env (mode : Analysis_mode.t) (always_fresh : bool)
-      (disable_hoisting : bool) (disable_defaults : bool)
-      (disable_short_circuit : bool) (disable_aliases : bool)
-      (deps_env : Cmd_dependencies.Options.env) : env =
-    { mode
+  let env (multifile : bool) (always_fresh : bool) (disable_hoisting : bool)
+      (disable_defaults : bool) (disable_short_circuit : bool)
+      (disable_aliases : bool) (deps_env : Cmd_dependencies.Options.env) : env =
+    { multifile
     ; always_fresh
     ; disable_hoisting
     ; disable_defaults
@@ -76,8 +74,9 @@ let normalizer_env (env : Options.env) (w : Workspace.t) : Normalizer.Env.t =
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     'm Prog.t Exec.result =
+  let dep_env = { env.deps_env with multifile = env.multifile } in
   let normalizer_env = normalizer_env env w in
-  let* dt = Cmd_dependencies.generate_dep_tree env.deps_env w env.mode input in
+  let* dt = Cmd_dependencies.run dep_env (Workspace.side_perm w) input in
   let* prog = Graphjs.normalize_program normalizer_env dt in
   Output.main w prog;
   Ok prog

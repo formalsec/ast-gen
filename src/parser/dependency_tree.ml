@@ -1,5 +1,4 @@
 open Graphjs_base
-open Graphjs_share
 
 exception Exn of (Fmt.t -> unit)
 
@@ -29,11 +28,11 @@ let find_package_main_file (package_path : string) : string =
     else raise "Unable to find 'index.js' in directory %S." root_path
   | None -> raise "Unable to find main module of directory %S." package_path
 
-let find_main_file (mode : Analysis_mode.t) (path : string) : string =
-  match (Sys.is_directory path, mode) with
+let find_main_file (multifile : bool) (path : string) : string =
+  match (Sys.is_directory path, multifile) with
   | (false, _) -> Unix.realpath path
-  | (true, MultiFile) -> find_package_main_file path
-  | (true, (Basic | SingleFile)) ->
+  | (true, true) -> find_package_main_file path
+  | (true, false) ->
     raise "Unable to perform basic/singlefile analysis in directory %S." path
   | exception Sys_error _ -> raise "Unable to find the provided path %S." path
 
@@ -90,15 +89,14 @@ let create (structure : Json.t) : t =
     { path; mrel; deps; cyclic = false }
   | structure -> Log.fail "unexpected dependency tree:@\n%a" Json.pp structure
 
-let generate_structure (mode : Analysis_mode.t) (main_file : string) : string =
-  match mode with
-  | Basic | SingleFile -> Fmt.str "{ %S : {} }" main_file
-  | MultiFile -> Console.execute (Fmt.str "dt %s" main_file)
+let generate_structure (multifile : bool) (main_file : string) : string =
+  if multifile then Console.execute (Fmt.str "dt %s" main_file)
+  else Fmt.str "{ %S : {} }" main_file
 
-let generate (mode : Analysis_mode.t) (path : Fpath.t) : t =
+let generate (multifile : bool) (path : Fpath.t) : t =
   let path' = Fpath.to_string path in
-  let main_path = find_main_file mode path' in
-  let structure = generate_structure mode main_path in
+  let main_path = find_main_file multifile path' in
+  let structure = generate_structure multifile main_path in
   create (Json.from_string structure)
 
 let equal (dt1 : t) (dt2 : t) : bool = compare dt1 dt2 == 0
@@ -125,13 +123,3 @@ let visit (f : Fpath.t * Fpath.t -> 'a -> 'a) (dt : t) (acc : 'a) : 'a =
       f (path, mrel) acc'
     else acc in
   visit' dt acc
-
-let visit_list (f : Fpath.t * Fpath.t -> 'a) (dt : t) : 'a list =
-  let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
-  let rec visit' { path; mrel; deps; _ } acc =
-    if not (Hashtbl.mem visited mrel) then
-      let _ = Hashtbl.add visited mrel () in
-      let deps_acc = DepSet.fold visit' deps [] in
-      acc @ deps_acc @ [ f (path, mrel) ]
-    else acc in
-  visit' dt []
