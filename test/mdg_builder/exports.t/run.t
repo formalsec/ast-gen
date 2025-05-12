@@ -1,110 +1,110 @@
   $ graphjs mdg --no-export exports.js
-  module[#8] --< P(exports) >--> exports[#9]
-  exports[#9] --< V(foo) >--> exports[#13]
-  $v1[#10] --< Param(0) >--> this[#11]
-  $v1[#10] --< Param(1) >--> x1[#12]
-  this[#11] -
-  x1[#12] -
-  exports[#13] --< P(foo) >--> $v1[#10]
-  exports[#13] --< V(bar) >--> exports[#19]
-  $v2[#14] --< Param(0) >--> this[#15]
-  $v2[#14] --< Param(1) >--> x2[#16]
-  $v2[#14] --< Param(2) >--> y2[#17]
-  $v2[#14] --< Param(3) >--> z2[#18]
-  this[#15] -
-  x2[#16] -
-  y2[#17] -
-  z2[#18] -
-  exports[#19] --< P(bar) >--> $v2[#14]
-  exports[#20] --< V(baz) >--> exports[#24]
-  $v3[#21] --< Param(0) >--> this[#22]
-  $v3[#21] --< Param(1) >--> x3[#23]
-  this[#22] -
-  x3[#23] -
-  exports[#24] --< P(baz) >--> $v3[#21]
-  [[taint]] --< D >--> exports[#9]
-  [[taint]] --< D >--> $v1[#10]
-  [[taint]] --< D >--> $v2[#14]
+  module[#7] --< P(exports) >--> exports[#8]
+  exports[#8] --< V(foo) >--> exports[#12]
+  $v1[#9] --< Param(0) >--> this[#10]
+  $v1[#9] --< Param(1) >--> x1[#11]
+  this[#10] -
+  x1[#11] -
+  exports[#12] --< P(foo) >--> $v1[#9]
+  exports[#12] --< V(bar) >--> exports[#18]
+  $v2[#13] --< Param(0) >--> this[#14]
+  $v2[#13] --< Param(1) >--> x2[#15]
+  $v2[#13] --< Param(2) >--> y2[#16]
+  $v2[#13] --< Param(3) >--> z2[#17]
+  this[#14] -
+  x2[#15] -
+  y2[#16] -
+  z2[#17] -
+  exports[#18] --< P(bar) >--> $v2[#13]
+  exports[#19] --< V(baz) >--> exports[#23]
+  $v3[#20] --< Param(0) >--> this[#21]
+  $v3[#20] --< Param(1) >--> x3[#22]
+  this[#21] -
+  x3[#22] -
+  exports[#23] --< P(baz) >--> $v3[#20]
+  [[taint]] --< D >--> exports[#8]
+  [[taint]] --< D >--> $v1[#9]
+  [[taint]] --< D >--> $v2[#13]
 
   $ graphjs mdg --no-export module.js
-  module[#8] --< P(exports) >--> exports[#9]
-  module[#8] --< V(exports) >--> module[#21]
-  exports[#9] --< V(foo) >--> exports[#13]
-  $v1[#10] --< Param(0) >--> this[#11]
-  $v1[#10] --< Param(1) >--> x1[#12]
-  this[#11] -
-  x1[#12] -
-  exports[#13] --< P(foo) >--> $v1[#10]
-  exports[#13] --< V(bar) >--> exports[#19]
-  $v3[#14] --< Param(0) >--> this[#15]
-  $v3[#14] --< Param(1) >--> x2[#16]
-  $v3[#14] --< Param(2) >--> y2[#17]
-  $v3[#14] --< Param(3) >--> z2[#18]
-  this[#15] -
-  x2[#16] -
-  y2[#17] -
-  z2[#18] -
-  exports[#19] --< P(bar) >--> $v3[#14]
-  $v5[#20] --< V(baz) >--> $v5[#25]
-  module[#21] --< P(exports) >--> $v5[#20]
-  $v6[#22] --< Param(0) >--> this[#23]
-  $v6[#22] --< Param(1) >--> x3[#24]
-  this[#23] -
-  x3[#24] -
-  $v5[#25] --< P(baz) >--> $v6[#22]
-  [[taint]] --< D >--> $v5[#20]
-  [[taint]] --< D >--> $v6[#22]
-
-  $ graphjs mdg --no-export dynamic.js
-  module[#8] --< P(exports) >--> exports[#9]
-  module[#8] --< P(*) >--> module.*[#19]
-  exports[#9] --< V(foo) >--> exports[#13]
-  $v1[#10] --< Param(0) >--> this[#11]
-  $v1[#10] --< Param(1) >--> x1[#12]
-  this[#11] -
-  x1[#12] -
-  exports[#13] --< P(foo) >--> $v1[#10]
-  exports[#13] --< V(bar) >--> $v4[#20]
-  $v3[#14] --< Param(0) >--> this[#15]
-  $v3[#14] --< Param(1) >--> x2[#16]
-  $v3[#14] --< Param(2) >--> y2[#17]
-  $v3[#14] --< Param(3) >--> z2[#18]
-  this[#15] -
-  x2[#16] -
-  y2[#17] -
-  z2[#18] -
-  module.*[#19] --< V(bar) >--> $v4[#20]
-  $v4[#20] --< P(bar) >--> $v3[#14]
-  $v4[#20] --< V(*) >--> $v4[#24]
-  $v5[#21] --< Param(0) >--> this[#22]
-  $v5[#21] --< Param(1) >--> x3[#23]
+  module[#7] --< P(exports) >--> exports[#8]
+  module[#7] --< V(exports) >--> module[#20]
+  exports[#8] --< V(foo) >--> exports[#12]
+  $v1[#9] --< Param(0) >--> this[#10]
+  $v1[#9] --< Param(1) >--> x1[#11]
+  this[#10] -
+  x1[#11] -
+  exports[#12] --< P(foo) >--> $v1[#9]
+  exports[#12] --< V(bar) >--> exports[#18]
+  $v3[#13] --< Param(0) >--> this[#14]
+  $v3[#13] --< Param(1) >--> x2[#15]
+  $v3[#13] --< Param(2) >--> y2[#16]
+  $v3[#13] --< Param(3) >--> z2[#17]
+  this[#14] -
+  x2[#15] -
+  y2[#16] -
+  z2[#17] -
+  exports[#18] --< P(bar) >--> $v3[#13]
+  $v5[#19] --< V(baz) >--> $v5[#24]
+  module[#20] --< P(exports) >--> $v5[#19]
+  $v6[#21] --< Param(0) >--> this[#22]
+  $v6[#21] --< Param(1) >--> x3[#23]
   this[#22] -
   x3[#23] -
-  $v4[#24] --< P(*) >--> $v5[#21]
-  [[taint]] --< D >--> exports[#9]
-  [[taint]] --< D >--> $v1[#10]
-  [[taint]] --< D >--> $v3[#14]
-  [[taint]] --< D >--> module.*[#19]
-  [[taint]] --< D >--> $v5[#21]
+  $v5[#24] --< P(baz) >--> $v6[#21]
+  [[taint]] --< D >--> $v5[#19]
+  [[taint]] --< D >--> $v6[#21]
+
+  $ graphjs mdg --no-export dynamic.js
+  module[#7] --< P(exports) >--> exports[#8]
+  module[#7] --< P(*) >--> module.*[#18]
+  exports[#8] --< V(foo) >--> exports[#12]
+  $v1[#9] --< Param(0) >--> this[#10]
+  $v1[#9] --< Param(1) >--> x1[#11]
+  this[#10] -
+  x1[#11] -
+  exports[#12] --< P(foo) >--> $v1[#9]
+  exports[#12] --< V(bar) >--> $v4[#19]
+  $v3[#13] --< Param(0) >--> this[#14]
+  $v3[#13] --< Param(1) >--> x2[#15]
+  $v3[#13] --< Param(2) >--> y2[#16]
+  $v3[#13] --< Param(3) >--> z2[#17]
+  this[#14] -
+  x2[#15] -
+  y2[#16] -
+  z2[#17] -
+  module.*[#18] --< V(bar) >--> $v4[#19]
+  $v4[#19] --< P(bar) >--> $v3[#13]
+  $v4[#19] --< V(*) >--> $v4[#23]
+  $v5[#20] --< Param(0) >--> this[#21]
+  $v5[#20] --< Param(1) >--> x3[#22]
+  this[#21] -
+  x3[#22] -
+  $v4[#23] --< P(*) >--> $v5[#20]
+  [[taint]] --< D >--> exports[#8]
+  [[taint]] --< D >--> $v1[#9]
+  [[taint]] --< D >--> $v3[#13]
+  [[taint]] --< D >--> module.*[#18]
+  [[taint]] --< D >--> $v5[#20]
 
   $ graphjs mdg --no-export mixed.js
-  module[#8] --< P(exports) >--> exports[#9]
-  exports[#9] --< V(foo) >--> exports[#13]
-  $v1[#10] --< Param(0) >--> this[#11]
-  $v1[#10] --< Param(1) >--> x1[#12]
-  this[#11] -
-  x1[#12] -
-  exports[#13] --< P(foo) >--> $v1[#10]
-  exports[#13] --< V(bar) >--> exports[#19]
-  $v2[#14] --< Param(0) >--> this[#15]
-  $v2[#14] --< Param(1) >--> x2[#16]
-  $v2[#14] --< Param(2) >--> y2[#17]
-  $v2[#14] --< Param(3) >--> z2[#18]
-  this[#15] -
-  x2[#16] -
-  y2[#17] -
-  z2[#18] -
-  exports[#19] --< P(bar) >--> $v2[#14]
-  [[taint]] --< D >--> exports[#9]
-  [[taint]] --< D >--> $v1[#10]
-  [[taint]] --< D >--> $v2[#14]
+  module[#7] --< P(exports) >--> exports[#8]
+  exports[#8] --< V(foo) >--> exports[#12]
+  $v1[#9] --< Param(0) >--> this[#10]
+  $v1[#9] --< Param(1) >--> x1[#11]
+  this[#10] -
+  x1[#11] -
+  exports[#12] --< P(foo) >--> $v1[#9]
+  exports[#12] --< V(bar) >--> exports[#18]
+  $v2[#13] --< Param(0) >--> this[#14]
+  $v2[#13] --< Param(1) >--> x2[#15]
+  $v2[#13] --< Param(2) >--> y2[#16]
+  $v2[#13] --< Param(3) >--> z2[#17]
+  this[#14] -
+  x2[#15] -
+  y2[#16] -
+  z2[#17] -
+  exports[#18] --< P(bar) >--> $v2[#13]
+  [[taint]] --< D >--> exports[#8]
+  [[taint]] --< D >--> $v1[#9]
+  [[taint]] --< D >--> $v2[#13]
