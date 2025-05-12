@@ -155,7 +155,6 @@ let name (node : t) : string =
   | Parameter name -> name
   | Call name -> name
   | Return name -> name
-  | Module name -> name
   | TaintSink sink -> sink.name
   | _ -> Log.fail "unexpected node '%a' without name" pp node
 
