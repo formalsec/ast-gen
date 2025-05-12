@@ -132,10 +132,9 @@ let call_interceptor (state : State.t) (retn_name : string)
       | None -> state )
 
 let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
-  let exprs_f acc expr = Node.Set.union acc (eval_expr state expr) in
   match expr.el with
   | `LiteralValue literal -> eval_literal_expr state literal (newcid expr)
-  | `TemplateLiteral { exprs; _ } -> List.fold_left exprs_f Node.Set.empty exprs
+  | `TemplateLiteral { exprs; _ } -> eval_template_literal_expr state expr exprs
   | `Identifier id -> eval_store_expr state (Identifier.name' id)
   | `This _ -> eval_store_expr state "this"
 
@@ -143,6 +142,16 @@ and eval_literal_expr (state : State.t) (literal : LiteralValue.t) (cid : cid) :
     Node.Set.t =
   let literal' = convert_literal literal in
   let l_literal = State.add_literal_node state cid literal' in
+  Node.Set.singleton l_literal
+
+and eval_template_literal_expr (state : State.t) (expr : 'm Expression.t)
+    (exprs : 'm Expression.t list) : Node.Set.t =
+  let raw = Expression.str expr in
+  let literal = Literal.create Template raw in
+  let l_literal = State.add_literal_node state (newcid expr) literal in
+  let add_dep_f = Fun.flip (State.add_dependency_edge state) l_literal in
+  Fun.flip List.iter exprs (fun expr ->
+      Node.Set.iter add_dep_f (eval_expr state expr) );
   Node.Set.singleton l_literal
 
 and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
