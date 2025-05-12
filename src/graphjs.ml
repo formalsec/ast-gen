@@ -65,7 +65,6 @@ let mdg_env =
   let open Term in
   const Cmd_mdg.Options.env
   $ Docs.MdgOpts.taint_config
-  $ Docs.MdgOpts.literal_mode
   $ Docs.MdgOpts.func_eval_mode
   $ Docs.MdgOpts.no_cleaner_analysis
   $ Docs.MdgOpts.no_tainted_analysis

@@ -27,17 +27,5 @@ let compute_excess_jslib (state : State.t) (acc : Node.t list) : Node.t list =
       | TaintSink _ when is_excess_sink state.mdg l_node -> l_node :: acc
       | _ -> acc )
 
-let compute_excess_literal (state : State.t) (acc : Node.t list) : Node.t list =
-  match state.env.literal_mode with
-  | Single | PropWrap ->
-    let l_literal = state.literal_node in
-    let edges = Mdg.get_edges state.mdg l_literal.loc in
-    let trans = Mdg.get_trans state.mdg l_literal.loc in
-    if Edge.Set.is_empty edges && Edge.Set.is_empty trans then l_literal :: acc
-    else acc
-  | Multiple -> acc
-
 let compute (state : State.t) : unit =
-  compute_excess_jslib state []
-  |> compute_excess_literal state
-  |> Mdg.remove_nodes state.mdg
+  compute_excess_jslib state [] |> Mdg.remove_nodes state.mdg

@@ -42,7 +42,6 @@ module Dot = struct
 
   let node_label (node : Node.t) : string =
     match node.kind with
-    | Literal lit when Literal.is_default lit -> Fmt.str "{ Literal Object }"
     | Literal lit -> Fmt.str "%s" (String.escaped (Literal.str lit))
     | Object name -> Fmt.str "%s" (String.escaped name)
     | Function name -> Fmt.str "function %s" (String.escaped name)

@@ -1,7 +1,6 @@
 open Graphjs_base
 
 type kind =
-  | Default
   | Null
   | String
   | Number
@@ -15,13 +14,10 @@ type t =
   }
 
 let default =
-  let dflt = { kind = Default; raw = "" } in
+  let dflt = { kind = Null; raw = "[[literal]]" } in
   fun () -> dflt
 
 let create (kind : kind) (raw : string) : t = { kind; raw }
-
-let is_default (literal : t) : bool =
-  match literal.kind with Default -> true | _ -> false
 
 let is_null (literal : t) : bool =
   match literal.kind with Null -> true | _ -> false
@@ -41,9 +37,5 @@ let is_regex (literal : t) : bool =
 let is_bigint (literal : t) : bool =
   match literal.kind with BigInt -> true | _ -> false
 
-let pp (ppf : Fmt.t) (literal : t) : unit =
-  match literal.kind with
-  | Default -> Fmt.pp_str ppf "[[literal]]"
-  | _ -> Fmt.pp_str ppf literal.raw
-
+let pp (ppf : Fmt.t) (literal : t) : unit = Fmt.pp_str ppf literal.raw
 let str (literal : t) : string = Fmt.str "%a" pp literal

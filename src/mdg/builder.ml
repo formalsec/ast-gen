@@ -3,14 +3,10 @@ open Graphjs_share
 open Graphjs_ast
 open Metadata
 
-type 'a el = ('a, Region.t) Metadata.t
 type cid = Allocator.cid
 
-let newcid (el : 'a el) : cid = Allocator.cid el
+let newcid (el : ('a, Region.t) Metadata.t) : cid = Allocator.cid el
 let offset (cid : cid) (ofs : int) : cid = Allocator.offset cid ofs
-
-let multiple_literal_mode (env : State.Env.t) : bool =
-  match env.literal_mode with Multiple -> true | _ -> false
 
 let opaque_function_eval (env : State.Env.t) : bool =
   match env.func_eval_mode with Opaque -> true | _ -> false
@@ -145,12 +141,9 @@ let rec eval_expr (state : State.t) (expr : 'm Expression.t) : Node.Set.t =
 
 and eval_literal_expr (state : State.t) (literal : LiteralValue.t) (cid : cid) :
     Node.Set.t =
-  match (state.env.literal_mode, state.stmt_ctx) with
-  | (Multiple, _) | (PropWrap, PropUpd) ->
-    let literal' = convert_literal literal in
-    let l_literal = State.add_literal_node state cid literal' in
-    Node.Set.singleton l_literal
-  | _ -> Node.Set.singleton state.literal_node
+  let literal' = convert_literal literal in
+  let l_literal = State.add_literal_node state cid literal' in
+  Node.Set.singleton l_literal
 
 and eval_store_expr (state : State.t) (id : string) : Node.Set.t =
   Store.find state.store id
@@ -161,8 +154,6 @@ let rec initialize_builder (env : State.Env.t) (tconf : Taint_config.t)
   let state = State.create env tconf prog in
   let cbs_builder = Interceptor.cbs_builder build_file in
   Interceptor.initialize state cbs_builder;
-  if not (multiple_literal_mode env) then
-    Mdg.add_node state.mdg state.literal_node;
   state
 
 and initialize_file (state : State.t) (f : 'm File.t) (main : bool)
@@ -287,7 +278,7 @@ and build_static_update (state : State.t) (obj : 'm Expression.t)
     (prop : 'm Prop.t) (right : 'm Expression.t) (cid : cid) : State.t =
   let prop' = Property.Static (Prop.name prop) in
   let ls_obj = eval_expr state obj in
-  let ls_right = eval_expr (State.stmt_ctx_prop_upd state) right in
+  let ls_right = eval_expr state right in
   let obj_name = object_name ls_obj obj in
   let ls_new = add_static_object_version state obj_name ls_obj prop' cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->
@@ -300,7 +291,7 @@ and build_dynamic_update (state : State.t) (obj : 'm Expression.t)
   let prop' = Property.Dynamic in
   let ls_obj = eval_expr state obj in
   let ls_prop = eval_expr state prop in
-  let ls_right = eval_expr (State.stmt_ctx_prop_upd state) right in
+  let ls_right = eval_expr state right in
   let obj_name = object_name ls_obj obj in
   let ls_new = add_dynamic_object_version state obj_name ls_obj ls_prop cid in
   Fun.flip Node.Set.iter ls_new (fun l_new ->

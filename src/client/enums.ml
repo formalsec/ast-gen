@@ -30,23 +30,6 @@ module DebugLvl = struct
   let ( >= ) (lvl1 : t) (lvl2 : t) : bool = Stdlib.(value lvl1 >= value lvl2)
 end
 
-module LiteralMode = struct
-  type t = Graphjs_mdg.State.Env.literal_mode
-
-  let all = Graphjs_mdg.State.Env.[ Single; PropWrap; Multiple ]
-
-  let pp (ppf : Fmt.t) (mode : t) : unit =
-    match mode with
-    | Single -> Fmt.pp_str ppf "single"
-    | PropWrap -> Fmt.pp_str ppf "propwrap"
-    | Multiple -> Fmt.pp_str ppf "multiple"
-
-  let str (mode : t) : string = Fmt.str "%a" pp mode
-
-  let args (modes : t list) : (string * t) list =
-    List.map (fun mode -> (str mode, mode)) modes
-end
-
 module FuncEvalMode = struct
   type t = Graphjs_mdg.State.Env.func_eval_mode
 
