@@ -1,3 +1,4 @@
+Graph.js MDG Builder: if statement
   $ graphjs mdg --no-export if.js
   x1[#9] --< V(p1) >--> x1[#11]
   10[#10] -
@@ -33,6 +34,7 @@
   w[#37] --< P(q1) >--> w1[#33]
   w[#37] --< P(q1) >--> w1[#35]
 
+Graph.js MDG Builder: switch statement
   $ graphjs mdg --no-export switch.js
   x1[#9] --< V(p1) >--> x1[#11]
   10[#10] -
