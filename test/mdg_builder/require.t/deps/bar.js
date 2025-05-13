@@ -6,8 +6,7 @@ const baz = require("./baz");
 let bar1 = { p: function (y) { baz(y); } };
 // variable declaration with an object initialization storing a no-parameter empty method
 let bar2 = { p: function () { } };
-// variable declaration with an object initialization storing an object 
-// with the 'baz' method of the 'baz' module
+// variable declaration with an object initialization storing an object with the 'baz' method of the 'baz' module
 let bar3 = { p: { q: baz } };
 
 // exports in property bar1 of a single-parameter function 

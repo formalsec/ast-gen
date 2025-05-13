@@ -1,3 +1,4 @@
+Graph.js MDG Builder: week property lookup
   $ graphjs mdg --no-export property_lookup.js
   $v1[#9] --< P(foo) >--> obj.foo[#11]
   $v1[#9] --< P(bar) >--> obj.bar[#12]
@@ -16,6 +17,7 @@
   obj.abc[#15] -
   obj.null[#16] -
 
+Graph.js MDG Builder: week property update
   $ graphjs mdg --no-export property_update.js
   $v1[#9] --< V(foo) >--> obj[#12]
   $v1[#9] --< P(bar) >--> obj.bar[#15]
@@ -39,6 +41,7 @@
   10[#22] -
   obj[#23] --< P(null) >--> 10[#22]
 
+Graph.js MDG Builder: week property access
   $ graphjs mdg --no-export property_access.js
   $v1[#9] --< V(foo) >--> obj[#12]
   $v1[#9] --< P(foo) >--> obj.foo[#15]
@@ -58,16 +61,17 @@
   obj.bar[#17] -
   obj[#18] --< P(baz) >--> $v3[#13]
 
+Graph.js MDG Builder: week method call
   $ graphjs mdg --no-export method_call.js
   $v1[#9] --< V(foo) >--> $v1[#13]
   $v1[#9] --< P(foo) >--> obj.foo[#22]
   $v1[#9] --< P(bar) >--> obj.bar[#28]
   $v1[#9] --< P(baz) >--> obj.baz[#32]
-  $v2[#10] --< Param(0) >--> this[#11]
-  $v2[#10] --< Param(1) >--> x1[#12]
+  [[function]] $v2[#10] --< Param(0) >--> this[#11]
+  [[function]] $v2[#10] --< Param(1) >--> x1[#12]
   this[#11] -
   x1[#12] -
-  $v1[#13] --< P(foo) >--> $v2[#10]
+  $v1[#13] --< P(foo) >--> [[function]] $v2[#10]
   $v1[#13] --< Arg(0) >--> obj.foo(...)[#23]
   $v1[#13] --< Arg(0) >--> obj.bar(...)[#29]
   $v1[#13] --< Arg(0) >--> obj.baz(...)[#33]
@@ -75,21 +79,21 @@
   $v3[#14] --< P(foo) >--> obj.foo[#22]
   $v3[#14] --< P(bar) >--> obj.bar[#28]
   $v3[#14] --< P(baz) >--> obj.baz[#32]
-  $v4[#15] --< Param(0) >--> this[#16]
-  $v4[#15] --< Param(1) >--> y1[#17]
-  $v4[#15] --< Param(2) >--> y2[#18]
-  $v4[#15] --< Param(3) >--> y3[#19]
+  [[function]] $v4[#15] --< Param(0) >--> this[#16]
+  [[function]] $v4[#15] --< Param(1) >--> y1[#17]
+  [[function]] $v4[#15] --< Param(2) >--> y2[#18]
+  [[function]] $v4[#15] --< Param(3) >--> y3[#19]
   this[#16] -
   y1[#17] -
   y2[#18] -
   y3[#19] -
-  $v3[#20] --< P(bar) >--> $v4[#15]
+  $v3[#20] --< P(bar) >--> [[function]] $v4[#15]
   $v3[#20] --< Arg(0) >--> obj.foo(...)[#23]
   $v3[#20] --< Arg(0) >--> obj.bar(...)[#29]
   $v3[#20] --< Arg(0) >--> obj.baz(...)[#33]
   10[#21] --< Arg(1) >--> obj.foo(...)[#23]
   obj.foo[#22] -
-  obj.foo(...)[#23] --< Call >--> $v2[#10]
+  obj.foo(...)[#23] --< Call >--> [[function]] $v2[#10]
   obj.foo(...)[#23] --< Call >--> obj.foo[#22]
   obj.foo(...)[#23] --< D >--> $v5[#24]
   $v5[#24] -
@@ -97,7 +101,7 @@
   "abc"[#26] --< Arg(2) >--> obj.bar(...)[#29]
   true[#27] --< Arg(3) >--> obj.bar(...)[#29]
   obj.bar[#28] -
-  obj.bar(...)[#29] --< Call >--> $v4[#15]
+  obj.bar(...)[#29] --< Call >--> [[function]] $v4[#15]
   obj.bar(...)[#29] --< Call >--> obj.bar[#28]
   obj.bar(...)[#29] --< D >--> $v6[#30]
   $v6[#30] -
@@ -107,6 +111,7 @@
   obj.baz(...)[#33] --< D >--> $v7[#34]
   $v7[#34] -
 
+Graph.js MDG Builder: week property value
   $ graphjs mdg --no-export property_value.js
   $v1[#9] --< V(foo) >--> obj[#12]
   $v1[#9] --< P(foo) >--> obj.foo[#17]
@@ -124,28 +129,29 @@
   obj2[#18] --< P(bar) >--> $v4[#13]
   obj2[#18] --< P(bar) >--> $v5[#14]
 
+Graph.js MDG Builder: week function call
   $ graphjs mdg --no-export function_call.js
-  $v1[#9] --< Param(0) >--> this[#10]
-  $v1[#9] --< Param(1) >--> x1[#11]
+  [[function]] $v1[#9] --< Param(0) >--> this[#10]
+  [[function]] $v1[#9] --< Param(1) >--> x1[#11]
   this[#10] -
   x1[#11] -
-  $v2[#12] --< Param(0) >--> this[#13]
-  $v2[#12] --< Param(1) >--> y1[#14]
-  $v2[#12] --< Param(2) >--> y2[#15]
-  $v2[#12] --< Param(3) >--> y3[#16]
+  [[function]] $v2[#12] --< Param(0) >--> this[#13]
+  [[function]] $v2[#12] --< Param(1) >--> y1[#14]
+  [[function]] $v2[#12] --< Param(2) >--> y2[#15]
+  [[function]] $v2[#12] --< Param(3) >--> y3[#16]
   this[#13] -
   y1[#14] -
   y2[#15] -
   y3[#16] -
   10[#17] --< Arg(1) >--> foo(...)[#18]
-  foo(...)[#18] --< Call >--> $v1[#9]
-  foo(...)[#18] --< Call >--> $v2[#12]
+  foo(...)[#18] --< Call >--> [[function]] $v1[#9]
+  foo(...)[#18] --< Call >--> [[function]] $v2[#12]
   foo(...)[#18] --< D >--> $v3[#19]
   $v3[#19] -
   10[#20] --< Arg(1) >--> foo(...)[#23]
   "abc"[#21] --< Arg(2) >--> foo(...)[#23]
   true[#22] --< Arg(3) >--> foo(...)[#23]
-  foo(...)[#23] --< Call >--> $v1[#9]
-  foo(...)[#23] --< Call >--> $v2[#12]
+  foo(...)[#23] --< Call >--> [[function]] $v1[#9]
+  foo(...)[#23] --< Call >--> [[function]] $v2[#12]
   foo(...)[#23] --< D >--> $v4[#24]
   $v4[#24] -

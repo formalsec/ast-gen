@@ -1,3 +1,4 @@
+Graph.js MDG Builder: unary operator
   $ graphjs mdg --no-export unopt.js
   10[#9] --< D >--> $v1[#10]
   $v1[#10] -
@@ -10,6 +11,7 @@
   $v7[#17] --< D >--> $v8[#18]
   $v8[#18] -
 
+Graph.js MDG Builder: binary operator
   $ graphjs mdg --no-export binopt.js
   10[#9] --< D >--> $v1[#11]
   "abc"[#10] --< D >--> $v1[#11]
@@ -31,6 +33,7 @@
   $v12[#26] --< D >--> $v13[#27]
   $v13[#27] -
 
+Graph.js MDG Builder: template expression
   $ graphjs mdg --no-export template.js
   `abc${10} def${true}`[#9] -
   10[#10] --< D >--> `abc${10} def${true}`[#9]
