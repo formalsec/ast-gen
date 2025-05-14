@@ -12,6 +12,7 @@ module ExitCodes = struct
   let deptree = 1
   let parsejs = 2
   let export_mdg = 3
+  let validate = 4
 end
 
 module Exits = struct
@@ -33,6 +34,10 @@ module Exits = struct
   let mdg =
     let export = info ~doc:"on MDG export error" ExitCodes.export_mdg in
     [ export ]
+
+  let validate =
+    let validate = info ~doc:"on query validation error" ExitCodes.validate in
+    [ validate ]
 end
 
 module CommonOpts = struct
@@ -73,11 +78,23 @@ module FileOpts = struct
     let parser = Fs.Parser.valid_file in
     Arg.(required & pos 0 (some parser) None & info [] ~docv ~doc)
 
+  let input_files =
+    let docv = "FILE..." in
+    let doc = "Path to the input files." in
+    let parser = Fs.Parser.valid_file in
+    Arg.(non_empty & pos_all parser [] & info [] ~docv ~doc)
+
   let input_dir =
-    let docv = "FILE" in
+    let docv = "DIR" in
     let doc = "Path to the input directory." in
     let parser = Fs.Parser.valid_dir in
     Arg.(required & pos 0 (some parser) None & info [] ~docv ~doc)
+
+  let input_dirs =
+    let docv = "DIR..." in
+    let doc = "Path to the input directories." in
+    let parser = Fs.Parser.valid_dir in
+    Arg.(non_empty & pos_all parser [] & info [] ~docv ~doc)
 
   let input_path =
     let docv = "FILE|DIR" in
@@ -285,19 +302,38 @@ end
 
 module QueryCmd = struct
   let name = "query"
-  let doc = "Executes pre-defined queries on a Node.js package"
+  let doc = "Executes pre-defined vulnerability queries on a Node.js package"
   let sdocs = Manpage.s_common_options
 
   let description =
-    [| "Given a Node.js package, executes a set of built-in queries to detect \
-        vulnerabilities in the package. Example vulnerabilities include code \
-        and command injection, path traversal, and prototype pollution. Note \
-        that these queries require the graph to be constructed using the \
-        unfold option." |]
+    [| "Given a Node.js package, executes a set of built-in vulnerability \
+        queries on the package. Example vulnerabilities include code and \
+        command injection, path traversal, and prototype pollution. Note that \
+        these queries require the graph to be constructed using the unfold \
+        option." |]
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
   let exits = Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg
+end
+
+module ValidateCmd = struct
+  let name = "validate"
+  let doc = "Validates the query results for a Node.js package"
+  let sdocs = Manpage.s_common_options
+
+  let description =
+    [| "Given a Node.js package, executes a set of built-in vulnerability \
+        queries on the package, and validates the obtained results. As input, \
+        this command expects a directory containing two subdirectories: \
+        'src/', which holds the code to be analyzed, and 'expected/', which \
+        contains the expected results." |]
+
+  let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
+  let man_xrefs = []
+
+  let exits =
+    Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg @ Exits.validate
 end
 
 module Application = struct

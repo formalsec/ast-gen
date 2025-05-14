@@ -7,12 +7,14 @@
   workspace
   bulk
   exec
+  query_expected
   enums
   docs
   cmd_dependencies
   cmd_parse
   cmd_mdg
-  cmd_query)
+  cmd_query
+  cmd_validate)
  (libraries
   graphjs_base
   graphjs_share
