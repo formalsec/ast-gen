@@ -991,7 +991,8 @@ and normalize_expr (ctx : Ctx.t) : (Loc.t, Loc.t) Flow.Expression.t -> n_expr =
  | (_, JSXElement _) | (_, JSXFragment _) ->
    Log.fail "[not implemented]: React expressions"
  | (_, ModuleRefLiteral _) ->
-   Log.fail "[internal flow construct]: ModuleRefLiteral" )
+   Log.fail "[internal flow construct]: ModuleRefLiteral"
+ | (_, Match _) -> Log.fail "[internal flow construct]: ModuleRefLiteral" )
 
 and normalize_expr_opt (ctx : Ctx.t)
     (expr : (Loc.t, Loc.t) Flow.Expression.t option) : stmt list * expr option =
@@ -1305,10 +1306,10 @@ and normalize_named_export_spec (ctx : Ctx.t) (md : md) (n_src : string option)
     [ n_export_s ]
   | ExportSpecifiers specifiers ->
     Fun.flip List.map specifiers (function
-      | (_, { local; exported = None }) ->
+      | (_, { local; exported = None; _ }) ->
         let n_prop = normalize_identifier ctx local in
         ExportDecl.create_stmt (Property n_prop) n_src @> md
-      | (_, { local; exported = Some exported' }) ->
+      | (_, { local; exported = Some exported'; _ }) ->
         let n_id = normalize_identifier ctx local in
         let n_alias = normalize_identifier ctx exported' in
         ExportDecl.create_stmt (Alias (n_id, n_alias)) n_src @> md )
@@ -1393,6 +1394,7 @@ and normalize_stmt (ctx : Ctx.t) : (Loc.t, Loc.t) Flow.Statement.t -> n_stmt =
     Log.fail "[not implemented]: TypeScript declaration statements"
   | (_, ComponentDeclaration _) ->
     Log.fail "[not implemented]: React statements"
+  | (_, Match _) -> Log.fail "[not implemented]: Match statements"
 
 and normalize_alias_wrapper (ctx : Ctx.t) (md : md) (wrapped_f : lval -> n_stmt)
     (n_left : lval) (alias : (Loc.t, Loc.t) Flow.Identifier.t option) : n_stmt =
@@ -1714,7 +1716,8 @@ and requires_expr_stmt (expr : (Loc.t, Loc.t) Flow.Expression.t) : bool =
   | (_, Class _)
   | (_, Import _)
   | (_, JSXElement _)
-  | (_, JSXFragment _) ->
+  | (_, JSXFragment _)
+  | (_, Match _) ->
     false
 
 let normalize_program (env : Env.t) (dt : Dependency_tree.t) : Region.t Prog.t =
