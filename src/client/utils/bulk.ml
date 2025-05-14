@@ -7,11 +7,13 @@ module Config = struct
   let main_font = constant (Font.create ~fg:`White ())
   let path_font = constant (Font.create ~fg:`DarkGray ())
   let success_font = constant (Font.create ~fg:`LightGreen ())
+  let partial_font = constant (Font.create ~fg:`LightYellow ())
   let failure_font = constant (Font.create ~fg:`LightRed ())
   let anomaly_font = constant (Font.create ~fg:`LightPurple ())
   let timeout_font = constant (Font.create ~fg:`Cyan ())
   let skipped_font = constant (Font.create ~fg:`Yellow ())
   let success_time_font = constant (time_font_f !success_font)
+  let partial_time_font = constant (time_font_f !partial_font)
   let failure_time_font = constant (time_font_f !failure_font)
   let anomaly_time_font = constant (time_font_f !anomaly_font)
   let timeout_time_font = constant (time_font_f !timeout_font)
@@ -79,6 +81,7 @@ end
 module Instance = struct
   type outcome =
     | Success
+    | Partial
     | Failure
     | Anomaly
     | Timeout
@@ -104,6 +107,7 @@ module Instance = struct
   let time_font (outcome : outcome) : Font.t =
     match outcome with
     | Success -> Config.(!success_time_font)
+    | Partial -> Config.(!partial_time_font)
     | Failure -> Config.(!failure_time_font)
     | Anomaly -> Config.(!anomaly_time_font)
     | Timeout -> Config.(!timeout_time_font)
@@ -118,19 +122,20 @@ module Instance = struct
 
   let pp_outcome (ppf : Fmt.t) : outcome -> unit = function
     | Success -> Font.fmt Config.(!success_font) ppf "SUCCESS"
+    | Partial -> Font.fmt Config.(!success_font) ppf "PARTIAL"
     | Failure -> Font.fmt Config.(!failure_font) ppf "FAILURE"
     | Timeout -> Font.fmt Config.(!timeout_font) ppf "TIMEOUT"
     | Anomaly -> Font.fmt Config.(!anomaly_font) ppf "ANOMALY"
     | Skipped -> Font.fmt Config.(!skipped_font) ppf "SKIPPED"
 
   let pp_simple (dflt_width : int) (ppf : Fmt.t) (instance : 'm t) : unit =
-    let log_time = not (skipped instance) in
-    let time_str = if log_time then Time.str instance.time else "" in
-    let time_len = String.length time_str in
-    let limit = Writer.(size ~default:dflt_width (width ppf)) - time_len - 11 in
+    let t_log = not (skipped instance) in
+    let t_str = if t_log then Fmt.str "[%s]" (Time.str instance.time) else "" in
+    let time_len = String.length t_str in
+    let limit = Writer.(size ~default:dflt_width (width ppf)) - time_len - 9 in
     Font.fmt Config.(!path_font) ppf "%a" (pp_path limit) instance.input;
     Fmt.fmt ppf " %a" pp_outcome instance.outcome;
-    if log_time then Font.fmt (time_font instance.outcome) ppf "[%s]" time_str
+    if t_log then Font.fmt (time_font instance.outcome) ppf "%s" t_str
 end
 
 module InstanceTree = struct
@@ -143,6 +148,7 @@ module InstanceTree = struct
     ; items : (string, 'm t') Hashtbl.t
     ; mutable time : Time.t
     ; mutable success : int
+    ; mutable partial : int
     ; mutable failure : int
     ; mutable timeout : int
     ; mutable anomaly : int
@@ -154,6 +160,7 @@ module InstanceTree = struct
     ; items = Hashtbl.create Config.(!dflt_htbl_sz)
     ; time = 0.0
     ; success = 0
+    ; partial = 0
     ; failure = 0
     ; timeout = 0
     ; anomaly = 0
@@ -187,24 +194,27 @@ module InstanceTree = struct
 
   let rec count_results (tree : 'm t) : unit =
     Fun.flip Hashtbl.iter tree.items (fun _ item ->
-        let (succ, fail, anom, tout, skip, time) = count_item item in
+        let (succ, fail, part, anom, tout, skip, time) = count_item item in
         tree.success <- tree.success + succ;
+        tree.partial <- tree.partial + part;
         tree.failure <- tree.failure + fail;
         tree.anomaly <- tree.anomaly + anom;
         tree.timeout <- tree.timeout + tout;
         tree.skipped <- tree.skipped + skip;
         tree.time <- tree.time +. time )
 
-  and count_item (tree : 'm t') : int * int * int * int * int * Time.t =
+  and count_item (tree : 'm t') : int * int * int * int * int * int * Time.t =
     match tree with
-    | Instance { time; outcome = Success; _ } -> (1, 0, 0, 0, 0, time)
-    | Instance { time; outcome = Failure; _ } -> (0, 1, 0, 0, 0, time)
-    | Instance { time; outcome = Anomaly; _ } -> (0, 0, 1, 0, 0, time)
-    | Instance { time; outcome = Timeout; _ } -> (0, 0, 0, 1, 0, time)
-    | Instance { outcome = Skipped; _ } -> (0, 0, 0, 0, 1, 0.0)
+    | Instance { time; outcome = Success; _ } -> (1, 0, 0, 0, 0, 0, time)
+    | Instance { time; outcome = Partial; _ } -> (0, 1, 0, 0, 0, 0, time)
+    | Instance { time; outcome = Failure; _ } -> (0, 0, 1, 0, 0, 0, time)
+    | Instance { time; outcome = Anomaly; _ } -> (0, 0, 0, 1, 0, 0, time)
+    | Instance { time; outcome = Timeout; _ } -> (0, 0, 0, 0, 1, 0, time)
+    | Instance { outcome = Skipped; _ } -> (0, 0, 0, 0, 0, 1, 0.0)
     | Directory tree ->
       count_results tree;
       ( tree.success
+      , tree.skipped
       , tree.failure
       , tree.anomaly
       , tree.timeout
@@ -228,8 +238,11 @@ module InstanceTree = struct
     let ratio = float_of_int tree.success *. 100.0 /. float_of_int total in
     Fmt.fmt ppf "Tests Successful: %d / %d (%.2f%%) | " tree.success total ratio;
     Fmt.fmt ppf "Time elapsed: %a@\n" Time.pp tree.time;
-    Fmt.fmt ppf "Failures: %d, Anomalies: %d, Timeouts: %d, Skipped: %d"
-      tree.failure tree.anomaly tree.timeout tree.skipped
+    Fmt.fmt ppf "Partials: %d, " tree.partial;
+    Fmt.fmt ppf "Failures: %d, " tree.failure;
+    Fmt.fmt ppf "Anomalies: %d, " tree.anomaly;
+    Fmt.fmt ppf "Timeouts: %d, " tree.failure;
+    Fmt.fmt ppf "Skipped: %d" tree.skipped
 
   let pp_summary (dflt_width : int) (ppf : Fmt.t) (tree : 'm t) : unit =
     let pp_header = pp_summary_header dflt_width in
