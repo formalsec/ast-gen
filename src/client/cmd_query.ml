@@ -18,19 +18,26 @@ module Options = struct
 end
 
 module Output = struct
-  let engine () : unit = Log.info "Analysis engine initialized successfully."
+  let pp_mrel (ppf : Fmt.t) (mrel : Fpath.t option) : unit =
+    match mrel with
+    | None -> Fmt.pp_str ppf "."
+    | Some mrel' -> Fmt.fmt ppf " for \"%a\"" Fpath.pp mrel'
 
-  let main (w : Workspace.t) (path : Fpath.t) (vulns : Vulnerability.Set.t) :
-      unit =
-    Log.info "Vulnerability queries ran successfully.";
-    Log.stdout "%a@." (Vulnerability.Set.pp path) vulns;
-    match w.path with
-    | None -> ()
-    | Single _ ->
-      Workspace.output_noerr Main w (Vulnerability.Set.pp path) vulns
-    | Bundle _ ->
-      let w' = Workspace.(w / "vulns.txt") in
-      Workspace.output_noerr Side w' (Vulnerability.Set.pp path) vulns
+  let engine (mrel : Fpath.t option) : unit =
+    Log.info "Analysis engine initialized successfully%a" pp_mrel mrel
+
+  let main (w : Workspace.t) (path : Fpath.t) (mrel : Fpath.t option)
+      (vulns : Vulnerability.Set.t) : unit =
+    Log.info "Vulnerability queries ran successfully%a" pp_mrel mrel;
+    Log.verbose "%a@." (Vulnerability.Set.pp path) vulns;
+    Workspace.log w "%a@." (Vulnerability.Set.pp path) vulns;
+    match (w.path, mrel) with
+    | (Single _, _) ->
+      Workspace.output_noerr Main w Vulnerability.Set.pp_json vulns
+    | (Bundle _, None) ->
+      let w' = Workspace.(w / "detected.json") in
+      Workspace.output_noerr Side w' Vulnerability.Set.pp_json vulns
+    | _ -> ()
 end
 
 let validate_mdg_env (env : Cmd_mdg.Options.env) : Cmd_mdg.Options.env =
@@ -41,22 +48,21 @@ let validate_mdg_env (env : Cmd_mdg.Options.env) : Cmd_mdg.Options.env =
     { env with func_eval_mode = UnfoldRec }
   | _ -> env
 
-let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
-    unit Exec.result =
-  let mdg_env = validate_mdg_env env.mdg_env in
-  let* e_mdg = Cmd_mdg.run mdg_env (Workspace.side_perm w) input in
+let run ?(mrel : Fpath.t option) (env : Options.env) (w : Workspace.t)
+    (input : Fpath.t) : Vulnerability.Set.t Exec.result =
+  let* e_mdg = Cmd_mdg.run env.mdg_env (Workspace.side_perm w) input in
   let engine = Query_engine.initialize e_mdg in
-  Output.engine ();
+  Output.engine mrel;
   let vulns = Builtin_queries.run engine in
-  Output.main w input vulns;
-  Ok ()
+  Output.main w input mrel vulns;
+  Ok vulns
 
-let outcome (res : 'a Exec.result) : Bulk.Instance.outcome =
+let outcome (res : Vulnerability.Set.t Exec.result) : Bulk.Instance.outcome =
   match res with Ok _ -> Success | Error _ -> Anomaly
 
 let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
   ( module struct
-    type t = unit
+    type t = Vulnerability.Set.t
 
     let cmd = Docs.QueryCmd.name
     let run = run env
@@ -64,9 +70,10 @@ let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
   end )
 
 let main (opts : Options.t) () : unit Exec.result =
+  let env = Options.{ mdg_env = validate_mdg_env opts.env.mdg_env } in
   let w = Workspace.create ~default:`None opts.inputs opts.output in
   let* _ = Workspace.prepare w in
   let* inputs = Bulk.InputTree.generate opts.inputs in
-  let module Interface = (val bulk_interface opts.env) in
+  let module Interface = (val bulk_interface env) in
   let module Executor = Bulk.Executor (Interface) in
   Executor.execute w inputs
