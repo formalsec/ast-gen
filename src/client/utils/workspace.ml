@@ -128,9 +128,9 @@ let clean (w : t) : unit Exec.result =
     Log.warn "Overriding \"%a\" file." Fpath.pp file_path;
     Fs.delete file_path in
   let error_dir dir_path =
-    Exec.error "Cannot override \"%a\" directory." Fpath.pp dir_path in
+    Exec.error "Cannot override the \"%a\" directory." Fpath.pp dir_path in
   let error_file file_path =
-    Exec.error "Cannot override \"%a\" file." Fpath.pp file_path in
+    Exec.error "Cannot override the \"%a\" file." Fpath.pp file_path in
   match w.path with
   | None -> Ok ()
   | (Single path | Bundle path) when not (Fpath.is_dir_path path) ->
