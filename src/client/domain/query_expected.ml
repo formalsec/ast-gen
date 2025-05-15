@@ -1,10 +1,9 @@
 open Graphjs_base
-open Graphjs_share
 open Graphjs_query
 
 module Entry = struct
   type t =
-    { kind : string
+    { cwe : string
     ; file : string
     ; line : int
     ; ext : bool
@@ -12,25 +11,25 @@ module Entry = struct
 
   let ext (entry : t) : bool = entry.ext
 
-  let create (kind : string) (file : string) (line : int) (ext : bool) : t =
-    { kind; file; line; ext }
+  let create (cwe : string) (file : string) (line : int) (ext : bool) : t =
+    { cwe; file; line; ext }
 
   let of_vuln (vuln : Vulnerability.t) : t =
-    let kind = Sink_kind.str vuln.sink.kind in
+    let cwe = Vulnerability.Cwe.str vuln.cwe in
     let file = vuln.node.at.file in
     let line = vuln.line in
-    create kind file line false
+    create cwe file line false
 
   let equal (entry1 : t) (entry2 : t) : bool =
-    String.equal entry1.kind entry2.kind
+    String.equal entry1.cwe entry2.cwe
     && String.equal entry1.file entry2.file
     && Int.equal entry1.line entry2.line
 
   let pp (ppf : Fmt.t) (entry : t) : unit =
     Fmt.fmt ppf "{@\n@[<v 2>  ";
-    Fmt.fmt ppf "\"vuln_type\": %S," entry.kind;
-    Fmt.fmt ppf "@\n\"sink_file\": %S," entry.file;
-    Fmt.fmt ppf "@\n\"sink_line\": %d," entry.line;
+    Fmt.fmt ppf "\"cwe\": %S," entry.cwe;
+    Fmt.fmt ppf "@\n\"file\": %S," entry.file;
+    Fmt.fmt ppf "@\n\"line\": %d," entry.line;
     Fmt.fmt ppf "@\n\"extended\": %b@]" entry.ext;
     Fmt.fmt ppf "@\n}"
 
@@ -46,7 +45,7 @@ let parse_vuln_list (ext : bool) (expected : Json.t) (acc : t) : t =
   let expected_vulns = Json.to_list expected in
   Fun.flip2 List.fold_left acc expected_vulns (fun acc vuln ->
       let kind = Json.member "vuln_type" vuln |> Json.to_string in
-      let file = Json.member "sink_file" vuln |> Json.to_string in
+      let file = Json.member "file" vuln |> Json.to_string in
       let line = Json.member "sink_lineno" vuln |> Json.to_int in
       let vuln = Entry.create kind file line ext in
       vuln :: acc )
@@ -86,11 +85,14 @@ module Validation = struct
   let tp (valid : t) : t = { valid with tp = valid.tp + 1 }
   let fp (valid : t) : t = { valid with fp = valid.fp + 1 }
   let tfp (valid : t) : t = { valid with tfp = valid.tfp + 1 }
+  let fn (valid : t) : int = valid.tp + valid.tfp
 
   let pp (ppf : Fmt.t) (valid : t) : unit =
     Fmt.fmt ppf "True Positives: %d@\n" valid.tp;
     Fmt.fmt ppf "False Positives: %d@\n" valid.fp;
-    Fmt.fmt ppf "True False Positives: %d@\n" valid.tfp
+    Fmt.fmt ppf "True False Positives: %d@\n@\n" valid.tfp;
+    Fmt.fmt ppf "False Negatives: %d@\n" (valid.exp.tp - valid.tp);
+    Fmt.fmt ppf "True False Negatives: %d" (valid.exp.tfp - valid.tfp)
 
   let str (valid : t) : string = Fmt.str "%a" pp valid
 

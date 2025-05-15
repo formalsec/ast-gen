@@ -79,7 +79,7 @@ module ExportView = struct
     | Sinks -> Fmt.pp_str ppf "sinks"
 
   let conv_param_view (view : string) (prefix : string) : bool =
-    let regex = Str.regexp (Fmt.str "^%s:\\([0-9]+\\)" prefix) in
+    let regex = Str.regexp (Fmt.str "^%s:\\([0-9]+\\)$" prefix) in
     Str.string_match regex view 0
 
   let conv (view : string) : conv =
