@@ -122,7 +122,7 @@ module Instance = struct
 
   let pp_outcome (ppf : Fmt.t) : outcome -> unit = function
     | Success -> Font.fmt Config.(!success_font) ppf "SUCCESS"
-    | Partial -> Font.fmt Config.(!success_font) ppf "PARTIAL"
+    | Partial -> Font.fmt Config.(!partial_font) ppf "PARTIAL"
     | Failure -> Font.fmt Config.(!failure_font) ppf "FAILURE"
     | Timeout -> Font.fmt Config.(!timeout_font) ppf "TIMEOUT"
     | Anomaly -> Font.fmt Config.(!anomaly_font) ppf "ANOMALY"
@@ -190,11 +190,11 @@ module InstanceTree = struct
         extend tree' secs' )
 
   let total (tree : 'm t) : int =
-    tree.success + tree.failure + tree.anomaly + tree.timeout
+    tree.success + tree.partial + tree.failure + tree.anomaly + tree.timeout
 
   let rec count_results (tree : 'm t) : unit =
     Fun.flip Hashtbl.iter tree.items (fun _ item ->
-        let (succ, fail, part, anom, tout, skip, time) = count_item item in
+        let (succ, part, fail, anom, tout, skip, time) = count_item item in
         tree.success <- tree.success + succ;
         tree.partial <- tree.partial + part;
         tree.failure <- tree.failure + fail;
@@ -214,7 +214,7 @@ module InstanceTree = struct
     | Directory tree ->
       count_results tree;
       ( tree.success
-      , tree.skipped
+      , tree.partial
       , tree.failure
       , tree.anomaly
       , tree.timeout
@@ -241,7 +241,7 @@ module InstanceTree = struct
     Fmt.fmt ppf "Partials: %d, " tree.partial;
     Fmt.fmt ppf "Failures: %d, " tree.failure;
     Fmt.fmt ppf "Anomalies: %d, " tree.anomaly;
-    Fmt.fmt ppf "Timeouts: %d, " tree.failure;
+    Fmt.fmt ppf "Timeouts: %d, " tree.timeout;
     Fmt.fmt ppf "Skipped: %d" tree.skipped
 
   let pp_summary (dflt_width : int) (ppf : Fmt.t) (tree : 'm t) : unit =
