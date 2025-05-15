@@ -59,7 +59,7 @@ module Output = struct
 
   let main (w : Workspace.t) (prog : 'm Prog.t) : unit =
     let multifile = Prog.is_multifile prog in
-    Workspace.log w "%a@." (Prog.pp ~filename:multifile) prog
+    Workspace.log w "%a" (Prog.pp ~filename:multifile) prog
 end
 
 let normalizer_env (env : Options.env) (w : Workspace.t) : Normalizer.Env.t =

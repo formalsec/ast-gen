@@ -13,7 +13,7 @@ module Env = struct
     { func_eval_mode : func_eval_mode
     ; run_cleaner_analysis : bool
     ; run_tainted_analysis : bool
-    ; cb_mdg : Fpath.t -> unit
+    ; cb_mdg_file : Fpath.t -> unit
     }
 
   let default =
@@ -21,7 +21,7 @@ module Env = struct
       { func_eval_mode = Opaque
       ; run_cleaner_analysis = true
       ; run_tainted_analysis = true
-      ; cb_mdg = (fun _ -> ())
+      ; cb_mdg_file = (fun _ -> ())
       } in
     fun () -> dflt
 end

@@ -693,7 +693,7 @@ and build_file (state : State.t) (file : 'm File.t) (main : bool)
   let state' = initialize_file state file main l_parent in
   let state'' = build_sequence state' file.body in
   Pcontext.file_built state''.pcontext file.path;
-  state''.env.cb_mdg file.mrel;
+  state''.env.cb_mdg_file file.mrel;
   state''
 
 module ExtendedMdg = struct

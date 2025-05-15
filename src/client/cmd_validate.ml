@@ -39,11 +39,10 @@ module Parser = struct
 end
 
 module Output = struct
-  let detected (w : Workspace.t) (path : Fpath.t) (vulns : Vulnerability.Set.t)
-      : unit =
+  let detected (w : Workspace.t) (vulns : Vulnerability.Set.t) : unit =
     let w' = Workspace.(w / "query" / "detected.json") in
-    Workspace.mkdir_noerr Main w';
-    Cmd_query.Output.main Workspace.(side_perm (w / "query")) path None vulns
+    Workspace.mkdir_noerr Side w';
+    Workspace.output_noerr Side w' Vulnerability.Set.pp_json vulns
 
   let expected (w : Workspace.t) (expected : Query_expected.t) : unit =
     let w' = Workspace.(w / "query" / "expected.json") in
@@ -51,17 +50,18 @@ module Output = struct
     Log.verbose "%a" Query_expected.pp expected;
     Workspace.output_noerr Side w' Query_expected.pp expected
 
-  let main (w : Workspace.t) (path : Fpath.t)
-      (confirm : Query_expected.Confirmation.t) : unit =
+  let validate (w : Workspace.t) (path : Fpath.t)
+      (confirm : Query_expected.Validation.t) : unit =
+    let w' = Workspace.(w / "query" / "confirmation.txt") in
     Log.info "Package \"%a\" successfully validated." Fpath.pp path;
-    Log.verbose "%a" Query_expected.Confirmation.pp confirm;
-    Workspace.log w "%a" Query_expected.Confirmation.pp confirm;
+    Log.verbose "%a" Query_expected.Validation.pp confirm;
+    Workspace.output_noerr Side w' Query_expected.Validation.pp confirm
+
+  let main (w : Workspace.t) (confirm : Query_expected.Validation.t) : unit =
+    Workspace.log w "%a" Query_expected.Validation.pp confirm;
     match w.path with
     | Single _ ->
-      Workspace.output_noerr Main w Query_expected.Confirmation.pp confirm
-    | Bundle _ ->
-      let w' = Workspace.(w / "query" / "confirmation.txt") in
-      Workspace.output_noerr Side w' Query_expected.Confirmation.pp confirm
+      Workspace.output_noerr Main w Query_expected.Validation.pp confirm
     | _ -> ()
 end
 
@@ -81,16 +81,16 @@ let run_queries (env : Cmd_query.Options.env) (w : Workspace.t) (input : Fpath.t
       Ok (Vulnerability.Set.union vulns acc') )
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
-    Query_expected.Confirmation.t Exec.result =
+    Query_expected.Validation.t Exec.result =
   let* vulns = run_queries env.query_env w input in
-  Output.detected w input vulns;
+  Output.detected w vulns;
   let* expected = get_query_expected input in
   Output.expected w expected;
-  let confirm = Query_expected.Confirmation.compute expected vulns in
-  Output.main w input confirm;
-  Ok confirm
+  let valid = Query_expected.Validation.validate expected vulns in
+  Output.validate w input valid;
+  Ok valid
 
-let outcome (res : Query_expected.Confirmation.t Exec.result) :
+let outcome (res : Query_expected.Validation.t Exec.result) :
     Bulk.Instance.outcome =
   match res with
   | Ok confirm ->
@@ -101,7 +101,7 @@ let outcome (res : Query_expected.Confirmation.t Exec.result) :
 
 let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
   ( module struct
-    type t = Query_expected.Confirmation.t
+    type t = Query_expected.Validation.t
 
     let cmd = Docs.QueryCmd.name
     let run = run env

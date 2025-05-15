@@ -30,7 +30,7 @@ module Output = struct
       (vulns : Vulnerability.Set.t) : unit =
     Log.info "Vulnerability queries ran successfully%a" pp_mrel mrel;
     Log.verbose "%a@." (Vulnerability.Set.pp path) vulns;
-    Workspace.log w "%a@." (Vulnerability.Set.pp path) vulns;
+    Workspace.log w "%a" (Vulnerability.Set.pp path) vulns;
     match (w.path, mrel) with
     | (Single _, _) ->
       Workspace.output_noerr Main w Vulnerability.Set.pp_json vulns
@@ -70,8 +70,9 @@ let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
   end )
 
 let main (opts : Options.t) () : unit Exec.result =
+  let ext = Some "json" in
   let env = Options.{ mdg_env = validate_mdg_env opts.env.mdg_env } in
-  let w = Workspace.create ~default:`None opts.inputs opts.output in
+  let w = Workspace.create ~default:(`Single ext) opts.inputs opts.output in
   let* _ = Workspace.prepare w in
   let* inputs = Bulk.InputTree.generate opts.inputs in
   let module Interface = (val bulk_interface env) in
