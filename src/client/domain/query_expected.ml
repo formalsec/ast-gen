@@ -57,7 +57,7 @@ let parse (expected : Json.t) (extended : Json.t option) : t =
   Option.fold extended ~none:vulns ~some:(fun extended' ->
       parse_vuln_list true extended' vulns )
 
-module Confirmation = struct
+module Validation = struct
   type expected =
     { tp : int
     ; tfp : int
@@ -80,23 +80,23 @@ module Confirmation = struct
     let tp = List.length expected - tfp in
     { (default ()) with exp = { tp; tfp } }
 
-  let tp (confirm : t) : t = { confirm with tp = confirm.tp + 1 }
-  let fp (confirm : t) : t = { confirm with fp = confirm.fp + 1 }
-  let tfp (confirm : t) : t = { confirm with tfp = confirm.tfp + 1 }
+  let tp (valid : t) : t = { valid with tp = valid.tp + 1 }
+  let fp (valid : t) : t = { valid with fp = valid.fp + 1 }
+  let tfp (valid : t) : t = { valid with tfp = valid.tfp + 1 }
 
-  let pp (ppf : Fmt.t) (confirm : t) : unit =
-    Fmt.fmt ppf "True Positives: %d@\n" confirm.tp;
-    Fmt.fmt ppf "False Positives: %d@\n" confirm.fp;
-    Fmt.fmt ppf "True False Positives: %d@\n" confirm.tfp
+  let pp (ppf : Fmt.t) (valid : t) : unit =
+    Fmt.fmt ppf "True Positives: %d@\n" valid.tp;
+    Fmt.fmt ppf "False Positives: %d@\n" valid.fp;
+    Fmt.fmt ppf "True False Positives: %d@\n" valid.tfp
 
-  let str (confirm : t) : string = Fmt.str "%a" pp confirm
+  let str (valid : t) : string = Fmt.str "%a" pp valid
 
-  let compute (expected : Entry.t list) (vulns : Vulnerability.Set.t) : t =
-    let confirm = create expected in
-    Fun.flip2 Vulnerability.Set.fold vulns confirm (fun vuln confirm' ->
+  let validate (expected : Entry.t list) (vulns : Vulnerability.Set.t) : t =
+    let valid = create expected in
+    Fun.flip2 Vulnerability.Set.fold vulns valid (fun vuln valid' ->
         let vuln' = Entry.of_vuln vuln in
         let matched = List.find_all (Entry.equal vuln') expected in
-        if List.is_empty matched then fp confirm'
-        else if List.exists Entry.ext matched then tfp confirm'
-        else tp confirm' )
+        if List.is_empty matched then fp valid'
+        else if List.exists Entry.ext matched then tfp valid'
+        else tp valid' )
 end

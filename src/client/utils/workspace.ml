@@ -85,11 +85,8 @@ let execute_noerr (p : perm) (w : t) (f : Fpath.t -> 'a) : unit =
 
 let log (w : t) (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
   match w.perm with
-  | Main when not Log.Config.(!log_verbose) -> Log.stdout fmt
+  | Main when not Log.Config.(!log_verbose) -> Log.stdout (fmt ^^ "@.")
   | _ -> Log.ignore fmt
-
-let print (w : t) (fmt : ('a, Fmt.t, unit, unit) format4) : 'a =
-  match w.perm with Main -> Log.stdout fmt | _ -> Log.ignore fmt
 
 let mkdir (p : perm) (w : t) : unit Exec.result = execute p w Fs.mkdir
 let mkdir_noerr (p : perm) (w : t) : unit = execute_noerr p w Fs.mkdir_noerr

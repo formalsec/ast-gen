@@ -61,10 +61,10 @@ module Workspace = struct
     let dir_f w = Fs.mkdir_noerr (Fpath.parent (path w)) |> fun () -> w in
     let rel' = Fpath.rem_ext mrel in
     match (w.path, export) with
-    | (None, true) -> single ~w Fpath.(v (temp_f rel') + "svg")
     | (None, false) -> w
+    | (None, true) -> single ~w Fpath.(v (temp_f rel') + "svg")
     | (Single _, _) -> w
-    | (Bundle _, _) -> dir_f ((w / "mdg" // rel') + "svg")
+    | (Bundle _, _) -> dir_f ((w / "mdg" // rel') + "mdg")
 end
 
 module Graphjs = struct
@@ -93,39 +93,34 @@ module Output = struct
     Log.verbose "%a" Taint_config.pp tc;
     Workspace.output_noerr Side w' Taint_config.pp tc
 
-  let mdg_built (mrel : Fpath.t) : unit =
+  let mdg_file (mrel : Fpath.t) : unit =
     Log.info "Module MDG '%a' built successfully." Fpath.pp mrel
 
   let main (w : Workspace.t) (env : Svg_exporter.Env.t) (export : bool)
       (prog : 'm Prog.t) (mdg : Mdg.t) : unit Exec.result =
     let w' = Workspace.mdg w export (Prog.main prog).mrel in
+    let url_f ppf url = Fmt.fmt ppf "%s" (Console.url (Fpath.to_string url)) in
     Log.verbose "%a" Mdg.pp mdg;
-    match (export, w'.path, w'.perm) with
-    | (false, _, _) ->
+    match (export, w'.path) with
+    | (false, _) ->
       Workspace.output_noerr Main w' Mdg.pp mdg;
-      Workspace.log w' "%a@." Mdg.pp mdg;
-      Ok ()
-    | (true, Single svg_path, Main) ->
+      Ok (Workspace.log w "%a" Mdg.pp mdg)
+    | (true, Single svg_path) ->
       let* _ = Workspace.execute Main w' (Graphjs.export_svg env (`Mdg mdg)) in
       Log.info "MDG exported successfully.";
-      Log.verbose "%s" (Console.url (Fpath.to_string svg_path));
-      Workspace.log w' "%s@." (Console.url (Fpath.to_string svg_path));
-      Ok ()
-    | (true, Single svg_path, Side) ->
-      let w'' = Workspace.main_perm w' in
-      let* _ = Workspace.execute Main w'' (Graphjs.export_svg env (`Mdg mdg)) in
-      Log.info "MDG exported successfully.";
-      Log.verbose "%s" (Console.url (Fpath.to_string svg_path));
-      Ok ()
-    | (true, Bundle svg_path, _) ->
+      Log.verbose "%a" url_f svg_path;
+      Ok (Workspace.log w "%a" url_f svg_path)
+    | (true, Bundle _) ->
       let w'' = Workspace.(w' -+ "dot") in
+      let w''' = Workspace.(w' -+ "svg") in
       let dot = `Dot (Workspace.path w'') in
+      let svg_path = Workspace.path w''' in
+      Workspace.output_noerr Main w' Mdg.pp mdg;
       let* _ = Workspace.execute Side w'' (Graphjs.export_dot env mdg) in
-      let* _ = Workspace.execute Main w' (Graphjs.export_svg env dot) in
+      let* _ = Workspace.execute Main w''' (Graphjs.export_svg env dot) in
       Log.info "MDG exported successfully.";
-      Log.verbose "%s" (Console.url (Fpath.to_string svg_path));
-      Workspace.log w'' "%s@." (Console.url (Fpath.to_string svg_path));
-      Ok ()
+      Log.verbose "%a" url_f svg_path;
+      Ok (Workspace.log w "%a" url_f svg_path)
     | _ -> Ok ()
 end
 
@@ -133,7 +128,7 @@ let builder_env (env : Options.env) : State.Env.t =
   { func_eval_mode = env.func_eval_mode
   ; run_cleaner_analysis = env.run_cleaner_analysis
   ; run_tainted_analysis = env.run_tainted_analysis
-  ; cb_mdg = Output.mdg_built
+  ; cb_mdg_file = Output.mdg_file
   }
 
 let export_env (env : Options.env) : Svg_exporter.Env.t =
