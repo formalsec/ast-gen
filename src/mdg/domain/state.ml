@@ -11,16 +11,18 @@ module Env = struct
 
   type t =
     { func_eval_mode : func_eval_mode
-    ; run_cleaner_analysis : bool
+    ; run_exported_analysis : bool
     ; run_tainted_analysis : bool
+    ; run_cleaner_analysis : bool
     ; cb_mdg_file : Fpath.t -> unit
     }
 
   let default =
     let dflt =
       { func_eval_mode = Opaque
-      ; run_cleaner_analysis = true
+      ; run_exported_analysis = true
       ; run_tainted_analysis = true
+      ; run_cleaner_analysis = true
       ; cb_mdg_file = (fun _ -> ())
       } in
     fun () -> dflt

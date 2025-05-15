@@ -47,15 +47,18 @@ let parse_vuln_list (ext : bool) (expected : Json.t) (acc : t) : t =
   Fun.flip2 List.fold_left acc expected_vulns (fun acc vuln ->
       let kind = Json.member "vuln_type" vuln |> Json.to_string in
       let file = Json.member "sink_file" vuln |> Json.to_string in
-      let line = Json.member "sink_lineno" vuln |> Json.to_string in
-      let line' = int_of_string line in
-      let vuln = Entry.create kind file line' ext in
+      let line = Json.member "sink_lineno" vuln |> Json.to_int in
+      let vuln = Entry.create kind file line ext in
       vuln :: acc )
 
-let parse (expected : Json.t) (extended : Json.t option) : t =
+let parse_unsafe (expected : Json.t) (extended : Json.t option) : t =
   let vulns = parse_vuln_list false expected [] in
   Option.fold extended ~none:vulns ~some:(fun extended' ->
       parse_vuln_list true extended' vulns )
+
+let parse (expected : Json.t) (extended : Json.t option) : t Exec.result =
+  try Ok (parse_unsafe expected extended)
+  with _ -> Exec.error "Unable to parse the expected query results."
 
 module Validation = struct
   type expected =
