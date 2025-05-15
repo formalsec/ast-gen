@@ -24,7 +24,7 @@ module Attr = struct
     | `White
     ]
 
-  type effect_ =
+  type filter =
     [ `Disable
     | `Faint
     | `Blink
@@ -43,7 +43,7 @@ module Attr = struct
     [ `Reset
     | `Foreground of color
     | `Background of color
-    | `Effect of effect_
+    | `Filter of filter
     | `Style of style
     ]
 
@@ -78,7 +78,7 @@ module Attr = struct
     | `Reset -> 0
     | `Foreground fg -> to_code fg
     | `Background bg -> to_code bg + 10
-    | `Effect effect_ -> to_code effect_
+    | `Filter filter -> to_code filter
     | `Style style -> to_code style
 end
 
@@ -91,21 +91,19 @@ open struct
   let mk_background (bg : Attr.color option) (font : t) : t =
     Option.fold ~none:font ~some:(fun bg -> `Background bg :: font) bg
 
-  let mk_effect (effect_ : Attr.effect_ option) (font : t) : t =
-    Option.fold ~none:font
-      ~some:(fun effect' -> `Effect effect' :: font)
-      effect_
+  let mk_filter (filter : Attr.filter option) (font : t) : t =
+    Option.fold ~none:font ~some:(fun filter' -> `Filter filter' :: font) filter
 
   let mk_style ((style, on) : Attr.style * bool option) (font : t) : t =
     let style_f = function true -> `Style style :: font | false -> font in
     Option.fold ~none:font ~some:style_f on
 
   let mk_font (fg : Attr.color option) (bg : Attr.color option)
-      (effect_ : Attr.effect_ option) (bold : bool option) (italic : bool option)
+      (filter : Attr.filter option) (bold : bool option) (italic : bool option)
       (underline : bool option) (strike : bool option) : t =
     mk_foreground fg []
     |> mk_background bg
-    |> mk_effect effect_
+    |> mk_filter filter
     |> mk_style (`Bold, bold)
     |> mk_style (`Italic, italic)
     |> mk_style (`Underline, underline)
@@ -120,8 +118,8 @@ let get_foreground (font : t) : Attr.color option =
 let get_background (font : t) : Attr.color option =
   List.find_map (function `Background bg -> Some bg | _ -> None) font
 
-let get_effect (font : t) : Attr.effect_ option =
-  List.find_map (function `Effect effect_ -> Some effect_ | _ -> None) font
+let get_filter (font : t) : Attr.filter option =
+  List.find_map (function `Filter filter -> Some filter | _ -> None) font
 
 let get_style (style : Attr.style) (font : t) : bool option =
   Fun.flip List.find_map font (function
@@ -129,21 +127,21 @@ let get_style (style : Attr.style) (font : t) : bool option =
     | _ -> None )
 
 let create ?(fg : Attr.color option) ?(bg : Attr.color option)
-    ?(effect_ : Attr.effect_ option) ?(bold : bool option) ?(italic : bool option)
+    ?(filter : Attr.filter option) ?(bold : bool option) ?(italic : bool option)
     ?(underline : bool option) ?(strike : bool option) () : t =
-  mk_font fg bg effect_ bold italic underline strike
+  mk_font fg bg filter bold italic underline strike
 
 let update ?(fg : Attr.color option) ?(bg : Attr.color option)
-    ?(effect_ : Attr.effect_ option) ?(bold : bool option) ?(italic : bool option)
+    ?(filter : Attr.filter option) ?(bold : bool option) ?(italic : bool option)
     ?(underline : bool option) ?(strike : bool option) (font : t) : t =
   let fg = Option.map_none ~value:(get_foreground font) fg in
   let bg = Option.map_none ~value:(get_background font) bg in
-  let effect_ = Option.map_none ~value:(get_effect font) effect_ in
+  let filter = Option.map_none ~value:(get_filter font) filter in
   let bold = Option.map_none ~value:(get_style `Bold font) bold in
   let italic = Option.map_none ~value:(get_style `Italic font) italic in
   let underline = Option.map_none ~value:(get_style `Underline font) underline in
   let strike = Option.map_none ~value:(get_style `Strike font) strike in
-  mk_font fg bg effect_ bold italic underline strike
+  mk_font fg bg filter bold italic underline strike
 
 let pp_font (ppf : Fmt.t) (font : t) : unit =
   let pp_attr ppf attr = Fmt.pp_int ppf (Attr.code attr) in
