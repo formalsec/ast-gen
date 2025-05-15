@@ -983,6 +983,7 @@ and normalize_expr (ctx : Ctx.t) : (Loc.t, Loc.t) Flow.Expression.t -> n_expr =
  | (loc, ArrowFunction func) -> normalize_function_expression ctx loc func
  | (loc, Class class') -> normalize_class_expression ctx loc class'
  | (loc, Import import) -> normalize_dynamic_import ctx loc import
+ | (_, Match _) -> Log.fail "[not implemented]: Match statements"
  | (_, TypeCast _)
  | (_, TSSatisfies _)
  | (_, AsConstExpression _)
@@ -991,8 +992,7 @@ and normalize_expr (ctx : Ctx.t) : (Loc.t, Loc.t) Flow.Expression.t -> n_expr =
  | (_, JSXElement _) | (_, JSXFragment _) ->
    Log.fail "[not implemented]: React expressions"
  | (_, ModuleRefLiteral _) ->
-   Log.fail "[internal flow construct]: ModuleRefLiteral"
- | (_, Match _) -> Log.fail "[internal flow construct]: ModuleRefLiteral" )
+   Log.fail "[internal flow construct]: ModuleRefLiteral" )
 
 and normalize_expr_opt (ctx : Ctx.t)
     (expr : (Loc.t, Loc.t) Flow.Expression.t option) : stmt list * expr option =
@@ -1374,6 +1374,7 @@ and normalize_stmt (ctx : Ctx.t) : (Loc.t, Loc.t) Flow.Statement.t -> n_stmt =
   | (loc, ImportDeclaration import) -> normalize_import ctx loc import
   | (loc, ExportDefaultDeclaration exp) -> normalize_default_export ctx loc exp
   | (loc, ExportNamedDeclaration exp) -> normalize_named_export ctx loc exp
+  | (_, Match _) -> Log.fail "[not implemented]: Match statements"
   | (_, TypeAlias _)
   | (_, OpaqueType _)
   | (_, EnumDeclaration _)
@@ -1394,7 +1395,6 @@ and normalize_stmt (ctx : Ctx.t) : (Loc.t, Loc.t) Flow.Statement.t -> n_stmt =
     Log.fail "[not implemented]: TypeScript declaration statements"
   | (_, ComponentDeclaration _) ->
     Log.fail "[not implemented]: React statements"
-  | (_, Match _) -> Log.fail "[not implemented]: Match statements"
 
 and normalize_alias_wrapper (ctx : Ctx.t) (md : md) (wrapped_f : lval -> n_stmt)
     (n_left : lval) (alias : (Loc.t, Loc.t) Flow.Identifier.t option) : n_stmt =
@@ -1715,9 +1715,9 @@ and requires_expr_stmt (expr : (Loc.t, Loc.t) Flow.Expression.t) : bool =
   | (_, ArrowFunction _)
   | (_, Class _)
   | (_, Import _)
+  | (_, Match _)
   | (_, JSXElement _)
-  | (_, JSXFragment _)
-  | (_, Match _) ->
+  | (_, JSXFragment _) ->
     false
 
 let normalize_program (env : Env.t) (dt : Dependency_tree.t) : Region.t Prog.t =
