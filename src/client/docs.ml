@@ -234,17 +234,25 @@ module MdgOpts = struct
     let parse_f = Enums.FuncEvalMode.parse in
     Arg.(value & opt parse_f Opaque & info [ "eval-func" ] ~doc)
 
+  let no_exported_analysis =
+    let doc =
+      "Run without the exported analysis. This analysis determines calculates \
+       the nodes that are exported by the module and, therefore, controlled by \
+       an attacker. Running without this analysis will prevent the tainted \
+       analysis to be executed." in
+    Arg.(value & flag & info [ "no-exported-analysis" ] ~doc)
+
+  let no_tainted_analysis =
+    let doc =
+      "Run without the tainted analysis. This analysis marks exported nodes as \
+       tainted by adding a dependency edge to the Tainted Source node." in
+    Arg.(value & flag & info [ "no-tainted-analysis" ] ~doc)
+
   let no_cleaner_analysis =
     let doc =
       "Run without the cleaner analysis. This analysis removes unused nodes \
        from the graph, according to their type and purpose." in
     Arg.(value & flag & info [ "no-cleaner-analysis" ] ~doc)
-
-  let no_tainted_analysis =
-    let doc =
-      "Run without the tainted analysis. This analysis marks exported values \
-       as tainted sources." in
-    Arg.(value & flag & info [ "no-tainted-analysis" ] ~doc)
 
   let no_export =
     let doc = "Run without generating the .svg graph format." in

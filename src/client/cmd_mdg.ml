@@ -8,8 +8,9 @@ module Options = struct
   type env =
     { taint_config : Fpath.t
     ; func_eval_mode : Enums.FuncEvalMode.t
-    ; run_cleaner_analysis : bool
+    ; run_exported_analysis : bool
     ; run_tainted_analysis : bool
+    ; run_cleaner_analysis : bool
     ; export_graph : bool
     ; export_subgraphs : bool
     ; export_func_subgraphs : bool
@@ -31,15 +32,16 @@ module Options = struct
     | None -> Properties.default_taint_config ()
 
   let env (taint_config' : Fpath.t option)
-      (func_eval_mode' : Enums.FuncEvalMode.t) (no_cleaner_analysis : bool)
-      (no_tainted_analysis : bool) (no_export : bool) (no_subgraphs : bool)
-      (no_func_subgraphs : bool) (no_file_subgraphs : bool)
-      (export_view' : Export_view.t) (export_timeout' : int)
-      (parse_env' : Cmd_parse.Options.env) : env =
+      (func_eval_mode' : Enums.FuncEvalMode.t) (no_exported_analysis : bool)
+      (no_tainted_analysis : bool) (no_cleaner_analysis : bool)
+      (no_export : bool) (no_subgraphs : bool) (no_func_subgraphs : bool)
+      (no_file_subgraphs : bool) (export_view' : Export_view.t)
+      (export_timeout' : int) (parse_env' : Cmd_parse.Options.env) : env =
     { taint_config = parse_taint_config taint_config'
     ; func_eval_mode = func_eval_mode'
+    ; run_exported_analysis = not no_exported_analysis
+    ; run_tainted_analysis = not (no_exported_analysis || no_tainted_analysis)
     ; run_cleaner_analysis = not no_cleaner_analysis
-    ; run_tainted_analysis = not no_tainted_analysis
     ; export_graph = not no_export
     ; export_subgraphs = not no_subgraphs
     ; export_func_subgraphs = not no_func_subgraphs
@@ -126,8 +128,9 @@ end
 
 let builder_env (env : Options.env) : State.Env.t =
   { func_eval_mode = env.func_eval_mode
-  ; run_cleaner_analysis = env.run_cleaner_analysis
+  ; run_exported_analysis = env.run_exported_analysis
   ; run_tainted_analysis = env.run_tainted_analysis
+  ; run_cleaner_analysis = env.run_cleaner_analysis
   ; cb_mdg_file = Output.mdg_file
   }
 

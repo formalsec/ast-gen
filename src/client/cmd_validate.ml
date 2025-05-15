@@ -68,7 +68,7 @@ end
 let get_query_expected (input : Fpath.t) : Query_expected.t Exec.result =
   let* expected = Parser.expected input in
   let* extended = Parser.extended input in
-  Ok (Query_expected.parse expected extended)
+  Query_expected.parse expected extended
 
 let run_queries (env : Cmd_query.Options.env) (w : Workspace.t) (input : Fpath.t)
     : Vulnerability.Set.t Exec.result =

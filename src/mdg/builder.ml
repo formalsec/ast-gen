@@ -699,18 +699,23 @@ and build_file (state : State.t) (file : 'm File.t) (main : bool)
 module ExtendedMdg = struct
   type t =
     { mdg : Mdg.t
-    ; exported : Exported.t
+    ; exported : Exported.t option
     ; tainted : Tainted.t
     }
 
-  let compute_exported_analysis (state : State.t) : Exported.t =
-    ( if opaque_function_eval state.env then Exported.compute_from_graph
-      else Exported.compute_and_unfold build_exported_function )
-      state
+  let compute_exported_analysis (state : State.t) : Exported.t option =
+    if state.env.run_exported_analysis then
+      let export_f =
+        if opaque_function_eval state.env then Exported.compute_from_graph
+        else Exported.compute_and_unfold build_exported_function in
+      Some (export_f state)
+    else None
 
-  let compute_tainted_analysis (state : State.t) exported : Tainted.t =
-    if state.env.run_tainted_analysis then Tainted.compute state exported
-    else Tainted.none ()
+  let compute_tainted_analysis (state : State.t) (exported : Exported.t option)
+      : Tainted.t =
+    match (state.env.run_tainted_analysis, exported) with
+    | (true, Some exported') -> Tainted.compute state exported'
+    | _ -> Tainted.none ()
 
   let compute_cleaner_analysis (state : State.t) : unit =
     if state.env.run_cleaner_analysis then Cleaner.compute state
