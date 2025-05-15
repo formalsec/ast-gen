@@ -290,12 +290,14 @@ let object_nested_traversal ?(final = true)
     match nodes with
     | [] -> acc
     | (props, node) :: nodes' ->
-      let found = object_dynamic_traversal ~final f' mdg ls_visited node [] in
-      let found' = List.map (fun (p, n) -> (props @ [ p ], n)) found in
-      let (_, ls_found) = List.split found' in
+      let found =
+        object_dynamic_traversal ~final f' mdg ls_visited node []
+        |> List.map (fun (p, n) -> (props @ [ p ], n))
+        |> List.filter (fun (_, n) -> not (Node.Set.mem n ls_visited)) in
+      let (_, ls_found) = List.split found in
       let ls_visited' = Node.Set.union ls_visited (Node.Set.of_list ls_found) in
-      let nodes'' = nodes' @ found' in
-      let acc' = List.fold_right f found' acc in
+      let nodes'' = nodes' @ found in
+      let acc' = List.fold_right f found acc in
       traverse ls_visited' nodes'' acc' in
   traverse (Node.Set.singleton node) [ ([], node) ] (f ([], node) acc)
 
