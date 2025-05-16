@@ -101,6 +101,9 @@ module Instance = struct
       (streams : Log.Redirect.t) : 'm t =
     { input; workspace; result; outcome; time; streams }
 
+  let compare (instance1 : 'm t) (instance2 : 'm t) : int =
+    Fpath.compare instance1.input instance2.input
+
   let skipped (instance : 'm t) : bool =
     match instance.outcome with Skipped -> true | _ -> false
 
@@ -124,8 +127,8 @@ module Instance = struct
     | Success -> Font.fmt Config.(!success_font) ppf "SUCCESS"
     | Partial -> Font.fmt Config.(!partial_font) ppf "PARTIAL"
     | Failure -> Font.fmt Config.(!failure_font) ppf "FAILURE"
-    | Timeout -> Font.fmt Config.(!timeout_font) ppf "TIMEOUT"
     | Anomaly -> Font.fmt Config.(!anomaly_font) ppf "ANOMALY"
+    | Timeout -> Font.fmt Config.(!timeout_font) ppf "TIMEOUT"
     | Skipped -> Font.fmt Config.(!skipped_font) ppf "SKIPPED"
 
   let pp_simple (dflt_width : int) (ppf : Fmt.t) (instance : 'm t) : unit =
@@ -150,8 +153,8 @@ module InstanceTree = struct
     ; mutable success : int
     ; mutable partial : int
     ; mutable failure : int
-    ; mutable timeout : int
     ; mutable anomaly : int
+    ; mutable timeout : int
     ; mutable skipped : int
     }
 
@@ -162,8 +165,8 @@ module InstanceTree = struct
     ; success = 0
     ; partial = 0
     ; failure = 0
-    ; timeout = 0
     ; anomaly = 0
+    ; timeout = 0
     ; skipped = 0
     }
 
@@ -312,8 +315,8 @@ module Executor (CmdInterface : CmdInterface) = struct
     Log.stdout "%a@." (Instance.pp_simple dflt_width) instance
 
   let run_instances (dflt_width : int) (tree : CmdInterface.t InstanceTree.t)
-      (inputs : (string list * Fpath.t) list) : unit Exec.result =
-    Fun.flip2 List.fold_left (Ok ()) inputs (fun acc (offset, input) ->
+      (inputs : (string list * Fpath.t) list) : CmdInterface.t Instance.t list =
+    Fun.flip2 List.fold_left [] inputs (fun acc (offset, input) ->
         Log.info "Running instance '%a'..." Fpath.pp input;
         let (tree', w, name) = InstanceTree.extend tree offset in
         let streams = Log.Redirect.capture Shared in
@@ -321,22 +324,34 @@ module Executor (CmdInterface : CmdInterface) = struct
         let _ = Log.Redirect.restore streams in
         let instance = Instance.create input w result outcome time streams in
         store_instance dflt_width tree' name instance;
-        match acc with
-        | Ok () -> Result.map ignore result
-        | Error _ as err -> err )
+        instance :: acc )
 
   let execute (w : Workspace.t) (inputs : (string list * Fpath.t) list) :
-      unit Exec.result =
+      CmdInterface.t Instance.t list =
     match inputs with
     | [] -> Log.fail "unexpected empty input list"
-    | [ (_, input) ] -> Result.map ignore (CmdInterface.run w input)
+    | [ (_, input) ] ->
+      let streams = Log.Redirect.default () in
+      let (time, (result, outcome)) = Time.compute (run_instance input w) in
+      [ Instance.create input w result outcome time streams ]
     | inputs ->
       let dflt_width = max_input_len inputs + Config.(!dflt_width) in
       let tree = InstanceTree.create w in
       Log.stdout "%a@." (InstanceTree.pp_header dflt_width) CmdInterface.cmd;
-      let res = run_instances dflt_width tree inputs in
+      let instances = run_instances dflt_width tree inputs in
       InstanceTree.count_results tree;
       Log.stdout "%a@." (InstanceTree.pp_summary dflt_width) tree;
       dump_execution_report dflt_width tree;
-      res
+      instances
+
+  let rec execution_result ?(acc = Ok ())
+      (instances : CmdInterface.t Instance.t list) : unit Exec.result =
+    match instances with
+    | [] -> acc
+    | { result = Ok _; _ } :: instances -> execution_result ~acc instances
+    | { result = Error _ as result; _ } :: _ -> result
+
+  let execute_only (w : Workspace.t) (inputs : (string list * Fpath.t) list) :
+      unit Exec.result =
+    execute w inputs |> execution_result
 end

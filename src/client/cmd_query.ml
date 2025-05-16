@@ -5,6 +5,14 @@ open Result
 module Options = struct
   type env = { mdg_env : Cmd_mdg.Options.env }
 
+  let validate_env (env : env) : env =
+    match env.mdg_env.func_eval_mode with
+    | Opaque ->
+      Log.warn "Unable to run built-in queries with 'opaque' function eval.";
+      Log.warn "Defaulting function evaluation mode to 'unfold:rec'...";
+      { mdg_env = { env.mdg_env with func_eval_mode = UnfoldRec } }
+    | _ -> env
+
   type t =
     { inputs : Fpath.t list
     ; output : Fpath.t option
@@ -40,14 +48,6 @@ module Output = struct
     | _ -> ()
 end
 
-let validate_mdg_env (env : Cmd_mdg.Options.env) : Cmd_mdg.Options.env =
-  match env.func_eval_mode with
-  | Opaque ->
-    Log.warn "Unable to run built-in queries with 'opaque' function evaluation.";
-    Log.warn "Defaulting function evaluation mode to 'unfold:rec'...";
-    { env with func_eval_mode = UnfoldRec }
-  | _ -> env
-
 let run ?(mrel : Fpath.t option) (env : Options.env) (w : Workspace.t)
     (input : Fpath.t) : Vulnerability.Set.t Exec.result =
   let* e_mdg = Cmd_mdg.run env.mdg_env (Workspace.side_perm w) input in
@@ -65,16 +65,15 @@ let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
     type t = Vulnerability.Set.t
 
     let cmd = Docs.QueryCmd.name
-    let run = run env
+    let run = run (Options.validate_env env)
     let outcome = outcome
   end )
 
 let main (opts : Options.t) () : unit Exec.result =
   let ext = Some "json" in
-  let env = Options.{ mdg_env = validate_mdg_env opts.env.mdg_env } in
   let w = Workspace.create ~default:(`Single ext) opts.inputs opts.output in
   let* _ = Workspace.prepare w in
   let* inputs = Bulk.InputTree.generate opts.inputs in
-  let module Interface = (val bulk_interface env) in
+  let module Interface = (val bulk_interface opts.env) in
   let module Executor = Bulk.Executor (Interface) in
-  Executor.execute w inputs
+  Executor.execute_only w inputs

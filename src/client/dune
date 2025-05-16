@@ -8,6 +8,7 @@
   bulk
   exec
   query_expected
+  query_validation
   enums
   docs
   cmd_dependencies

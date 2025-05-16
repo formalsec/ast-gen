@@ -88,6 +88,17 @@ module Redirect = struct
     ; new_err : Buffer.t option
     }
 
+  let default_buf =
+    let dflt = Some (Buffer.create Config.(!dflt_buf_sz)) in
+    fun () -> dflt
+
+  let default () : t =
+    let old_out = Writer.Config.(!stdout) in
+    let old_err = Writer.Config.(!stderr) in
+    let new_out = default_buf () in
+    let new_err = default_buf () in
+    { old_out; old_err; new_out; new_err }
+
   let capture (old : Writer.t Config.t) (buf : Buffer.t) : Buffer.t =
     Writer.Config.(old := Writer.to_buffer buf);
     buf
