@@ -90,9 +90,9 @@ open struct
 
   let read_sink_kind (sink_kind : string) : Sink_kind.t =
     match sink_kind with
-    | "code-injection" -> CodeInjection
-    | "command-injection" -> CommandInjection
     | "path-traversal" -> PathTraversal
+    | "command-injection" -> CommandInjection
+    | "code-injection" -> CodeInjection
     | _ -> raise "Unsupported sink kind '%s' in taint config." sink_kind
 
   let read_package (pkg : Json.t) : package =

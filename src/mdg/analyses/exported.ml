@@ -126,7 +126,6 @@ let empty_exports (state : State.t) (ls_exported : Node.Set.t) : bool =
 let compute (env : Env.t) (state : State.t) : t =
   let exported = create () in
   let ls_exported = Jslib.exported_object state.mdg state.jslib in
-  Log.debug "ls_exported = %a" Node.Set.pp ls_exported;
   if not (empty_exports state ls_exported) then
     compute_object env state exported [] ls_exported;
   exported

@@ -20,6 +20,8 @@ module Options = struct
     ; parse_env : Cmd_parse.Options.env
     }
 
+  let validate_env (env : env) : env = env
+
   type t =
     { inputs : Fpath.t list
     ; output : Fpath.t option
@@ -166,7 +168,7 @@ let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
     type t = Builder.ExtendedMdg.t
 
     let cmd = Docs.MdgCmd.name
-    let run = run env
+    let run = run (Options.validate_env env)
     let outcome = outcome
   end )
 
@@ -177,4 +179,4 @@ let main (opts : Options.t) () : unit Exec.result =
   let* inputs = Bulk.InputTree.generate opts.inputs in
   let module Interface = (val bulk_interface opts.env) in
   let module Executor = Bulk.Executor (Interface) in
-  Executor.execute w inputs
+  Executor.execute_only w inputs

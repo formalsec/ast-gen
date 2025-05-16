@@ -9,7 +9,7 @@ module InjectionUnfold = struct
         let sink = Node.sink l_sink in
         let ls_args = Query_engine.tainted_sink_args engine l_call sink in
         if Node.Set.exists (Query_engine.is_tainted engine) ls_args then
-          let vuln = Vulnerability.of_node l_call sink in
+          let vuln = Vulnerability.tainted l_call sink in
           Vulnerability.Set.add vuln vulns
         else vulns )
 end

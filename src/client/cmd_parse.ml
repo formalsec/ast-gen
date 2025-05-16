@@ -14,6 +14,8 @@ module Options = struct
     ; deps_env : Cmd_dependencies.Options.env
     }
 
+  let validate_env (env : env) : env = env
+
   type t =
     { inputs : Fpath.t list
     ; output : Fpath.t option
@@ -93,7 +95,7 @@ let interface (env : Options.env) : (module Bulk.CmdInterface) =
     type t = Region.t Prog.t
 
     let cmd = Docs.ParseCmd.name
-    let run = run env
+    let run = run (Options.validate_env env)
     let outcome = outcome
   end )
 
@@ -103,4 +105,4 @@ let main (opts : Options.t) () : unit Exec.result =
   let* inputs = Bulk.InputTree.generate opts.inputs in
   let module Interface = (val interface opts.env) in
   let module Executor = Bulk.Executor (Interface) in
-  Executor.execute w inputs
+  Executor.execute_only w inputs
