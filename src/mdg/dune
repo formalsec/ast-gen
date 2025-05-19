@@ -20,6 +20,7 @@
   tainted
   cleaner
   export_view
+  export_taint
   svg_exporter
   builder
   interceptor)

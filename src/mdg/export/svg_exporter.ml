@@ -9,6 +9,11 @@ let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
 
 let timeout () : 'a = Stdlib.raise Timeout
 
+type graph_attrs = Graph.Graphviz.DotAttributes.graph list
+type vertex_attrs = Graph.Graphviz.DotAttributes.vertex list
+type edge_attrs = Graph.Graphviz.DotAttributes.edge list
+type subgraph = Graph.Graphviz.DotAttributes.subgraph
+
 module Env = struct
   type t =
     { subgraphs : bool
@@ -16,6 +21,8 @@ module Env = struct
     ; subgraphs_file : bool
     ; view : Export_view.t
     ; timeout : int
+    ; node_attr_mod : Node.t -> vertex_attrs -> vertex_attrs
+    ; edge_attr_mod : Edge.t -> edge_attrs -> edge_attrs
     }
 
   let default =
@@ -25,6 +32,8 @@ module Env = struct
       ; subgraphs_file = true
       ; view = Full
       ; timeout = 30
+      ; node_attr_mod = (fun _ attrs -> attrs)
+      ; edge_attr_mod = (fun _ attrs -> attrs)
       } in
     fun () -> dflt
 end
@@ -80,11 +89,6 @@ module Dot = struct
   include Graph.Graphviz.Dot (struct
     include Export_view.G
 
-    type graph_attrs = Graph.Graphviz.DotAttributes.graph list
-    type vertex_attrs = Graph.Graphviz.DotAttributes.vertex list
-    type edge_attrs = Graph.Graphviz.DotAttributes.edge list
-    type subgraph = Graph.Graphviz.DotAttributes.subgraph
-
     let graph_attributes (_ : t) : graph_attrs = []
 
     let default_vertex_attributes (_ : t) : vertex_attrs =
@@ -96,38 +100,45 @@ module Dot = struct
 
     let vertex_name (node : V.t) : string = string_of_int node.loc
 
+    let vertex_attributes' (node : V.t) : vertex_attrs =
+      List.cons
+        (`Label (node_label node))
+        ( match node.kind with
+        | Literal _ -> [ `Color 26214; `Fillcolor 13434879 ]
+        | Blank _ ->
+          [ `Color 12632256; `Fillcolor 14737632; `Fontcolor 12632256 ]
+        | Object _ -> [ `Color 2105376; `Fillcolor 12632256 ]
+        | Function _ -> [ `Color 26112; `Fillcolor 52224 ]
+        | Parameter "this" -> [ `Color 6684723; `Fillcolor 16764133 ]
+        | Parameter _ -> [ `Color 26112; `Fillcolor 13434828 ]
+        | Call _ -> [ `Color 6697728; `Fillcolor 13395456 ]
+        | Return _ -> [ `Color 6697728; `Fillcolor 16770508 ]
+        | Module _ -> [ `Color 3342438; `Fillcolor 15060223 ]
+        | TaintSource -> [ `Color 6684672; `Fillcolor 16764108 ]
+        | TaintSink _ -> [ `Color 6684672; `Fillcolor 16724787 ] )
+
     let vertex_attributes (node : V.t) : vertex_attrs =
-      `Label (node_label node)
-      ::
-      ( match node.kind with
-      | Literal _ -> [ `Color 26214; `Fillcolor 13434879 ]
-      | Blank _ -> [ `Color 12632256; `Fillcolor 14737632; `Fontcolor 12632256 ]
-      | Object _ -> [ `Color 2105376; `Fillcolor 12632256 ]
-      | Function _ -> [ `Color 26112; `Fillcolor 52224 ]
-      | Parameter "this" -> [ `Color 6684723; `Fillcolor 16764133 ]
-      | Parameter _ -> [ `Color 26112; `Fillcolor 13434828 ]
-      | Call _ -> [ `Color 6697728; `Fillcolor 13395456 ]
-      | Return _ -> [ `Color 6697728; `Fillcolor 16770508 ]
-      | Module _ -> [ `Color 3342438; `Fillcolor 15060223 ]
-      | TaintSource -> [ `Color 6684672; `Fillcolor 16764108 ]
-      | TaintSink _ -> [ `Color 6684672; `Fillcolor 16724787 ] )
+      !env.node_attr_mod node (vertex_attributes' node)
+
+    let edge_attributes' (edge : Edge.t) : edge_attrs =
+      List.cons
+        (`Label (edge_label edge))
+        ( match edge.kind with
+        | (Dependency | Argument _) when Node.is_literal edge.src ->
+          [ `Style `Dotted; `Color 26214; `Fontcolor 26214 ]
+        | Dependency when Node.is_return edge.tar ->
+          [ `Style `Dotted; `Color 6697728; `Fontcolor 6697728 ]
+        | Dependency when Node.is_taint_source edge.src ->
+          [ `Style `Dotted; `Color 6684672; `Fontcolor 6684672 ]
+        | Parameter 0 -> [ `Color 6684723; `Fontcolor 6684723 ]
+        | Parameter _ -> [ `Color 26112; `Fontcolor 26112 ]
+        | Argument 0 -> [ `Style `Dotted; `Color 6684723; `Fontcolor 6684723 ]
+        | Caller -> [ `Color 6697728; `Fontcolor 6697728 ]
+        | Return -> [ `Style `Dotted; `Color 26112; `Fontcolor 26112 ]
+        | _ -> [ `Color 2105376 ] )
 
     let edge_attributes ((_, edge, _) : Node.t * Edge.t * Node.t) : edge_attrs =
-      `Label (edge_label edge)
-      ::
-      ( match edge.kind with
-      | (Dependency | Argument _) when Node.is_literal edge.src ->
-        [ `Style `Dotted; `Color 26214; `Fontcolor 26214 ]
-      | Dependency when Node.is_return edge.tar ->
-        [ `Style `Dotted; `Color 6697728; `Fontcolor 6697728 ]
-      | Dependency when Node.is_taint_source edge.src ->
-        [ `Style `Dotted; `Color 6684672; `Fontcolor 6684672 ]
-      | Parameter 0 -> [ `Color 6684723; `Fontcolor 6684723 ]
-      | Parameter _ -> [ `Color 26112; `Fontcolor 26112 ]
-      | Argument 0 -> [ `Style `Dotted; `Color 6684723; `Fontcolor 6684723 ]
-      | Caller -> [ `Color 6697728; `Fontcolor 6697728 ]
-      | Return -> [ `Style `Dotted; `Color 26112; `Fontcolor 26112 ]
-      | _ -> [ `Color 2105376 ] )
+      !env.edge_attr_mod edge (edge_attributes' edge)
 
     let subgraph_color (l_subgraph : Node.t) : int =
       let depth = subgraph_depth l_subgraph in

@@ -137,12 +137,20 @@ let builder_env (env : Options.env) : State.Env.t =
   }
 
 let export_env (env : Options.env) : Svg_exporter.Env.t =
-  { subgraphs = env.export_subgraphs
+  { (Svg_exporter.Env.default ()) with
+    subgraphs = env.export_subgraphs
   ; subgraphs_func = env.export_func_subgraphs
   ; subgraphs_file = env.export_file_subgraphs
   ; view = env.export_view
   ; timeout = env.export_timeout
   }
+
+let export_tainted_env (export_env : Svg_exporter.Env.t)
+    (builder_env : State.Env.t) (tainted : Node.Set.t) : Svg_exporter.Env.t =
+  if builder_env.run_tainted_analysis then
+    let node_attr_mod = Export_taint.node_attr_mod tainted in
+    { export_env with node_attr_mod }
+  else export_env
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     Builder.ExtendedMdg.t Exec.result =
@@ -152,7 +160,8 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   let* tc = Graphjs.taint_config env.taint_config in
   Output.taint_config w env.taint_config tc;
   let* e_mdg = Graphjs.mdg_builder builder_env tc prog in
-  let* _ = Output.main w export_env env.export_graph prog e_mdg.mdg in
+  let export_env' = export_tainted_env export_env builder_env e_mdg.tainted in
+  let* _ = Output.main w export_env' env.export_graph prog e_mdg.mdg in
   Ok e_mdg
 
 let outcome (res : Builder.ExtendedMdg.t Exec.result) : Bulk.Instance.outcome =
