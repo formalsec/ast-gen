@@ -279,10 +279,10 @@ module MdgOpts = struct
        include: (1) 'full' [default] for exporting the complete graph; (2) \
        'calls' for exporting the program's call graph; (3) 'object:<#loc>' for \
        exporting the graph of the object at location <#loc>; (4) \
-       'function:<#loc>' for exporting the graph of the function at location \
-       <#loc>; (5) 'reaches:<#loc>' for exporting the subgraph that reaches \
-       the node at location <#loc>; and (6) 'sinks' for exporting the subgraph \
-       that reaches every tainted sink of the program." in
+       'parent:<#loc>' for exporting the graph of the function/module at \
+       location <#loc>; (5) 'reaches:<#loc>' for exporting the subgraph that \
+       reaches the node at location <#loc>; and (6) 'sinks' for exporting the \
+       subgraph that reaches every tainted sink of the program." in
     let parse_f = Enums.ExportView.parse in
     Arg.(value & opt parse_f Full & info [ "export-view" ] ~doc)
 

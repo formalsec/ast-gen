@@ -33,7 +33,7 @@ type t =
   | Full
   | Calls
   | Object of Location.t
-  | Function of Location.t
+  | Parent of Location.t
   | Reaches of Location.t
   | Sinks
 
@@ -69,8 +69,9 @@ module Object = struct
   let get_object (mdg : Mdg.t) (loc : Location.t) : Node.t =
     let l_obj = get_node mdg loc in
     match l_obj.kind with
-    | Object _ | Function _ | Parameter _ | Return _ -> l_obj
-    | _ -> raise "Unexpected non-object node '%a'" Node.pp l_obj
+    | Call _ | TaintSink _ | TaintSource ->
+      raise "Unexpected non-object node '%a'" Node.pp l_obj
+    | _ -> l_obj
 
   let visit_f (edge : Edge.t) : bool =
     match edge.kind with Property _ | Version _ -> true | _ -> false
@@ -85,26 +86,32 @@ module Object = struct
     Mdg.visit_forwards visit_f node_f edge_f mdg node G.empty
 end
 
-module Function = struct
-  let get_function (mdg : Mdg.t) (loc : Location.t) : Node.t =
-    let l_func = get_node mdg loc in
-    match l_func.kind with
-    | Function _ -> l_func
-    | _ -> raise "Unexpected non-function node '%a'" Node.pp l_func
+module Parent = struct
+  let get_parent (mdg : Mdg.t) (loc : Location.t) : Node.t =
+    let l_parent = get_node mdg loc in
+    match l_parent.kind with
+    | Function _ -> l_parent
+    | Module _ -> l_parent
+    | _ -> raise "Unexpected non-parent node '%a'" Node.pp l_parent
 
-  let in_function (l_func : Node.t) (node : Node.t) : bool =
-    Node.equal l_func node || Option.equal Node.equal (Some l_func) node.parent
+  let rec is_parent (l_parent : Node.t) (node : Node.t) : bool =
+    if not (Node.equal l_parent node) then
+      match node.parent with
+      | None -> false
+      | Some l_parent' when Node.equal l_parent l_parent' -> true
+      | Some l_parent' -> is_parent l_parent' node
+    else true
 
   let build_graph_node (l_func : Node.t) (node : Node.t) (graph : G.t) : G.t =
-    if in_function l_func node then G.add_vertex graph node else graph
+    if is_parent l_func node then G.add_vertex graph node else graph
 
   let build_graph_edge (l_func : Node.t) (edge : Edge.t) (graph : G.t) : G.t =
-    if in_function l_func edge.src || in_function l_func edge.tar then
+    if is_parent l_func edge.src || is_parent l_func edge.tar then
       G.add_edge_e graph (G.E.create edge.src edge edge.tar)
     else graph
 
   let build_graph (mdg : Mdg.t) (loc : Location.t) : G.t =
-    let l_node = get_function mdg loc in
+    let l_node = get_parent mdg loc in
     Hashtbl.fold (fun _ -> build_graph_node l_node) mdg.nodes G.empty
     |> Hashtbl.fold (fun _ -> Edge.Set.fold (build_graph_edge l_node)) mdg.edges
 end
