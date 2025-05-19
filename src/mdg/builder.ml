@@ -568,19 +568,20 @@ and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
   | Some { floc; func; eval_store; _ } ->
     let store = Store.copy eval_store in
     let curr_floc = floc in
+    let curr_stack = l_func :: state.curr_stack in
     let curr_parent = Some l_func in
-    let state' = { state with store; curr_floc; curr_parent } in
+    let state' = { state with store; curr_floc; curr_stack; curr_parent } in
     let state'' = initialize_hoisted_functions state' func.body in
     let this_cid = newcid func.left in
-    let l_this = State.add_parameter_node state' this_cid "this" in
-    State.add_parameter_edge state' l_func l_this 0;
+    let l_this = State.add_parameter_node state'' this_cid "this" in
+    State.add_parameter_edge state'' l_func l_this 0;
     Store.replace state''.store "this" (Node.Set.singleton l_this);
     Fun.flip List.iteri func.params (fun idx param ->
         let idx' = idx + 1 in
         let param_cid = newcid param in
         let name = Identifier.name param in
-        let l_param = State.add_parameter_node state' param_cid name in
-        State.add_parameter_edge state' l_func l_param idx';
+        let l_param = State.add_parameter_node state'' param_cid name in
+        State.add_parameter_edge state'' l_func l_param idx';
         Store.replace state''.store name (Node.Set.singleton l_param) );
     build_sequence state'' func.body
 
