@@ -49,7 +49,7 @@ let add_static_orig_object_property (state : State.t) (name : string)
       let ls_orig = Mdg.object_orig_versions state.mdg l_obj in
       Fun.flip Node.Set.iter ls_orig (fun l_orig ->
           if not (Mdg.has_property state.mdg l_orig prop) then
-            let l_prop = State.add_object_node state cid name in
+            let l_prop = State.add_blank_node state cid name in
             State.add_property_edge state l_orig l_prop prop ) )
 
 let add_dynamic_orig_object_property (state : State.t) (name : string)
@@ -61,7 +61,7 @@ let add_dynamic_orig_object_property (state : State.t) (name : string)
       Fun.flip Node.Set.iter ls_orig (fun l_orig ->
           match Mdg.get_property state.mdg l_orig prop with
           | [] ->
-            let l_prop = State.add_object_node state cid name in
+            let l_prop = State.add_blank_node state cid name in
             State.add_property_edge state l_orig l_prop prop;
             Node.Set.iter (set_deps_f l_prop) ls_prop
           | l_prop :: _ -> Node.Set.iter (set_deps_f l_prop) ls_prop ) )
@@ -684,12 +684,12 @@ module ExtendedMdg = struct
     }
 
   let compute_exported_analysis (state : State.t) : Exported.t option =
-    if state.env.run_exported_analysis then
-      let export_f =
-        if opaque_function_eval state.env then Exported.compute_from_graph
-        else Exported.compute_and_unfold build_exported_function in
-      Some (export_f state)
-    else None
+    let opaque = opaque_function_eval state.env in
+    match (state.env.run_exported_analysis, opaque) with
+    | (true, true) -> Some (Exported.compute_from_graph state)
+    | (true, false) ->
+      Some (Exported.compute_and_unfold build_exported_function state)
+    | (false, _) -> None
 
   let compute_tainted_analysis (state : State.t) (exported : Exported.t option)
       : Node.Set.t =
