@@ -180,47 +180,6 @@ let get_function_returns (mdg : t) (node : Node.t) : Node.t list =
   |> Edge.Set.filter Edge.is_return
   |> Edge.Set.map_list Edge.tar
 
-let visit (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
-    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (nodes : Node.t list) (acc : 'a)
-    (forward : bool) : 'a =
-  let get_edges_f = if forward then get_edges else get_trans in
-  let worklist = Queue.create () in
-  let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
-  List.iter (fun node -> Queue.add node worklist) nodes;
-  List.iter (fun node -> Hashtbl.add visited (Node.loc node) ()) nodes;
-  let visit_edge edge acc =
-    if visit_f edge then (
-      if not (Hashtbl.mem visited edge.tar.loc) then (
-        Queue.add edge.tar worklist;
-        Hashtbl.add visited edge.tar.loc () );
-      edge_f edge acc )
-    else acc in
-  let visit_node node acc =
-    let acc' = node_f node acc in
-    Edge.Set.fold visit_edge (get_edges_f mdg node.loc) acc' in
-  let rec visit_nodes acc =
-    Option.fold (Queue.take_opt worklist) ~none:acc ~some:(fun node ->
-        visit_nodes (visit_node node acc) ) in
-  visit_nodes acc
-
-let visit_forwards (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
-    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (node : Node.t) (acc : 'a) : 'a =
-  visit visit_f node_f edge_f mdg [ node ] acc true
-
-let visit_backwards (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
-    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (node : Node.t) (acc : 'a) : 'a =
-  visit visit_f node_f edge_f mdg [ node ] acc false
-
-let visit_multiple_forwards (visit_f : Edge.t -> bool)
-    (node_f : Node.t -> 'a -> 'a) (edge_f : Edge.t -> 'a -> 'a) (mdg : t)
-    (nodes : Node.t list) (acc : 'a) : 'a =
-  visit visit_f node_f edge_f mdg nodes acc true
-
-let visit_multiple_backwards (visit_f : Edge.t -> bool)
-    (node_f : Node.t -> 'a -> 'a) (edge_f : Edge.t -> 'a -> 'a) (mdg : t)
-    (nodes : Node.t list) (acc : 'a) : 'a =
-  visit visit_f node_f edge_f mdg nodes acc false
-
 let object_parents_traversal (f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
     (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
   Fun.flip2 List.fold_left acc (get_parents mdg node) (fun acc (_, l_parent) ->
@@ -234,8 +193,8 @@ let object_lineage_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
   let rec_lineage_f node lineage = List.equal Node.equal [ node ] lineage in
   let rec traverse ls_visited node acc =
     let (_, lineage) = List.split (lineage_f mdg node) in
-    let final_node = no_lineage_f lineage || rec_lineage_f node lineage in
-    let acc' = if final_node then f node acc else acc in
+    let end_lineage = no_lineage_f lineage || rec_lineage_f node lineage in
+    let acc' = if end_lineage then f node acc else acc in
     Fun.flip2 List.fold_left acc' lineage (fun acc l_lineage ->
         if Node.Set.mem l_lineage ls_visited then acc
         else traverse (Node.Set.add l_lineage ls_visited) l_lineage acc ) in
@@ -249,17 +208,13 @@ let object_tail_versions (mdg : t) (node : Node.t) : Node.Set.t =
   object_lineage_traversal Node.Set.add mdg get_versions
     (Node.Set.singleton node) node Node.Set.empty
 
-let object_final_traversal (final : bool) (f : Node.Set.t -> Node.t -> 'a -> 'a)
-    (mdg : t) (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
-  if final then
-    let ls_final = object_tail_versions mdg node in
-    let ls_visited' = Node.Set.union ls_visited ls_final in
-    Node.Set.fold (f ls_visited') ls_final acc
-  else
-    let ls_visited' = Node.Set.add node ls_visited in
-    f ls_visited' node acc
+let object_final_traversal (f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
+    (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
+  let ls_final = object_tail_versions mdg node in
+  let ls_visited' = Node.Set.union ls_visited ls_final in
+  Node.Set.fold (f ls_visited') ls_final acc
 
-let object_static_traversal ?(final = true) (f : Node.t -> 'a -> 'a) (mdg : t)
+let object_static_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
     (ls_visited : Node.Set.t) (node : Node.t) (prop : string) (acc : 'a) : 'a =
   let rec traverse ls_visited node acc =
     let ls_dynamic = get_property mdg node Dynamic in
@@ -267,11 +222,10 @@ let object_static_traversal ?(final = true) (f : Node.t -> 'a -> 'a) (mdg : t)
     let acc' = List.fold_right f ls_dynamic acc in
     if not (List.is_empty ls_prop) then List.fold_right f ls_prop acc'
     else object_parents_traversal traverse mdg ls_visited node acc' in
-  object_final_traversal final traverse mdg ls_visited node acc
+  object_final_traversal traverse mdg ls_visited node acc
 
-let object_dynamic_traversal ?(final = true)
-    (f : Property.t * Node.t -> 'a -> 'a) (mdg : t) (ls_visited : Node.Set.t)
-    (node : Node.t) (acc : 'a) : 'a =
+let object_dynamic_traversal (f : Property.t * Node.t -> 'a -> 'a) (mdg : t)
+    (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
   let rec traverse seen ls_visited node acc =
     let dynamic_f (prop, _) = Property.is_dynamic prop in
     let unseen_f (prop, _) = not (List.exists (Property.equal prop) seen) in
@@ -280,20 +234,19 @@ let object_dynamic_traversal ?(final = true)
     let seen' = seen @ List.map fst unseen in
     let acc' = List.fold_right f (dynamic @ unseen) acc in
     object_parents_traversal (traverse seen') mdg ls_visited node acc' in
-  object_final_traversal final (traverse []) mdg ls_visited node acc
+  object_final_traversal (traverse []) mdg ls_visited node acc
 
-let object_nested_traversal ?(final = true)
-    (f : Property.t list * Node.t -> 'a -> 'a) (mdg : t) (node : Node.t)
-    (acc : 'a) : 'a =
-  let f' node acc = node :: acc in
+let object_nested_traversal (f : Property.t list * Node.t -> 'a -> 'a) (mdg : t)
+    (node : Node.t) (acc : 'a) : 'a =
+  let found_f ls_visited props node =
+    object_dynamic_traversal List.cons mdg ls_visited node []
+    |> List.map (fun (p, n) -> (props @ [ p ], n))
+    |> List.filter (fun (_, n) -> not (Node.Set.mem n ls_visited)) in
   let rec traverse ls_visited nodes acc =
     match nodes with
     | [] -> acc
     | (props, node) :: nodes' ->
-      let found =
-        object_dynamic_traversal ~final f' mdg ls_visited node []
-        |> List.map (fun (p, n) -> (props @ [ p ], n))
-        |> List.filter (fun (_, n) -> not (Node.Set.mem n ls_visited)) in
+      let found = found_f ls_visited props node in
       let (_, ls_found) = List.split found in
       let ls_visited' = Node.Set.union ls_visited (Node.Set.of_list ls_found) in
       let nodes'' = nodes' @ found in
@@ -313,3 +266,42 @@ let object_lookup (mdg : t) (node : Node.t) (prop : Property.t) : Node.Set.t =
   match prop with
   | Static prop' -> object_static_lookup mdg node prop'
   | Dynamic -> object_dynamic_lookup mdg node
+
+let visit (get_f : t -> Location.t -> Edge.Set.t) (visit_f : Edge.t -> bool)
+    (node_f : Node.t -> 'a -> 'a) (edge_f : Edge.t -> 'a -> 'a) (mdg : t)
+    (nodes : Node.t list) (acc : 'a) : 'a =
+  let worklist = Queue.create () in
+  let visited = Hashtbl.create Config.(!dflt_htbl_sz) in
+  List.iter (fun node -> Queue.add node worklist) nodes;
+  List.iter (fun node -> Hashtbl.add visited (Node.loc node) ()) nodes;
+  let visit_edges edge acc =
+    if visit_f edge then (
+      if not (Hashtbl.mem visited edge.tar.loc) then (
+        Queue.add edge.tar worklist;
+        Hashtbl.add visited edge.tar.loc () );
+      edge_f edge acc )
+    else acc in
+  let rec visit_nodes acc =
+    Option.fold (Queue.take_opt worklist) ~none:acc ~some:(fun node ->
+        let acc' = node_f node acc in
+        let acc'' = Edge.Set.fold visit_edges (get_f mdg node.loc) acc' in
+        visit_nodes acc'' ) in
+  visit_nodes acc
+
+let visit_forwards (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
+    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (node : Node.t) (acc : 'a) : 'a =
+  visit get_edges visit_f node_f edge_f mdg [ node ] acc
+
+let visit_backwards (visit_f : Edge.t -> bool) (node_f : Node.t -> 'a -> 'a)
+    (edge_f : Edge.t -> 'a -> 'a) (mdg : t) (node : Node.t) (acc : 'a) : 'a =
+  visit get_trans visit_f node_f edge_f mdg [ node ] acc
+
+let visit_multiple_forwards (visit_f : Edge.t -> bool)
+    (node_f : Node.t -> 'a -> 'a) (edge_f : Edge.t -> 'a -> 'a) (mdg : t)
+    (nodes : Node.t list) (acc : 'a) : 'a =
+  visit get_edges visit_f node_f edge_f mdg nodes acc
+
+let visit_multiple_backwards (visit_f : Edge.t -> bool)
+    (node_f : Node.t -> 'a -> 'a) (edge_f : Edge.t -> 'a -> 'a) (mdg : t)
+    (nodes : Node.t list) (acc : 'a) : 'a =
+  visit get_trans visit_f node_f edge_f mdg nodes acc
