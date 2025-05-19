@@ -159,7 +159,7 @@ let build_graph (env : Env.t) (mdg : Mdg.t) : Export_view.G.t =
   | Full -> Export_view.Full.build_graph mdg
   | Calls -> Export_view.Calls.build_graph mdg
   | Object loc -> Export_view.Object.build_graph mdg loc
-  | Function loc -> Export_view.Function.build_graph mdg loc
+  | Parent loc -> Export_view.Parent.build_graph mdg loc
   | Reaches loc -> Export_view.Reaches.build_graph mdg loc
   | Sinks -> Export_view.Sinks.build_graph mdg
 
