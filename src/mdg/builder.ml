@@ -480,25 +480,25 @@ and build_dynamic_method_call_unfold (state : State.t) (left : 'm LeftValue.t)
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =
   match alternate with
-  | None -> build_sequence state consequent
+  | None -> build_scoped_sequence state consequent
   | Some alternate' ->
-    let state_altr = State.copy state in
-    let state' = build_sequence state consequent in
-    let state_altr' = build_sequence state_altr alternate' in
-    State.lub state' state_altr'
+    let state2 = State.copy state in
+    let state1' = build_scoped_sequence state consequent in
+    let state2' = build_scoped_sequence state2 alternate' in
+    State.lub state1' state2'
 
 and build_switch (state : State.t) (cases : 'm SwitchCase.t list) : State.t =
   (* TODO: implement flow control to the builder *)
   (* this statement can be improved by reasoning about the control flow of the break and return statements *)
   (* additionally, we should account for the initial states of the switch not being processed *)
-  List.map SwitchCase.body cases |> List.fold_left build_sequence state
+  List.map SwitchCase.body cases |> List.fold_left build_scoped_sequence state
 
 and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
   (* TODO: model the assignment in the forin and forof statement *)
   (* we treat this assignment as a lookup on all properties of the expression *)
   (* the left value should depend of all the properties of the right value *)
   let store = Store.copy state.store in
-  let state' = build_sequence state body in
+  let state' = build_scoped_sequence state body in
   let store' = Store.lub state'.store store in
   if Store.equal store' store then state' else build_loop state' body
 
@@ -613,22 +613,22 @@ and build_try (state : State.t) (body : 'm Statement.t list)
   (* TODO: implement the catch construct *)
   (* the catch body should only be analyzed if an exception is thrown *)
   let handler' = Option.map Catch.body handler in
-  let state' = build_sequence state body in
-  let state'' = build_sequence_opt state' handler' in
-  let state''' = build_sequence_opt state'' finalizer in
+  let state' = build_scoped_sequence state body in
+  let state'' = build_scoped_sequence_opt state' handler' in
+  let state''' = build_scoped_sequence_opt state'' finalizer in
   state'''
 
 and build_with (state : State.t) (_expr : 'm Expression.t)
     (body : 'm Statement.t list) : State.t =
   (* TODO: implement the with construct *)
   (* extend the current scope with the statement's expression *)
-  build_sequence state body
+  build_scoped_sequence state body
 
 and build_labeled (state : State.t) (_label : 'm Identifier.t)
     (body : 'm Statement.t list) : State.t =
   (* TODO: implement the labeled construct *)
   (* store the labels in the environment, and then use them in the break and continue statements *)
-  build_sequence state body
+  build_scoped_sequence state body
 
 and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
   match stmt.el with
@@ -687,6 +687,15 @@ and build_sequence (state : State.t) (stmts : 'm Statement.t list) : State.t =
 and build_sequence_opt (state : State.t) (stmts : 'm Statement.t list option) :
     State.t =
   Option.fold ~none:state ~some:(build_sequence state) stmts
+
+and build_scoped_sequence (state : State.t) (stmts : 'm Statement.t list) :
+    State.t =
+  let state' = initialize_hoisted_functions state stmts in
+  build_sequence state' stmts
+
+and build_scoped_sequence_opt (state : State.t)
+    (stmts : 'm Statement.t list option) : State.t =
+  Option.fold ~none:state ~some:(build_scoped_sequence state) stmts
 
 and build_file (state : State.t) (file : 'm File.t) (main : bool)
     (l_parent : Node.t option) : State.t =
