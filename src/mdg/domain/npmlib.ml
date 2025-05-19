@@ -3,12 +3,12 @@ open Graphjs_share
 open Graphjs_ast
 
 module Template = struct
-  type el =
+  type field =
     | Source of Taint.source
     | Sink of Taint.sink
 
-  let pp_el (ppf : Fmt.t) (el : el) : unit =
-    match el with
+  let pp_el (ppf : Fmt.t) (field : field) : unit =
+    match field with
     | Source source -> Taint.pp_source ppf source
     | Sink sink -> Taint.pp_sink ppf sink
 
@@ -26,7 +26,7 @@ module Template = struct
   let add_sink (sink : Taint.sink) (template : t) : t =
     { template with sinks = sink :: template.sinks }
 
-  let to_list (template : t) : el list =
+  let to_list (template : t) : field list =
     let sources = List.map (fun source -> Source source) template.sources in
     let sinks = List.map (fun sink -> Sink sink) template.sinks in
     sources @ sinks
@@ -100,12 +100,12 @@ let build_unknown_package (mdg : Mdg.t) (npmlib : t) (name : string) : Node.t =
 let build_template_package (mdg : Mdg.t) (npmlib : t) (name : string)
     (template : Template.t) : Node.t =
   let l_npmlib = Node.create_module template.name in
+  let l_parent = Some l_npmlib in
   Mdg.add_node mdg l_npmlib;
   Fun.flip List.iter template.sinks (fun sink ->
-      let parent = Some l_npmlib in
       let at = Region.default () in
       let prop = Property.Static sink.name in
-      let l_sink = Node.create_taint_sink sink parent at in
+      let l_sink = Node.create_taint_sink sink l_parent at in
       Mdg.add_node mdg l_sink;
       Mdg.add_edge mdg (Edge.create_property prop l_npmlib l_sink) );
   Hashtbl.replace npmlib name (Built l_npmlib);

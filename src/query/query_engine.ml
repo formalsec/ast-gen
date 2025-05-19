@@ -3,7 +3,7 @@ open Graphjs_mdg
 
 type t =
   { mdg : Mdg.t
-  ; tainted : Tainted.t
+  ; tainted : Node.Set.t
   }
 
 let initialize (e_mdg : Builder.ExtendedMdg.t) : t =

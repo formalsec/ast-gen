@@ -85,20 +85,6 @@ let remove_edge (mdg : t) (edge : Edge.t) : unit =
 let remove_edges (mdg : t) (edges : Edge.t list) : unit =
   List.iter (remove_edge mdg) edges
 
-let lub (mdg1 : t) (mdg2 : t) : t =
-  Fun.flip Hashtbl.iter mdg2.edges (fun loc edges2 ->
-      let node2 = get_node mdg2 loc in
-      let trans2 = get_trans mdg2 loc in
-      let node1 = Hashtbl.find_opt mdg1.nodes loc in
-      let edges1 = Hashtbl.find_opt mdg1.edges loc in
-      let trans1 = Hashtbl.find_opt mdg1.trans loc in
-      let edges1' = Option.value ~default:Edge.Set.empty edges1 in
-      let trans1' = Option.value ~default:Edge.Set.empty trans1 in
-      if Option.is_none node1 then Hashtbl.replace mdg1.nodes loc node2;
-      Hashtbl.replace mdg1.edges loc (Edge.Set.union edges1' edges2);
-      Hashtbl.replace mdg1.trans loc (Edge.Set.union trans1' trans2) );
-  mdg1
-
 let get_dependencies (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_dependency
@@ -208,12 +194,6 @@ let object_tail_versions (mdg : t) (node : Node.t) : Node.Set.t =
   object_lineage_traversal Node.Set.add mdg get_versions
     (Node.Set.singleton node) node Node.Set.empty
 
-let object_final_traversal (f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
-    (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
-  let ls_final = object_tail_versions mdg node in
-  let ls_visited' = Node.Set.union ls_visited ls_final in
-  Node.Set.fold (f ls_visited') ls_final acc
-
 let object_static_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
     (ls_visited : Node.Set.t) (node : Node.t) (prop : string) (acc : 'a) : 'a =
   let rec traverse ls_visited node acc =
@@ -222,7 +202,7 @@ let object_static_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
     let acc' = List.fold_right f ls_dynamic acc in
     if not (List.is_empty ls_prop) then List.fold_right f ls_prop acc'
     else object_parents_traversal traverse mdg ls_visited node acc' in
-  object_final_traversal traverse mdg ls_visited node acc
+  traverse ls_visited node acc
 
 let object_dynamic_traversal (f : Property.t * Node.t -> 'a -> 'a) (mdg : t)
     (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
@@ -234,7 +214,7 @@ let object_dynamic_traversal (f : Property.t * Node.t -> 'a -> 'a) (mdg : t)
     let seen' = seen @ List.map fst unseen in
     let acc' = List.fold_right f (dynamic @ unseen) acc in
     object_parents_traversal (traverse seen') mdg ls_visited node acc' in
-  object_final_traversal (traverse []) mdg ls_visited node acc
+  traverse [] ls_visited node acc
 
 let object_nested_traversal (f : Property.t list * Node.t -> 'a -> 'a) (mdg : t)
     (node : Node.t) (acc : 'a) : 'a =
@@ -257,10 +237,12 @@ let object_nested_traversal (f : Property.t list * Node.t -> 'a -> 'a) (mdg : t)
 let object_static_lookup (mdg : t) (node : Node.t) (p : string) : Node.Set.t =
   let f node acc = Node.Set.add node acc in
   object_static_traversal f mdg (Node.Set.singleton node) node p Node.Set.empty
+  |> Node.Set.map_flat (object_tail_versions mdg)
 
 let object_dynamic_lookup (mdg : t) (node : Node.t) : Node.Set.t =
   let f (_, node) acc = Node.Set.add node acc in
   object_dynamic_traversal f mdg (Node.Set.singleton node) node Node.Set.empty
+  |> Node.Set.map_flat (object_tail_versions mdg)
 
 let object_lookup (mdg : t) (node : Node.t) (prop : Property.t) : Node.Set.t =
   match prop with

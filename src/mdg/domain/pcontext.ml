@@ -31,25 +31,25 @@ type 'm t =
   { prog : 'm Prog.t
   ; files : (Fpath.t, 'm file) Hashtbl.t
   ; funcs : (Location.t, 'm func) Hashtbl.t
-  ; initial_store : Store.t
+  ; init_store : Store.t
   }
 
 let create_files (prog : 'm Prog.t) : (Fpath.t, 'm file) Hashtbl.t =
   let files = Hashtbl.create Config.(!dflt_htbl_sz) in
-  Fun.flip2 Hashtbl.fold prog.files files (fun path file files ->
+  Fun.flip Hashtbl.iter prog.files (fun path file ->
       let path' = Fpath.rem_ext path in
-      Hashtbl.replace files path' { file; built = false };
-      files )
+      Hashtbl.replace files path' { file; built = false } );
+  files
 
-let create (prog : 'm Prog.t) (initial_store : Store.t) : 'm t =
+let create (prog : 'm Prog.t) (init_store : Store.t) : 'm t =
   let files = create_files prog in
   let funcs = Hashtbl.create Config.(!dflt_htbl_sz) in
-  { prog; files; funcs; initial_store }
+  { prog; files; funcs; init_store }
 
 let file (pcontext : 'm t) (path : Fpath.t) : 'm file option =
   Hashtbl.find_opt pcontext.files path
 
-let file_built (pcontext : 'm t) (path : Fpath.t) : unit =
+let build_file (pcontext : 'm t) (path : Fpath.t) : unit =
   let path' = Fpath.rem_ext path in
   match Hashtbl.find_opt pcontext.files path' with
   | Some file -> Hashtbl.replace pcontext.files path' { file with built = true }
@@ -58,6 +58,6 @@ let file_built (pcontext : 'm t) (path : Fpath.t) : unit =
 let func (pcontext : 'm t) (l_func : Node.t) : 'm func option =
   Hashtbl.find_opt pcontext.funcs l_func.loc
 
-let func_decl (pcontext : 'm t) (l_func : Node.t) (floc : Floc.t)
+let declare_func (pcontext : 'm t) (l_func : Node.t) (floc : Floc.t)
     (func : 'm FunctionDefinition.t) (eval_store : Store.t) : unit =
   Hashtbl.replace pcontext.funcs l_func.loc { floc; func; eval_store }

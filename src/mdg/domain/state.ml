@@ -65,7 +65,7 @@ let create (env' : Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t) : t =
 let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
     (l_parent : Node.t option) : t =
   let file = if main then None else Some mrel in
-  let store' = Store.copy state.pcontext.initial_store in
+  let store' = Store.copy state.pcontext.init_store in
   Jslib.initialize state.mdg store' state.jslib file l_parent;
   { state with
     store = store'
@@ -76,15 +76,13 @@ let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
   }
 
 let copy (state : t) : t =
-  let mdg = Mdg.copy state.mdg in
   let store = Store.copy state.store in
-  { state with mdg; store }
+  { state with store }
 
 let lub (state1 : t) (state2 : t) : t =
-  let mdg = Mdg.lub state1.mdg state2.mdg in
   let store = Store.lub state1.store state2.store in
   let curr_return = Node.Set.union state1.curr_return state2.curr_return in
-  { state1 with mdg; store; curr_return }
+  { state1 with store; curr_return }
 
 type cid = Allocator.cid
 

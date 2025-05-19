@@ -1,10 +1,10 @@
 open Graphjs_base
 
-type t = Node.Set.t
+let is_tainted (tainted : Node.Set.t) (node : Node.t) : bool =
+  Node.Set.mem node tainted
 
-let none () : t = Node.Set.empty
-let is_tainted (tainted : t) (node : Node.t) : bool = Node.Set.mem node tainted
-let taint (tainted : t) (node : Node.t) : Node.Set.t = Node.Set.add node tainted
+let taint (tainted : Node.Set.t) (node : Node.t) : Node.Set.t =
+  Node.Set.add node tainted
 
 let set_tainted_exports (mdg : Mdg.t) (exported : Exported.t) : Node.t =
   let l_taint = Node.create_taint_source () in
@@ -16,13 +16,15 @@ let set_tainted_exports (mdg : Mdg.t) (exported : Exported.t) : Node.t =
       | _ -> () );
   l_taint
 
-let mark_taint (queue : Node.t Queue.t) (node : Node.t) (tainted : t) : t =
+let mark_taint (queue : Node.t Queue.t) (node : Node.t) (tainted : Node.Set.t) :
+    Node.Set.t =
   if not (is_tainted tainted node) then (
     Queue.add node queue;
     taint tainted node )
   else tainted
 
-let rec mark_nodes (mdg : Mdg.t) (queue : Node.t Queue.t) (tainted : t) : t =
+let rec mark_nodes (mdg : Mdg.t) (queue : Node.t Queue.t) (tainted : Node.Set.t)
+    : Node.Set.t =
   Option.fold (Queue.take_opt queue) ~none:tainted ~some:(fun l_node ->
       let loc = Node.loc l_node in
       let edges = Mdg.get_edges mdg loc in
@@ -30,7 +32,7 @@ let rec mark_nodes (mdg : Mdg.t) (queue : Node.t Queue.t) (tainted : t) : t =
       mark_nodes mdg queue tainted' )
 
 and mark_edge (mdg : Mdg.t) (queue : Node.t Queue.t) (edge : Edge.t)
-    (tainted : t) : t =
+    (tainted : Node.Set.t) : Node.Set.t =
   match edge.kind with
   | Dependency -> mark_taint queue edge.tar tainted
   | Property _ -> mark_taint_prop mdg queue edge tainted
@@ -39,18 +41,19 @@ and mark_edge (mdg : Mdg.t) (queue : Node.t Queue.t) (edge : Edge.t)
   | _ -> tainted
 
 and mark_taint_prop (mdg : Mdg.t) (queue : Node.t Queue.t) (edge : Edge.t)
-    (tainted : t) : t =
+    (tainted : Node.Set.t) : Node.Set.t =
   let ls_obj = Node.Set.singleton edge.src in
   let ls_orig = Mdg.object_orig_versions mdg edge.src in
   if Node.Set.equal ls_obj ls_orig then mark_taint queue edge.tar tainted
   else tainted
 
-let mark_tainted (mdg : Mdg.t) (tainted : t) (l_taint : Node.t) : t =
+let mark_tainted (mdg : Mdg.t) (tainted : Node.Set.t) (l_taint : Node.t) :
+    Node.Set.t =
   let queue = Queue.create () in
   Queue.push l_taint queue;
   mark_nodes mdg queue tainted
 
-let compute (state : State.t) (exported : Exported.t) : t =
+let compute (state : State.t) (exported : Exported.t) : Node.Set.t =
   if not (Exported.is_empty exported) then
     let tainted = Node.Set.empty in
     let l_taint = set_tainted_exports state.mdg exported in
