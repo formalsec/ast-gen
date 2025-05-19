@@ -58,7 +58,12 @@ let run ?(mrel : Fpath.t option) (env : Options.env) (w : Workspace.t)
   Ok vulns
 
 let outcome (res : Vulnerability.Set.t Exec.result) : Bulk.Instance.outcome =
-  match res with Ok _ -> Success | Error _ -> Anomaly
+  match res with
+  | Ok _ -> Success
+  | Error (`DepTree _) -> Failure
+  | Error (`ParseJS _) -> Failure
+  | Error (`ExportMDG _) -> Anomaly
+  | Error _ -> Anomaly
 
 let bulk_interface (env : Options.env) : (module Bulk.CmdInterface) =
   ( module struct
