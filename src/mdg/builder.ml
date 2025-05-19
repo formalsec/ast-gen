@@ -32,8 +32,7 @@ let object_property_name (ls_obj : Node.Set.t) (obj : 'm Expression.t)
 
 let lookup_property (state : State.t) (ls_obj : Node.Set.t) (prop : Property.t)
     : Node.Set.t =
-  Fun.flip Node.Set.map_flat ls_obj (fun l_obj ->
-      Mdg.object_lookup state.mdg l_obj prop )
+  Node.Set.map_flat (Fun.flip (Mdg.object_lookup state.mdg) prop) ls_obj
 
 let lookup_method (state : State.t) (call_name : string) (call_cid : cid)
     (ls_obj : Node.Set.t) (prop : Property.t) : Node.Set.t =
@@ -169,35 +168,14 @@ and eval_store_expr (state : State.t) (id : string) (cid : cid) : Node.Set.t =
     Node.Set.singleton l_expr
   else ls_expr
 
-let rec initialize_builder (env : State.Env.t) (tconf : Taint_config.t)
-    (prog : 'm Prog.t) : State.t =
-  Location.reset_generator ();
-  let state = State.create env tconf prog in
-  let cbs_builder = Interceptor.cbs_builder build_file in
-  Interceptor.initialize state cbs_builder;
-  state
-
-and initialize_file (state : State.t) (f : 'm File.t) (main : bool)
-    (l_parent : Node.t option) : State.t =
-  let state' = State.initialize state f.path f.mrel main l_parent in
-  initialize_hoisted_functions state' f.body
-
-and initialize_hoisted_functions (state : State.t) (stmts : 'm Statement.t list)
-    : State.t =
-  Fun.flip2 List.fold_left state stmts (fun state stmt ->
-      match stmt.el with
-      | `FunctionDefinition func when FunctionDefinition.is_hoisted func ->
-        build_function_declaration state func (newcid stmt)
-      | _ -> state )
-
-and can_unfold_call (state : State.t) (l_func : Node.t) : bool =
+let can_unfold_call (state : State.t) (l_func : Node.t) : bool =
   match state.env.func_eval_mode with
   | Opaque -> Log.fail "unexpected function evaluation mode"
   | Unfold -> Log.fail "not implemented (use 'unfold:rec' or 'unfold:<depth>')"
   | UnfoldRec -> not (List.mem l_func state.curr_stack)
   | UnfoldDepth depth -> List.length state.curr_stack < depth
 
-and unfold_this_param (state : State.t) (cons : bool) (retn_name : string)
+let unfold_this_param (state : State.t) (cons : bool) (retn_name : string)
     (retn_cid : cid) (ls_args : Node.Set.t list) : Node.Set.t =
   if cons then
     let retn_cid' = offset retn_cid 1 in
@@ -205,22 +183,21 @@ and unfold_this_param (state : State.t) (cons : bool) (retn_name : string)
     Node.Set.singleton l_this
   else List.hd ls_args
 
-and unfold_this_retn (state : State.t) (cons : bool) (ls_this : Node.Set.t) :
+let unfold_this_retn (state : State.t) (cons : bool) (ls_this : Node.Set.t) :
     Node.Set.t =
-  let fold_f l_this acc =
-    Node.Set.union acc (Mdg.object_tail_versions state.mdg l_this) in
-  if cons then Node.Set.fold fold_f ls_this Node.Set.empty
-  else state.curr_return
+  let tail_lookup_f = Mdg.object_tail_versions state.mdg in
+  if cons then Node.Set.map_flat tail_lookup_f ls_this else state.curr_return
 
-and unfold_function_call (state : State.t) (cons : bool) (call_name : string)
-    (retn_name : string) (ls_func : Node.Set.t) (ls_args : Node.Set.t list)
-    (call_cid : cid) (retn_cid : cid) : State.t * Node.Set.t =
+let rec unfold_function_call (state : State.t) (cons : bool)
+    (call_name : string) (retn_name : string) (ls_func : Node.Set.t)
+    (ls_args : Node.Set.t list) (call_cid : cid) (retn_cid : cid) :
+    State.t * Node.Set.t =
   let ls_this = unfold_this_param state cons retn_name retn_cid ls_args in
   Fun.flip2 Node.Set.fold ls_func (state, Node.Set.empty)
     (fun l_func (state, ls_retn) ->
-      let unfold = can_unfold_call state l_func in
+      let unfoldable = can_unfold_call state l_func in
       let func = Pcontext.func state.pcontext l_func in
-      match (unfold, func) with
+      match (unfoldable, func) with
       | (false, _) | (true, None) ->
         let add_call_f = add_function_call state call_name retn_name in
         let (state', _, l_retn) = add_call_f ls_func ls_args call_cid retn_cid in
@@ -232,14 +209,13 @@ and unfold_function_call (state : State.t) (cons : bool) (call_name : string)
         let curr_stack = l_func :: state.curr_stack in
         let curr_parent = Some l_func in
         let state' = { state with store; curr_floc; curr_stack; curr_parent } in
-        let state'' = initialize_hoisted_functions state' func.body in
-        Store.replace state''.store "this" ls_this;
+        Store.replace state'.store "this" ls_this;
         Fun.flip List.iteri (List.tl ls_args) (fun idx ls_arg ->
             Fun.flip Option.iter (List.nth_opt func.params idx) (fun param ->
                 let name = Identifier.name param in
-                Store.replace state''.store name ls_arg ) );
-        let state''' = build_sequence state'' func.body in
-        let ls_retn' = unfold_this_retn state''' cons ls_this in
+                Store.replace state'.store name ls_arg ) );
+        let state'' = build_sequence state' func.body in
+        let ls_retn' = unfold_this_retn state'' cons ls_this in
         let ls_retn'' = Node.Set.union ls_retn ls_retn' in
         (state, ls_retn'') )
 
@@ -290,10 +266,8 @@ and build_static_lookup (state : State.t) (left : 'm LeftValue.t)
   let ls_obj = eval_expr state obj in
   let prop_name = object_property_name ls_obj obj prop' in
   add_static_orig_object_property state prop_name ls_obj prop' cid;
-  let tail_lookup_f = Mdg.object_tail_versions state.mdg in
   let ls_lookup = lookup_property state ls_obj prop' in
-  let ls_lookup' = Node.Set.map_flat tail_lookup_f ls_lookup in
-  Store.replace state.store name ls_lookup';
+  Store.replace state.store name ls_lookup;
   state
 
 and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
@@ -304,10 +278,8 @@ and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
   let ls_prop = eval_expr state prop in
   let prop_name = object_property_name ls_obj obj prop' in
   add_dynamic_orig_object_property state prop_name ls_obj ls_prop cid;
-  let tail_lookup_f = Mdg.object_tail_versions state.mdg in
   let ls_lookup = lookup_property state ls_obj prop' in
-  let ls_lookup' = Node.Set.map_flat tail_lookup_f ls_lookup in
-  Store.replace state.store name ls_lookup';
+  Store.replace state.store name ls_lookup;
   state
 
 and build_static_update (state : State.t) (obj : 'm Expression.t)
@@ -480,25 +452,25 @@ and build_dynamic_method_call_unfold (state : State.t) (left : 'm LeftValue.t)
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =
   match alternate with
-  | None -> build_scoped_sequence state consequent
+  | None -> build_sequence state consequent
   | Some alternate' ->
     let state2 = State.copy state in
-    let state1' = build_scoped_sequence state consequent in
-    let state2' = build_scoped_sequence state2 alternate' in
+    let state1' = build_sequence state consequent in
+    let state2' = build_sequence state2 alternate' in
     State.lub state1' state2'
 
 and build_switch (state : State.t) (cases : 'm SwitchCase.t list) : State.t =
   (* TODO: implement flow control to the builder *)
   (* this statement can be improved by reasoning about the control flow of the break and return statements *)
   (* additionally, we should account for the initial states of the switch not being processed *)
-  List.map SwitchCase.body cases |> List.fold_left build_scoped_sequence state
+  List.map SwitchCase.body cases |> List.fold_left build_sequence state
 
 and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
   (* TODO: model the assignment in the forin and forof statement *)
   (* we treat this assignment as a lookup on all properties of the expression *)
   (* the left value should depend of all the properties of the right value *)
   let store = Store.copy state.store in
-  let state' = build_scoped_sequence state body in
+  let state' = build_sequence state body in
   let store' = Store.lub state'.store store in
   if Store.equal store' store then state' else build_loop state' body
 
@@ -530,7 +502,7 @@ and build_function_declaration_unfold (state : State.t)
   let func_name = LeftValue.name func.left in
   let l_func = State.add_function_node state cid func_name in
   Store.replace state.store func_name (Node.Set.singleton l_func);
-  Pcontext.func_decl state.pcontext l_func state.curr_floc func state.store;
+  Pcontext.declare_func state.pcontext l_func state.curr_floc func state.store;
   state
 
 and build_function_definition (state : State.t) (func : 'm FunctionDefinition.t)
@@ -545,16 +517,15 @@ and build_function_definition_opaque (state : State.t)
   let l_func = State.get_node state cid in
   let store' = Store.copy state'.store in
   let state'' = { state' with store = store'; curr_parent = Some l_func } in
-  let state''' = initialize_hoisted_functions state'' func.body in
   let this_cid = newcid func.left in
   let l_this = State.get_node state this_cid in
-  Store.replace state'''.store "this" (Node.Set.singleton l_this);
+  Store.replace state''.store "this" (Node.Set.singleton l_this);
   Fun.flip List.iteri func.params (fun _ param ->
       let param_cid = newcid param in
       let param_name = Identifier.name param in
       let l_param = State.get_node state param_cid in
-      Store.replace state'''.store param_name (Node.Set.singleton l_param) );
-  ignore (build_sequence state''' func.body);
+      Store.replace state''.store param_name (Node.Set.singleton l_param) );
+  ignore (build_sequence state'' func.body);
   state
 
 and build_function_definition_hoisted (state : State.t)
@@ -571,19 +542,26 @@ and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
     let curr_stack = l_func :: state.curr_stack in
     let curr_parent = Some l_func in
     let state' = { state with store; curr_floc; curr_stack; curr_parent } in
-    let state'' = initialize_hoisted_functions state' func.body in
     let this_cid = newcid func.left in
-    let l_this = State.add_parameter_node state'' this_cid "this" in
-    State.add_parameter_edge state'' l_func l_this 0;
-    Store.replace state''.store "this" (Node.Set.singleton l_this);
+    let l_this = State.add_parameter_node state' this_cid "this" in
+    State.add_parameter_edge state' l_func l_this 0;
+    Store.replace state'.store "this" (Node.Set.singleton l_this);
     Fun.flip List.iteri func.params (fun idx param ->
         let idx' = idx + 1 in
         let param_cid = newcid param in
-        let name = Identifier.name param in
-        let l_param = State.add_parameter_node state'' param_cid name in
-        State.add_parameter_edge state'' l_func l_param idx';
-        Store.replace state''.store name (Node.Set.singleton l_param) );
-    build_sequence state'' func.body
+        let param_name = Identifier.name param in
+        let l_param = State.add_parameter_node state' param_cid param_name in
+        State.add_parameter_edge state' l_func l_param idx';
+        Store.replace state'.store param_name (Node.Set.singleton l_param) );
+    build_sequence state' func.body
+
+and build_hoisted_functions (state : State.t) (stmts : 'm Statement.t list) :
+    State.t =
+  Fun.flip2 List.fold_left state stmts (fun state stmt ->
+      match stmt.el with
+      | `FunctionDefinition func when FunctionDefinition.is_hoisted func ->
+        build_function_declaration state func (newcid stmt)
+      | _ -> state )
 
 and build_loop_break (state : State.t) (_label : 'm Identifier.t option) :
     State.t =
@@ -614,22 +592,22 @@ and build_try (state : State.t) (body : 'm Statement.t list)
   (* TODO: implement the catch construct *)
   (* the catch body should only be analyzed if an exception is thrown *)
   let handler' = Option.map Catch.body handler in
-  let state' = build_scoped_sequence state body in
-  let state'' = build_scoped_sequence_opt state' handler' in
-  let state''' = build_scoped_sequence_opt state'' finalizer in
+  let state' = build_sequence state body in
+  let state'' = build_sequence_opt state' handler' in
+  let state''' = build_sequence_opt state'' finalizer in
   state'''
 
 and build_with (state : State.t) (_expr : 'm Expression.t)
     (body : 'm Statement.t list) : State.t =
   (* TODO: implement the with construct *)
   (* extend the current scope with the statement's expression *)
-  build_scoped_sequence state body
+  build_sequence state body
 
 and build_labeled (state : State.t) (_label : 'm Identifier.t)
     (body : 'm Statement.t list) : State.t =
   (* TODO: implement the labeled construct *)
   (* store the labels in the environment, and then use them in the break and continue statements *)
-  build_scoped_sequence state body
+  build_sequence state body
 
 and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
   match stmt.el with
@@ -683,26 +661,18 @@ and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
   | `ExportDecl _ -> state
 
 and build_sequence (state : State.t) (stmts : 'm Statement.t list) : State.t =
-  List.fold_left build_statement state stmts
+  let state' = build_hoisted_functions state stmts in
+  List.fold_left build_statement state' stmts
 
 and build_sequence_opt (state : State.t) (stmts : 'm Statement.t list option) :
     State.t =
   Option.fold ~none:state ~some:(build_sequence state) stmts
 
-and build_scoped_sequence (state : State.t) (stmts : 'm Statement.t list) :
-    State.t =
-  let state' = initialize_hoisted_functions state stmts in
-  build_sequence state' stmts
-
-and build_scoped_sequence_opt (state : State.t)
-    (stmts : 'm Statement.t list option) : State.t =
-  Option.fold ~none:state ~some:(build_scoped_sequence state) stmts
-
 and build_file (state : State.t) (file : 'm File.t) (main : bool)
     (l_parent : Node.t option) : State.t =
-  let state' = initialize_file state file main l_parent in
+  let state' = State.initialize state file.path file.mrel main l_parent in
   let state'' = build_sequence state' file.body in
-  Pcontext.file_built state''.pcontext file.path;
+  Pcontext.build_file state''.pcontext file.path;
   state''.env.cb_mdg_file file.mrel;
   state''
 
@@ -710,7 +680,7 @@ module ExtendedMdg = struct
   type t =
     { mdg : Mdg.t
     ; exported : Exported.t option
-    ; tainted : Tainted.t
+    ; tainted : Node.Set.t
     }
 
   let compute_exported_analysis (state : State.t) : Exported.t option =
@@ -722,10 +692,10 @@ module ExtendedMdg = struct
     else None
 
   let compute_tainted_analysis (state : State.t) (exported : Exported.t option)
-      : Tainted.t =
+      : Node.Set.t =
     match (state.env.run_tainted_analysis, exported) with
     | (true, Some exported') -> Tainted.compute state exported'
-    | _ -> Tainted.none ()
+    | _ -> Node.Set.empty
 
   let compute_cleaner_analysis (state : State.t) : unit =
     if state.env.run_cleaner_analysis then Cleaner.compute state
@@ -740,7 +710,10 @@ end
 
 let build_program (env : State.Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t)
     : ExtendedMdg.t =
+  Location.reset_generator ();
   let main = Prog.main prog in
-  let state = initialize_builder env tconf prog in
+  let state = State.create env tconf prog in
+  let cbs_builder = Interceptor.cbs_builder build_file in
+  Interceptor.initialize state cbs_builder;
   let state' = build_file state main true None in
   ExtendedMdg.compute_analyses state'
