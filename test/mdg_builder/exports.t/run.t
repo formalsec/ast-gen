@@ -23,9 +23,9 @@ Graph.js MDG Builder: simple exports
   this[#21] -
   x3[#22] -
   exports[#23] --< P(baz) >--> [[function]] $v3[#20]
-  [[taint]] --< D >--> exports[#8]
   [[taint]] --< D >--> [[function]] $v1[#9]
   [[taint]] --< D >--> [[function]] $v2[#13]
+  [[taint]] --< D >--> exports[#18]
 
 Graph.js MDG Builder: module exports
   $ graphjs mdg --no-export module.js
@@ -54,8 +54,8 @@ Graph.js MDG Builder: module exports
   this[#22] -
   x3[#23] -
   $v5[#24] --< P(baz) >--> [[function]] $v6[#21]
-  [[taint]] --< D >--> $v5[#19]
   [[taint]] --< D >--> [[function]] $v6[#21]
+  [[taint]] --< D >--> $v5[#24]
 
 Graph.js MDG Builder: dynamic exports
   $ graphjs mdg --no-export dynamic.js
@@ -87,11 +87,10 @@ Graph.js MDG Builder: dynamic exports
   export_prop[#24] --< D >--> module.*[#19]
   baz[#25] --< D >--> $v4[#26]
   $v4[#26] --< P(*) >--> [[function]] $v5[#21]
-  [[taint]] --< D >--> exports[#8]
   [[taint]] --< D >--> [[function]] $v1[#9]
   [[taint]] --< D >--> [[function]] $v3[#13]
-  [[taint]] --< D >--> module.*[#19]
   [[taint]] --< D >--> [[function]] $v5[#21]
+  [[taint]] --< D >--> $v4[#26]
 
 Graph.js MDG Builder: mixed exports
   $ graphjs mdg --no-export mixed.js
@@ -112,6 +111,6 @@ Graph.js MDG Builder: mixed exports
   y2[#16] -
   z2[#17] -
   exports[#18] --< P(bar) >--> [[function]] $v2[#13]
-  [[taint]] --< D >--> exports[#8]
   [[taint]] --< D >--> [[function]] $v1[#9]
   [[taint]] --< D >--> [[function]] $v2[#13]
+  [[taint]] --< D >--> exports[#18]

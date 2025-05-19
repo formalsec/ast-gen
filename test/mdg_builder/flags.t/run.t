@@ -15,9 +15,9 @@ Graph.js MDG Builder: tainted analysis flag
   $v3[#16] -
   $v2[#17] --< P(q) >--> $v3[#16]
   exports[#18] --< P(foo) >--> $v2[#17]
-  [[taint]] --< D >--> exports[#8]
   [[taint]] --< D >--> $v3[#16]
   [[taint]] --< D >--> $v2[#17]
+  [[taint]] --< D >--> exports[#18]
 
   $ graphjs mdg --no-export no_tainted_sources.js --no-tainted-analysis
   module[#7] --< P(exports) >--> exports[#8]

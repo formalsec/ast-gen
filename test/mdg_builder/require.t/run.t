@@ -81,7 +81,6 @@ Graph.js MDG Builder: multifile require
   exports[#32] --< P(bar1) >--> exports.bar1[#78]
   exports[#32] --< P(bar3) >--> exports.bar3[#83]
   exports[#32] --< P(bar4) >--> exports.bar4[#89]
-  exports[#32] --< Arg(0) >--> exports.bar4(...)[#91]
   "./baz"[#33] --< Arg(1) >--> require(...)[#34]
   require(...)[#34] --< Call >--> [[sink]] require[#3]
   require(...)[#34] --< D >--> baz[#35]
@@ -141,6 +140,7 @@ Graph.js MDG Builder: multifile require
   exports[#73] --< P(bar2) >--> bar2[#67]
   exports[#73] --< V(bar3) >--> exports[#74]
   exports[#74] --< P(bar3) >--> bar3[#71]
+  exports[#74] --< Arg(0) >--> exports.bar4(...)[#90]
   $v2.obj[#75] -
   $v2.foo(...)[#76] --< Call >--> [[function]] foo[#18]
   $v2.foo(...)[#76] --< D >--> $v11[#77]
@@ -159,7 +159,6 @@ Graph.js MDG Builder: multifile require
   $v9.q(...)[#87] --< D >--> $v16[#88]
   $v16[#88] -
   exports.bar4[#89] -
-  exports.bar4[#90] -
-  exports.bar4(...)[#91] --< Call >--> exports.bar4[#90]
-  exports.bar4(...)[#91] --< D >--> $v17[#92]
-  $v17[#92] -
+  exports.bar4(...)[#90] --< Call >--> exports.bar4[#89]
+  exports.bar4(...)[#90] --< D >--> $v17[#91]
+  $v17[#91] -
