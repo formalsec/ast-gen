@@ -39,7 +39,7 @@ end
 type t = Entry.t list
 
 let pp (ppf : Fmt.t) (vulns : t) : unit =
-  Fmt.fmt ppf "[@\n@[<v 2>  %a@]@\n]" Fmt.(pp_lst !>"@\n" Entry.pp) vulns
+  Fmt.fmt ppf "[@\n@[<v 2>  %a@]@\n]" Fmt.(pp_lst !>",@\n" Entry.pp) vulns
 
 let parse_vuln_list (ext : bool) (expected : Json.t) (acc : t) : t =
   let expected_vulns = Json.to_list expected in
