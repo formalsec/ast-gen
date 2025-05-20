@@ -168,12 +168,22 @@ and eval_store_expr (state : State.t) (id : string) (cid : cid) : Node.Set.t =
     Node.Set.singleton l_expr
   else ls_expr
 
-let can_unfold_call (state : State.t) (l_func : Node.t) : bool =
+let unfoldable_function (state : State.t) (l_func : Node.t) : bool =
   match state.env.func_eval_mode with
   | Opaque -> Log.fail "unexpected function evaluation mode"
   | Unfold -> Log.fail "not implemented (use 'unfold:rec' or 'unfold:<depth>')"
   | UnfoldRec -> not (List.mem l_func state.curr_stack)
   | UnfoldDepth depth -> List.length state.curr_stack < depth
+
+let unfoldable_callbacks (state : State.t) (ls_args : Node.Set.t list) :
+    (int * Node.t) list =
+  let ls_args' = List.mapi (fun idx ls_arg -> (idx, ls_arg)) ls_args in
+  Fun.flip2 List.fold_right ls_args' [] (fun (idx, ls_arg) acc ->
+      Fun.flip2 Node.Set.fold ls_arg acc (fun l_arg acc ->
+          match l_arg.kind with
+          | Function _ when unfoldable_function state l_arg ->
+            (idx, l_arg) :: acc
+          | _ -> acc ) )
 
 let unfold_this_param (state : State.t) (cons : bool) (retn_name : string)
     (retn_cid : cid) (ls_args : Node.Set.t list) : Node.Set.t =
@@ -195,13 +205,15 @@ let rec unfold_function_call (state : State.t) (cons : bool)
   let ls_this = unfold_this_param state cons retn_name retn_cid ls_args in
   Fun.flip2 Node.Set.fold ls_func (state, Node.Set.empty)
     (fun l_func (state, ls_retn) ->
-      let unfoldable = can_unfold_call state l_func in
+      let unfoldable = unfoldable_function state l_func in
       let func = Pcontext.func state.pcontext l_func in
       match (unfoldable, func) with
       | (false, _) | (true, None) ->
         let add_call_f = add_function_call state call_name retn_name in
         let (state', _, l_retn) = add_call_f ls_func ls_args call_cid retn_cid in
         let ls_retn' = Node.Set.add l_retn ls_retn in
+        let callbacks = unfoldable_callbacks state (List.tl ls_args) in
+        unfold_callback_arguments state callbacks;
         (state', ls_retn')
       | (true, Some { floc; func; eval_store; _ }) ->
         let store = Store.copy eval_store in
@@ -218,6 +230,19 @@ let rec unfold_function_call (state : State.t) (cons : bool)
         let ls_retn' = unfold_this_retn state'' cons ls_this in
         let ls_retn'' = Node.Set.union ls_retn ls_retn' in
         (state, ls_retn'') )
+
+and unfold_callback_arguments (state : State.t) (callbacks : (int * Node.t) list)
+    : unit =
+  Fun.flip List.iter callbacks (fun (_, l_func) ->
+      match Pcontext.func state.pcontext l_func with
+      | None -> Log.fail "unexpected unknown callback function"
+      | Some { floc; func; eval_store; _ } ->
+        let store = Store.copy eval_store in
+        let curr_floc = floc in
+        let curr_stack = l_func :: state.curr_stack in
+        let curr_parent = Some l_func in
+        let state' = { state with store; curr_floc; curr_stack; curr_parent } in
+        ignore (build_sequence state' func.body) )
 
 and build_assignment (state : State.t) (left : 'm LeftValue.t)
     (right : 'm Expression.t) : State.t =
