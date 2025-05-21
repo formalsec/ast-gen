@@ -92,7 +92,7 @@ module Csv_exporter = struct
 
   let pp_result (ppf : Fmt.t) (result : Query_validation.t Exec.result) : unit =
     match result with
-    | Ok valid -> Fmt.fmt ppf "%d,%d,%d" valid.tp valid.fp valid.tfp
+    | Ok valid -> Fmt.fmt ppf "%d,%d,%d" valid.tp valid.tpe valid.tfp
     | Error _ -> Fmt.fmt ppf "-,-,-"
 
   let pp_instance (ppf : Fmt.t) (instance : Query_validation.t Bulk.Instance.t)
@@ -142,7 +142,7 @@ let outcome (res : Query_validation.t Exec.result) : Bulk.Instance.outcome =
   match res with
   | Ok confirm ->
     if confirm.tp == confirm.e_tp then
-      if confirm.tfp == confirm.e_tfp then Success else Partial
+      if confirm.tpe == confirm.e_tpe then Success else Partial
     else Failure
   | Error _ -> Anomaly
 
