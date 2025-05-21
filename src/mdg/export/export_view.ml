@@ -109,9 +109,9 @@ module Parent = struct
     else graph
 
   let build_graph (mdg : Mdg.t) (loc : Location.t) : G.t =
-    let l_node = get_parent mdg loc in
-    Hashtbl.fold (fun _ -> build_graph_node l_node) mdg.nodes G.empty
-    |> Hashtbl.fold (fun _ -> Edge.Set.fold (build_graph_edge l_node)) mdg.edges
+    let node = get_parent mdg loc in
+    Hashtbl.fold (fun _ -> build_graph_node node) mdg.nodes G.empty
+    |> Hashtbl.fold (fun _ -> Edge.Set.fold (build_graph_edge node)) mdg.edges
 end
 
 module Reaches = struct

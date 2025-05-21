@@ -16,13 +16,13 @@ let is_excess_sink (mdg : Mdg.t) (l_sink : Node.t) : bool =
   Edge.Set.is_empty edges && Edge.Set.is_empty trans
 
 let compute_excess_jslib (state : State.t) (acc : Node.t list) : Node.t list =
-  Fun.flip2 Hashtbl.fold state.jslib acc (fun _ l_node acc ->
-      match l_node.kind with
-      | Object "module" when is_excess_module state.mdg l_node ->
+  Fun.flip2 Hashtbl.fold state.jslib acc (fun _ node acc ->
+      match node.kind with
+      | Object "module" when is_excess_module state.mdg node ->
         let prop = Property.Static "exports" in
-        let l_exports = Mdg.get_property state.mdg l_node prop in
-        (l_node :: l_exports) @ acc
-      | TaintSink _ when is_excess_sink state.mdg l_node -> l_node :: acc
+        let l_exports = Mdg.get_property state.mdg node prop in
+        (node :: l_exports) @ acc
+      | TaintSink _ when is_excess_sink state.mdg node -> node :: acc
       | _ -> acc )
 
 let compute (state : State.t) : unit =

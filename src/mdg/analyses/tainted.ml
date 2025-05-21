@@ -1,10 +1,10 @@
 let mark_tainted_exports (mdg : Mdg.t) (exported : Exported.t) : Node.t =
   let l_taint_source = Node.create_taint_source () in
   Mdg.add_node mdg l_taint_source;
-  Fun.flip Hashtbl.iter exported (fun _ (l_node, _) ->
-      match l_node.kind with
+  Fun.flip Hashtbl.iter exported (fun _ (l_exported, _) ->
+      match l_exported.kind with
       | Blank _ | Object _ | Function _ | TaintSink _ ->
-        Mdg.add_edge mdg (Edge.create_dependency () l_taint_source l_node)
+        Mdg.add_edge mdg (Edge.create_dependency () l_taint_source l_exported)
       | _ -> () );
   l_taint_source
 
@@ -16,8 +16,8 @@ let taint (ls_tainted : Node.Set.t) (node : Node.t) : Node.Set.t =
 
 let rec mark_nodes (state : State.t) (queue : Node.t Queue.t)
     (tainted : Node.Set.t) : Node.Set.t =
-  Option.fold (Queue.take_opt queue) ~none:tainted ~some:(fun l_node ->
-      let loc = Node.loc l_node in
+  Option.fold (Queue.take_opt queue) ~none:tainted ~some:(fun node ->
+      let loc = Node.loc node in
       let edges = Mdg.get_edges state.mdg loc in
       let ls_tainted = Edge.Set.fold (mark_edge state queue) edges tainted in
       mark_nodes state queue ls_tainted )

@@ -71,7 +71,7 @@ let initialize (mdg : Mdg.t) (store : Store.t) (jslib : t)
 
 let exported_object ?(mrel : Fpath.t option) (mdg : Mdg.t) (jslib : t) :
     Node.Set.t =
-  let l_module = find mdg jslib (resolve_name mrel "module") in
-  Node.Set.map_flat
-    (Fun.flip (Mdg.object_static_lookup mdg) "exports")
-    (Mdg.(object_tail_versions mdg) l_module)
+  find mdg jslib (resolve_name mrel "module")
+  |> Mdg.(object_tail_versions mdg)
+  |> Node.Set.map_flat (Fun.flip (Mdg.object_static_lookup mdg) "exports")
+  |> Node.Set.map_flat Mdg.(object_tail_versions mdg)
