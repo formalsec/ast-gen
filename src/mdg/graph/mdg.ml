@@ -164,12 +164,6 @@ let get_function_returns (mdg : t) (node : Node.t) : Node.t list =
   |> Edge.Set.filter Edge.is_return
   |> Edge.Set.map_list Edge.tar
 
-let object_parents_traversal (f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
-    (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
-  Fun.flip2 List.fold_left acc (get_parents mdg node) (fun acc (_, l_parent) ->
-      if Node.Set.mem l_parent ls_visited then acc
-      else f (Node.Set.add l_parent ls_visited) l_parent acc )
-
 let object_lineage_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
     (lineage_f : t -> Node.t -> (Property.t * Node.t) list)
     (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
@@ -191,6 +185,12 @@ let object_orig_versions (mdg : t) (node : Node.t) : Node.Set.t =
 let object_tail_versions (mdg : t) (node : Node.t) : Node.Set.t =
   object_lineage_traversal Node.Set.add mdg get_versions
     (Node.Set.singleton node) node Node.Set.empty
+
+let object_parents_traversal (f : Node.Set.t -> Node.t -> 'a -> 'a) (mdg : t)
+    (ls_visited : Node.Set.t) (node : Node.t) (acc : 'a) : 'a =
+  Fun.flip2 List.fold_left acc (get_parents mdg node) (fun acc (_, l_parent) ->
+      if Node.Set.mem l_parent ls_visited then acc
+      else f (Node.Set.add l_parent ls_visited) l_parent acc )
 
 let object_static_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
     (ls_visited : Node.Set.t) (node : Node.t) (prop : string) (acc : 'a) : 'a =
@@ -217,8 +217,10 @@ let object_dynamic_traversal (f : Property.t * Node.t -> 'a -> 'a) (mdg : t)
 let object_nested_traversal (f : Property.t list * Node.t -> 'a -> 'a) (mdg : t)
     (node : Node.t) (acc : 'a) : 'a =
   let found_f ls_visited props node =
+    let fold_f acc (p, ns) = Node.Set.fold (fun n acc -> (p, n) :: acc) ns acc in
     object_dynamic_traversal List.cons mdg ls_visited node []
-    |> List.map (fun (p, n) -> (props @ [ p ], n))
+    |> List.map (fun (p, n) -> (props @ [ p ], object_tail_versions mdg n))
+    |> List.fold_left fold_f []
     |> List.filter (fun (_, n) -> not (Node.Set.mem n ls_visited)) in
   let rec traverse ls_visited nodes acc =
     match nodes with

@@ -54,7 +54,7 @@ let add_static_orig_object_property (state : State.t) (name : string)
 let add_dynamic_orig_object_property (state : State.t) (name : string)
     (ls_obj : Node.Set.t) (ls_prop : Node.Set.t) (cid : cid) : unit =
   let prop = Property.Dynamic in
-  let set_deps_f l_node = Fun.flip (State.add_dependency_edge state) l_node in
+  let set_deps_f l_prop = Fun.flip (State.add_dependency_edge state) l_prop in
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
       let ls_orig = Mdg.object_orig_versions state.mdg l_obj in
       Fun.flip Node.Set.iter ls_orig (fun l_orig ->
@@ -67,40 +67,40 @@ let add_dynamic_orig_object_property (state : State.t) (name : string)
 
 let static_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
     (prop : Property.t) (cid : cid) : Node.Set.t =
-  let l_node = State.add_object_node state cid name in
-  State.add_version_edge state l_obj l_node prop;
-  Store.strong_update state.store l_obj l_node;
-  Node.Set.singleton l_node
+  let l_new = State.add_object_node state cid name in
+  State.add_version_edge state l_obj l_new prop;
+  Store.strong_update state.store l_obj l_new;
+  Node.Set.singleton l_new
 
 let static_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
     (prop : Property.t) (cid : cid) : Node.Set.t =
-  let l_node = State.add_object_node state cid name in
+  let l_new = State.add_object_node state cid name in
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
-      let ls_new = Node.Set.of_list [ l_obj; l_node ] in
-      State.add_version_edge state l_obj l_node prop;
+      let ls_new = Node.Set.of_list [ l_obj; l_new ] in
+      State.add_version_edge state l_obj l_new prop;
       Store.weak_update state.store l_obj ls_new );
-  let ls_node = Node.Set.singleton l_node in
+  let ls_node = Node.Set.singleton l_new in
   Store.replace state.store name ls_node;
   ls_node
 
 let dynamic_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
     (ls_prop : Node.Set.t) (cid : cid) : Node.Set.t =
-  let l_node = State.add_object_node state cid name in
-  State.add_version_edge state l_obj l_node Property.Dynamic;
-  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop;
-  Store.strong_update state.store l_obj l_node;
-  Node.Set.singleton l_node
+  let l_new = State.add_object_node state cid name in
+  State.add_version_edge state l_obj l_new Property.Dynamic;
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_new) ls_prop;
+  Store.strong_update state.store l_obj l_new;
+  Node.Set.singleton l_new
 
 let dynamic_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
     (ls_prop : Node.Set.t) (cid : cid) : Node.Set.t =
   let prop = Property.Dynamic in
-  let l_node = State.add_object_node state cid name in
+  let l_new = State.add_object_node state cid name in
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
-      let ls_new = Node.Set.of_list [ l_obj; l_node ] in
-      State.add_version_edge state l_obj l_node prop;
+      let ls_new = Node.Set.of_list [ l_obj; l_new ] in
+      State.add_version_edge state l_obj l_new prop;
       Store.weak_update state.store l_obj ls_new );
-  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop;
-  let ls_node = Node.Set.singleton l_node in
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_new) ls_prop;
+  let ls_node = Node.Set.singleton l_new in
   Store.replace state.store name ls_node;
   ls_node
 
@@ -252,17 +252,17 @@ and build_assignment (state : State.t) (left : 'm LeftValue.t)
 
 and build_new (state : State.t) (left : 'm LeftValue.t) (cid : cid) : State.t =
   let name = LeftValue.name left in
-  let l_node = State.add_object_node state cid name in
-  Store.replace state.store name (Node.Set.singleton l_node);
+  let l_obj = State.add_object_node state cid name in
+  Store.replace state.store name (Node.Set.singleton l_obj);
   state
 
 and build_unopt (state : State.t) (left : 'm LeftValue.t)
     (arg : 'm Expression.t) (cid : cid) : State.t =
   let name = LeftValue.name left in
   let ls_arg = eval_expr state arg in
-  let l_node = State.add_object_node state cid name in
-  Store.replace state.store name (Node.Set.singleton l_node);
-  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg;
+  let l_unopt = State.add_object_node state cid name in
+  Store.replace state.store name (Node.Set.singleton l_unopt);
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_unopt) ls_arg;
   state
 
 and build_binopt (state : State.t) (left : 'm LeftValue.t)
@@ -270,10 +270,10 @@ and build_binopt (state : State.t) (left : 'm LeftValue.t)
   let name = LeftValue.name left in
   let ls_arg1 = eval_expr state arg1 in
   let ls_arg2 = eval_expr state arg2 in
-  let l_node = State.add_object_node state cid name in
-  Store.replace state.store name (Node.Set.singleton l_node);
-  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg1;
-  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg2;
+  let l_binopt = State.add_object_node state cid name in
+  Store.replace state.store name (Node.Set.singleton l_binopt);
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_binopt) ls_arg1;
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_binopt) ls_arg2;
   state
 
 and build_yield (state : State.t) (_left : 'm LeftValue.t)
