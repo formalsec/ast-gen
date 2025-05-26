@@ -4,7 +4,9 @@
  (inline_tests)
  (preprocess
   (pps ppx_inline_test))
- (libraries graphjs_base graphjs_share graphjs_parser))
+ (libraries graphjs_base graphjs_share graphjs_parser)
+ (flags
+  (:standard -open Graphjs_base)))
 
 (alias
  (name runtest)

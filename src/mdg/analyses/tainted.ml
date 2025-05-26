@@ -1,12 +1,10 @@
-let mark_tainted_exports (mdg : Mdg.t) (exported : Exported.t) : Node.t =
-  let l_taint_source = Node.create_taint_source () in
-  Mdg.add_node mdg l_taint_source;
+let mark_exports (state : State.t) (exported : Exported.t) (l_taint : Node.t) :
+    unit =
   Fun.flip Hashtbl.iter exported (fun _ (l_exported, _) ->
       match l_exported.kind with
       | Blank _ | Object _ | Function _ | TaintSink _ ->
-        Mdg.add_edge mdg (Edge.create_dependency () l_taint_source l_exported)
-      | _ -> () );
-  l_taint_source
+        Mdg.add_edge state.mdg (Edge.create_dependency () l_taint l_exported)
+      | _ -> () )
 
 let is_tainted (ls_tainted : Node.Set.t) (node : Node.t) : bool =
   Node.Set.mem node ls_tainted
@@ -56,10 +54,9 @@ and mark_call (state : State.t) (queue : Node.t Queue.t) (node : Node.t)
     mark_next queue l_retn ls_tainted'
 
 let compute (state : State.t) (exported : Exported.t) : Node.Set.t =
-  if not (Exported.is_empty exported) then (
-    let l_taint_source = mark_tainted_exports state.mdg exported in
-    let ls_tainted = Node.Set.singleton l_taint_source in
-    let queue = Queue.create () in
-    Queue.push l_taint_source queue;
-    mark_nodes state queue ls_tainted )
-  else Node.Set.empty
+  let l_taint = Jslib.find state.mdg state.jslib "taint" in
+  mark_exports state exported l_taint;
+  let ls_tainted = Node.Set.singleton l_taint in
+  let queue = Queue.create () in
+  Queue.push l_taint queue;
+  mark_nodes state queue ls_tainted

@@ -22,6 +22,7 @@ let compute_excess_jslib (state : State.t) (acc : Node.t list) : Node.t list =
         let prop = Property.Static "exports" in
         let l_exports = Mdg.get_property state.mdg node prop in
         (node :: l_exports) @ acc
+      | TaintSource -> node :: acc
       | TaintSink _ when is_excess_sink state.mdg node -> node :: acc
       | _ -> acc )
 
