@@ -487,7 +487,10 @@ and build_dynamic_method_call_unfold (state : State.t) (left : 'm LeftValue.t)
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =
   match alternate with
-  | None -> build_sequence state consequent
+  | None ->
+    let state' = State.copy state in
+    let state'' = build_sequence state' consequent in
+    State.lub state state''
   | Some alternate' ->
     let state2 = State.copy state in
     let state1' = build_sequence state consequent in
