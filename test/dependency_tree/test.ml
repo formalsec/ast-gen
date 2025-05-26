@@ -1,4 +1,3 @@
-open Graphjs_base
 open Graphjs_parser.Dependency_tree
 
 let expected (exp : string) (res : string) : bool =

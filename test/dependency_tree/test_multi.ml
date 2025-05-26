@@ -1,5 +1,4 @@
 open Test
-open Graphjs_base
 
 let%test "unknown_file" =
   Analysis.multi "main/unknown.js" @@ Res.unknown_path "main/unknown.js"

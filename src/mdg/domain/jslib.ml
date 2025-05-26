@@ -22,6 +22,12 @@ let pp (ppf : Fmt.t) (jslib : t) : unit =
 
 let str (jslib : t) : string = Fmt.str "%a" pp jslib
 
+let initialize_tainted_source (mdg : Mdg.t) (jslib : t) : unit =
+  let name_jslib = "taint" in
+  let l_taint = Node.create_taint_source () in
+  Hashtbl.replace jslib name_jslib l_taint;
+  Mdg.add_node mdg l_taint
+
 let add_tainted_sink (mdg : Mdg.t) (store : Store.t) (jslib : t)
     (make_generic_sink_f : 'a -> Taint.sink) (generic_sink : 'a) : unit =
   let sink = make_generic_sink_f generic_sink in
@@ -61,6 +67,7 @@ let initialize_exports (mdg : Mdg.t) (store : Store.t) (jslib : t)
 
 let create (tconf : Taint_config.t) (mdg : Mdg.t) (store : Store.t) : t =
   let jslib = Hashtbl.create Config.(!dflt_htbl_sz) in
+  initialize_tainted_source mdg jslib;
   initialize_tainted_sinks tconf mdg store jslib;
   jslib
 
