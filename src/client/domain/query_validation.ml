@@ -26,8 +26,8 @@ let pp (ppf : Fmt.t) (valid : t) : unit =
   Fmt.fmt ppf "True Positives: %d@\n" valid.tp;
   Fmt.fmt ppf "True Positives (Extended): %d@\n" valid.tpe;
   Fmt.fmt ppf "True Positives (All): %d@\n@\n" (valid.tp + valid.tpe);
-  Fmt.fmt ppf "False Positives (True): %d@\n@\n" valid.tfp;
-  Fmt.fmt ppf "False Positives (All): %d@\n" (valid.tpe + valid.tfp);
+  Fmt.fmt ppf "False Positives (True): %d@\n" valid.tfp;
+  Fmt.fmt ppf "False Positives (All): %d@\n@\n" (valid.tpe + valid.tfp);
   Fmt.fmt ppf "False Negatives: %d@\n" (max (valid.e_tp - valid.tp) 0);
   Fmt.fmt ppf "False Negatives (Extended): %d@\n"
     (max (valid.e_tpe - valid.tpe) 0);
