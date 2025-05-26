@@ -66,59 +66,54 @@ let empty_exports (state : State.t) (ls_exported : Node.Set.t) : bool =
     && Edge.Set.cardinal l_exported_edges == 0
   else false
 
-let add_exported (exported : t) (acc : acc) (l_exported : Node.t)
-    (scheme : Scheme.t) : acc =
-  if not (mem exported l_exported) then (
-    replace exported l_exported scheme;
-    (l_exported, scheme) :: acc )
-  else acc
+let compute_function_this (state : State.t) (l_func : Node.t)
+    (scheme : Scheme.t) (entries : acc) : acc =
+  let l_this = Mdg.get_parameter state.mdg l_func 0 in
+  let ls_this = Mdg.object_tail_versions state.mdg l_this in
+  Fun.flip2 Node.Set.fold ls_this entries (fun l_this acc ->
+      (l_this, scheme) :: acc )
 
-let compute_lookups (state : State.t) (exported : t) (prev : Scheme.t)
-    (ls_obj : Node.Set.t) : acc =
-  let props_f (props, l_prop) acc =
-    List.map Interaction.lookup props
-    |> Scheme.extend prev
-    |> add_exported exported acc l_prop in
-  Fun.flip2 Node.Set.fold ls_obj [] (fun l_obj acc ->
-      Mdg.object_nested_traversal props_f state.mdg l_obj acc )
-
-let compute_functions_graph (state : State.t) (l_func : Node.t)
-    (scheme : Scheme.t) (acc : acc) : acc =
-  let ls_retn = Mdg.get_function_returns state.mdg l_func in
-  Fun.flip2 List.fold_left acc ls_retn (fun acc l_retn ->
-      let scheme' = Scheme.extend scheme [ Call ] in
-      (l_retn, scheme') :: acc )
-
-let compute_functions_unfold (cb_unfold_func : Env.cb_unfold_func)
-    (state : State.t) (l_func : Node.t) (scheme : Scheme.t) (acc : acc) : acc =
-  let state' = cb_unfold_func state l_func in
-  Fun.flip2 Node.Set.fold state'.curr_return acc (fun l_retn acc ->
-      let scheme' = Scheme.extend scheme [ Call ] in
-      (l_retn, scheme') :: acc )
-
-let compute_functions_dispatch (env : Env.t) :
-    State.t -> Node.t -> Scheme.t -> acc -> acc =
+let compute_function_return (env : Env.t) (state : State.t) (l_func : Node.t) :
+    Node.Set.t =
   match env.return_handler with
-  | GraphEdge -> compute_functions_graph
-  | Unfold cb_unfold_func -> compute_functions_unfold cb_unfold_func
+  | GraphEdge -> Mdg.get_function_returns state.mdg l_func |> Node.Set.of_list
+  | Unfold cb_unfold_func -> (cb_unfold_func state l_func).curr_return
 
-let compute_functions (env : Env.t) (state : State.t) (props : acc) : acc =
-  let compute_func_f = compute_functions_dispatch env in
-  Fun.flip2 List.fold_left [] props (fun acc (l_prop, scheme) ->
-      if Node.is_function l_prop then compute_func_f state l_prop scheme acc
-      else acc )
+let compute_function (env : Env.t) (state : State.t) (l_func : Node.t)
+    (scheme : Scheme.t) (entries : acc) : acc =
+  let ls_retn = compute_function_return env state l_func in
+  let entries' = compute_function_this state l_func scheme entries in
+  Fun.flip2 Node.Set.fold ls_retn entries' (fun l_retn acc ->
+      let scheme' = Scheme.extend scheme [ Call ] in
+      (l_retn, scheme') :: acc )
+
+let compute_functions (env : Env.t) (state : State.t) (scheme : Scheme.t)
+    (ls_entries : Node.Set.t) : acc =
+  Fun.flip2 Node.Set.fold ls_entries [] (fun l_entry acc ->
+      let acc' = (l_entry, scheme) :: acc in
+      if not (Node.is_function l_entry) then acc'
+      else compute_function env state l_entry scheme acc' )
+
+let compute_lookups (state : State.t) (entries : acc) : acc =
+  let props_f prev (props, l_prop) acc =
+    let next = List.map Interaction.lookup props in
+    let scheme = Scheme.extend prev next in
+    (l_prop, scheme) :: acc in
+  Fun.flip2 List.fold_left [] entries (fun acc (l_entry, scheme) ->
+      Mdg.object_nested_traversal (props_f scheme) state.mdg l_entry acc )
 
 let rec compute_object (env : Env.t) (state : State.t) (exported : t)
-    (prev : Scheme.t) (ls_exported : Node.Set.t) : unit =
-  compute_lookups state exported prev ls_exported
-  |> compute_functions env state
-  |> compute_returns env state exported
+    (scheme : Scheme.t) (ls_entries : Node.Set.t) : unit =
+  compute_functions env state scheme ls_entries
+  |> compute_lookups state
+  |> compute_recursive env state exported
 
-and compute_returns (env : Env.t) (state : State.t) (exported : t)
-    (returns : acc) : unit =
-  Fun.flip List.iter returns (fun (l_retn, scheme) ->
-      if not (mem exported l_retn) then
-        compute_object env state exported scheme (Node.Set.singleton l_retn) )
+and compute_recursive (env : Env.t) (state : State.t) (exported : t)
+    (entries : acc) : unit =
+  Fun.flip List.iter entries (fun (l_entry, scheme) ->
+      if not (mem exported l_entry) then (
+        replace exported l_entry scheme;
+        compute_object env state exported scheme (Node.Set.singleton l_entry) ) )
 
 let compute (env : Env.t) (state : State.t) : t =
   let exported = create () in
