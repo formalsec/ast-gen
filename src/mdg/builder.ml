@@ -42,6 +42,17 @@ let lookup_method (state : State.t) (call_name : string) (call_cid : cid)
     Node.Set.singleton l_func
   else ls_func
 
+let new_version_object (state : State.t) (name : string) (ls_obj : Node.Set.t)
+    (cid : cid) : Node.t =
+  let l_funcs = Node.Set.filter Node.is_function ls_obj in
+  if Node.Set.cardinal l_funcs == 1 then (
+    let l_func = Node.Set.choose l_funcs in
+    let func = Pcontext.func state.pcontext l_func in
+    let l_func' = State.add_function_node state cid name in
+    Option.iter (Pcontext.set_func state.pcontext l_func') func;
+    l_func' )
+  else State.add_object_node state cid name
+
 let add_static_orig_object_property (state : State.t) (name : string)
     (ls_obj : Node.Set.t) (prop : Property.t) (cid : cid) : unit =
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
@@ -67,14 +78,14 @@ let add_dynamic_orig_object_property (state : State.t) (name : string)
 
 let static_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
     (prop : Property.t) (cid : cid) : Node.Set.t =
-  let l_new = State.add_object_node state cid name in
+  let l_new = new_version_object state name (Node.Set.singleton l_obj) cid in
   State.add_version_edge state l_obj l_new prop;
   Store.strong_update state.store l_obj l_new;
   Node.Set.singleton l_new
 
 let static_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
     (prop : Property.t) (cid : cid) : Node.Set.t =
-  let l_new = State.add_object_node state cid name in
+  let l_new = new_version_object state name ls_obj cid in
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
       let ls_new = Node.Set.of_list [ l_obj; l_new ] in
       State.add_version_edge state l_obj l_new prop;
@@ -85,7 +96,7 @@ let static_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
 
 let dynamic_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
     (ls_prop : Node.Set.t) (cid : cid) : Node.Set.t =
-  let l_new = State.add_object_node state cid name in
+  let l_new = new_version_object state name (Node.Set.singleton l_obj) cid in
   State.add_version_edge state l_obj l_new Property.Dynamic;
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_new) ls_prop;
   Store.strong_update state.store l_obj l_new;
@@ -94,7 +105,7 @@ let dynamic_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
 let dynamic_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
     (ls_prop : Node.Set.t) (cid : cid) : Node.Set.t =
   let prop = Property.Dynamic in
-  let l_new = State.add_object_node state cid name in
+  let l_new = new_version_object state name ls_obj cid in
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
       let ls_new = Node.Set.of_list [ l_obj; l_new ] in
       State.add_version_edge state l_obj l_new prop;

@@ -73,11 +73,6 @@ let add_exported (exported : t) (acc : acc) (l_exported : Node.t)
     (l_exported, scheme) :: acc )
   else acc
 
-let compute_parents (state : State.t) (exported : t) (scheme : Scheme.t)
-    (l_obj : Node.t) (acc : acc) : acc =
-  let traverse_f _ l_obj acc = add_exported exported acc l_obj scheme in
-  Mdg.object_parents_traversal traverse_f state.mdg Node.Set.empty l_obj acc
-
 let compute_lookups (state : State.t) (exported : t) (prev : Scheme.t)
     (ls_obj : Node.Set.t) : acc =
   let props_f (props, l_prop) acc =
@@ -85,31 +80,30 @@ let compute_lookups (state : State.t) (exported : t) (prev : Scheme.t)
     |> Scheme.extend prev
     |> add_exported exported acc l_prop in
   Fun.flip2 Node.Set.fold ls_obj [] (fun l_obj acc ->
-      let acc' = compute_parents state exported prev l_obj acc in
-      Mdg.object_nested_traversal props_f state.mdg l_obj acc' )
+      Mdg.object_nested_traversal props_f state.mdg l_obj acc )
 
-let compute_returns_graph (state : State.t) (l_func : Node.t)
+let compute_functions_graph (state : State.t) (l_func : Node.t)
     (scheme : Scheme.t) (acc : acc) : acc =
   let ls_retn = Mdg.get_function_returns state.mdg l_func in
   Fun.flip2 List.fold_left acc ls_retn (fun acc l_retn ->
       let scheme' = Scheme.extend scheme [ Call ] in
       (l_retn, scheme') :: acc )
 
-let compute_returns_unfold (cb_unfold_func : Env.cb_unfold_func)
+let compute_functions_unfold (cb_unfold_func : Env.cb_unfold_func)
     (state : State.t) (l_func : Node.t) (scheme : Scheme.t) (acc : acc) : acc =
   let state' = cb_unfold_func state l_func in
   Fun.flip2 Node.Set.fold state'.curr_return acc (fun l_retn acc ->
       let scheme' = Scheme.extend scheme [ Call ] in
       (l_retn, scheme') :: acc )
 
-let compute_returns_dispatch (env : Env.t) :
+let compute_functions_dispatch (env : Env.t) :
     State.t -> Node.t -> Scheme.t -> acc -> acc =
   match env.return_handler with
-  | GraphEdge -> compute_returns_graph
-  | Unfold cb_unfold_func -> compute_returns_unfold cb_unfold_func
+  | GraphEdge -> compute_functions_graph
+  | Unfold cb_unfold_func -> compute_functions_unfold cb_unfold_func
 
-let compute_returns (env : Env.t) (state : State.t) (props : acc) : acc =
-  let compute_func_f = compute_returns_dispatch env in
+let compute_functions (env : Env.t) (state : State.t) (props : acc) : acc =
+  let compute_func_f = compute_functions_dispatch env in
   Fun.flip2 List.fold_left [] props (fun acc (l_prop, scheme) ->
       if Node.is_function l_prop then compute_func_f state l_prop scheme acc
       else acc )
@@ -117,10 +111,10 @@ let compute_returns (env : Env.t) (state : State.t) (props : acc) : acc =
 let rec compute_object (env : Env.t) (state : State.t) (exported : t)
     (prev : Scheme.t) (ls_exported : Node.Set.t) : unit =
   compute_lookups state exported prev ls_exported
-  |> compute_returns env state
-  |> compute_returned_values env state exported
+  |> compute_functions env state
+  |> compute_returns env state exported
 
-and compute_returned_values (env : Env.t) (state : State.t) (exported : t)
+and compute_returns (env : Env.t) (state : State.t) (exported : t)
     (returns : acc) : unit =
   Fun.flip List.iter returns (fun (l_retn, scheme) ->
       if not (mem exported l_retn) then
