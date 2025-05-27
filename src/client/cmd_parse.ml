@@ -1,4 +1,3 @@
-open Graphjs_base
 open Graphjs_parser
 open Graphjs_ast
 open Result

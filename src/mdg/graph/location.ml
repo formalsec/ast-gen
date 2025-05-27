@@ -1,5 +1,3 @@
-open Graphjs_base
-
 open struct
   let loc_gen = Generator.of_numbers ~init:1 ()
 end

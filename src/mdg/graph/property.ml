@@ -1,5 +1,3 @@
-open Graphjs_base
-
 type t =
   | Static of string
   | Dynamic

@@ -24,4 +24,6 @@
   svg_exporter
   builder
   interceptor)
- (libraries graphjs_base graphjs_share graphjs_ast ocamlgraph))
+ (libraries graphjs_base graphjs_share graphjs_ast ocamlgraph)
+ (flags
+  (:standard -open Graphjs_base)))
