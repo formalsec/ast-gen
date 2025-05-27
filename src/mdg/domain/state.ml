@@ -10,6 +10,7 @@ module Env = struct
 
   type t =
     { func_eval_mode : func_eval_mode
+    ; reset_locations : bool
     ; run_exported_analysis : bool
     ; run_tainted_analysis : bool
     ; run_cleaner_analysis : bool
@@ -19,6 +20,7 @@ module Env = struct
   let default =
     let dflt =
       { func_eval_mode = Opaque
+      ; reset_locations = true
       ; run_exported_analysis = true
       ; run_tainted_analysis = true
       ; run_cleaner_analysis = true

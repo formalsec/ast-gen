@@ -748,7 +748,7 @@ end
 
 let build_program (env : State.Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t)
     : ExtendedMdg.t =
-  Location.reset_generator ();
+  if env.reset_locations then Location.reset_generator ();
   let main = Prog.main prog in
   let state = State.create env tconf prog in
   let cbs_builder = Interceptor.cbs_builder build_file in
