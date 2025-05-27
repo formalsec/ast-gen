@@ -14,8 +14,8 @@ let default =
   fun () -> dflt
 
 let create (expected : Expected.t list) : t =
-  let e_tpe = List.length (List.filter Expected.ext expected) in
-  let e_tp = List.length expected - e_tpe in
+  let e_tp = List.length (List.filter Expected.main expected) in
+  let e_tpe = List.length expected - e_tp in
   { (default ()) with e_tp; e_tpe }
 
 let tp (valid : t) : t = { valid with tp = valid.tp + 1 }
@@ -42,5 +42,5 @@ let validate (expected : Expected.t list) (vulns : Vulnerability.Set.t) : t =
       let vuln' = Expected.of_vuln vuln in
       let matched = List.find_all (Expected.equal vuln') expected in
       if List.is_empty matched then tfp valid'
-      else if List.exists Expected.ext matched then tpe valid'
-      else tp valid' )
+      else if List.exists Expected.main matched then tp valid'
+      else tpe valid' )
