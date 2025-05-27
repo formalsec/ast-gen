@@ -1,5 +1,3 @@
-open Graphjs_base
-
 type t =
   { nodes : (Location.t, Node.t) Hashtbl.t
   ; edges : (Location.t, Edge.Set.t) Hashtbl.t

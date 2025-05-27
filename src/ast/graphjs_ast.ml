@@ -1,5 +1,3 @@
-open Graphjs_base
-
 module Region = struct
   include Region
 end

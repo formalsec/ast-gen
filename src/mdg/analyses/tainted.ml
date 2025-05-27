@@ -1,5 +1,3 @@
-open Graphjs_base
-
 let mark_tainted_exports (mdg : Mdg.t) (exported : Exported.t) : Node.t =
   let l_taint_source = Node.create_taint_source () in
   Mdg.add_node mdg l_taint_source;

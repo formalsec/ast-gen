@@ -1,5 +1,3 @@
-open Graphjs_base
-
 type error =
   [ `Generic of Fmt.t -> unit
   | `Failure of Fmt.t -> unit

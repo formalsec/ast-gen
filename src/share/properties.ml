@@ -1,5 +1,3 @@
-open Graphjs_base
-
 let search (locations : string list) (filename : string) : string option =
   Fun.flip List.find_map locations (fun dir ->
       let path = Filename.concat dir filename in
