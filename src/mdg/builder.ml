@@ -1,4 +1,3 @@
-open Graphjs_base
 open Graphjs_share
 open Graphjs_ast
 open Metadata
@@ -70,7 +69,7 @@ let static_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
     (prop : Property.t) (cid : cid) : Node.Set.t =
   let l_node = State.add_object_node state cid name in
   State.add_version_edge state l_obj l_node prop;
-  Store.strong_update state.store l_obj l_node;
+  state.store <- Store_layered.strong_update state.store l_obj l_node;
   Node.Set.singleton l_node
 
 let static_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
@@ -79,9 +78,9 @@ let static_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
       let ls_new = Node.Set.of_list [ l_obj; l_node ] in
       State.add_version_edge state l_obj l_node prop;
-      Store.weak_update state.store l_obj ls_new );
+      state.store <- Store_layered.weak_update state.store l_obj ls_new );
   let ls_node = Node.Set.singleton l_node in
-  Store.replace state.store name ls_node;
+  state.store <- Store_layered.replace state.store name ls_node;
   ls_node
 
 let dynamic_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
@@ -89,7 +88,7 @@ let dynamic_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
   let l_node = State.add_object_node state cid name in
   State.add_version_edge state l_obj l_node Property.Dynamic;
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop;
-  Store.strong_update state.store l_obj l_node;
+  state.store <- Store_layered.strong_update state.store l_obj l_node;
   Node.Set.singleton l_node
 
 let dynamic_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
@@ -99,10 +98,10 @@ let dynamic_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
       let ls_new = Node.Set.of_list [ l_obj; l_node ] in
       State.add_version_edge state l_obj l_node prop;
-      Store.weak_update state.store l_obj ls_new );
+      state.store <- Store_layered.weak_update state.store l_obj ls_new );
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop;
   let ls_node = Node.Set.singleton l_node in
-  Store.replace state.store name ls_node;
+  state.store <- Store_layered.replace state.store name ls_node;
   ls_node
 
 let add_static_object_version (state : State.t) (name : string)
@@ -162,7 +161,7 @@ and eval_template_literal_expr (state : State.t) (expr : 'm Expression.t)
   Node.Set.singleton l_literal
 
 and eval_store_expr (state : State.t) (id : string) (cid : cid) : Node.Set.t =
-  let ls_expr = Store.find state.store id in
+  let ls_expr = Store_layered.find state.store id in
   if Node.Set.is_empty ls_expr then
     let l_expr = State.add_blank_node state cid id in
     Node.Set.singleton l_expr
@@ -215,17 +214,16 @@ let rec unfold_function_call (state : State.t) (cons : bool)
         let callbacks = unfoldable_callbacks state (List.tl ls_args) in
         unfold_callback_arguments state callbacks;
         (state', ls_retn')
-      | (true, Some { floc; func; eval_store; _ }) ->
-        let store = Store.copy eval_store in
+      | (true, Some { floc; func; _ }) ->
         let curr_floc = floc in
         let curr_stack = l_func :: state.curr_stack in
         let curr_parent = Some l_func in
+        let store = Store_layered.replace state.store "this" ls_this in
         let state' = { state with store; curr_floc; curr_stack; curr_parent } in
-        Store.replace state'.store "this" ls_this;
         Fun.flip List.iteri (List.tl ls_args) (fun idx ls_arg ->
             Fun.flip Option.iter (List.nth_opt func.params idx) (fun param ->
                 let name = Identifier.name param in
-                Store.replace state'.store name ls_arg ) );
+                state'.store <- Store_layered.replace state'.store name ls_arg ) );
         let state'' = build_sequence state' func.body in
         let ls_retn' = unfold_this_retn state'' cons ls_this in
         let ls_retn'' = Node.Set.union ls_retn ls_retn' in
@@ -236,25 +234,25 @@ and unfold_callback_arguments (state : State.t) (callbacks : (int * Node.t) list
   Fun.flip List.iter callbacks (fun (_, l_func) ->
       match Pcontext.func state.pcontext l_func with
       | None -> Log.fail "unexpected unknown callback function"
-      | Some { floc; func; eval_store; _ } ->
-        let store = Store.copy eval_store in
+      | Some { floc; func; _ } ->
         let curr_floc = floc in
         let curr_stack = l_func :: state.curr_stack in
         let curr_parent = Some l_func in
-        let state' = { state with store; curr_floc; curr_stack; curr_parent } in
+        let state' = { state with curr_floc; curr_stack; curr_parent } in
         ignore (build_sequence state' func.body) )
 
 and build_assignment (state : State.t) (left : 'm LeftValue.t)
     (right : 'm Expression.t) : State.t =
   let name = LeftValue.name left in
   let ls_right = eval_expr state right in
-  Store.replace state.store name ls_right;
+  state.store <- Store_layered.replace state.store name ls_right;
   state
 
 and build_new (state : State.t) (left : 'm LeftValue.t) (cid : cid) : State.t =
   let name = LeftValue.name left in
   let l_node = State.add_object_node state cid name in
-  Store.replace state.store name (Node.Set.singleton l_node);
+  state.store <-
+    Store_layered.replace state.store name (Node.Set.singleton l_node);
   state
 
 and build_unopt (state : State.t) (left : 'm LeftValue.t)
@@ -262,7 +260,8 @@ and build_unopt (state : State.t) (left : 'm LeftValue.t)
   let name = LeftValue.name left in
   let ls_arg = eval_expr state arg in
   let l_node = State.add_object_node state cid name in
-  Store.replace state.store name (Node.Set.singleton l_node);
+  state.store <-
+    Store_layered.replace state.store name (Node.Set.singleton l_node);
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg;
   state
 
@@ -272,7 +271,8 @@ and build_binopt (state : State.t) (left : 'm LeftValue.t)
   let ls_arg1 = eval_expr state arg1 in
   let ls_arg2 = eval_expr state arg2 in
   let l_node = State.add_object_node state cid name in
-  Store.replace state.store name (Node.Set.singleton l_node);
+  let ls_node = Node.Set.singleton l_node in
+  state.store <- Store_layered.replace state.store name ls_node;
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg1;
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg2;
   state
@@ -292,7 +292,7 @@ and build_static_lookup (state : State.t) (left : 'm LeftValue.t)
   let prop_name = object_property_name ls_obj obj prop' in
   add_static_orig_object_property state prop_name ls_obj prop' cid;
   let ls_lookup = lookup_property state ls_obj prop' in
-  Store.replace state.store name ls_lookup;
+  state.store <- Store_layered.replace state.store name ls_lookup;
   state
 
 and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
@@ -304,7 +304,7 @@ and build_dynamic_lookup (state : State.t) (left : 'm LeftValue.t)
   let prop_name = object_property_name ls_obj obj prop' in
   add_dynamic_orig_object_property state prop_name ls_obj ls_prop cid;
   let ls_lookup = lookup_property state ls_obj prop' in
-  Store.replace state.store name ls_lookup;
+  state.store <- Store_layered.replace state.store name ls_lookup;
   state
 
 and build_static_update (state : State.t) (obj : 'm Expression.t)
@@ -369,7 +369,8 @@ and build_function_call_opaque (state : State.t) (left : 'm LeftValue.t)
   let ls_args' = Node.Set.empty :: ls_args in
   let add_call_f = add_function_call state call_name retn_name in
   let (state', _, l_retn) = add_call_f ls_func ls_args' call_cid retn_cid in
-  Store.replace state'.store retn_name (Node.Set.singleton l_retn);
+  let ls_retn = Node.Set.singleton l_retn in
+  state'.store <- Store_layered.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
 and build_function_call_unfold (cons : bool) (state : State.t)
@@ -383,7 +384,7 @@ and build_function_call_unfold (cons : bool) (state : State.t)
   let ls_args' = Node.Set.empty :: ls_args in
   let unfold_call_f = unfold_function_call state cons call_name retn_name in
   let (state', ls_retn) = unfold_call_f ls_func ls_args' call_cid retn_cid in
-  Store.replace state'.store retn_name ls_retn;
+  state'.store <- Store_layered.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
@@ -408,7 +409,8 @@ and build_static_method_call_opaque (state : State.t) (left : 'm LeftValue.t)
   let ls_func = lookup_method state call_name call_cid ls_obj prop' in
   let add_call_f = add_function_call state call_name retn_name in
   let (state', _, l_retn) = add_call_f ls_func ls_args' call_cid retn_cid in
-  Store.replace state'.store retn_name (Node.Set.singleton l_retn);
+  let ls_retn = Node.Set.singleton l_retn in
+  state'.store <- Store_layered.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
 and build_static_method_call_unfold (state : State.t) (left : 'm LeftValue.t)
@@ -426,7 +428,7 @@ and build_static_method_call_unfold (state : State.t) (left : 'm LeftValue.t)
   let ls_func = lookup_method state call_name call_cid ls_obj prop' in
   let unfold_call_f = unfold_function_call state false call_name retn_name in
   let (state', ls_retn) = unfold_call_f ls_func ls_args' call_cid retn_cid in
-  Store.replace state'.store retn_name ls_retn;
+  state'.store <- Store_layered.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
@@ -452,7 +454,8 @@ and build_dynamic_method_call_opaque (state : State.t) (left : 'm LeftValue.t)
   let ls_func = lookup_property state ls_obj prop' in
   let add_call_f = add_function_call state call_name retn_name in
   let (state', _, l_retn) = add_call_f ls_func ls_args' call_cid retn_cid in
-  Store.replace state'.store retn_name (Node.Set.singleton l_retn);
+  let ls_retn = Node.Set.singleton l_retn in
+  state'.store <- Store_layered.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
 and build_dynamic_method_call_unfold (state : State.t) (left : 'm LeftValue.t)
@@ -471,7 +474,7 @@ and build_dynamic_method_call_unfold (state : State.t) (left : 'm LeftValue.t)
   let ls_func = lookup_property state ls_obj prop' in
   let unfold_call_f = unfold_function_call state false call_name retn_name in
   let (state', ls_retn) = unfold_call_f ls_func ls_args' call_cid retn_cid in
-  Store.replace state'.store retn_name ls_retn;
+  state'.store <- Store_layered.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
 and build_if (state : State.t) (consequent : 'm Statement.t list)
@@ -494,10 +497,11 @@ and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
   (* TODO: model the assignment in the forin and forof statement *)
   (* we treat this assignment as a lookup on all properties of the expression *)
   (* the left value should depend of all the properties of the right value *)
-  let store = Store.copy state.store in
+  let store = state.store in
   let state' = build_sequence state body in
-  let store' = Store.lub state'.store store in
-  if Store.equal store' store then state' else build_loop state' body
+  let store' = Store_layered.lub state'.store store in
+  if Store_layered.equal store' store then state'
+  else build_loop { state' with store = store' } body
 
 and build_function_declaration (state : State.t)
     (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
@@ -509,7 +513,8 @@ and build_function_declaration_opaque (state : State.t)
     (func : 'm FunctionDefinition.t) (func_cid : cid) : State.t =
   let func_name = LeftValue.name func.left in
   let l_func = State.add_function_node state func_cid func_name in
-  Store.replace state.store func_name (Node.Set.singleton l_func);
+  state.store <-
+    Store_layered.replace state.store func_name (Node.Set.singleton l_func);
   let this_cid = newcid func.left in
   let state' = { state with curr_parent = Some l_func } in
   let l_this = State.add_parameter_node state' this_cid "this" in
@@ -526,8 +531,9 @@ and build_function_declaration_unfold (state : State.t)
     (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
   let func_name = LeftValue.name func.left in
   let l_func = State.add_function_node state cid func_name in
-  Store.replace state.store func_name (Node.Set.singleton l_func);
-  Pcontext.declare_func state.pcontext l_func state.curr_floc func state.store;
+  state.store <-
+    Store_layered.replace state.store func_name (Node.Set.singleton l_func);
+  Pcontext.declare_func state.pcontext l_func state.curr_floc func;
   state
 
 and build_function_definition (state : State.t) (func : 'm FunctionDefinition.t)
@@ -540,16 +546,15 @@ and build_function_definition_opaque (state : State.t)
     (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
   let state' = build_function_definition_hoisted state func cid in
   let l_func = State.get_node state cid in
-  let store' = Store.copy state'.store in
+  let l_this = State.get_node state (newcid func.left) in
+  let store' = state'.store in
+  let store' = Store_layered.replace store' "this" (Node.Set.singleton l_this) in
   let state'' = { state' with store = store'; curr_parent = Some l_func } in
-  let this_cid = newcid func.left in
-  let l_this = State.get_node state this_cid in
-  Store.replace state''.store "this" (Node.Set.singleton l_this);
   Fun.flip List.iteri func.params (fun _ param ->
       let param_cid = newcid param in
       let param_name = Identifier.name param in
-      let l_param = State.get_node state param_cid in
-      Store.replace state''.store param_name (Node.Set.singleton l_param) );
+      let l_param = Node.Set.singleton @@ State.get_node state param_cid in
+      state''.store <- Store_layered.replace state''.store param_name l_param );
   ignore (build_sequence state'' func.body);
   state
 
@@ -561,23 +566,24 @@ and build_function_definition_hoisted (state : State.t)
 and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
   match Pcontext.func state.pcontext l_func with
   | None -> state
-  | Some { floc; func; eval_store; _ } ->
-    let store = Store.copy eval_store in
+  | Some { floc; func; _ } ->
     let curr_floc = floc in
     let curr_stack = l_func :: state.curr_stack in
     let curr_parent = Some l_func in
-    let state' = { state with store; curr_floc; curr_stack; curr_parent } in
-    let this_cid = newcid func.left in
-    let l_this = State.add_parameter_node state' this_cid "this" in
+    let state' = { state with curr_floc; curr_stack; curr_parent } in
+    let l_this = State.add_parameter_node state' (newcid func.left) "this" in
     State.add_parameter_edge state' l_func l_this 0;
-    Store.replace state'.store "this" (Node.Set.singleton l_this);
+    state'.store <-
+      Store_layered.replace state'.store "this" (Node.Set.singleton l_this);
     Fun.flip List.iteri func.params (fun idx param ->
         let idx' = idx + 1 in
         let param_cid = newcid param in
         let param_name = Identifier.name param in
         let l_param = State.add_parameter_node state' param_cid param_name in
         State.add_parameter_edge state' l_func l_param idx';
-        Store.replace state'.store param_name (Node.Set.singleton l_param) );
+        state'.store <-
+          Store_layered.replace state'.store param_name
+            (Node.Set.singleton l_param) );
     build_sequence state' func.body
 
 and build_hoisted_functions (state : State.t) (stmts : 'm Statement.t list) :

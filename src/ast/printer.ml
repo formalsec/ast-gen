@@ -1,4 +1,3 @@
-open Graphjs_base
 open Ast
 
 module Config = struct

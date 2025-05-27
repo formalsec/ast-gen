@@ -4,4 +4,6 @@
  (name graphjs_ast)
  (modules region metadata printer ast graphjs_ast)
  (private_modules metadata region printer)
- (libraries graphjs_base flow_parser))
+ (libraries graphjs_base flow_parser)
+ (flags
+  (:standard -open Graphjs_base)))

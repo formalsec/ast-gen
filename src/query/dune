@@ -3,4 +3,6 @@
 (library
  (name graphjs_query)
  (modules vulnerability query_engine builtin_queries)
- (libraries graphjs_base graphjs_share graphjs_mdg))
+ (libraries graphjs_base graphjs_share graphjs_mdg)
+ (flags
+  (:standard -open Graphjs_base)))

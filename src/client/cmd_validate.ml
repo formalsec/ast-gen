@@ -1,4 +1,3 @@
-open Graphjs_base
 open Graphjs_query
 open Result
 

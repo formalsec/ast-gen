@@ -1,5 +1,3 @@
-open Graphjs_base
-
 let is_excess_exports (mdg : Mdg.t) (l_exports : Node.t) : bool =
   let edges = Mdg.get_edges mdg l_exports.loc in
   let trans = Mdg.get_trans mdg l_exports.loc in

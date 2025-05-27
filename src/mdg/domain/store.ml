@@ -1,5 +1,3 @@
-open Graphjs_base
-
 type t = (string, Node.Set.t) Hashtbl.t
 
 let create () : t = Hashtbl.create Config.(!dflt_htbl_sz)

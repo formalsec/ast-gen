@@ -1,4 +1,3 @@
-open Graphjs_base
 open Graphjs_share
 open Graphjs_ast
 
@@ -23,7 +22,7 @@ module Env = struct
       ; run_exported_analysis = true
       ; run_tainted_analysis = true
       ; run_cleaner_analysis = true
-      ; cb_mdg_file = (fun _ -> ())
+      ; cb_mdg_file = ignore
       } in
     fun () -> dflt
 end
@@ -31,7 +30,7 @@ end
 type t =
   { env : Env.t
   ; mdg : Mdg.t
-  ; store : Store.t
+  ; mutable store : Store_layered.t
   ; allocator : Node.t Allocator.t
   ; pcontext : Region.t Pcontext.t
   ; jslib : Jslib.t
@@ -47,13 +46,14 @@ and call_interceptor = t -> string -> Node.t -> Node.Set.t list -> t
 
 let create (env' : Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t) : t =
   let mdg' = Mdg.create () in
-  let store' = Store.create () in
+  let store' = Store_layered.create () in
+  let (store', jslib') = Jslib.create tconf mdg' store' in
   { env = env'
   ; mdg = mdg'
   ; store = store'
   ; allocator = Allocator.create Config.(!dflt_htbl_sz)
   ; pcontext = Pcontext.create prog store'
-  ; jslib = Jslib.create tconf mdg' store'
+  ; jslib = jslib'
   ; npmlib = Npmlib.create tconf
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; curr_floc = Pcontext.Floc.default ()
@@ -65,8 +65,8 @@ let create (env' : Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t) : t =
 let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
     (l_parent : Node.t option) : t =
   let file = if main then None else Some mrel in
-  let store' = Store.copy state.pcontext.init_store in
-  Jslib.initialize state.mdg store' state.jslib file l_parent;
+  let store' = state.pcontext.init_store in
+  let store' = Jslib.initialize state.mdg store' state.jslib file l_parent in
   { state with
     store = store'
   ; curr_floc = Pcontext.Floc.create path mrel main
@@ -76,11 +76,22 @@ let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
   }
 
 let copy (state : t) : t =
-  let store = Store.copy state.store in
-  { state with store }
+  { env = state.env
+  ; mdg = state.mdg
+  ; store = state.store
+  ; allocator = state.allocator
+  ; pcontext = state.pcontext
+  ; jslib = state.jslib
+  ; npmlib = state.npmlib
+  ; call_interceptors = state.call_interceptors
+  ; curr_floc = state.curr_floc
+  ; curr_stack = state.curr_stack
+  ; curr_parent = state.curr_parent
+  ; curr_return = state.curr_return
+  }
 
 let lub (state1 : t) (state2 : t) : t =
-  let store = Store.lub state1.store state2.store in
+  let store = Store_layered.lub state1.store state2.store in
   let curr_return = Node.Set.union state1.curr_return state2.curr_return in
   { state1 with store; curr_return }
 

@@ -24,4 +24,6 @@
   graphjs_mdg
   graphjs_query
   cmdliner
-  bos))
+  bos)
+ (flags
+  (:standard -open Graphjs_base)))

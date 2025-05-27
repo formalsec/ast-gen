@@ -1,5 +1,3 @@
-open Graphjs_base
-
 type kind =
   | Dependency
   | Property of Property.t

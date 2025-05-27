@@ -1,4 +1,3 @@
-open Graphjs_base
 open Graphjs_ast
 
 type cb_build_file =
@@ -46,8 +45,9 @@ module RequireInterceptor = struct
     | None -> state
     | Some path ->
       let ls_exports = process_module cb_build_file state path in
-      Store.replace state.store retn_name ls_exports;
-      state
+      { state with
+        store = Store_layered.replace state.store retn_name ls_exports
+      }
 end
 
 let initialize (state : State.t) (cbs_builder : cbs_builder) : unit =

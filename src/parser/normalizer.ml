@@ -1,4 +1,3 @@
-open Graphjs_base
 open Graphjs_ast
 open Graphjs_ast.Metadata
 module Flow = Flow_ast

@@ -9,4 +9,6 @@
   graphjs_ast
   graphjs_mdg
   graphjs_query
-  graphjs_client))
+  graphjs_client)
+ (flags
+  (:standard -open Graphjs_base)))

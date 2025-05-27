@@ -1,5 +1,3 @@
-open Graphjs_base
-
 module DebugLvl = struct
   type t =
     | None

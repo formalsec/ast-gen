@@ -3,7 +3,9 @@
 (library
  (name graphjs_share)
  (modules site properties sink_kind taint_config)
- (libraries graphjs_base dune-site))
+ (libraries graphjs_base dune-site)
+ (flags
+  (:standard -open Graphjs_base)))
 
 (generate_sites_module
  (module site)

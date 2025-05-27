@@ -1,5 +1,3 @@
-open Graphjs_base
-
 exception Exn of (Fmt.t -> unit)
 
 open struct

@@ -1,5 +1,3 @@
-open Graphjs_base
-
 module Config = struct
   include Config
 

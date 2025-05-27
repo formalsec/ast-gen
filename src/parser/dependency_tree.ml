@@ -1,5 +1,3 @@
-open Graphjs_base
-
 exception Exn of (Fmt.t -> unit)
 
 let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =

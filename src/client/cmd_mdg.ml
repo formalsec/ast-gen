@@ -1,4 +1,3 @@
-open Graphjs_base
 open Graphjs_share
 open Graphjs_ast
 open Graphjs_mdg

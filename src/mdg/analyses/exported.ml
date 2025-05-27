@@ -1,5 +1,3 @@
-open Graphjs_base
-
 module Env = struct
   type cb_unfold_func = State.t -> Node.t -> State.t
 
