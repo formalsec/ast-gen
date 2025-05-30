@@ -1,3 +1,4 @@
+open Graphjs_mdg
 open Graphjs_query
 open Result
 
@@ -5,7 +6,9 @@ module Options = struct
   type env = { query_env : Cmd_query.Options.env }
 
   let validate_env (env : env) : env =
-    { query_env = Cmd_query.Options.validate_env env.query_env }
+    let query_env = Cmd_query.Options.validate_env env.query_env in
+    let mdg_env = { query_env.mdg_env with reset_locations = false } in
+    { query_env = { mdg_env } }
 
   type t =
     { inputs : Fpath.t list
@@ -92,7 +95,7 @@ module Csv_exporter = struct
 
   let pp_result (ppf : Fmt.t) (result : Query_validation.t Exec.result) : unit =
     match result with
-    | Ok valid -> Fmt.fmt ppf "%d,%d,%d" valid.tp valid.fp valid.tfp
+    | Ok valid -> Fmt.fmt ppf "%d,%d,%d" valid.tp valid.tpe valid.tfp
     | Error _ -> Fmt.fmt ppf "-,-,-"
 
   let pp_instance (ppf : Fmt.t) (instance : Query_validation.t Bulk.Instance.t)
@@ -115,8 +118,7 @@ end
 let run_queries (env : Cmd_query.Options.env) (w : Workspace.t) (input : Fpath.t)
     : Vulnerability.Set.t Exec.result =
   let* sources = Parser.sources input in
-  let vulns = Ok Vulnerability.Set.empty in
-  Fun.flip2 List.fold_left vulns sources (fun acc mrel ->
+  Fun.flip2 List.fold_left (Ok Vulnerability.Set.empty) sources (fun acc mrel ->
       let* acc' = acc in
       let input' = Fpath.(input / "src" // mrel) in
       let* vulns = Cmd_query.run ~mrel env (Workspace.side_perm w) input' in
@@ -129,6 +131,7 @@ let get_query_expected (input : Fpath.t) : Query_expected.t Exec.result =
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     Query_validation.t Exec.result =
+  Location.reset_generator ();
   let* vulns = run_queries env.query_env w input in
   Output.detected w vulns;
   let* expected = get_query_expected input in
@@ -142,7 +145,7 @@ let outcome (res : Query_validation.t Exec.result) : Bulk.Instance.outcome =
   match res with
   | Ok confirm ->
     if confirm.tp == confirm.e_tp then
-      if confirm.tfp == confirm.e_tfp then Success else Partial
+      if confirm.tpe == confirm.e_tpe then Success else Partial
     else Failure
   | Error _ -> Anomaly
 

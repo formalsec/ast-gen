@@ -7,6 +7,7 @@ module Options = struct
   type env =
     { taint_config : Fpath.t
     ; func_eval_mode : Enums.FuncEvalMode.t
+    ; reset_locations : bool
     ; run_exported_analysis : bool
     ; run_tainted_analysis : bool
     ; run_cleaner_analysis : bool
@@ -40,6 +41,7 @@ module Options = struct
       (export_timeout' : int) (parse_env' : Cmd_parse.Options.env) : env =
     { taint_config = parse_taint_config taint_config'
     ; func_eval_mode = func_eval_mode'
+    ; reset_locations = true
     ; run_exported_analysis = not no_exported_analysis
     ; run_tainted_analysis = not (no_exported_analysis || no_tainted_analysis)
     ; run_cleaner_analysis = not no_cleaner_analysis
@@ -129,6 +131,7 @@ end
 
 let builder_env (env : Options.env) : State.Env.t =
   { func_eval_mode = env.func_eval_mode
+  ; reset_locations = env.reset_locations
   ; run_exported_analysis = env.run_exported_analysis
   ; run_tainted_analysis = env.run_tainted_analysis
   ; run_cleaner_analysis = env.run_cleaner_analysis

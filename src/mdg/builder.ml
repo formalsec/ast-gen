@@ -42,6 +42,17 @@ let lookup_method (state : State.t) (call_name : string) (call_cid : cid)
     Node.Set.singleton l_func
   else ls_func
 
+let new_version_object (state : State.t) (name : string) (ls_obj : Node.Set.t)
+    (cid : cid) : Node.t =
+  let l_funcs = Node.Set.filter Node.is_function ls_obj in
+  if Node.Set.cardinal l_funcs == 1 then (
+    let l_func = Node.Set.choose l_funcs in
+    let func = Pcontext.func state.pcontext l_func in
+    let l_func' = State.add_function_node state cid name in
+    Option.iter (Pcontext.set_func state.pcontext l_func') func;
+    l_func' )
+  else State.add_object_node state cid name
+
 let add_static_orig_object_property (state : State.t) (name : string)
     (ls_obj : Node.Set.t) (prop : Property.t) (cid : cid) : unit =
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
@@ -54,7 +65,7 @@ let add_static_orig_object_property (state : State.t) (name : string)
 let add_dynamic_orig_object_property (state : State.t) (name : string)
     (ls_obj : Node.Set.t) (ls_prop : Node.Set.t) (cid : cid) : unit =
   let prop = Property.Dynamic in
-  let set_deps_f l_node = Fun.flip (State.add_dependency_edge state) l_node in
+  let set_deps_f l_prop = Fun.flip (State.add_dependency_edge state) l_prop in
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
       let ls_orig = Mdg.object_orig_versions state.mdg l_obj in
       Fun.flip Node.Set.iter ls_orig (fun l_orig ->
@@ -67,40 +78,40 @@ let add_dynamic_orig_object_property (state : State.t) (name : string)
 
 let static_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
     (prop : Property.t) (cid : cid) : Node.Set.t =
-  let l_node = State.add_object_node state cid name in
-  State.add_version_edge state l_obj l_node prop;
-  Store.strong_update state.store l_obj l_node;
-  Node.Set.singleton l_node
+  let l_new = new_version_object state name (Node.Set.singleton l_obj) cid in
+  State.add_version_edge state l_obj l_new prop;
+  Store.strong_update state.store l_obj l_new;
+  Node.Set.singleton l_new
 
 let static_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
     (prop : Property.t) (cid : cid) : Node.Set.t =
-  let l_node = State.add_object_node state cid name in
+  let l_new = new_version_object state name ls_obj cid in
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
-      let ls_new = Node.Set.of_list [ l_obj; l_node ] in
-      State.add_version_edge state l_obj l_node prop;
+      let ls_new = Node.Set.of_list [ l_obj; l_new ] in
+      State.add_version_edge state l_obj l_new prop;
       Store.weak_update state.store l_obj ls_new );
-  let ls_node = Node.Set.singleton l_node in
+  let ls_node = Node.Set.singleton l_new in
   Store.replace state.store name ls_node;
   ls_node
 
 let dynamic_strong_nv (state : State.t) (name : string) (l_obj : Node.t)
     (ls_prop : Node.Set.t) (cid : cid) : Node.Set.t =
-  let l_node = State.add_object_node state cid name in
-  State.add_version_edge state l_obj l_node Property.Dynamic;
-  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop;
-  Store.strong_update state.store l_obj l_node;
-  Node.Set.singleton l_node
+  let l_new = new_version_object state name (Node.Set.singleton l_obj) cid in
+  State.add_version_edge state l_obj l_new Property.Dynamic;
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_new) ls_prop;
+  Store.strong_update state.store l_obj l_new;
+  Node.Set.singleton l_new
 
 let dynamic_weak_nv (state : State.t) (name : string) (ls_obj : Node.Set.t)
     (ls_prop : Node.Set.t) (cid : cid) : Node.Set.t =
   let prop = Property.Dynamic in
-  let l_node = State.add_object_node state cid name in
+  let l_new = new_version_object state name ls_obj cid in
   Fun.flip Node.Set.iter ls_obj (fun l_obj ->
-      let ls_new = Node.Set.of_list [ l_obj; l_node ] in
-      State.add_version_edge state l_obj l_node prop;
+      let ls_new = Node.Set.of_list [ l_obj; l_new ] in
+      State.add_version_edge state l_obj l_new prop;
       Store.weak_update state.store l_obj ls_new );
-  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_prop;
-  let ls_node = Node.Set.singleton l_node in
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_new) ls_prop;
+  let ls_node = Node.Set.singleton l_new in
   Store.replace state.store name ls_node;
   ls_node
 
@@ -119,8 +130,9 @@ let add_dynamic_object_version (state : State.t) (name : string)
   | _ -> dynamic_weak_nv state name ls_obj ls_prop cid
 
 let add_function_call (state : State.t) (call_name : string)
-    (retn_name : string) (ls_func : Node.Set.t) (ls_args : Node.Set.t list)
-    (call_cid : cid) (retn_cid : cid) : State.t * Node.t * Node.t =
+    (retn_name : string) (call_cid : cid) (retn_cid : cid)
+    (ls_func : Node.Set.t) (ls_args : Node.Set.t list) :
+    State.t * Node.t * Node.t =
   let l_call = State.add_call_node state call_cid call_name in
   let l_retn = State.add_return_node state retn_cid retn_name in
   let add_arg_f = Fun.flip2 (State.add_argument_edge state) l_call in
@@ -179,29 +191,28 @@ let unfoldable_callbacks (state : State.t) (ls_args : Node.Set.t list) :
   let ls_args' = List.mapi (fun idx ls_arg -> (idx, ls_arg)) ls_args in
   Fun.flip2 List.fold_right ls_args' [] (fun (idx, ls_arg) acc ->
       Fun.flip2 Node.Set.fold ls_arg acc (fun l_arg acc ->
-          match l_arg.kind with
-          | Function _ when unfoldable_function state l_arg ->
+          if Node.is_function l_arg && unfoldable_function state l_arg then
             (idx, l_arg) :: acc
-          | _ -> acc ) )
+          else acc ) )
 
-let unfold_this_param (state : State.t) (cons : bool) (retn_name : string)
-    (retn_cid : cid) (ls_args : Node.Set.t list) : Node.Set.t =
-  if cons then
+let unfold_this_argument (state : State.t) (retn_name : string) (retn_cid : cid)
+    (l_func : Node.t) (ls_args : Node.Set.t list) (new_ : bool) : Node.Set.t =
+  if new_ then (
     let retn_cid' = offset retn_cid 1 in
     let l_this = State.add_object_node state retn_cid' retn_name in
-    Node.Set.singleton l_this
+    let p_special = Property.Static "$proto" in
+    State.add_property_edge state l_this l_func p_special;
+    Node.Set.singleton l_this )
   else List.hd ls_args
 
-let unfold_this_retn (state : State.t) (cons : bool) (ls_this : Node.Set.t) :
+let unfold_this_retn (state : State.t) (ls_this : Node.Set.t) (new_ : bool) :
     Node.Set.t =
-  let tail_lookup_f = Mdg.object_tail_versions state.mdg in
-  if cons then Node.Set.map_flat tail_lookup_f ls_this else state.curr_return
+  if new_ then Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_this
+  else state.curr_return
 
-let rec unfold_function_call (state : State.t) (cons : bool)
-    (call_name : string) (retn_name : string) (ls_func : Node.Set.t)
-    (ls_args : Node.Set.t list) (call_cid : cid) (retn_cid : cid) :
-    State.t * Node.Set.t =
-  let ls_this = unfold_this_param state cons retn_name retn_cid ls_args in
+let rec unfold_function_call (new_ : bool) (state : State.t)
+    (call_name : string) (retn_name : string) (call_cid : cid) (retn_cid : cid)
+    (ls_func : Node.Set.t) (ls_args : Node.Set.t list) : State.t * Node.Set.t =
   Fun.flip2 Node.Set.fold ls_func (state, Node.Set.empty)
     (fun l_func (state, ls_retn) ->
       let unfoldable = unfoldable_function state l_func in
@@ -209,7 +220,7 @@ let rec unfold_function_call (state : State.t) (cons : bool)
       match (unfoldable, func) with
       | (false, _) | (true, None) ->
         let add_call_f = add_function_call state call_name retn_name in
-        let (state', _, l_retn) = add_call_f ls_func ls_args call_cid retn_cid in
+        let (state', _, l_retn) = add_call_f call_cid retn_cid ls_func ls_args in
         let ls_retn' = Node.Set.add l_retn ls_retn in
         let callbacks = unfoldable_callbacks state (List.tl ls_args) in
         unfold_callback_arguments state callbacks;
@@ -220,13 +231,15 @@ let rec unfold_function_call (state : State.t) (cons : bool)
         let curr_stack = l_func :: state.curr_stack in
         let curr_parent = Some l_func in
         let state' = { state with store; curr_floc; curr_stack; curr_parent } in
+        let unfold_this_f = unfold_this_argument state' retn_name in
+        let ls_this = unfold_this_f retn_cid l_func ls_args new_ in
         Store.replace state'.store "this" ls_this;
         Fun.flip List.iteri (List.tl ls_args) (fun idx ls_arg ->
             Fun.flip Option.iter (List.nth_opt func.params idx) (fun param ->
                 let name = Identifier.name param in
                 Store.replace state'.store name ls_arg ) );
         let state'' = build_sequence state' func.body in
-        let ls_retn' = unfold_this_retn state'' cons ls_this in
+        let ls_retn' = unfold_this_retn state'' ls_this new_ in
         let ls_retn'' = Node.Set.union ls_retn ls_retn' in
         (state, ls_retn'') )
 
@@ -252,17 +265,17 @@ and build_assignment (state : State.t) (left : 'm LeftValue.t)
 
 and build_new (state : State.t) (left : 'm LeftValue.t) (cid : cid) : State.t =
   let name = LeftValue.name left in
-  let l_node = State.add_object_node state cid name in
-  Store.replace state.store name (Node.Set.singleton l_node);
+  let l_obj = State.add_object_node state cid name in
+  Store.replace state.store name (Node.Set.singleton l_obj);
   state
 
 and build_unopt (state : State.t) (left : 'm LeftValue.t)
     (arg : 'm Expression.t) (cid : cid) : State.t =
   let name = LeftValue.name left in
   let ls_arg = eval_expr state arg in
-  let l_node = State.add_object_node state cid name in
-  Store.replace state.store name (Node.Set.singleton l_node);
-  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg;
+  let l_unopt = State.add_object_node state cid name in
+  Store.replace state.store name (Node.Set.singleton l_unopt);
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_unopt) ls_arg;
   state
 
 and build_binopt (state : State.t) (left : 'm LeftValue.t)
@@ -270,10 +283,10 @@ and build_binopt (state : State.t) (left : 'm LeftValue.t)
   let name = LeftValue.name left in
   let ls_arg1 = eval_expr state arg1 in
   let ls_arg2 = eval_expr state arg2 in
-  let l_node = State.add_object_node state cid name in
-  Store.replace state.store name (Node.Set.singleton l_node);
-  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg1;
-  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_node) ls_arg2;
+  let l_binopt = State.add_object_node state cid name in
+  Store.replace state.store name (Node.Set.singleton l_binopt);
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_binopt) ls_arg1;
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_binopt) ls_arg2;
   state
 
 and build_yield (state : State.t) (_left : 'm LeftValue.t)
@@ -367,11 +380,11 @@ and build_function_call_opaque (state : State.t) (left : 'm LeftValue.t)
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = Node.Set.empty :: ls_args in
   let add_call_f = add_function_call state call_name retn_name in
-  let (state', _, l_retn) = add_call_f ls_func ls_args' call_cid retn_cid in
+  let (state', _, l_retn) = add_call_f call_cid retn_cid ls_func ls_args' in
   Store.replace state'.store retn_name (Node.Set.singleton l_retn);
   call_interceptor state' retn_name ls_func ls_args'
 
-and build_function_call_unfold (cons : bool) (state : State.t)
+and build_function_call_unfold (new_ : bool) (state : State.t)
     (left : 'm LeftValue.t) (callee : 'm Identifier.t)
     (args : 'm Expression.t list) (call_cid : cid) : State.t =
   let retn_cid = newcid left in
@@ -380,8 +393,8 @@ and build_function_call_unfold (cons : bool) (state : State.t)
   let ls_func = eval_store_expr state call_name (newcid callee) in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = Node.Set.empty :: ls_args in
-  let unfold_call_f = unfold_function_call state cons call_name retn_name in
-  let (state', ls_retn) = unfold_call_f ls_func ls_args' call_cid retn_cid in
+  let unfold_call_f = unfold_function_call new_ state call_name retn_name in
+  let (state', ls_retn) = unfold_call_f call_cid retn_cid ls_func ls_args' in
   Store.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
@@ -406,7 +419,7 @@ and build_static_method_call_opaque (state : State.t) (left : 'm LeftValue.t)
   add_static_orig_object_property state call_name ls_obj prop' prop_cid;
   let ls_func = lookup_method state call_name call_cid ls_obj prop' in
   let add_call_f = add_function_call state call_name retn_name in
-  let (state', _, l_retn) = add_call_f ls_func ls_args' call_cid retn_cid in
+  let (state', _, l_retn) = add_call_f call_cid retn_cid ls_func ls_args' in
   Store.replace state'.store retn_name (Node.Set.singleton l_retn);
   call_interceptor state' retn_name ls_func ls_args'
 
@@ -423,8 +436,8 @@ and build_static_method_call_unfold (state : State.t) (left : 'm LeftValue.t)
   let call_name = object_property_name ls_obj obj prop' in
   add_static_orig_object_property state call_name ls_obj prop' prop_cid;
   let ls_func = lookup_method state call_name call_cid ls_obj prop' in
-  let unfold_call_f = unfold_function_call state false call_name retn_name in
-  let (state', ls_retn) = unfold_call_f ls_func ls_args' call_cid retn_cid in
+  let unfold_call_f = unfold_function_call false state call_name retn_name in
+  let (state', ls_retn) = unfold_call_f call_cid retn_cid ls_func ls_args' in
   Store.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
@@ -450,7 +463,7 @@ and build_dynamic_method_call_opaque (state : State.t) (left : 'm LeftValue.t)
   add_dynamic_orig_object_property state call_name ls_obj ls_prop prop_cid;
   let ls_func = lookup_property state ls_obj prop' in
   let add_call_f = add_function_call state call_name retn_name in
-  let (state', _, l_retn) = add_call_f ls_func ls_args' call_cid retn_cid in
+  let (state', _, l_retn) = add_call_f call_cid retn_cid ls_func ls_args' in
   Store.replace state'.store retn_name (Node.Set.singleton l_retn);
   call_interceptor state' retn_name ls_func ls_args'
 
@@ -468,15 +481,18 @@ and build_dynamic_method_call_unfold (state : State.t) (left : 'm LeftValue.t)
   let call_name = object_property_name ls_obj obj prop' in
   add_dynamic_orig_object_property state call_name ls_obj ls_prop prop_cid;
   let ls_func = lookup_property state ls_obj prop' in
-  let unfold_call_f = unfold_function_call state false call_name retn_name in
-  let (state', ls_retn) = unfold_call_f ls_func ls_args' call_cid retn_cid in
+  let unfold_call_f = unfold_function_call false state call_name retn_name in
+  let (state', ls_retn) = unfold_call_f call_cid retn_cid ls_func ls_args' in
   Store.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =
   match alternate with
-  | None -> build_sequence state consequent
+  | None ->
+    let state' = State.copy state in
+    let state'' = build_sequence state' consequent in
+    State.lub state state''
   | Some alternate' ->
     let state2 = State.copy state in
     let state1' = build_sequence state consequent in
@@ -734,7 +750,7 @@ end
 
 let build_program (env : State.Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t)
     : ExtendedMdg.t =
-  Location.reset_generator ();
+  if env.reset_locations then Location.reset_generator ();
   let main = Prog.main prog in
   let state = State.create env tconf prog in
   let cbs_builder = Interceptor.cbs_builder build_file in

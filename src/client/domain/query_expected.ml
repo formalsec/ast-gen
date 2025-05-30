@@ -8,7 +8,7 @@ module Entry = struct
     ; ext : bool
     }
 
-  let ext (entry : t) : bool = entry.ext
+  let main (entry : t) : bool = not entry.ext
 
   let create (cwe : string) (file : string) (line : int) (ext : bool) : t =
     { cwe; file; line; ext }

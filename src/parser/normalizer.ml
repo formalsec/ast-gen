@@ -243,9 +243,11 @@ let normalize_location (loc : Loc.t) : md =
 let ( @!> ) (el : 'e) (loc : Loc.t) : ('e, md) Metadata.t =
   el @> normalize_location loc
 
-let rec leftvalue_ctx (ctx : Ctx.t) :
-    (Loc.t, Loc.t) Flow.Pattern.t -> lval option = function
-  | (_, Identifier id) -> Some (normalize_leftvalue ctx id.name)
+let rec leftvalue_ctx (ctx : Ctx.t) (left : (Loc.t, Loc.t) Flow.Pattern.t) :
+    lval option =
+  match (ctx.curr_stmt, left) with
+  | (AssignOperator _, _) -> None
+  | (_, (_, Identifier id)) -> Some (normalize_leftvalue ctx id.name)
   | _ -> None
 
 and leftvalue_ctx_random (md : md) : lval option =
