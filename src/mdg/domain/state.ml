@@ -3,7 +3,7 @@ open Graphjs_ast
 
 module Env = struct
   type func_eval_mode =
-    | Opaque
+    | Connect
     | Unfold
     | UnfoldRec
     | UnfoldDepth of int
@@ -19,7 +19,7 @@ module Env = struct
 
   let default =
     let dflt =
-      { func_eval_mode = Opaque
+      { func_eval_mode = Connect
       ; reset_locations = true
       ; run_exported_analysis = true
       ; run_tainted_analysis = true

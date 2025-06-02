@@ -38,7 +38,7 @@ module FuncEvalMode = struct
 
   let pp (ppf : Fmt.t) (mode : t) : unit =
     match mode with
-    | Opaque -> Fmt.pp_str ppf "opaque"
+    | Connect -> Fmt.pp_str ppf "connect"
     | Unfold -> Fmt.pp_str ppf "unfold"
     | UnfoldRec -> Fmt.pp_str ppf "unfold:rec"
     | UnfoldDepth _ -> Fmt.pp_str ppf "unfold:<depth>"
@@ -49,7 +49,7 @@ module FuncEvalMode = struct
 
   let conv (mode : string) : conv =
     match mode with
-    | "opaque" -> `Ok Opaque
+    | "connect" -> `Ok Connect
     | "unfold" -> `Ok Unfold
     | "unfold:rec" -> `Ok UnfoldRec
     | mode' when conv_unfold_depth mode ->
