@@ -459,63 +459,41 @@ and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
   if Store.equal store' store then state' else build_loop state' body
 
 and build_function_declaration (state : State.t)
-    (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
-  ( if connect_function_eval state.env then build_function_declaration_connect
-    else build_function_declaration_unfold )
-    state func cid
-
-and build_function_declaration_connect (state : State.t)
     (func : 'm FunctionDefinition.t) (func_cid : cid) : State.t =
   let func_name = LeftValue.name func.left in
   let l_func = State.add_function_node state func_cid func_name in
   Store.replace state.store func_name (Node.Set.singleton l_func);
-  let this_cid = newcid func.left in
-  let state' = { state with curr_parent = Some l_func } in
-  let l_this = State.add_parameter_node state' this_cid "this" in
-  State.add_parameter_edge state' l_func l_this 0;
-  Fun.flip List.iteri func.params (fun idx param ->
-      let idx' = idx + 1 in
-      let param_cid = newcid param in
-      let param_name = Identifier.name param in
-      let l_param = State.add_parameter_node state' param_cid param_name in
-      State.add_parameter_edge state' l_func l_param idx' );
-  state
-
-and build_function_declaration_unfold (state : State.t)
-    (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
-  let func_name = LeftValue.name func.left in
-  let l_func = State.add_function_node state cid func_name in
-  Store.replace state.store func_name (Node.Set.singleton l_func);
   Pcontext.declare_func state.pcontext l_func state.curr_floc func state.store;
+  if connect_function_eval state.env then (
+    let state' = { state with curr_parent = Some l_func } in
+    let this_cid = newcid func.left in
+    let l_this = State.add_parameter_node state' this_cid "this" in
+    State.add_parameter_edge state' l_func l_this 0;
+    Fun.flip List.iteri func.params (fun idx param ->
+        let param_cid = newcid param in
+        let param_name = Identifier.name param in
+        let l_param = State.add_parameter_node state' param_cid param_name in
+        State.add_parameter_edge state' l_func l_param (idx + 1) ) );
   state
 
 and build_function_definition (state : State.t) (func : 'm FunctionDefinition.t)
-    (cid : cid) : State.t =
-  ( if connect_function_eval state.env then build_function_definition_connect
-    else build_function_definition_hoisted )
-    state func cid
-
-and build_function_definition_connect (state : State.t)
-    (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
-  let state' = build_function_definition_hoisted state func cid in
-  let l_func = State.get_node state cid in
-  let store' = Store.copy state'.store in
-  let state'' = { state' with store = store'; curr_parent = Some l_func } in
-  let this_cid = newcid func.left in
-  let l_this = State.get_node state this_cid in
-  Store.replace state''.store "this" (Node.Set.singleton l_this);
-  Fun.flip List.iteri func.params (fun _ param ->
-      let param_cid = newcid param in
-      let param_name = Identifier.name param in
-      let l_param = State.get_node state param_cid in
-      Store.replace state''.store param_name (Node.Set.singleton l_param) );
-  ignore (build_sequence state'' func.body);
+    (func_cid : cid) : State.t =
+  if not (FunctionHoisting.hoisted func.hoisted) then
+    ignore (build_function_declaration state func func_cid);
+  if connect_function_eval state.env then (
+    let l_func = State.get_node state func_cid in
+    let store' = Store.copy state.store in
+    let state' = { state with store = store'; curr_parent = Some l_func } in
+    let this_cid = newcid func.left in
+    let l_this = State.get_node state this_cid in
+    Store.replace state'.store "this" (Node.Set.singleton l_this);
+    Fun.flip List.iteri func.params (fun _ param ->
+        let param_cid = newcid param in
+        let param_name = Identifier.name param in
+        let l_param = State.get_node state param_cid in
+        Store.replace state'.store param_name (Node.Set.singleton l_param) );
+    ignore (build_sequence state' func.body) );
   state
-
-and build_function_definition_hoisted (state : State.t)
-    (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
-  if FunctionHoisting.hoisted func.hoisted then state
-  else build_function_declaration state func cid
 
 and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
   match Pcontext.func state.pcontext l_func with
@@ -531,11 +509,10 @@ and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
     State.add_parameter_edge state' l_func l_this 0;
     Store.replace state'.store "this" (Node.Set.singleton l_this);
     Fun.flip List.iteri func.params (fun idx param ->
-        let idx' = idx + 1 in
         let param_cid = newcid param in
         let param_name = Identifier.name param in
         let l_param = State.add_parameter_node state' param_cid param_name in
-        State.add_parameter_edge state' l_func l_param idx';
+        State.add_parameter_edge state' l_func l_param (idx + 1);
         Store.replace state'.store param_name (Node.Set.singleton l_param) );
     build_sequence state' func.body
 
