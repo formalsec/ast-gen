@@ -218,7 +218,7 @@ module MdgOpts = struct
     let docv = "FILE" in
     let doc = "Path to the taint source/sink configuration file." in
     let parser = Fs.Parser.valid_file in
-    Arg.(value & opt (some parser) None & info [ "config" ] ~docv ~doc)
+    Arg.(value & opt (some parser) None & info [ "tconf" ] ~docv ~doc)
 
   let func_eval_mode =
     let doc =

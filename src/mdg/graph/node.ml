@@ -9,8 +9,8 @@ type kind =
   | Call of string
   | Return of string
   | Module of string
+  | TaintSink of Taint.Sink.t
   | TaintSource
-  | TaintSink of Taint.sink
 
 type t =
   { loc : Location.t
@@ -47,9 +47,9 @@ let pp (ppf : Fmt.t) (node : t) : unit =
   | Call name -> Fmt.fmt ppf "%s(...)[%a]" name Location.pp node.loc
   | Return name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
   | Module name -> Fmt.fmt ppf "[[module]] %s[%a]" name Location.pp node.loc
-  | TaintSource -> Fmt.pp_str ppf "[[taint]]"
   | TaintSink sink ->
-    Fmt.fmt ppf "[[sink]] %s[%a]" sink.name Location.pp node.loc
+    Fmt.fmt ppf "[[sink]] %s[%a]" (Taint.Sink.name sink) Location.pp node.loc
+  | TaintSource -> Fmt.pp_str ppf "[[taint]]"
 
 let str (node : t) : string = Fmt.str "%a" pp node
 
@@ -107,14 +107,14 @@ let create_module (name : string) : t =
   let kind = Module name in
   create loc kind None (Region.default ())
 
-let create_taint_source () : t =
-  let loc = Location.create () in
-  create loc TaintSource None (Region.default ())
-
-let create_taint_sink (sink : Taint.sink) : t option -> Region.t -> t =
+let create_taint_sink (sink : Taint.Sink.t) : t option -> Region.t -> t =
  fun parent at ->
   let loc = Location.create () in
   create loc (TaintSink sink) parent at
+
+let create_taint_source () : t =
+  let loc = Location.create () in
+  create loc TaintSource None (Region.default ())
 
 let is_literal (node : t) : bool =
   match node.kind with Literal _ -> true | _ -> false
@@ -140,11 +140,11 @@ let is_return (node : t) : bool =
 let is_module (node : t) : bool =
   match node.kind with Module _ -> true | _ -> false
 
-let is_taint_source (node : t) : bool =
-  match node.kind with TaintSource -> true | _ -> false
-
 let is_taint_sink (node : t) : bool =
   match node.kind with TaintSink _ -> true | _ -> false
+
+let is_taint_source (node : t) : bool =
+  match node.kind with TaintSource -> true | _ -> false
 
 let name (node : t) : string =
   match node.kind with
@@ -154,10 +154,10 @@ let name (node : t) : string =
   | Parameter name -> name
   | Call name -> name
   | Return name -> name
-  | TaintSink sink -> sink.name
+  | TaintSink sink -> Taint.Sink.name sink
   | _ -> Log.fail "unexpected node '%a' without name" pp node
 
-let sink (node : t) : Taint.sink =
+let sink (node : t) : Taint.Sink.t =
   match node.kind with
   | TaintSink sink -> sink
   | _ -> Log.fail "unexpected node '%a' without tainted sink" pp node

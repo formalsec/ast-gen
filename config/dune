@@ -2,4 +2,4 @@
  (section
   (site
    (graphjs config)))
- (files config.json))
+ (files taint.json))

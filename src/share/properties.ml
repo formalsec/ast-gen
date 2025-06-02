@@ -4,6 +4,6 @@ let search (locations : string list) (filename : string) : string option =
       if Sys.file_exists path then Some path else None )
 
 let default_taint_config () =
-  match search Site.Sites.config "config.json" with
+  match search Site.Sites.config "taint.json" with
   | Some file -> Fpath.v file
-  | None -> Log.fail "unable to find the default config.js file"
+  | None -> Log.fail "unable to find the default taint.js file"

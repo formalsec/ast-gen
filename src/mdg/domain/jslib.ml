@@ -29,17 +29,17 @@ let initialize_tainted_source (mdg : Mdg.t) (jslib : t) : unit =
   Mdg.add_node mdg l_taint
 
 let add_tainted_sink (mdg : Mdg.t) (store : Store.t) (jslib : t)
-    (make_generic_sink_f : 'a -> Taint.sink) (generic_sink : 'a) : unit =
-  let sink = make_generic_sink_f generic_sink in
-  let name_jslib = resolve_name None sink.name in
+    (endpoint : Taint_config.Endpoint.t) : unit =
+  let sink = Taint.language_sink endpoint in
+  let name_jslib = resolve_name None endpoint.name in
   let l_sink = Node.create_taint_sink sink None (Region.default ()) in
   Hashtbl.replace jslib name_jslib l_sink;
   Mdg.add_node mdg l_sink;
-  Store.replace store sink.name (Node.Set.singleton l_sink)
+  Store.replace store endpoint.name (Node.Set.singleton l_sink)
 
 let initialize_tainted_sinks (tconf : Taint_config.t) (mdg : Mdg.t)
     (store : Store.t) (jslib : t) : unit =
-  List.iter (add_tainted_sink mdg store jslib Taint.function_sink) tconf.f_sinks
+  List.iter (add_tainted_sink mdg store jslib) tconf.language
 
 let initialize_module (mdg : Mdg.t) (store : Store.t) (jslib : t)
     (file : Fpath.t option) (l_parent : Node.t option) : unit =

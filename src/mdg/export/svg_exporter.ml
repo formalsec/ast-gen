@@ -48,29 +48,31 @@ module Dot = struct
     | (_, None) -> None
 
   let node_label (node : Node.t) : string =
-    match node.kind with
-    | Literal lit -> Fmt.str "%s" (String.escaped (Literal.str lit))
-    | Blank name -> Fmt.str "%s" (String.escaped name)
-    | Object name -> Fmt.str "%s" (String.escaped name)
-    | Function name -> Fmt.str "function %s" (String.escaped name)
-    | Parameter name -> Fmt.str "%s" (String.escaped name)
-    | Call name -> Fmt.str "%s(...)" (String.escaped name)
-    | Return name -> Fmt.str "%s" (String.escaped name)
-    | Module name -> Fmt.str "module %s" (String.escaped name)
-    | TaintSource -> Fmt.str "{ Taint Source }"
-    | TaintSink sink -> Fmt.str "sink %s" (String.escaped sink.name)
+    ( match node.kind with
+    | Literal lit -> Fmt.str "%s" (Literal.str lit)
+    | Blank name -> Fmt.str "%s" name
+    | Object name -> Fmt.str "%s" name
+    | Function name -> Fmt.str "function %s" name
+    | Parameter name -> Fmt.str "%s" name
+    | Call name -> Fmt.str "%s(...)" name
+    | Return name -> Fmt.str "%s" name
+    | Module name -> Fmt.str "module %s" name
+    | TaintSink sink -> Fmt.str "sink %s" (Taint.Sink.name sink)
+    | TaintSource -> Fmt.str "{ Taint Source }" )
+    |> String.escaped
 
   let edge_label (edge : Edge.t) : string =
-    match edge.kind with
+    ( match edge.kind with
     | Dependency -> Fmt.str "D"
-    | Property prop -> Fmt.str "P(%s)" (String.escaped (Property.str prop))
-    | Version prop -> Fmt.str "V(%s)" (String.escaped (Property.str prop))
+    | Property prop -> Fmt.str "P(%s)" (Property.str prop)
+    | Version prop -> Fmt.str "V(%s)" (Property.str prop)
     | Parameter 0 -> Fmt.str "This"
     | Parameter idx -> Fmt.str "Param:%d" idx
     | Argument 0 -> Fmt.str "this"
     | Argument idx -> Fmt.str "Arg:%d" idx
     | Caller -> Fmt.str "Call"
-    | Return -> Fmt.str "Return"
+    | Return -> Fmt.str "Return" )
+    |> String.escaped
 
   let initialize (env' : Env.t) (mdg' : Mdg.t) : unit =
     env := env';
@@ -112,8 +114,8 @@ module Dot = struct
         | Call _ -> [ `Color 6697728; `Fillcolor 13395456 ]
         | Return _ -> [ `Color 6697728; `Fillcolor 16770508 ]
         | Module _ -> [ `Color 3342438; `Fillcolor 15060223 ]
-        | TaintSource -> [ `Color 6684672; `Fillcolor 16764108 ]
-        | TaintSink _ -> [ `Color 6684672; `Fillcolor 16724787 ] )
+        | TaintSink _ -> [ `Color 6684672; `Fillcolor 16724787 ]
+        | TaintSource -> [ `Color 6684672; `Fillcolor 16764108 ] )
 
     let vertex_attributes (node : V.t) : vertex_attrs =
       !env.node_attr_mod node (vertex_attributes' node)
