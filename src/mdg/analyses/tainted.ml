@@ -60,7 +60,7 @@ and mark_prop (state : State.t) (queue : queue) (edge : Edge.t)
 and mark_call (state : State.t) (queue : queue) (node : Node.t)
     (ls_tainted : Node.Set.t) : Node.Set.t =
   match state.env.func_eval_mode with
-  | Opaque -> ls_tainted
+  | Connect -> ls_tainted
   | Unfold | UnfoldRec | UnfoldDepth _ ->
     let l_retn = Mdg.get_return_of_call state.mdg node in
     let ls_tainted' = Node.Set.add node ls_tainted in

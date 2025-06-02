@@ -7,8 +7,8 @@ type cid = Allocator.cid
 let newcid (el : ('a, Region.t) Metadata.t) : cid = Allocator.cid el
 let offset (cid : cid) (ofs : int) : cid = Allocator.offset cid ofs
 
-let opaque_function_eval (env : State.Env.t) : bool =
-  match env.func_eval_mode with Opaque -> true | _ -> false
+let connect_function_eval (env : State.Env.t) : bool =
+  match env.func_eval_mode with Connect -> true | _ -> false
 
 let convert_literal (literal : LiteralValue.t) : Literal.t =
   match literal.value with
@@ -181,7 +181,7 @@ and eval_store_expr (state : State.t) (id : string) (cid : cid) : Node.Set.t =
 
 let unfoldable_function (state : State.t) (l_func : Node.t) : bool =
   match state.env.func_eval_mode with
-  | Opaque -> Log.fail "unexpected function evaluation mode"
+  | Connect -> Log.fail "unexpected function evaluation mode"
   | Unfold -> Log.fail "not implemented (use 'unfold:rec' or 'unfold:<depth>')"
   | UnfoldRec -> not (List.mem l_func state.curr_stack)
   | UnfoldDepth depth -> List.length state.curr_stack < depth
@@ -359,18 +359,18 @@ and build_dynamic_delete (state : State.t) (_left : 'm LeftValue.t)
 and build_new_call (state : State.t) (left : 'm LeftValue.t)
     (callee : 'm Identifier.t) (args : 'm Expression.t list) (cid : cid) :
     State.t =
-  ( if opaque_function_eval state.env then build_function_call_opaque
+  ( if connect_function_eval state.env then build_function_call_connect
     else build_function_call_unfold true )
     state left callee args cid
 
 and build_function_call (state : State.t) (left : 'm LeftValue.t)
     (callee : 'm Identifier.t) (args : 'm Expression.t list) (cid : cid) :
     State.t =
-  ( if opaque_function_eval state.env then build_function_call_opaque
+  ( if connect_function_eval state.env then build_function_call_connect
     else build_function_call_unfold false )
     state left callee args cid
 
-and build_function_call_opaque (state : State.t) (left : 'm LeftValue.t)
+and build_function_call_connect (state : State.t) (left : 'm LeftValue.t)
     (callee : 'm Identifier.t) (args : 'm Expression.t list) (call_cid : cid) :
     State.t =
   let retn_cid = newcid left in
@@ -401,11 +401,11 @@ and build_function_call_unfold (new_ : bool) (state : State.t)
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
     (cid : cid) : State.t =
-  ( if opaque_function_eval state.env then build_static_method_call_opaque
+  ( if connect_function_eval state.env then build_static_method_call_connect
     else build_static_method_call_unfold )
     state left obj prop args cid
 
-and build_static_method_call_opaque (state : State.t) (left : 'm LeftValue.t)
+and build_static_method_call_connect (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
     (call_cid : cid) : State.t =
   let prop_cid = newcid prop in
@@ -444,11 +444,11 @@ and build_static_method_call_unfold (state : State.t) (left : 'm LeftValue.t)
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
     (args : 'm Expression.t list) (cid : cid) : State.t =
-  ( if opaque_function_eval state.env then build_dynamic_method_call_opaque
+  ( if connect_function_eval state.env then build_dynamic_method_call_connect
     else build_dynamic_method_call_unfold )
     state left obj prop args cid
 
-and build_dynamic_method_call_opaque (state : State.t) (left : 'm LeftValue.t)
+and build_dynamic_method_call_connect (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
     (args : 'm Expression.t list) (call_cid : cid) : State.t =
   let prop_cid = newcid prop in
@@ -516,11 +516,11 @@ and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
 
 and build_function_declaration (state : State.t)
     (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
-  ( if opaque_function_eval state.env then build_function_declaration_opaque
+  ( if connect_function_eval state.env then build_function_declaration_connect
     else build_function_declaration_unfold )
     state func cid
 
-and build_function_declaration_opaque (state : State.t)
+and build_function_declaration_connect (state : State.t)
     (func : 'm FunctionDefinition.t) (func_cid : cid) : State.t =
   let func_name = LeftValue.name func.left in
   let l_func = State.add_function_node state func_cid func_name in
@@ -547,11 +547,11 @@ and build_function_declaration_unfold (state : State.t)
 
 and build_function_definition (state : State.t) (func : 'm FunctionDefinition.t)
     (cid : cid) : State.t =
-  ( if opaque_function_eval state.env then build_function_definition_opaque
+  ( if connect_function_eval state.env then build_function_definition_connect
     else build_function_definition_hoisted )
     state func cid
 
-and build_function_definition_opaque (state : State.t)
+and build_function_definition_connect (state : State.t)
     (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
   let state' = build_function_definition_hoisted state func cid in
   let l_func = State.get_node state cid in
@@ -616,7 +616,7 @@ and build_return (state : State.t) (arg : 'm Expression.t option) : State.t =
   match (state.curr_parent, ls_arg) with
   | (None, _) | (Some _, None) -> state
   | (Some l_func, Some ls_arg') ->
-    if opaque_function_eval state.env then
+    if connect_function_eval state.env then
       Node.Set.iter (State.add_return_edge state l_func) ls_arg';
     let curr_return = Node.Set.union state.curr_return ls_arg' in
     { state with curr_return }
@@ -724,8 +724,8 @@ module ExtendedMdg = struct
     }
 
   let compute_exported_analysis (state : State.t) : Exported.t option =
-    let opaque = opaque_function_eval state.env in
-    match (state.env.run_exported_analysis, opaque) with
+    let connect = connect_function_eval state.env in
+    match (state.env.run_exported_analysis, connect) with
     | (true, true) -> Some (Exported.compute_from_graph state)
     | (true, false) ->
       Some (Exported.compute_and_unfold build_exported_function state)
