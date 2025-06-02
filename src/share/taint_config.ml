@@ -1,154 +1,166 @@
 exception Exn of (Fmt.t -> unit)
 
-open struct
-  let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
-    let raise_f acc = raise (Exn acc) in
-    Fmt.kdly (fun acc -> raise_f (fun ppf -> Log.fmt_error ppf "%t" acc)) fmt
+let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
+  let raise_f acc = raise (Exn acc) in
+  Fmt.kdly (fun acc -> raise_f (fun ppf -> Log.fmt_error ppf "%t" acc)) fmt
+
+let pp_indent (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (v : 'a) : unit =
+  Fmt.fmt ppf "@\n@[<v 2>  %a@]@\n" pp_v v
+
+let pp_list (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (vs : 'a list) : unit =
+  match List.length vs with
+  | 0 -> ()
+  | 1 -> Fmt.fmt ppf "[%a]" Fmt.(pp_lst !>",@\n" pp_v) vs
+  | _ -> Fmt.fmt ppf "[%a]" (pp_indent Fmt.(pp_lst !>",@\n" pp_v)) vs
+
+type sink =
+  [ `CodeInjection
+  | `CommandInjection
+  | `PathTraversal
+  ]
+
+type source = [ `TaintSource ]
+
+let sink = function
+  | (`CodeInjection | `CommandInjection | `PathTraversal) as kind' -> kind'
+  | _ -> Log.fail "unexpected non-sink endpoint"
+
+let source = function
+  | `TaintSource as kind' -> kind'
+  | _ -> Log.fail "unexpected non-source endpoint"
+
+module Endpoint = struct
+  type kind =
+    [ sink
+    | source
+    ]
+
+  type t =
+    { name : string
+    ; kind : kind
+    ; args : int list
+    }
+
+  let pp_kind (ppf : Fmt.t) (kind : kind) : unit =
+    match kind with
+    | `CodeInjection -> Fmt.pp_str ppf "kind: \"code-injection\""
+    | `CommandInjection -> Fmt.pp_str ppf "kind: \"command-injection\""
+    | `PathTraversal -> Fmt.pp_str ppf "kind: \"path-traversal\""
+    | `TaintSource -> Fmt.pp_str ppf "kind: \"taint-source\""
+
+  let pp_name (ppf : Fmt.t) (name : string) : unit =
+    if String.length name == 0 then () else Fmt.fmt ppf ", name: %S" name
+
+  let pp_args (ppf : Fmt.t) (args : int list) : unit =
+    if List.length args == 0 then ()
+    else Fmt.fmt ppf ", args: [%a]" Fmt.(pp_lst !>", " pp_int) args
+
+  let pp (ppf : Fmt.t) (endpoint : t) : unit =
+    Fmt.fmt ppf "{ %a%a%a }" pp_kind endpoint.kind pp_name endpoint.name pp_args
+      endpoint.args
+
+  let str (endpoint : t) : string = Fmt.str "%a" pp endpoint
 end
 
-let pp_args (ppf : Fmt.t) (args : int list) : unit =
-  Fmt.(pp_lst !>", " pp_int) ppf args
+module Package = struct
+  type t =
+    { name : string
+    ; self : Endpoint.t option
+    ; props : Endpoint.t list
+    }
 
-let pp_indent (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (vs : 'a list) : unit =
-  if List.length vs == 0 then ()
-  else Fmt.fmt ppf "@\n@[<v 2>  %a@]" Fmt.(pp_lst !>"@\n" pp_v) vs
+  let pp_package (ppf : Fmt.t) (name : string) : unit =
+    Fmt.fmt ppf "package: %S" name
 
-type package =
-  { name : string
-  ; args : int list
-  }
+  let pp_self (ppf : Fmt.t) (self : Endpoint.t option) : unit =
+    Fun.flip Option.iter self (fun endpoint ->
+        Fmt.fmt ppf ",@\nself: %a" Endpoint.pp endpoint )
 
-let find_package (name : string) (pkgs : package list) : package =
-  List.find (fun pkg -> String.equal name pkg.name) pkgs
+  let pp_props (ppf : Fmt.t) (props : Endpoint.t list) : unit =
+    if List.length props > 0 then
+      Fmt.fmt ppf ",@\nprops: %a" (pp_list Endpoint.pp) props
 
-let pp_package (ppf : Fmt.t) (pkg : package) : unit =
-  Fmt.fmt ppf "{ package: %S, args: [%a] }" pkg.name pp_args pkg.args
+  let pp' (ppf : Fmt.t) (package : t) : unit =
+    Fmt.fmt ppf "%a%a%a" pp_package package.name pp_self package.self pp_props
+      package.props
 
-type package_source =
-  { name : string
-  ; pkgs : package list
-  }
+  let pp (ppf : Fmt.t) (package : t) : unit =
+    Fmt.fmt ppf "{%a}" (pp_indent pp') package
 
-let pp_package_source (ppf : Fmt.t) (p_source : package_source) : unit =
-  Fmt.fmt ppf "{ source: %S, packages: [...] }%a" p_source.name
-    (pp_indent pp_package) p_source.pkgs
-
-type package_sink =
-  { name : string
-  ; kind : Sink_kind.t
-  ; pkgs : package list
-  }
-
-let pp_package_sink (ppf : Fmt.t) (p_sink : package_sink) : unit =
-  Fmt.fmt ppf "{ source: %S, kind: \"%a\", packages: [...] }%a" p_sink.name
-    Sink_kind.pp p_sink.kind (pp_indent pp_package) p_sink.pkgs
-
-type function_sink =
-  { name : string
-  ; kind : Sink_kind.t
-  ; args : int list
-  }
-
-let pp_function_sink (ppf : Fmt.t) (f_sink : function_sink) : unit =
-  Fmt.fmt ppf "{ source: %S, kind: \"%a\", args: [%a] }" f_sink.name
-    Sink_kind.pp f_sink.kind pp_args f_sink.args
-
-type new_sink =
-  { name : string
-  ; kind : Sink_kind.t
-  ; args : int list
-  }
-
-let pp_new_sink (ppf : Fmt.t) (n_sink : new_sink) : unit =
-  Fmt.fmt ppf "{ source: %S, kind: \"%a\", args: [%a] }" n_sink.name
-    Sink_kind.pp n_sink.kind pp_args n_sink.args
+  let str (package : t) : string = Fmt.str "%a" pp package
+end
 
 type t =
-  { p_sources : package_source list
-  ; p_sinks : package_sink list
-  ; f_sinks : function_sink list
-  ; n_sinks : new_sink list
+  { language : Endpoint.t list
+  ; packages : Package.t list
   }
 
 let pp (ppf : Fmt.t) (tconf : t) : unit =
-  let pp_p_sources = pp_indent pp_package_source in
-  let pp_p_sinks = pp_indent pp_package_sink in
-  let pp_f_sinks = pp_indent pp_function_sink in
-  let pp_n_sinks = pp_indent pp_new_sink in
-  Fmt.fmt ppf "[package_sources]%a@\n" pp_p_sources tconf.p_sources;
-  Fmt.fmt ppf "[package_sinks]%a@\n" pp_p_sinks tconf.p_sinks;
-  Fmt.fmt ppf "[function_sinks]%a@\n" pp_f_sinks tconf.f_sinks;
-  Fmt.fmt ppf "[new_sinks]%a" pp_n_sinks tconf.n_sinks
+  Fmt.fmt ppf "language-endpoints: %a,@\n" (pp_list Endpoint.pp) tconf.language;
+  Fmt.fmt ppf "package_endpoints: %a@\n" (pp_list Package.pp) tconf.packages
 
 let str (tconf : t) : string = Fmt.str "%a" pp tconf
 
-open struct
-  type sources = package_source list
-  type sinks = package_sink list * function_sink list * new_sink list
+let parse_endpoint_name (name : Json.t) : string =
+  try Json.to_string name
+  with _ -> raise "Expected 'name' field of type string."
 
-  let read_sink_kind (sink_kind : string) : Sink_kind.t =
-    match sink_kind with
-    | "path-traversal" -> PathTraversal
-    | "command-injection" -> CommandInjection
-    | "code-injection" -> CodeInjection
-    | _ -> raise "Unsupported sink kind '%s' in taint config." sink_kind
+let parse_endpoint_kind (kind : Json.t) : Endpoint.kind =
+  match kind with
+  | `String "code-injection" -> `CodeInjection
+  | `String "command-injection" -> `CommandInjection
+  | `String "path-traversal" -> `PathTraversal
+  | `String "taint-source" -> `TaintSource
+  | _ -> raise "Unsupported endpoint kind '%a' in taint config." Json.pp kind
 
-  let read_package (pkg : Json.t) : package =
-    let pkg_name = pkg |> Json.member "package" |> Json.to_string in
-    let pkg_args = pkg |> Json.member "args" |> Json.to_list in
-    let pkg_args' = List.map Json.to_int pkg_args in
-    { name = pkg_name; args = pkg_args' }
+let parse_endpoint_args (args : Json.t) : int list =
+  try Json.to_list args |> List.map Json.to_int
+  with _ -> raise "Expecting 'args' field of type integer list."
 
-  let read_source (source : Json.t) (p_sources : sources) : sources =
-    let source_name = source |> Json.member "source" |> Json.to_string in
-    let source_type = source |> Json.member "type" |> Json.to_string in
-    match source_type with
-    | "package" ->
-      let pkgs = source |> Json.member "packages" |> Json.to_list in
-      let pkgs' = List.map read_package pkgs in
-      { name = source_name; pkgs = pkgs' } :: p_sources
-    | _ -> raise "Unsupported source type '%s' in taint config." source_type
+let read_endpoint_body (endpoint : Json.t) : Endpoint.kind * int list =
+  let kind = endpoint |> Json.member "type" |> parse_endpoint_kind in
+  match kind with
+  | `CodeInjection | `CommandInjection | `PathTraversal ->
+    let args = endpoint |> Json.member "args" |> parse_endpoint_args in
+    (kind, args)
+  | `TaintSource -> (kind, [])
 
-  let read_sink (kind : Sink_kind.t) (sink : Json.t)
-      ((p_sinks, f_sinks, n_sinks) : sinks) : sinks =
-    let sink_name = sink |> Json.member "sink" |> Json.to_string in
-    let sink_type = sink |> Json.member "type" |> Json.to_string in
-    match sink_type with
-    | "package" ->
-      let pkgs = sink |> Json.member "packages" |> Json.to_list in
-      let pkgs' = List.map read_package pkgs in
-      let p_sink : package_sink = { kind; name = sink_name; pkgs = pkgs' } in
-      (p_sink :: p_sinks, f_sinks, n_sinks)
-    | "function" ->
-      let args = sink |> Json.member "args" |> Json.to_list in
-      let args' = List.map Json.to_int args in
-      let f_sink : function_sink = { kind; name = sink_name; args = args' } in
-      (p_sinks, f_sink :: f_sinks, n_sinks)
-    | "new" ->
-      let args = sink |> Json.member "args" |> Json.to_list in
-      let args' = List.map Json.to_int args in
-      let n_sink : new_sink = { kind; name = sink_name; args = args' } in
-      (p_sinks, f_sinks, n_sink :: n_sinks)
-    | _ -> raise "Unsupported sink type '%s' in taint config." sink_type
+let read_endpoint (endpoint : Json.t) : Endpoint.t =
+  let name = endpoint |> Json.member "name" |> parse_endpoint_name in
+  let (kind, args) = read_endpoint_body endpoint in
+  { name; kind; args }
 
-  let read_vuln_sink (vuln : string * Json.t) (sinks : sinks) : sinks =
-    let (sink_kind, vuln_sinks) = vuln in
-    let kind = read_sink_kind sink_kind in
-    List.fold_right (read_sink kind) (Json.to_list vuln_sinks) sinks
+let parse_package_name (name : Json.t) : string =
+  try Json.to_string name
+  with _ -> raise "Expected 'package' field of type string."
 
-  let read_sources (config : Json.t) : sources =
-    let sources = config |> Json.member "sources" in
-    if sources == `Null then []
-    else List.fold_right read_source (Json.to_list sources) []
+let parse_package_self (self : Json.t) : Endpoint.t option =
+  if self != `Null then
+    let (kind, args) = read_endpoint_body self in
+    Some { name = ""; kind; args }
+  else None
 
-  let read_sinks (config : Json.t) : sinks =
-    let sinks = config |> Json.member "sinks" in
-    if sinks == `Null then ([], [], [])
-    else List.fold_right read_vuln_sink (Json.to_assoc sinks) ([], [], [])
-end
+let parse_package_props (props : Json.t) : Endpoint.t list =
+  if props != `Null then List.map read_endpoint (Json.to_list props) else []
+
+let read_package (package : Json.t) : Package.t =
+  let name = package |> Json.member "package" |> parse_package_name in
+  let self = package |> Json.member "self" |> parse_package_self in
+  let props = package |> Json.member "props" |> parse_package_props in
+  { name; self; props }
+
+let read_language_endpoints (config : Json.t) : Endpoint.t list =
+  let endpoints = config |> Json.member "language-endpoints" in
+  if endpoints != `Null then List.map read_endpoint (Json.to_list endpoints)
+  else []
+
+let read_package_endpoints (config : Json.t) : Package.t list =
+  let packages = config |> Json.member "package-endpoints" in
+  if packages != `Null then List.map read_package (Json.to_list packages)
+  else []
 
 let read (path : Fpath.t) : t =
   let config = Json.from_file (Fpath.to_string path) in
-  let p_sources = read_sources config in
-  let (p_sinks, f_sinks, n_sinks) = read_sinks config in
-  { p_sources; p_sinks; f_sinks; n_sinks }
+  let language = read_language_endpoints config in
+  let packages = read_package_endpoints config in
+  { language; packages }

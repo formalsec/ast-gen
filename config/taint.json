@@ -1,0 +1,85 @@
+{
+  "language-endpoints": [
+    { "type": "code-injection", "name": "eval", "args": [1] },
+    { "type": "code-injection", "name": "Function", "args": [1, 2, 3, 4] },
+    { "type": "code-injection", "name": "require", "args": [1] }
+  ],
+  "package-endpoints": [
+    {
+      "package": "async-execute",
+      "props": [
+        { "type": "command-injection", "name": "execAsync", "args": [1] }
+      ]
+    },
+    {
+      "package": "child_process",
+      "props": [
+        { "type": "command-injection", "name": "exec", "args": [1] },
+        { "type": "command-injection", "name": "execFile", "args": [1, 2] },
+        { "type": "command-injection", "name": "execSync", "args": [1] },
+        { "type": "command-injection", "name": "spawn", "args": [1, 2] }
+      ]
+    },
+    {
+      "package": "comandante",
+      "props": [{ "type": "command-injection", "name": "write", "args": [1] }]
+    },
+    {
+      "package": "cross-spawn",
+      "self": { "type": "command-injection", "args": [1, 2] }
+    },
+    {
+      "package": "execa",
+      "props": [{ "type": "command-injection", "name": "shell", "args": [1] }]
+    },
+    {
+      "package": "fs",
+      "props": [
+        { "type": "path-traversal", "name": "readFile", "args": [1] },
+        { "type": "path-traversal", "name": "readFileSync", "args": [1] },
+        { "type": "path-traversal", "name": "writeFile", "args": [1] },
+        { "type": "path-traversal", "name": "writeFileSync", "args": [1] },
+        { "type": "path-traversal", "name": "createReadStream", "args": [1] }
+      ]
+    },
+    {
+      "package": "gray-matter",
+      "props": [{ "type": "code-injection", "name": "default", "args": [1] }]
+    },
+    {
+      "package": "im-metadata",
+      "self": { "type": "command-injection", "args": [1] }
+    },
+    {
+      "package": "meta-exec",
+      "self": { "type": "command-injection", "args": [1] }
+    },
+    {
+      "package": "mz/child_process",
+      "props": [{ "type": "command-injection", "name": "exec", "args": [1] }]
+    },
+    {
+      "package": "platform-command",
+      "props": [{ "type": "command-injection", "name": "exec", "args": [1] }]
+    },
+    {
+      "package": "process",
+      "props": [{ "type": "taint-source", "name": "argv" }]
+    },
+    {
+      "package": "shelljs",
+      "props": [{ "type": "command-injection", "name": "exec", "args": [1] }]
+    },
+    {
+      "package": "vm",
+      "props": [
+        { "type": "code-injection", "name": "runInContext", "args": [1] },
+        { "type": "code-injection", "name": "runInNewContext", "args": [1] }
+      ]
+    },
+    {
+      "package": "yargs",
+      "props": [{ "type": "taint-source", "name": "argv" }]
+    }
+  ]
+}

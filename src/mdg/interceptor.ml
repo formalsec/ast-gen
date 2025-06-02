@@ -30,7 +30,7 @@ module RequireInterceptor = struct
     match Pcontext.file state.pcontext path with
     | None ->
       let name = Fpath.filename path in
-      let l_npmlib = Npmlib.resolve_package state.mdg state.npmlib name in
+      let l_npmlib = Npmlib.resolve state.mdg state.jslib state.npmlib name in
       Node.Set.singleton l_npmlib
     | Some file when file.built ->
       Jslib.exported_object ~mrel:file.file.mrel state.mdg state.jslib
