@@ -124,8 +124,6 @@ module Dot = struct
       List.cons
         (`Label (edge_label edge))
         ( match edge.kind with
-        | (Dependency | Argument _) when Node.is_literal edge.src ->
-          [ `Style `Dotted; `Color 26214; `Fontcolor 26214 ]
         | Dependency when Node.is_return edge.tar ->
           [ `Style `Dotted; `Color 6697728; `Fontcolor 6697728 ]
         | Dependency when Node.is_taint_source edge.src ->

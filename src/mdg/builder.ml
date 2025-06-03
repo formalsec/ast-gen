@@ -228,16 +228,9 @@ let rec unfold_function_call (state : State.t) (call_name : string)
 
 and unfold_callbacks (state : State.t) (ls_args : Node.Set.t list) : unit =
   let ls_callbacks = unfoldable_callbacks state ls_args in
+  let ls_this = Store.find state.store "this" in
   Fun.flip Node.Set.iter ls_callbacks (fun l_func ->
-      match Pcontext.func state.pcontext l_func with
-      | None -> Log.fail "unexpected unknown callback function"
-      | Some { floc; func; eval_store; _ } ->
-        let store = Store.copy eval_store in
-        let curr_floc = floc in
-        let curr_stack = l_func :: state.curr_stack in
-        let curr_parent = Some l_func in
-        let state' = { state with store; curr_floc; curr_stack; curr_parent } in
-        ignore (build_sequence state' func.body) )
+      ignore (build_entry_function ~ls_this state l_func) )
 
 and unfold_this_argument (state : State.t) (retn_name : string) (retn_cid : cid)
     (new_ : bool) (l_func : Node.t) (ls_args : Node.Set.t list) : Node.Set.t =
@@ -450,13 +443,34 @@ and build_switch (state : State.t) (cases : 'm SwitchCase.t list) : State.t =
   List.map SwitchCase.body cases |> List.fold_left build_sequence state
 
 and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
-  (* TODO: model the assignment in the forin and forof statement *)
-  (* we treat this assignment as a lookup on all properties of the expression *)
-  (* the left value should depend of all the properties of the right value *)
   let store = Store.copy state.store in
   let state' = build_sequence state body in
   let store' = Store.lub state'.store store in
   if Store.equal store' store then state' else build_loop state' body
+
+and build_forin (state : State.t) (left : 'm LeftValue.t)
+    (right : 'm Expression.t) (body : 'm Statement.t list) : State.t =
+  (* TODO: improve the assignment in the forin statement *)
+  (* we treat this assignment as a lookup on all properties of the expression *)
+  (* the left value should depend of all the properties of the right value *)
+  let left_name = LeftValue.name left in
+  let l_left = State.add_object_node state (newcid left) left_name in
+  let ls_right = eval_expr state right in
+  Store.replace state.store left_name (Node.Set.singleton l_left);
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_left) ls_right;
+  build_loop state body
+
+and build_forof (state : State.t) (left : 'm LeftValue.t)
+    (right : 'm Expression.t) (body : 'm Statement.t list) : State.t =
+  (* TODO: improve the assignment in the forof statement *)
+  (* we treat this assignment as a lookup on all properties of the expression *)
+  (* the left value should depend of all the properties of the right value *)
+  let left_name = LeftValue.name left in
+  let l_left = State.add_object_node state (newcid left) left_name in
+  let ls_right = eval_expr state right in
+  Store.replace state.store left_name (Node.Set.singleton l_left);
+  Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_left) ls_right;
+  build_loop state body
 
 and build_function_declaration (state : State.t)
     (func : 'm FunctionDefinition.t) (func_cid : cid) : State.t =
@@ -495,7 +509,8 @@ and build_function_definition (state : State.t) (func : 'm FunctionDefinition.t)
     ignore (build_sequence state' func.body) );
   state
 
-and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
+and build_entry_function ?(ls_this : Node.Set.t option) (state : State.t)
+    (l_func : Node.t) : State.t =
   match Pcontext.func state.pcontext l_func with
   | None -> state
   | Some { floc; func; eval_store; _ } ->
@@ -504,10 +519,8 @@ and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
     let curr_stack = l_func :: state.curr_stack in
     let curr_parent = Some l_func in
     let state' = { state with store; curr_floc; curr_stack; curr_parent } in
-    let this_cid = newcid func.left in
-    let l_this = State.add_parameter_node state' this_cid "this" in
-    State.add_parameter_edge state' l_func l_this 0;
-    Store.replace state'.store "this" (Node.Set.singleton l_this);
+    let ls_this' = build_entry_this state' l_func func ls_this in
+    Store.replace state'.store "this" ls_this';
     Fun.flip List.iteri func.params (fun idx param ->
         let param_cid = newcid param in
         let param_name = Identifier.name param in
@@ -515,6 +528,17 @@ and build_exported_function (state : State.t) (l_func : Node.t) : State.t =
         State.add_parameter_edge state' l_func l_param (idx + 1);
         Store.replace state'.store param_name (Node.Set.singleton l_param) );
     build_sequence state' func.body
+
+and build_entry_this (state : State.t) (l_func : Node.t)
+    (func : Region.t FunctionDefinition.t) (ls_this : Node.Set.t option) :
+    Node.Set.t =
+  match ls_this with
+  | None ->
+    let this_cid = newcid func.left in
+    let l_this = State.add_parameter_node state this_cid "this" in
+    State.add_parameter_edge state l_func l_this 0;
+    Node.Set.singleton l_this
+  | Some ls_this' -> ls_this'
 
 and build_hoisted_functions (state : State.t) (stmts : 'm Statement.t list) :
     State.t =
@@ -608,8 +632,8 @@ and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
   | `If { consequent; alternate; _ } -> build_if state consequent alternate
   | `Switch { cases; _ } -> build_switch state cases
   | `While { body; _ } -> build_loop state body
-  | `ForIn { body; _ } -> build_loop state body
-  | `ForOf { body; _ } -> build_loop state body
+  | `ForIn { left; right; body; _ } -> build_forin state left right body
+  | `ForOf { left; right; body; _ } -> build_forof state left right body
   | `Break { label } -> build_loop_break state label
   | `Continue { label } -> build_loop_break state label
   | `Return { arg } -> build_return state arg
@@ -645,7 +669,7 @@ module ExtendedMdg = struct
     }
 
   let compute_exported_analysis (state : State.t) : Exported.t option =
-    let build_f = build_exported_function in
+    let build_f = build_entry_function in
     let connect = connect_function_eval state.env in
     match (state.env.run_exported_analysis, connect) with
     | (true, true) -> Some (Exported.compute_from_graph state)
