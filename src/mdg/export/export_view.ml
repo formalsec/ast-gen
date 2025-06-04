@@ -34,6 +34,7 @@ type t =
   | Parent of Location.t
   | Reaches of Location.t
   | Sinks
+  | Tainted of Node.Set.t
 
 module Full = struct
   let build_graph_node (node : Node.t) (graph : G.t) : G.t =
@@ -129,9 +130,8 @@ end
 
 module Sinks = struct
   let get_sinks (mdg : Mdg.t) : Node.t list =
-    Hashtbl.to_seq_values mdg.nodes
-    |> Seq.filter Node.is_taint_sink
-    |> List.of_seq
+    Fun.flip2 Hashtbl.fold mdg.nodes [] (fun _ node acc ->
+        if Node.is_taint_sink node then node :: acc else acc )
 
   let visit_f (_ : Edge.t) : bool = true
   let node_f (node : Node.t) (graph : G.t) : G.t = G.add_vertex graph node
@@ -143,4 +143,22 @@ module Sinks = struct
   let build_graph (mdg : Mdg.t) : G.t =
     let nodes = get_sinks mdg in
     Mdg.visit_multiple_backwards visit_f node_f edge_f mdg nodes G.empty
+end
+
+module Tainted = struct
+  let get_tainted (mdg : Mdg.t) (ls_tainted : Node.Set.t) : Node.Set.t =
+    Node.Set.filter (fun l_tainted -> Mdg.has_node mdg l_tainted.loc) ls_tainted
+
+  let build_graph_node (node : Node.t) (graph : G.t) : G.t =
+    G.add_vertex graph node
+
+  let build_graph_edge (mdg : Mdg.t) (node : Node.t) (graph : G.t) : G.t =
+    let edges = Mdg.get_edges mdg node.loc in
+    Fun.flip2 Edge.Set.fold edges graph (fun edge graph ->
+        G.add_edge_e graph (G.E.create edge.src edge edge.tar) )
+
+  let build_graph (mdg : Mdg.t) (ls_tainted : Node.Set.t) : G.t =
+    let ls_tainted' = get_tainted mdg ls_tainted in
+    Node.Set.fold build_graph_node ls_tainted' G.empty
+    |> Node.Set.fold (build_graph_edge mdg) ls_tainted'
 end

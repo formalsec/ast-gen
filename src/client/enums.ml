@@ -60,6 +60,8 @@ module FuncEvalMode = struct
 end
 
 module ExportView = struct
+  open Graphjs_mdg
+
   type t = Graphjs_mdg.Export_view.t
 
   type conv =
@@ -75,6 +77,7 @@ module ExportView = struct
     | Parent _ -> Fmt.pp_str ppf "function"
     | Reaches _ -> Fmt.pp_str ppf "reaches"
     | Sinks -> Fmt.pp_str ppf "sinks"
+    | Tainted _ -> Fmt.pp_str ppf "tainted"
 
   let conv_param_view (view : string) (prefix : string) : bool =
     let regex = Str.regexp (Fmt.str "^%s:\\([0-9]+\\)$" prefix) in
@@ -85,6 +88,7 @@ module ExportView = struct
     | "full" -> `Ok Full
     | "calls" -> `Ok Calls
     | "sinks" -> `Ok Sinks
+    | "tainted" -> `Ok (Tainted Node.Set.empty)
     | view' when conv_param_view view "object" ->
       `Ok (Object (int_of_string (Str.matched_group 1 view')))
     | view' when conv_param_view view "parent" ->

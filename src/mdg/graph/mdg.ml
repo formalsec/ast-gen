@@ -16,6 +16,8 @@ let copy (mdg : t) : t =
   let trans = Hashtbl.copy mdg.trans in
   { nodes; edges; trans }
 
+let has_node (mdg : t) (loc : Location.t) : bool = Hashtbl.mem mdg.nodes loc
+
 let get_node (mdg : t) (loc : Location.t) : Node.t =
   match Hashtbl.find_opt mdg.nodes loc with
   | None -> Log.fail "expecting node with location '%a' in mdg" Location.pp loc
