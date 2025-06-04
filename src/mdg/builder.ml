@@ -664,23 +664,22 @@ and build_file (state : State.t) (file : 'm File.t) (main : bool)
 module ExtendedMdg = struct
   type t =
     { mdg : Mdg.t
-    ; exported : Exported.t option
-    ; tainted : Node.Set.t
+    ; exported : Exported.t
+    ; tainted : Tainted.t
     }
 
-  let compute_exported_analysis (state : State.t) : Exported.t option =
+  let compute_exported_analysis (state : State.t) : Exported.t =
     let build_f = build_entry_function in
     let connect = connect_function_eval state.env in
     match (state.env.run_exported_analysis, connect) with
-    | (true, true) -> Some (Exported.compute_from_graph state)
-    | (true, false) -> Some (Exported.compute_and_unfold build_f state)
-    | (false, _) -> None
+    | (true, true) -> Exported.compute_from_graph state
+    | (true, false) -> Exported.compute_and_unfold build_f state
+    | (false, _) -> Exported.none ()
 
-  let compute_tainted_analysis (state : State.t) (exported : Exported.t option)
-      : Node.Set.t =
-    match (state.env.run_tainted_analysis, exported) with
-    | (true, Some exported') -> Tainted.compute state exported'
-    | _ -> Node.Set.empty
+  let compute_tainted_analysis (state : State.t) (exported : Exported.t) :
+      Tainted.t =
+    if state.env.run_tainted_analysis then Tainted.compute state exported
+    else Tainted.none ()
 
   let compute_cleaner_analysis (state : State.t) : unit =
     if state.env.run_cleaner_analysis then Cleaner.compute state

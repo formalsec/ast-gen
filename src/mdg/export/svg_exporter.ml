@@ -171,6 +171,7 @@ let build_graph (env : Env.t) (mdg : Mdg.t) : Export_view.G.t =
   | Parent loc -> Export_view.Parent.build_graph mdg loc
   | Reaches loc -> Export_view.Reaches.build_graph mdg loc
   | Sinks -> Export_view.Sinks.build_graph mdg
+  | Tainted ls_tainted -> Export_view.Tainted.build_graph mdg ls_tainted
 
 let pp_svg_out (ppf : Fmt.t) () : unit =
   Log.info "Starting SVG exporter.";

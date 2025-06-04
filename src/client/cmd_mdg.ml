@@ -148,11 +148,15 @@ let export_env (env : Options.env) : Svg_exporter.Env.t =
   }
 
 let export_tainted_env (export_env : Svg_exporter.Env.t)
-    (builder_env : State.Env.t) (tainted : Node.Set.t) : Svg_exporter.Env.t =
-  if builder_env.run_tainted_analysis then
-    let node_attr_mod = Export_taint.node_attr_mod tainted in
-    { export_env with node_attr_mod }
-  else export_env
+    (builder_env : State.Env.t) (tainted : Tainted.t) : Svg_exporter.Env.t =
+  let view =
+    match export_env.view with
+    | Tainted _ -> Export_view.Tainted (Tainted.get_tainted tainted)
+    | view -> view in
+  let node_attr_mod =
+    if builder_env.run_tainted_analysis then Export_taint.node_attr_mod tainted
+    else export_env.node_attr_mod in
+  { export_env with view; node_attr_mod }
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     Builder.ExtendedMdg.t Exec.result =

@@ -1,4 +1,23 @@
 type queue = (Node.t * bool) Queue.t
+type t = (Location.t, Node.t * bool) Hashtbl.t
+
+let create () : t = Hashtbl.create Config.(!dflt_htbl_sz)
+let none () : t = Hashtbl.create Config.(!dflt_htbl_sz)
+
+let is_tainted (tainted : t) (node : Node.t) : bool =
+  Hashtbl.mem tainted node.loc
+
+let set_tainted (tainted : t) (node : Node.t) (strong : bool) : unit =
+  Hashtbl.replace tainted node.loc (node, strong)
+
+let get_tainted (tainted : t) : Node.Set.t =
+  Fun.flip2 Hashtbl.fold tainted Node.Set.empty (fun _ (l_tainted, _) acc ->
+      Node.Set.add l_tainted acc )
+
+let propagate (tainted : t) (node : Node.t) (strong : bool) : bool =
+  match Hashtbl.find_opt tainted node.loc with
+  | Some (_, strong') -> strong && not strong'
+  | None -> true
 
 let mark_tainted_exports (state : State.t) (exported : Exported.t)
     (l_taint : Node.t) : unit =
@@ -8,56 +27,53 @@ let mark_tainted_exports (state : State.t) (exported : Exported.t)
         Mdg.add_edge state.mdg (Edge.create_dependency () l_taint l_exported)
       | _ -> () )
 
-let is_tainted (ls_tainted : Node.Set.t) (node : Node.t) : bool =
-  Node.Set.mem node ls_tainted
-
-let taint (ls_tainted : Node.Set.t) (node : Node.t) : Node.Set.t =
-  Node.Set.add node ls_tainted
-
-let rec mark_nodes (state : State.t) (queue : queue) (ls_tainted : Node.Set.t) :
-    Node.Set.t =
-  Option.fold (Queue.take_opt queue) ~none:ls_tainted
-    ~some:(fun (node, strong) ->
+let rec mark_tainted_nodes (state : State.t) (queue : queue) (tainted : t) :
+    unit =
+  Fun.flip Option.iter (Queue.take_opt queue) (fun (node, strong) ->
       let loc = Node.loc node in
       let edges = Mdg.get_edges state.mdg loc in
       let trans = Mdg.get_trans state.mdg loc in
-      let mark_edge_f = mark_edge state queue strong in
-      let mark_trans_f = mark_trans state queue in
-      let ls_tainted' = Edge.Set.fold mark_edge_f edges ls_tainted in
-      let ls_tainted'' = Edge.Set.fold mark_trans_f trans ls_tainted' in
-      mark_nodes state queue ls_tainted'' )
+      Edge.Set.iter (mark_tainted_edge state queue tainted strong) edges;
+      Edge.Set.iter (mark_tainted_tran state queue tainted strong) trans;
+      mark_tainted_nodes state queue tainted )
 
-and mark_edge (state : State.t) (queue : queue) (strong : bool) (edge : Edge.t)
-    (ls_tainted : Node.Set.t) : Node.Set.t =
+and mark_tainted_edge (state : State.t) (queue : queue) (tainted : t)
+    (strong : bool) (edge : Edge.t) : unit =
+  Log.debug "%a" Edge.pp edge;
   match edge.kind with
-  | Dependency -> mark_next queue edge.tar strong ls_tainted
-  | Property _ when strong -> mark_next queue edge.tar strong ls_tainted
-  | Version _ -> mark_next queue edge.tar false ls_tainted
-  | Parameter _ -> mark_next queue edge.tar true ls_tainted
-  | Argument _ -> mark_call state queue edge ls_tainted
-  | _ -> ls_tainted
+  | Dependency -> mark_tainted_next queue tainted edge.tar strong
+  | Property _ when strong -> mark_tainted_prop state queue tainted edge
+  | Version _ -> mark_tainted_next queue tainted edge.tar false
+  | Parameter _ -> mark_tainted_next queue tainted edge.tar true
+  | Argument _ -> mark_tainted_call state queue tainted edge
+  | _ -> ()
 
-and mark_trans (_ : State.t) (queue : queue) (edge : Edge.t)
-    (ls_tainted : Node.Set.t) : Node.Set.t =
+and mark_tainted_tran (_ : State.t) (queue : queue) (tainted : t) (_ : bool)
+    (edge : Edge.t) : unit =
   match edge.kind with
-  | Property _ -> mark_next queue edge.tar false ls_tainted
-  | _ -> ls_tainted
+  | Property _ -> mark_tainted_next queue tainted edge.tar false
+  | _ -> ()
 
-and mark_next (queue : queue) (node : Node.t) (strong : bool)
-    (ls_tainted : Node.Set.t) : Node.Set.t =
-  if not (is_tainted ls_tainted node) then (
+and mark_tainted_next (queue : queue) (tainted : t) (node : Node.t)
+    (strong : bool) : unit =
+  if propagate tainted node strong then (
     Queue.add (node, strong) queue;
-    taint ls_tainted node )
-  else ls_tainted
+    set_tainted tainted node strong )
 
-and mark_call (state : State.t) (queue : queue) (edge : Edge.t)
-    (ls_tainted : Node.Set.t) : Node.Set.t =
+and mark_tainted_prop (state : State.t) (queue : queue) (tainted : t)
+    (edge : Edge.t) : unit =
+  let ls_orig = Mdg.object_orig_versions state.mdg edge.src in
+  if Node.Set.mem edge.src ls_orig then
+    mark_tainted_next queue tainted edge.tar true
+
+and mark_tainted_call (state : State.t) (queue : queue) (tainted : t)
+    (edge : Edge.t) : unit =
   let call_name = Node.name edge.tar in
   let segs = String.split_on_char '.' call_name in
   let segs_len = List.length segs in
   let func = List.nth segs (segs_len - 1) in
   let arg_idx = Edge.argument edge in
-  mark_call_components state queue edge ls_tainted
+  mark_tainted_call_components state queue tainted edge
     ( if segs_len == 1 then mark_func_call_policy func arg_idx
       else mark_method_call_policy func arg_idx )
 
@@ -73,21 +89,22 @@ and mark_method_call_policy (func : string) (arg : int) : int list =
   | ("post", _) -> [ 2 ]
   | _ -> [ -1 ]
 
-and mark_call_components (state : State.t) (queue : queue) (edge : Edge.t)
-    (ls_tainted : Node.Set.t) (to_mark : int list) : Node.Set.t =
+and mark_tainted_call_components (state : State.t) (queue : queue) (tainted : t)
+    (edge : Edge.t) (to_mark : int list) : unit =
   let ls_args = Mdg.get_arguments state.mdg edge.tar in
   let l_retn = Mdg.get_return_of_call state.mdg edge.tar in
   let components = (-1, l_retn) :: ls_args in
-  let ls_tainted' = Node.Set.add edge.tar ls_tainted in
-  Fun.flip2 List.fold_left ls_tainted' to_mark (fun acc idx ->
+  set_tainted tainted edge.tar true;
+  Fun.flip List.iter to_mark (fun idx ->
       let matched = List.find_all (fun (idx', _) -> idx == idx') components in
-      Fun.flip2 List.fold_left acc matched (fun acc (_, node) ->
-          mark_next queue node true acc ) )
+      Fun.flip List.iter matched (fun (_, node) ->
+          mark_tainted_next queue tainted node true ) )
 
-let compute (state : State.t) (exported : Exported.t) : Node.Set.t =
+let compute (state : State.t) (exported : Exported.t) : t =
   let l_taint = Jslib.find state.mdg state.jslib "taint" in
   mark_tainted_exports state exported l_taint;
-  let ls_tainted = Node.Set.singleton l_taint in
+  let tainted = create () in
   let queue = Queue.create () in
   Queue.push (l_taint, true) queue;
-  mark_nodes state queue ls_tainted
+  mark_tainted_nodes state queue tainted;
+  tainted
