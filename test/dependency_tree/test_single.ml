@@ -20,8 +20,8 @@ let%test "triple_file" =
 
 let%test "directory_file" =
   let f3 = Fmt.str "%S : {}" "directories/dir/f3.js" in
-  let dep_tree = Fmt.str "{ %s }" f3 in
-  Analysis.single "directories/dir/f3.js" @@ Res.ok dep_tree
+  let deptree = Fmt.str "{ %s }" f3 in
+  Analysis.single "directories/dir/f3.js" @@ Res.ok deptree
 
 let%test "recursive_file" =
   let f3 = Fmt.str "%S : {}" "recursive/f3.js" in

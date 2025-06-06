@@ -46,13 +46,13 @@ let%test "invalid_package_path" =
 
 let%test "valid_package_path" =
   let main = Fmt.str "%S : {}" "package/valid/main.js" in
-  let dep_tree = Fmt.str "{ %s }" main in
-  Analysis.multi "package/valid/" @@ Res.ok dep_tree
+  let deptree = Fmt.str "{ %s }" main in
+  Analysis.multi "package/valid/" @@ Res.ok deptree
 
 let%test "invalid_index_path" =
   Analysis.multi "index/invalid/" @@ Res.bad_index "index/invalid/main"
 
 let%test "valid_index_path" =
   let index = Fmt.str "%S : {}" "index/valid/main/index.js" in
-  let dep_tree = Fmt.str "{ %s }" index in
-  Analysis.multi "index/valid/" @@ Res.ok dep_tree
+  let deptree = Fmt.str "{ %s }" index in
+  Analysis.multi "index/valid/" @@ Res.ok deptree

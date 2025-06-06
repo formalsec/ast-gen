@@ -63,7 +63,7 @@ let parse_cmd =
 let mdg_env =
   let open Term in
   const Cmd_mdg.Options.env
-  $ Docs.MdgOpts.taint_config
+  $ Docs.MdgOpts.jsmodel
   $ Docs.MdgOpts.func_eval_mode
   $ Docs.MdgOpts.no_exported_analysis
   $ Docs.MdgOpts.no_tainted_analysis
@@ -137,6 +137,7 @@ let eval_cmd (status : status) =
   | Ok (`Ok (Error `Timeout)) -> Docs.ExitCodes.timeout
   | Ok (`Ok (Error (`DepTree _))) -> Docs.ExitCodes.deptree
   | Ok (`Ok (Error (`ParseJS _))) -> Docs.ExitCodes.parsejs
+  | Ok (`Ok (Error (`Jsmodel _))) -> Docs.ExitCodes.jsmodel
   | Ok (`Ok (Error (`ExportMDG _))) -> Docs.ExitCodes.export_mdg
   | Error `Term -> Docs.ExitCodes.term
   | Error `Parse -> Docs.ExitCodes.client

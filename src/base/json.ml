@@ -1,5 +1,7 @@
 type t = Yojson.Basic.t
 
+exception Exn = Yojson.Basic.Util.Type_error
+
 let from_file (path : string) : t = Yojson.Basic.from_file path
 let from_string (data : string) : t = Yojson.Basic.from_string data
 let to_int (json : t) : int = Yojson.Basic.Util.to_int json

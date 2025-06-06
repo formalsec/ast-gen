@@ -1,4 +1,3 @@
-open Graphjs_share
 open Graphjs_ast
 
 module Env = struct
@@ -46,7 +45,7 @@ type t =
 
 and call_interceptor = t -> string -> Node.t -> Node.Set.t list -> t
 
-let create (env' : Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t) : t =
+let create (env' : Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) : t =
   let mdg' = Mdg.create () in
   let store' = Store.create () in
   { env = env'
@@ -54,8 +53,8 @@ let create (env' : Env.t) (tconf : Taint_config.t) (prog : 'm Prog.t) : t =
   ; store = store'
   ; allocator = Allocator.create Config.(!dflt_htbl_sz)
   ; pcontext = Pcontext.create prog store'
-  ; jslib = Jslib.create tconf mdg' store'
-  ; npmlib = Npmlib.create tconf
+  ; jslib = Jslib.create mdg' store' jsmodel
+  ; npmlib = Npmlib.create jsmodel
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
   ; curr_floc = Pcontext.Floc.default ()
   ; curr_stack = []

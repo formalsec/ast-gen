@@ -23,14 +23,14 @@ module Options = struct
 end
 
 module Graphjs = struct
-  let dep_tree (multifile : bool) (path : Fpath.t) :
+  let deptree (multifile : bool) (path : Fpath.t) :
       Dependency_tree.t Exec.result =
     Exec.graphjs (fun () -> Dependency_tree.generate multifile path)
 end
 
 module Output = struct
-  let dep_tree (abs : bool) (w : Workspace.t) (dt : Dependency_tree.t) : unit =
-    let w' = Workspace.(w / "dep_tree.json") in
+  let deptree (abs : bool) (w : Workspace.t) (dt : Dependency_tree.t) : unit =
+    let w' = Workspace.(w / "deptree.json") in
     Log.info "Dependency tree \"%a\" generated successfully." Fpath.pp dt.path;
     Log.verbose "%a" (Dependency_tree.pp abs) dt;
     Workspace.output_noerr Side w' (Dependency_tree.pp abs) dt
@@ -44,8 +44,8 @@ end
 
 let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
     Dependency_tree.t Exec.result =
-  let* dt = Graphjs.dep_tree env.multifile input in
-  Output.dep_tree env.absolute_dependency_paths w dt;
+  let* dt = Graphjs.deptree env.multifile input in
+  Output.deptree env.absolute_dependency_paths w dt;
   Output.main env.absolute_dependency_paths w dt;
   Ok dt
 
