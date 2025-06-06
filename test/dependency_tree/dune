@@ -1,10 +1,10 @@
 (library
- (name graphjs_tests_dep_tree)
+ (name graphjs_tests_deptree)
  (modules test test_single test_multi)
  (inline_tests)
  (preprocess
   (pps ppx_inline_test))
- (libraries graphjs_base graphjs_share graphjs_parser)
+ (libraries graphjs_base graphjs_parser)
  (flags
   (:standard -open Graphjs_base)))
 

@@ -11,8 +11,9 @@ module ExitCodes = struct
   (* graphjs specific errors *)
   let deptree = 1
   let parsejs = 2
-  let export_mdg = 3
-  let validate = 4
+  let jsmodel = 3
+  let export_mdg = 4
+  let validate = 5
 end
 
 module Exits = struct
@@ -23,21 +24,16 @@ module Exits = struct
     let timeout = info ~doc:"on execution timeout" ExitCodes.timeout in
     terminal :: timeout :: defaults
 
-  let dependencies =
-    let dt = info ~doc:"on dependency tree generation error" ExitCodes.deptree in
-    [ dt ]
+  let deptree =
+    [ info ~doc:"on dependency tree generation error" ExitCodes.deptree ]
 
-  let parse =
-    let parsejs = info ~doc:"on JavaScript parsing error" ExitCodes.parsejs in
-    [ parsejs ]
+  let parse = [ info ~doc:"on JavaScript parsing error" ExitCodes.parsejs ]
 
   let mdg =
-    let export = info ~doc:"on MDG export error" ExitCodes.export_mdg in
-    [ export ]
+    [ info ~doc:"on JavaScript model parsing error" ExitCodes.jsmodel
+    ; info ~doc:"on MDG export error" ExitCodes.export_mdg ]
 
-  let validate =
-    let validate = info ~doc:"on query validation error" ExitCodes.validate in
-    [ validate ]
+  let validate = [ info ~doc:"on query validation error" ExitCodes.validate ]
 end
 
 module CommonOpts = struct
@@ -151,7 +147,7 @@ module DependenciesCmd = struct
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
-  let exits = Exits.common @ Exits.dependencies
+  let exits = Exits.common @ Exits.deptree
 end
 
 module ParseOpts = struct
@@ -210,15 +206,15 @@ module ParseCmd = struct
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
-  let exits = Exits.common @ Exits.dependencies @ Exits.parse
+  let exits = Exits.common @ Exits.deptree @ Exits.parse
 end
 
 module MdgOpts = struct
-  let taint_config =
+  let jsmodel =
     let docv = "FILE" in
-    let doc = "Path to the taint source/sink configuration file." in
+    let doc = "Path to the JavaScript model configuration file." in
     let parser = Fs.Parser.valid_file in
-    Arg.(value & opt (some parser) None & info [ "tconf" ] ~docv ~doc)
+    Arg.(value & opt (some parser) None & info [ "jsmodel" ] ~docv ~doc)
 
   let func_eval_mode =
     let doc =
@@ -306,7 +302,7 @@ module MdgCmd = struct
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
-  let exits = Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg
+  let exits = Exits.common @ Exits.deptree @ Exits.parse @ Exits.mdg
 end
 
 module QueryCmd = struct
@@ -323,7 +319,7 @@ module QueryCmd = struct
 
   let man = [ `S Manpage.s_description; `P (Array.get description 0) ]
   let man_xrefs = []
-  let exits = Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg
+  let exits = Exits.common @ Exits.deptree @ Exits.parse @ Exits.mdg
 end
 
 module ValidateCmd = struct
@@ -342,7 +338,7 @@ module ValidateCmd = struct
   let man_xrefs = []
 
   let exits =
-    Exits.common @ Exits.dependencies @ Exits.parse @ Exits.mdg @ Exits.validate
+    Exits.common @ Exits.deptree @ Exits.parse @ Exits.mdg @ Exits.validate
 end
 
 module Application = struct

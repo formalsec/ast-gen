@@ -1,11 +1,10 @@
-open Graphjs_share
 open Graphjs_ast
 open Graphjs_mdg
 open Result
 
 module Options = struct
   type env =
-    { taint_config : Fpath.t
+    { jsmodel : Fpath.t
     ; func_eval_mode : Enums.FuncEvalMode.t
     ; reset_locations : bool
     ; run_exported_analysis : bool
@@ -28,18 +27,18 @@ module Options = struct
     ; env : env
     }
 
-  let parse_taint_config (taint_config : Fpath.t option) : Fpath.t =
-    match taint_config with
-    | Some taint_config' -> taint_config'
-    | None -> Properties.default_taint_config ()
+  let jsmodel_path (jsmodel : Fpath.t option) : Fpath.t =
+    match jsmodel with
+    | Some jsmodel' -> jsmodel'
+    | None -> Properties.default_jsmodel ()
 
-  let env (taint_config' : Fpath.t option)
-      (func_eval_mode' : Enums.FuncEvalMode.t) (no_exported_analysis : bool)
-      (no_tainted_analysis : bool) (no_cleaner_analysis : bool)
-      (no_export : bool) (no_subgraphs : bool) (no_func_subgraphs : bool)
-      (no_file_subgraphs : bool) (export_view' : Export_view.t)
-      (export_timeout' : int) (parse_env' : Cmd_parse.Options.env) : env =
-    { taint_config = parse_taint_config taint_config'
+  let env (jsmodel' : Fpath.t option) (func_eval_mode' : Enums.FuncEvalMode.t)
+      (no_exported_analysis : bool) (no_tainted_analysis : bool)
+      (no_cleaner_analysis : bool) (no_export : bool) (no_subgraphs : bool)
+      (no_func_subgraphs : bool) (no_file_subgraphs : bool)
+      (export_view' : Export_view.t) (export_timeout' : int)
+      (parse_env' : Cmd_parse.Options.env) : env =
+    { jsmodel = jsmodel_path jsmodel'
     ; func_eval_mode = func_eval_mode'
     ; reset_locations = true
     ; run_exported_analysis = not no_exported_analysis
@@ -73,12 +72,12 @@ module Workspace = struct
 end
 
 module Graphjs = struct
-  let taint_config (path : Fpath.t) : Taint_config.t Exec.result =
-    Exec.graphjs (fun () -> Taint_config.read path)
+  let jsmodel (path : Fpath.t) : Jsmodel.t Exec.result =
+    Exec.graphjs (fun () -> Jsmodel.Parser.parse path)
 
-  let mdg_builder (env : State.Env.t) (tc : Taint_config.t) (prog : 'm Prog.t) :
+  let mdg_builder (env : State.Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) :
       Builder.ExtendedMdg.t Exec.result =
-    Exec.graphjs (fun () -> Builder.build_program env tc prog)
+    Exec.graphjs (fun () -> Builder.build_program env jsmodel prog)
 
   let export_dot (env : Svg_exporter.Env.t) (mdg : Mdg.t) (path : Fpath.t) :
       unit Exec.result =
@@ -91,12 +90,11 @@ module Graphjs = struct
 end
 
 module Output = struct
-  let taint_config (w : Workspace.t) (path : Fpath.t) (tc : Taint_config.t) :
-      unit =
-    let w' = Workspace.(w / "taint_config.conf") in
+  let jsmodel (w : Workspace.t) (path : Fpath.t) (jsmodel : Jsmodel.t) : unit =
+    let w' = Workspace.(w / "jsmodel.conf") in
     Log.info "Tainted config \"%a\" read successfully." Fpath.pp path;
-    Log.verbose "%a" Taint_config.pp tc;
-    Workspace.output_noerr Side w' Taint_config.pp tc
+    Log.verbose "%a" Jsmodel.pp jsmodel;
+    Workspace.output_noerr Side w' Jsmodel.pp jsmodel
 
   let mdg_file (mrel : Fpath.t) : unit =
     Log.info "Module MDG '%a' built successfully." Fpath.pp mrel
@@ -163,9 +161,9 @@ let run (env : Options.env) (w : Workspace.t) (input : Fpath.t) :
   let export_env = export_env env in
   let builder_env = builder_env env in
   let* prog = Cmd_parse.run env.parse_env (Workspace.side_perm w) input in
-  let* tc = Graphjs.taint_config env.taint_config in
-  Output.taint_config w env.taint_config tc;
-  let* e_mdg = Graphjs.mdg_builder builder_env tc prog in
+  let* jsmodel = Graphjs.jsmodel env.jsmodel in
+  Output.jsmodel w env.jsmodel jsmodel;
+  let* e_mdg = Graphjs.mdg_builder builder_env jsmodel prog in
   let export_env' = export_tainted_env export_env builder_env e_mdg.tainted in
   let* _ = Output.main w export_env' env.export_graph prog e_mdg.mdg in
   Ok e_mdg

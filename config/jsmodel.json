@@ -1,10 +1,10 @@
 {
-  "language-endpoints": [
+  "language-config": [
     { "type": "code-injection", "name": "eval", "args": [1] },
     { "type": "code-injection", "name": "Function", "args": [1, 2, 3, 4] },
     { "type": "code-injection", "name": "require", "args": [1] }
   ],
-  "package-endpoints": [
+  "package-config": [
     {
       "package": "async-execute",
       "props": [
@@ -64,7 +64,7 @@
     },
     {
       "package": "process",
-      "props": [{ "type": "taint-source", "name": "argv" }]
+      "props": [{ "type": "tainted-symbol", "name": "argv" }]
     },
     {
       "package": "shelljs",
@@ -79,7 +79,7 @@
     },
     {
       "package": "yargs",
-      "props": [{ "type": "taint-source", "name": "argv" }]
+      "props": [{ "type": "tainted-symbol", "name": "argv" }]
     }
   ]
 }

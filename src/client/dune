@@ -5,8 +5,10 @@
  (modules
   fs
   workspace
-  bulk
   exec
+  bulk
+  site
+  properties
   query_expected
   query_validation
   enums
@@ -18,12 +20,16 @@
   cmd_validate)
  (libraries
   graphjs_base
-  graphjs_share
   graphjs_parser
   graphjs_ast
   graphjs_mdg
   graphjs_query
+  dune-site
   cmdliner
   bos)
  (flags
   (:standard -open Graphjs_base)))
+
+(generate_sites_module
+ (module site)
+ (sites graphjs))

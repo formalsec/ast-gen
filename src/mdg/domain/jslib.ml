@@ -1,4 +1,3 @@
-open Graphjs_share
 open Graphjs_ast
 
 type t = (string, Node.t) Hashtbl.t
@@ -28,18 +27,24 @@ let initialize_tainted_source (mdg : Mdg.t) (jslib : t) : unit =
   Hashtbl.replace jslib name_jslib l_taint;
   Mdg.add_node mdg l_taint
 
-let add_tainted_sink (mdg : Mdg.t) (store : Store.t) (jslib : t)
-    (endpoint : Taint_config.Endpoint.t) : unit =
-  let sink = Taint.language_sink endpoint in
-  let name_jslib = resolve_name None endpoint.name in
-  let l_sink = Node.create_taint_sink sink None (Region.default ()) in
+let initialize_tainted_sink (mdg : Mdg.t) (store : Store.t) (jslib : t)
+    (sink : Jsmodel.Sink.t) : unit =
+  let taint_sink = Taint.Sink.create Taint.Id.language sink in
+  let name_jslib = resolve_name None sink.name in
+  let l_sink = Node.create_taint_sink taint_sink None (Region.default ()) in
   Hashtbl.replace jslib name_jslib l_sink;
   Mdg.add_node mdg l_sink;
-  Store.replace store endpoint.name (Node.Set.singleton l_sink)
+  Store.replace store sink.name (Node.Set.singleton l_sink)
 
-let initialize_tainted_sinks (tconf : Taint_config.t) (mdg : Mdg.t)
-    (store : Store.t) (jslib : t) : unit =
-  List.iter (add_tainted_sink mdg store jslib) tconf.language
+let initialize_language_component (mdg : Mdg.t) (store : Store.t) (jslib : t)
+    (component : Jsmodel.Component.t) =
+  match component with
+  | `Sink sink -> initialize_tainted_sink mdg store jslib sink
+  | _ -> ()
+
+let initialize_language_model (mdg : Mdg.t) (store : Store.t) (jslib : t)
+    (jsmodel : Jsmodel.t) : unit =
+  List.iter (initialize_language_component mdg store jslib) jsmodel.language
 
 let initialize_module (mdg : Mdg.t) (store : Store.t) (jslib : t)
     (file : Fpath.t option) (l_parent : Node.t option) : unit =
@@ -65,10 +70,10 @@ let initialize_exports (mdg : Mdg.t) (store : Store.t) (jslib : t)
   Mdg.add_edge mdg (Edge.create l_module l_exports (Property prop));
   Store.replace store name (Node.Set.singleton l_exports)
 
-let create (tconf : Taint_config.t) (mdg : Mdg.t) (store : Store.t) : t =
+let create (mdg : Mdg.t) (store : Store.t) (jsmodel : Jsmodel.t) : t =
   let jslib = Hashtbl.create Config.(!dflt_htbl_sz) in
   initialize_tainted_source mdg jslib;
-  initialize_tainted_sinks tconf mdg store jslib;
+  initialize_language_model mdg store jslib jsmodel;
   jslib
 
 let initialize (mdg : Mdg.t) (store : Store.t) (jslib : t)

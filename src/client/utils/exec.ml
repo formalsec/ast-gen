@@ -4,6 +4,7 @@ type error =
   | `Timeout
   | `DepTree of Fmt.t -> unit
   | `ParseJS of Fmt.t -> unit
+  | `Jsmodel of Fmt.t -> unit
   | `ExportMDG of Fmt.t -> unit
   ]
 
@@ -16,6 +17,7 @@ let pp_err (ppf : Fmt.t) (err : error) : unit =
   | `Timeout -> Log.fmt_error ppf "graphjs timeout"
   | `DepTree fmt -> Fmt.fmt ppf "%t" fmt
   | `ParseJS fmt -> Fmt.fmt ppf "%t" fmt
+  | `Jsmodel fmt -> Fmt.fmt ppf "%t" fmt
   | `ExportMDG fmt -> Fmt.fmt ppf "%t" fmt
 
 let log_err (err : error) : unit = Log.stderr "%a" pp_err err
@@ -41,9 +43,10 @@ let graphjs (exec_f : unit -> 'a) : 'a result =
   try Ok (exec_f ()) with
   | Graphjs_parser.Dependency_tree.Exn fmt -> exn (`DepTree fmt)
   | Graphjs_parser.Flow_parser.Exn fmt -> exn (`ParseJS fmt)
+  | Graphjs_mdg.Jsmodel.Exn fmt -> exn (`Jsmodel fmt)
+  | Graphjs_mdg.Export_view.Exn fmt -> exn (`ExportMDG fmt)
   | Graphjs_mdg.Svg_exporter.Exn fmt -> exn (`ExportMDG fmt)
   | Graphjs_mdg.Svg_exporter.Timeout -> exn `Timeout
-  | Graphjs_mdg.Export_view.Exn fmt -> exn (`ExportMDG fmt)
   | err ->
     let msg = Printexc.to_string err in
     let trace = Printexc.get_backtrace () in
