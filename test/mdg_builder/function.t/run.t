@@ -1,235 +1,235 @@
 Graph.js MDG Builder: function header
   $ graphjs mdg --no-export header.js
-  [[function]] foo[#10] --< Param(0) >--> this[#11]
-  this[#11] -
-  [[function]] bar[#12] --< Param(0) >--> this[#13]
-  [[function]] bar[#12] --< Param(1) >--> y1[#14]
+  [[function]] foo[#7] --< Param(0) >--> this[#8]
+  this[#8] -
+  [[function]] bar[#9] --< Param(0) >--> this[#10]
+  [[function]] bar[#9] --< Param(1) >--> y1[#11]
+  this[#10] -
+  y1[#11] -
+  [[function]] baz[#12] --< Param(0) >--> this[#13]
+  [[function]] baz[#12] --< Param(1) >--> z1[#14]
+  [[function]] baz[#12] --< Param(2) >--> z2[#15]
+  [[function]] baz[#12] --< Param(3) >--> z3[#16]
   this[#13] -
-  y1[#14] -
-  [[function]] baz[#15] --< Param(0) >--> this[#16]
-  [[function]] baz[#15] --< Param(1) >--> z1[#17]
-  [[function]] baz[#15] --< Param(2) >--> z2[#18]
-  [[function]] baz[#15] --< Param(3) >--> z3[#19]
-  this[#16] -
-  z1[#17] -
-  z2[#18] -
-  z3[#19] -
-  [[function]] baz[#20] --< Param(0) >--> this[#21]
-  [[function]] baz[#20] --< Param(1) >--> w1[#22]
-  this[#21] -
-  w1[#22] -
+  z1[#14] -
+  z2[#15] -
+  z3[#16] -
+  [[function]] baz[#17] --< Param(0) >--> this[#18]
+  [[function]] baz[#17] --< Param(1) >--> w1[#19]
+  this[#18] -
+  w1[#19] -
 
 Graph.js MDG Builder: function body
   $ graphjs mdg --no-export body.js
-  [[function]] foo[#10] --< Param(0) >--> this[#11]
-  [[function]] foo[#10] --< Param(1) >--> x1[#12]
-  this[#11] -
-  x1[#12] -
-  $v1[#13] --< V(p1) >--> $v1[#14]
-  $v1[#14] --< P(p1) >--> x1[#12]
-  [[function]] bar[#15] --< Param(0) >--> this[#16]
-  [[function]] bar[#15] --< Param(1) >--> y1[#17]
-  [[function]] bar[#15] --< Param(2) >--> y2[#18]
-  [[function]] bar[#15] --< Param(3) >--> y3[#19]
-  this[#16] -
-  y1[#17] -
-  y2[#18] -
-  y3[#19] -
-  $v2[#20] --< V(p1) >--> $v2[#21]
-  $v2[#21] --< P(p1) >--> y1[#17]
-  $v2[#21] --< V(p2) >--> $v2[#22]
-  $v2[#22] --< P(p2) >--> y2[#18]
-  $v2[#22] --< V(p3) >--> $v2[#23]
-  $v2[#23] --< P(p3) >--> y3[#19]
-  [[function]] baz[#24] --< Param(0) >--> this[#25]
-  [[function]] baz[#24] --< Param(1) >--> z1[#26]
-  this[#25] -
-  z1[#26] --< P(p1) >--> z1.p1[#28]
-  $v3[#27] --< V(p) >--> $v3[#29]
-  z1.p1[#28] -
-  $v3[#29] --< P(p) >--> z1.p1[#28]
-  [[function]] qux[#30] --< Param(0) >--> this[#31]
-  [[function]] qux[#30] --< Param(1) >--> w1[#32]
-  this[#31] -
-  w1[#32] --< P(p1) >--> w1.p1[#34]
-  $v5[#33] --< V(p) >--> $v5[#35]
-  $v5[#33] --< P(p) >--> $v5.p[#36]
-  w1.p1[#34] -
-  $v5[#35] --< P(p) >--> w1.p1[#34]
-  $v5.p[#36] -
-  $v8[#37] --< V(q) >--> $v8[#38]
-  $v8[#38] --< P(q) >--> w1.p1[#34]
+  [[function]] foo[#7] --< Param(0) >--> this[#8]
+  [[function]] foo[#7] --< Param(1) >--> x1[#9]
+  this[#8] -
+  x1[#9] -
+  $v1[#10] --< V(p1) >--> $v1[#11]
+  $v1[#11] --< P(p1) >--> x1[#9]
+  [[function]] bar[#12] --< Param(0) >--> this[#13]
+  [[function]] bar[#12] --< Param(1) >--> y1[#14]
+  [[function]] bar[#12] --< Param(2) >--> y2[#15]
+  [[function]] bar[#12] --< Param(3) >--> y3[#16]
+  this[#13] -
+  y1[#14] -
+  y2[#15] -
+  y3[#16] -
+  $v2[#17] --< V(p1) >--> $v2[#18]
+  $v2[#18] --< P(p1) >--> y1[#14]
+  $v2[#18] --< V(p2) >--> $v2[#19]
+  $v2[#19] --< P(p2) >--> y2[#15]
+  $v2[#19] --< V(p3) >--> $v2[#20]
+  $v2[#20] --< P(p3) >--> y3[#16]
+  [[function]] baz[#21] --< Param(0) >--> this[#22]
+  [[function]] baz[#21] --< Param(1) >--> z1[#23]
+  this[#22] -
+  z1[#23] --< P(p1) >--> z1.p1[#25]
+  $v3[#24] --< V(p) >--> $v3[#26]
+  z1.p1[#25] -
+  $v3[#26] --< P(p) >--> z1.p1[#25]
+  [[function]] qux[#27] --< Param(0) >--> this[#28]
+  [[function]] qux[#27] --< Param(1) >--> w1[#29]
+  this[#28] -
+  w1[#29] --< P(p1) >--> w1.p1[#31]
+  $v5[#30] --< V(p) >--> $v5[#32]
+  $v5[#30] --< P(p) >--> $v5.p[#33]
+  w1.p1[#31] -
+  $v5[#32] --< P(p) >--> w1.p1[#31]
+  $v5.p[#33] -
+  $v8[#34] --< V(q) >--> $v8[#35]
+  $v8[#35] --< P(q) >--> w1.p1[#31]
 
 Graph.js MDG Builder: return statement
   $ graphjs mdg --no-export return.js
-  [[function]] foo[#10] --< Param(0) >--> this[#11]
-  [[function]] foo[#10] --< Param(1) >--> x1[#12]
+  [[function]] foo[#7] --< Param(0) >--> this[#8]
+  [[function]] foo[#7] --< Param(1) >--> x1[#9]
+  this[#8] -
+  x1[#9] -
+  [[function]] bar[#10] --< Param(0) >--> this[#11]
+  [[function]] bar[#10] --< Param(1) >--> y1[#12]
+  [[function]] bar[#10] --< Retn >--> 10[#13]
   this[#11] -
-  x1[#12] -
-  [[function]] bar[#13] --< Param(0) >--> this[#14]
-  [[function]] bar[#13] --< Param(1) >--> y1[#15]
-  [[function]] bar[#13] --< Retn >--> 10[#16]
-  this[#14] -
-  y1[#15] -
-  10[#16] -
-  [[function]] baz[#17] --< Param(0) >--> this[#18]
-  [[function]] baz[#17] --< Param(1) >--> z1[#19]
-  [[function]] baz[#17] --< Retn >--> $v1[#20]
-  this[#18] -
-  z1[#19] -
-  $v1[#20] -
-  [[function]] qux[#21] --< Param(0) >--> this[#22]
-  [[function]] qux[#21] --< Param(1) >--> w1[#23]
-  [[function]] qux[#21] --< Retn >--> w1[#23]
-  this[#22] -
-  w1[#23] -
+  y1[#12] -
+  10[#13] -
+  [[function]] baz[#14] --< Param(0) >--> this[#15]
+  [[function]] baz[#14] --< Param(1) >--> z1[#16]
+  [[function]] baz[#14] --< Retn >--> $v1[#17]
+  this[#15] -
+  z1[#16] -
+  $v1[#17] -
+  [[function]] qux[#18] --< Param(0) >--> this[#19]
+  [[function]] qux[#18] --< Param(1) >--> w1[#20]
+  [[function]] qux[#18] --< Retn >--> w1[#20]
+  this[#19] -
+  w1[#20] -
 
 Graph.js MDG Builder: function scope
   $ graphjs mdg --no-export scope.js
-  [[function]] foo[#10] --< Param(0) >--> this[#11]
-  [[function]] foo[#10] --< Param(1) >--> x[#12]
+  [[function]] foo[#7] --< Param(0) >--> this[#8]
+  [[function]] foo[#7] --< Param(1) >--> x[#9]
+  this[#8] -
+  x[#9] -
+  [[function]] bar[#10] --< Param(0) >--> this[#11]
+  [[function]] bar[#10] --< Param(1) >--> y[#12]
   this[#11] -
-  x[#12] -
-  [[function]] bar[#13] --< Param(0) >--> this[#14]
-  [[function]] bar[#13] --< Param(1) >--> y[#15]
-  this[#14] -
-  y[#15] -
-  $v1[#16] --< V(p1) >--> $v1[#17]
-  $v1[#17] --< P(p1) >--> x[#12]
-  $v1[#17] --< V(p2) >--> $v1[#18]
-  $v1[#18] --< P(p2) >--> y[#15]
+  y[#12] -
+  $v1[#13] --< V(p1) >--> $v1[#14]
+  $v1[#14] --< P(p1) >--> x[#9]
+  $v1[#14] --< V(p2) >--> $v1[#15]
+  $v1[#15] --< P(p2) >--> y[#12]
 
 Graph.js MDG Builder: call statement
   $ graphjs mdg --no-export call.js
-  [[function]] foo[#10] --< Param(0) >--> this[#11]
-  [[function]] foo[#10] --< Param(1) >--> x1[#12]
+  [[function]] foo[#7] --< Param(0) >--> this[#8]
+  [[function]] foo[#7] --< Param(1) >--> x1[#9]
+  this[#8] -
+  x1[#9] -
+  [[function]] bar[#10] --< Param(0) >--> this[#11]
+  [[function]] bar[#10] --< Param(1) >--> y1[#12]
+  [[function]] bar[#10] --< Param(2) >--> y2[#13]
+  [[function]] bar[#10] --< Param(3) >--> y3[#14]
   this[#11] -
-  x1[#12] -
-  [[function]] bar[#13] --< Param(0) >--> this[#14]
-  [[function]] bar[#13] --< Param(1) >--> y1[#15]
-  [[function]] bar[#13] --< Param(2) >--> y2[#16]
-  [[function]] bar[#13] --< Param(3) >--> y3[#17]
-  this[#14] -
-  y1[#15] -
-  y2[#16] -
-  y3[#17] -
-  10[#18] --< Arg(1) >--> foo(...)[#19]
-  foo(...)[#19] --< Call >--> [[function]] foo[#10]
-  foo(...)[#19] --< D >--> $v1[#20]
-  $v1[#20] -
-  10[#21] --< Arg(1) >--> bar(...)[#22]
-  bar(...)[#22] --< Call >--> [[function]] bar[#13]
-  bar(...)[#22] --< D >--> $v2[#23]
-  $v2[#23] -
-  10[#24] --< Arg(1) >--> foo(...)[#27]
-  "abc"[#25] --< Arg(2) >--> foo(...)[#27]
-  true[#26] --< Arg(3) >--> foo(...)[#27]
-  foo(...)[#27] --< Call >--> [[function]] foo[#10]
-  foo(...)[#27] --< D >--> $v3[#28]
-  $v3[#28] -
-  10[#29] --< Arg(1) >--> bar(...)[#32]
-  "abc"[#30] --< Arg(2) >--> bar(...)[#32]
-  true[#31] --< Arg(3) >--> bar(...)[#32]
-  bar(...)[#32] --< Call >--> [[function]] bar[#13]
-  bar(...)[#32] --< D >--> $v4[#33]
-  $v4[#33] -
-  baz[#34] -
-  10[#35] --< Arg(1) >--> baz(...)[#36]
-  baz(...)[#36] --< Call >--> baz[#34]
-  baz(...)[#36] --< D >--> $v5[#37]
-  $v5[#37] -
+  y1[#12] -
+  y2[#13] -
+  y3[#14] -
+  10[#15] --< Arg(1) >--> foo(...)[#16]
+  foo(...)[#16] --< Call >--> [[function]] foo[#7]
+  foo(...)[#16] --< D >--> $v1[#17]
+  $v1[#17] -
+  10[#18] --< Arg(1) >--> bar(...)[#19]
+  bar(...)[#19] --< Call >--> [[function]] bar[#10]
+  bar(...)[#19] --< D >--> $v2[#20]
+  $v2[#20] -
+  10[#21] --< Arg(1) >--> foo(...)[#24]
+  "abc"[#22] --< Arg(2) >--> foo(...)[#24]
+  true[#23] --< Arg(3) >--> foo(...)[#24]
+  foo(...)[#24] --< Call >--> [[function]] foo[#7]
+  foo(...)[#24] --< D >--> $v3[#25]
+  $v3[#25] -
+  10[#26] --< Arg(1) >--> bar(...)[#29]
+  "abc"[#27] --< Arg(2) >--> bar(...)[#29]
+  true[#28] --< Arg(3) >--> bar(...)[#29]
+  bar(...)[#29] --< Call >--> [[function]] bar[#10]
+  bar(...)[#29] --< D >--> $v4[#30]
+  $v4[#30] -
+  baz[#31] -
+  10[#32] --< Arg(1) >--> baz(...)[#33]
+  baz(...)[#33] --< Call >--> baz[#31]
+  baz(...)[#33] --< D >--> $v5[#34]
+  $v5[#34] -
 
 Graph.js MDG Builder: new call statement
   $ graphjs mdg --no-export new.js
-  [[function]] foo[#10] --< Param(0) >--> this[#11]
-  [[function]] foo[#10] --< Param(1) >--> x1[#12]
+  [[function]] foo[#7] --< Param(0) >--> this[#8]
+  [[function]] foo[#7] --< Param(1) >--> x1[#9]
+  this[#8] -
+  x1[#9] -
+  [[function]] bar[#10] --< Param(0) >--> this[#11]
+  [[function]] bar[#10] --< Param(1) >--> y1[#12]
+  [[function]] bar[#10] --< Param(2) >--> y2[#13]
+  [[function]] bar[#10] --< Param(3) >--> y3[#14]
   this[#11] -
-  x1[#12] -
-  [[function]] bar[#13] --< Param(0) >--> this[#14]
-  [[function]] bar[#13] --< Param(1) >--> y1[#15]
-  [[function]] bar[#13] --< Param(2) >--> y2[#16]
-  [[function]] bar[#13] --< Param(3) >--> y3[#17]
-  this[#14] -
-  y1[#15] -
-  y2[#16] -
-  y3[#17] -
-  10[#18] --< Arg(1) >--> foo(...)[#19]
-  foo(...)[#19] --< Call >--> [[function]] foo[#10]
-  foo(...)[#19] --< D >--> $v1[#20]
-  $v1[#20] -
-  10[#21] --< Arg(1) >--> bar(...)[#22]
-  bar(...)[#22] --< Call >--> [[function]] bar[#13]
-  bar(...)[#22] --< D >--> $v2[#23]
-  $v2[#23] -
-  10[#24] --< Arg(1) >--> foo(...)[#27]
-  "abc"[#25] --< Arg(2) >--> foo(...)[#27]
-  true[#26] --< Arg(3) >--> foo(...)[#27]
-  foo(...)[#27] --< Call >--> [[function]] foo[#10]
-  foo(...)[#27] --< D >--> $v3[#28]
-  $v3[#28] -
-  10[#29] --< Arg(1) >--> bar(...)[#32]
-  "abc"[#30] --< Arg(2) >--> bar(...)[#32]
-  true[#31] --< Arg(3) >--> bar(...)[#32]
-  bar(...)[#32] --< Call >--> [[function]] bar[#13]
-  bar(...)[#32] --< D >--> $v4[#33]
-  $v4[#33] -
-  baz[#34] -
-  10[#35] --< Arg(1) >--> baz(...)[#36]
-  baz(...)[#36] --< Call >--> baz[#34]
-  baz(...)[#36] --< D >--> $v5[#37]
-  $v5[#37] -
+  y1[#12] -
+  y2[#13] -
+  y3[#14] -
+  10[#15] --< Arg(1) >--> foo(...)[#16]
+  foo(...)[#16] --< Call >--> [[function]] foo[#7]
+  foo(...)[#16] --< D >--> $v1[#17]
+  $v1[#17] -
+  10[#18] --< Arg(1) >--> bar(...)[#19]
+  bar(...)[#19] --< Call >--> [[function]] bar[#10]
+  bar(...)[#19] --< D >--> $v2[#20]
+  $v2[#20] -
+  10[#21] --< Arg(1) >--> foo(...)[#24]
+  "abc"[#22] --< Arg(2) >--> foo(...)[#24]
+  true[#23] --< Arg(3) >--> foo(...)[#24]
+  foo(...)[#24] --< Call >--> [[function]] foo[#7]
+  foo(...)[#24] --< D >--> $v3[#25]
+  $v3[#25] -
+  10[#26] --< Arg(1) >--> bar(...)[#29]
+  "abc"[#27] --< Arg(2) >--> bar(...)[#29]
+  true[#28] --< Arg(3) >--> bar(...)[#29]
+  bar(...)[#29] --< Call >--> [[function]] bar[#10]
+  bar(...)[#29] --< D >--> $v4[#30]
+  $v4[#30] -
+  baz[#31] -
+  10[#32] --< Arg(1) >--> baz(...)[#33]
+  baz(...)[#33] --< Call >--> baz[#31]
+  baz(...)[#33] --< D >--> $v5[#34]
+  $v5[#34] -
 
 Graph.js MDG Builder: hoisted functions
   $ graphjs mdg --no-export hoisted.js
-  [[function]] foo[#10] --< Param(0) >--> this[#11]
-  [[function]] foo[#10] --< Param(1) >--> x[#12]
+  [[function]] foo[#7] --< Param(0) >--> this[#8]
+  [[function]] foo[#7] --< Param(1) >--> x[#9]
+  this[#8] -
+  x[#9] --< Arg(1) >--> foo(...)[#19]
+  x[#9] --< Arg(1) >--> bar(...)[#21]
+  [[function]] bar[#10] --< Param(0) >--> this[#11]
+  [[function]] bar[#10] --< Param(1) >--> w[#12]
   this[#11] -
-  x[#12] --< Arg(1) >--> foo(...)[#22]
-  x[#12] --< Arg(1) >--> bar(...)[#24]
-  [[function]] bar[#13] --< Param(0) >--> this[#14]
-  [[function]] bar[#13] --< Param(1) >--> w[#15]
-  this[#14] -
-  w[#15] --< Arg(1) >--> bar(...)[#36]
-  w[#15] --< Arg(1) >--> foo(...)[#38]
-  10[#16] --< Arg(1) >--> foo(...)[#17]
-  foo(...)[#17] --< Call >--> [[function]] foo[#10]
-  foo(...)[#17] --< D >--> $v1[#18]
-  $v1[#18] -
-  "abc"[#19] --< Arg(1) >--> bar(...)[#20]
-  bar(...)[#20] --< Call >--> [[function]] bar[#13]
-  bar(...)[#20] --< D >--> $v2[#21]
-  $v2[#21] -
-  foo(...)[#22] --< Call >--> [[function]] foo[#10]
-  foo(...)[#22] --< D >--> $v3[#23]
-  $v3[#23] -
-  bar(...)[#24] --< Call >--> [[function]] bar[#13]
-  bar(...)[#24] --< D >--> $v4[#25]
-  $v4[#25] -
-  [[function]] foo[#26] --< Param(0) >--> this[#27]
-  [[function]] foo[#26] --< Param(1) >--> y[#28]
-  this[#27] -
-  y[#28] --< Arg(1) >--> foo(...)[#29]
-  foo(...)[#29] --< Call >--> [[function]] foo[#26]
-  foo(...)[#29] --< D >--> $v5[#30]
-  $v5[#30] -
-  [[function]] bar[#31] --< Param(0) >--> this[#32]
-  [[function]] bar[#31] --< Param(1) >--> z[#33]
-  this[#32] -
-  z[#33] --< Arg(1) >--> bar(...)[#34]
-  bar(...)[#34] --< Call >--> [[function]] bar[#31]
-  bar(...)[#34] --< D >--> $v6[#35]
-  $v6[#35] -
-  bar(...)[#36] --< Call >--> [[function]] bar[#31]
-  bar(...)[#36] --< D >--> $v7[#37]
-  $v7[#37] -
-  foo(...)[#38] --< Call >--> [[function]] foo[#26]
-  foo(...)[#38] --< D >--> $v8[#39]
-  $v8[#39] -
-  10[#40] --< Arg(1) >--> foo(...)[#41]
-  foo(...)[#41] --< Call >--> [[function]] foo[#26]
-  foo(...)[#41] --< D >--> $v9[#42]
-  $v9[#42] -
-  "abc"[#43] --< Arg(1) >--> bar(...)[#44]
-  bar(...)[#44] --< Call >--> [[function]] bar[#31]
-  bar(...)[#44] --< D >--> $v10[#45]
-  $v10[#45] -
+  w[#12] --< Arg(1) >--> bar(...)[#33]
+  w[#12] --< Arg(1) >--> foo(...)[#35]
+  10[#13] --< Arg(1) >--> foo(...)[#14]
+  foo(...)[#14] --< Call >--> [[function]] foo[#7]
+  foo(...)[#14] --< D >--> $v1[#15]
+  $v1[#15] -
+  "abc"[#16] --< Arg(1) >--> bar(...)[#17]
+  bar(...)[#17] --< Call >--> [[function]] bar[#10]
+  bar(...)[#17] --< D >--> $v2[#18]
+  $v2[#18] -
+  foo(...)[#19] --< Call >--> [[function]] foo[#7]
+  foo(...)[#19] --< D >--> $v3[#20]
+  $v3[#20] -
+  bar(...)[#21] --< Call >--> [[function]] bar[#10]
+  bar(...)[#21] --< D >--> $v4[#22]
+  $v4[#22] -
+  [[function]] foo[#23] --< Param(0) >--> this[#24]
+  [[function]] foo[#23] --< Param(1) >--> y[#25]
+  this[#24] -
+  y[#25] --< Arg(1) >--> foo(...)[#26]
+  foo(...)[#26] --< Call >--> [[function]] foo[#23]
+  foo(...)[#26] --< D >--> $v5[#27]
+  $v5[#27] -
+  [[function]] bar[#28] --< Param(0) >--> this[#29]
+  [[function]] bar[#28] --< Param(1) >--> z[#30]
+  this[#29] -
+  z[#30] --< Arg(1) >--> bar(...)[#31]
+  bar(...)[#31] --< Call >--> [[function]] bar[#28]
+  bar(...)[#31] --< D >--> $v6[#32]
+  $v6[#32] -
+  bar(...)[#33] --< Call >--> [[function]] bar[#28]
+  bar(...)[#33] --< D >--> $v7[#34]
+  $v7[#34] -
+  foo(...)[#35] --< Call >--> [[function]] foo[#23]
+  foo(...)[#35] --< D >--> $v8[#36]
+  $v8[#36] -
+  10[#37] --< Arg(1) >--> foo(...)[#38]
+  foo(...)[#38] --< Call >--> [[function]] foo[#23]
+  foo(...)[#38] --< D >--> $v9[#39]
+  $v9[#39] -
+  "abc"[#40] --< Arg(1) >--> bar(...)[#41]
+  bar(...)[#41] --< Call >--> [[function]] bar[#28]
+  bar(...)[#41] --< D >--> $v10[#42]
+  $v10[#42] -
