@@ -39,7 +39,6 @@ let rec mark_tainted_nodes (state : State.t) (queue : queue) (tainted : t) :
 
 and mark_tainted_edge (state : State.t) (queue : queue) (tainted : t)
     (strong : bool) (edge : Edge.t) : unit =
-  Log.debug "%a" Edge.pp edge;
   match edge.kind with
   | Dependency -> mark_tainted_next queue tainted edge.tar strong
   | Property _ when strong -> mark_tainted_prop state queue tainted edge
