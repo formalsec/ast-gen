@@ -9,7 +9,7 @@ module Options = struct
     | Connect ->
       Log.warn "Unable to run built-in queries with 'connect' function eval.";
       Log.warn "Defaulting function evaluation mode to 'unfold:rec'...";
-      { mdg_env = { env.mdg_env with func_eval_mode = UnfoldRec } }
+      { mdg_env = { env.mdg_env with func_eval_mode = UnfoldRec 1 } }
     | _ -> env
 
   type t =

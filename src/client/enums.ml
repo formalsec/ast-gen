@@ -40,20 +40,19 @@ module FuncEvalMode = struct
     match mode with
     | Connect -> Fmt.pp_str ppf "connect"
     | Unfold -> Fmt.pp_str ppf "unfold"
-    | UnfoldRec -> Fmt.pp_str ppf "unfold:rec"
-    | UnfoldDepth _ -> Fmt.pp_str ppf "unfold:<depth>"
+    | UnfoldRec _ -> Fmt.pp_str ppf "unfold:rec<depth>"
 
   let conv_unfold_depth (mode : string) : bool =
-    let regex = Str.regexp (Fmt.str "^unfold:\\([0-9]+\\)") in
+    let regex = Str.regexp {|unfold:rec\([0-9]+\)?|} in
     Str.string_match regex mode 0
 
   let conv (mode : string) : conv =
     match mode with
     | "connect" -> `Ok Connect
     | "unfold" -> `Ok Unfold
-    | "unfold:rec" -> `Ok UnfoldRec
-    | mode' when conv_unfold_depth mode ->
-      `Ok (UnfoldDepth (int_of_string (Str.matched_group 1 mode')))
+    | mode' when conv_unfold_depth mode -> (
+      try `Ok (UnfoldRec (int_of_string (Str.matched_group 1 mode')))
+      with Not_found -> `Ok (UnfoldRec 1) )
     | _ -> `Error "Invalid eval-func argument."
 
   let parse = (conv, pp)

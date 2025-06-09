@@ -4,8 +4,7 @@ module Env = struct
   type func_eval_mode =
     | Connect
     | Unfold
-    | UnfoldRec
-    | UnfoldDepth of int
+    | UnfoldRec of int
 
   type t =
     { func_eval_mode : func_eval_mode

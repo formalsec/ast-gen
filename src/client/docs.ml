@@ -225,9 +225,8 @@ module MdgOpts = struct
        opening each call-site by re-evaluating the function body. The unfold \
        mode also accepts an optional modifier in the form unfold[:<mod>] to \
        control how far to unfold: (1) [absent] for unfolding until the \
-       fixpoint is reached; (2) 'unfold:rec' for unfolding until a recursive \
-       call is reached; (3) 'unfold:<depth>' for unfolding until the maximum \
-       depth is reached." in
+       fixpoint is reached; (2) 'unfold:rec[<depth>]' for unfolding until \
+       depth (default=1) recursive calls are reached." in
     let parse_f = Enums.FuncEvalMode.parse in
     Arg.(value & opt parse_f Connect & info [ "eval-func" ] ~doc)
 

@@ -181,9 +181,8 @@ and eval_store_expr (state : State.t) (id : string) (cid : cid) : Node.Set.t =
 let unfoldable_function (state : State.t) (l_func : Node.t) : bool =
   match state.env.func_eval_mode with
   | Connect -> Log.fail "unexpected 'connect' function evaluation mode"
-  | Unfold -> Log.fail "not implemented (use 'unfold:rec' or 'unfold:<depth>')"
-  | UnfoldRec -> not (List.mem l_func state.curr_stack)
-  | UnfoldDepth depth -> List.length state.curr_stack < depth
+  | Unfold -> Log.fail "not implemented (use 'unfold:rec<depth>')"
+  | UnfoldRec depth -> List.count (Node.equal l_func) state.curr_stack < depth
 
 let unfoldable_callbacks (state : State.t) (ls_args : Node.Set.t list) :
     Node.Set.t =
