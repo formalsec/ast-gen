@@ -103,10 +103,10 @@ let get_properties (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
   |> Edge.Set.filter Edge.is_property
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
-let get_property_owners (mdg : t) (node : Node.t) : Node.t list =
+let get_property_owner (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
   get_trans mdg node.loc
   |> Edge.Set.filter Edge.is_property
-  |> Edge.Set.map_list Edge.tar
+  |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
 
 let get_versions (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
   get_edges mdg node.loc

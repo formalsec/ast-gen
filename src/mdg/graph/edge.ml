@@ -38,7 +38,7 @@ let compare_kind_arg (kind1 : kind) (kind2 : kind) : int =
 
 let compare_kind (kind1 : kind) (kind2 : kind) : int =
   let kind_cmp = Int.compare (kind_id kind1) (kind_id kind2) in
-  if kind_cmp != 0 then kind_cmp else compare_kind_arg kind1 kind2
+  if kind_cmp == 0 then compare_kind_arg kind1 kind2 else kind_cmp
 
 let pp_kind (ppf : Fmt.t) (kind : kind) : unit =
   match kind with

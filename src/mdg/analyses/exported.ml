@@ -40,8 +40,8 @@ end
 type t = (Location.t, Node.t * Scheme.t) Hashtbl.t
 type acc = (Node.t * Scheme.t) list
 
-let create () : t = Hashtbl.create Config.(!dflt_htbl_sz)
 let none () : t = Hashtbl.create Config.(!dflt_htbl_sz)
+let create () : t = none ()
 let is_empty (exported : t) : bool = Hashtbl.length exported == 0
 let mem (exported : t) (node : Node.t) : bool = Hashtbl.mem exported node.loc
 

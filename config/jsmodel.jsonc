@@ -1,0 +1,188 @@
+{
+  "language-components": [
+    { "type": "code-injection", "name": "eval", "args": [1] },
+    { "type": "code-injection", "name": "Function", "args": [1, 2, 3, 4] },
+    { "type": "code-injection", "name": "require", "args": [1] }
+  ],
+  "package-components": [
+    {
+      "package": "async-execute",
+      "props": [{ "type": "command-injection", "name": "execAsync", "args": [1] }]
+    },
+    {
+      "package": "child_process",
+      "props": [
+        { "type": "command-injection", "name": "exec", "args": [1] },
+        { "type": "command-injection", "name": "execFile", "args": [1, 2] },
+        { "type": "command-injection", "name": "execSync", "args": [1] },
+        { "type": "command-injection", "name": "spawn", "args": [1, 2] }
+      ]
+    },
+    {
+      "package": "comandante",
+      "props": [{ "type": "command-injection", "name": "write", "args": [1] }]
+    },
+    {
+      "package": "cross-spawn",
+      "self": { "type": "command-injection", "args": [1, 2] }
+    },
+    {
+      "package": "execa",
+      "props": [{ "type": "command-injection", "name": "shell", "args": [1] }]
+    },
+    {
+      "package": "fs",
+      "props": [
+        { "type": "path-traversal", "name": "readFile", "args": [1] },
+        { "type": "path-traversal", "name": "readFileSync", "args": [1] },
+        { "type": "path-traversal", "name": "writeFile", "args": [1] },
+        { "type": "path-traversal", "name": "writeFileSync", "args": [1] },
+        { "type": "path-traversal", "name": "createReadStream", "args": [1] }
+      ]
+    },
+    {
+      "package": "gray-matter",
+      "props": [{ "type": "code-injection", "name": "default", "args": [1] }]
+    },
+    {
+      "package": "im-metadata",
+      "self": { "type": "command-injection", "args": [1] }
+    },
+    {
+      "package": "meta-exec",
+      "self": { "type": "command-injection", "args": [1] }
+    },
+    {
+      "package": "mz/child_process",
+      "props": [{ "type": "command-injection", "name": "exec", "args": [1] }]
+    },
+    {
+      "package": "platform-command",
+      "props": [{ "type": "command-injection", "name": "exec", "args": [1] }]
+    },
+    {
+      "package": "process",
+      "props": [{ "type": "tainted-symbol", "name": "argv" }]
+    },
+    {
+      "package": "shelljs",
+      "props": [{ "type": "command-injection", "name": "exec", "args": [1] }]
+    },
+    {
+      "package": "vm",
+      "props": [
+        { "type": "code-injection", "name": "runInContext", "args": [1] },
+        { "type": "code-injection", "name": "runInNewContext", "args": [1] }
+      ]
+    },
+    {
+      "package": "yargs",
+      "props": [{ "type": "tainted-symbol", "name": "argv" }]
+    }
+  ],
+  "taint-policies": [
+    // Array.prototype taint policies
+    { "type": "proto", "name": "at", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "concat", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "concat", "source": "arg1", "targets": ["retn"] },
+    { "type": "proto", "name": "copyWithin", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "entries", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "every", "source": "this", "targets": ["arg1:arg1"] },
+    { "type": "proto", "name": "every", "source": "arg2", "targets": ["arg1:this"] },
+    { "type": "proto", "name": "fill", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "fill", "source": "arg1", "targets": ["this", "retn"] },
+    { "type": "proto", "name": "filter", "source": "this", "targets": ["arg1:arg1", "retn"] },
+    { "type": "proto", "name": "filter", "source": "arg2", "targets": ["arg1:this"] },
+    { "type": "proto", "name": "find", "source": "this", "targets": ["arg1:arg1", "retn"] },
+    { "type": "proto", "name": "find", "source": "arg2", "targets": ["arg1:this"] },
+    { "type": "proto", "name": "findIndex", "source": "this", "targets": ["arg1:arg1"] },
+    { "type": "proto", "name": "findIndex", "source": "arg2", "targets": ["arg1:this"] },
+    { "type": "proto", "name": "findLast", "source": "this", "targets": ["arg1:arg1", "retn"] },
+    { "type": "proto", "name": "findLast", "source": "arg2", "targets": ["arg1:this"] },
+    { "type": "proto", "name": "findLastIndex", "source": "this", "targets": ["arg1:arg1"] },
+    { "type": "proto", "name": "findLastIndex", "source": "arg2", "targets": ["arg1:this"] },
+    { "type": "proto", "name": "flat", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "flatMap", "source": "this", "targets": ["arg1:arg1"] },
+    { "type": "proto", "name": "flatMap", "source": "arg2", "targets": ["arg1:this"] },
+    { "type": "proto", "name": "flatMap", "source": "this", "targets": ["retn"] }, // To-Do: Fix mapper policy
+    { "type": "proto", "name": "forEach", "source": "this", "targets": ["arg1:arg1"] },
+    { "type": "proto", "name": "forEach", "source": "arg2", "targets": ["arg1:this"] },
+    { "type": "proto", "name": "join", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "join", "source": "arg1", "targets": ["retn"] },
+    { "type": "proto", "name": "map", "source": "this", "targets": ["arg1:arg1"] },
+    { "type": "proto", "name": "map", "source": "arg2", "targets": ["arg1:this"] },
+    { "type": "proto", "name": "map", "source": "this", "targets": ["retn"] }, // To-Do: Fix mapper policy
+    { "type": "proto", "name": "pop", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "push", "source": "arg1...", "targets": ["this"] },
+    { "type": "proto", "name": "reduce", "source": "this", "targets": ["arg1:arg2"] },
+    { "type": "proto", "name": "reduce", "source": "arg2", "targets": ["arg1:arg1"] },
+    { "type": "proto", "name": "reduce", "source": "this", "targets": ["retn"] }, // To-Do: Fix mapper policy
+    { "type": "proto", "name": "reduceRight", "source": "this", "targets": ["arg1:arg2"] },
+    { "type": "proto", "name": "reduceRight", "source": "arg2", "targets": ["arg1:arg1"] },
+    { "type": "proto", "name": "reduceRight", "source": "this", "targets": ["retn"] }, // To-Do: Fix mapper policy
+    { "type": "proto", "name": "reverse", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "shift", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "slice", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "some", "source": "this", "targets": ["arg1:arg1"] },
+    { "type": "proto", "name": "some", "source": "arg2", "targets": ["arg1:this"] },
+    { "type": "proto", "name": "sort", "source": "this", "targets": ["arg1:arg1", "arg1:arg2", "retn"] },
+    { "type": "proto", "name": "splice", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "splice", "source": "arg3...", "targets": ["this"] },
+    { "type": "proto", "name": "toLocaleString", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "toReversed", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "toSorted", "source": "this", "targets": ["arg1:arg1", "arg1:arg2", "retn"] },
+    { "type": "proto", "name": "toSpliced", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "toSpliced", "source": "arg3...", "targets": ["retn"] },
+    { "type": "proto", "name": "toString", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "unshift", "source": "arg1...", "targets": ["this"] },
+    { "type": "proto", "name": "values", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "with", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "with", "source": "arg2", "targets": ["retn"] },
+    // String.prototype taint policies
+    { "type": "proto", "name": "match", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "matchAll", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "normalize", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "padEnd", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "padEnd", "source": "arg2", "targets": ["retn"] },
+    { "type": "proto", "name": "padStart", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "padStart", "source": "arg2", "targets": ["retn"] },
+    { "type": "proto", "name": "repeat", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "replace", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "replace", "source": "arg2", "targets": ["retn"] },
+    { "type": "proto", "name": "replaceAll", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "replaceAll", "source": "arg2", "targets": ["retn"] },
+    { "type": "proto", "name": "search", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "split", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "substring", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "toLocaleLowerCase", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "toLocaleUpperCase", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "toLowerCase", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "toUpperCase", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "toWellFormed", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "trim", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "trimEnd", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "trimStart", "source": "this", "targets": ["retn"] },
+    { "type": "proto", "name": "valueOf", "source": "this", "targets": ["retn"] },
+    // Router taint policies
+    { "type": "proto", "name": "all", "source": "this", "targets": ["arg2"] },
+    { "type": "proto", "name": "get", "source": "this", "targets": ["arg2", "retn"] },
+    { "type": "proto", "name": "post", "source": "this", "targets": ["arg2"] },
+
+    // JavaScript builtins taint policies
+    { "type": "builtin", "builtin": "Object", "name": "assign", "source": "arg2", "targets": ["arg1", "retn"] },
+    { "type": "builtin", "builtin": "JSON", "name": "stringify", "source": "arg1", "targets": ["retn"] },
+
+    // Npm package taint policies
+    { "type": "package", "package": "merge", "source": "arg2...", "targets": ["retn"] },
+    { "type": "package", "package": "acorn", "name": "parse", "source": "arg1", "targets": ["retn"] },
+    { "type": "package", "package": "child_process", "name": "exec", "source": "arg1", "targets": ["retn"] },
+    { "type": "package", "package": "child_process", "name": "execSync", "source": "arg1", "targets": ["retn"] },
+    { "type": "package", "package": "escodegen", "name": "generate", "source": "arg1", "targets": ["retn"] },
+    { "type": "package", "package": "estraverse", "name": "replace", "source": "arg1", "targets": ["retn"] },
+    { "type": "package", "package": "path", "name": "join", "source": "arg1...", "targets": ["retn"] },
+    { "type": "package", "package": "path", "name": "resolve", "source": "arg1...", "targets": ["retn"] },
+    { "type": "package", "package": "path", "name": "basename", "source": "arg1", "targets": ["retn"] },
+    { "type": "package", "package": "path", "name": "dirname", "source": "arg1", "targets": ["retn"] },
+    { "type": "package", "package": "util", "name": "format", "source": "arg2...", "targets": ["retn"] }
+  ]
+}
