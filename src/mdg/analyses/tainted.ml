@@ -1,21 +1,79 @@
 type queue = (Node.t * bool) Queue.t
-type t = (Location.t, Node.t * bool) Hashtbl.t
 
-let create () : t = Hashtbl.create Config.(!dflt_htbl_sz)
-let none () : t = Hashtbl.create Config.(!dflt_htbl_sz)
+module PolicyTable = struct
+  module Tbl = Hashtbl.Make (struct
+    type t = Jsmodel.TaintPolicy.kind * string
+
+    let hash ((kind, name) : t) : int =
+      Hashtbl.hash (Hashtbl.hash kind, String.hash name)
+
+    let equal ((kind1, name1) : t) ((kind2, name2) : t) : bool =
+      match (kind1, kind2) with
+      | (`ProtoMethodPolicy, `ProtoMethodPolicy) -> String.equal name1 name2
+      | (`BuiltinMethodPolicy builtin1, `BuiltinMethodPolicy builtin2) ->
+        String.equal builtin1 builtin2 && String.equal name1 name2
+      | (`PackageMethodPolicy package1, `PackageMethodPolicy package2) ->
+        String.equal package1 package2 && String.equal name1 name2
+      | (`PackageSelfPolicy, `PackageSelfPolicy) -> String.equal name1 name2
+      | _ -> false
+  end)
+
+  include Tbl
+
+  type source = Jsmodel.TaintPolicy.source
+  type target = Jsmodel.TaintPolicy.target
+  type policy = source * target list
+  type t = policy Tbl.t
+
+  let resolve_method (mdg : Mdg.t) (l_func : Node.t) (func : string) :
+      Jsmodel.TaintPolicy.kind * string =
+    match Mdg.get_property_owner mdg l_func with
+    | [ (Static prop, { kind = Module package; _ }) ] ->
+      (`PackageMethodPolicy package, prop)
+    (* TODO: Replace this with the Built-In node type *)
+    | [ (Static prop, { kind = Blank "Object"; _ }) ] ->
+      (`BuiltinMethodPolicy "Object", prop)
+    | [ (Static prop, { kind = Blank "JSON"; _ }) ] ->
+      (`BuiltinMethodPolicy "JSON", prop)
+    | _ -> (`ProtoMethodPolicy, func)
+
+  let resolve (mdg : Mdg.t) (l_call : Node.t) (func : string) :
+      Jsmodel.TaintPolicy.kind * string =
+    match Mdg.get_called_functions mdg l_call with
+    | [ { kind = Module package; _ } ] -> (`PackageSelfPolicy, package)
+    | [ l_func ] -> resolve_method mdg l_func func
+    | _ -> (`ProtoMethodPolicy, func)
+end
+
+type t =
+  { map : (Location.t, Node.t * bool) Hashtbl.t
+  ; policies : PolicyTable.t
+  }
+
+let none () : t =
+  let map = Hashtbl.create Config.(!dflt_htbl_sz) in
+  let policies = PolicyTable.create Config.(!dflt_htbl_sz) in
+  { map; policies }
+
+let create (jsmodel : Jsmodel.TaintPolicy.t list) : t =
+  let tainted = none () in
+  Fun.flip List.iter jsmodel (fun policy ->
+      PolicyTable.add tainted.policies (policy.kind, policy.name)
+        (policy.source, policy.targets) );
+  tainted
 
 let is_tainted (tainted : t) (node : Node.t) : bool =
-  Hashtbl.mem tainted node.loc
+  Hashtbl.mem tainted.map node.loc
 
 let set_tainted (tainted : t) (node : Node.t) (strong : bool) : unit =
-  Hashtbl.replace tainted node.loc (node, strong)
+  Hashtbl.replace tainted.map node.loc (node, strong)
 
 let get_tainted (tainted : t) : Node.Set.t =
-  Fun.flip2 Hashtbl.fold tainted Node.Set.empty (fun _ (l_tainted, _) acc ->
+  Fun.flip2 Hashtbl.fold tainted.map Node.Set.empty (fun _ (l_tainted, _) acc ->
       Node.Set.add l_tainted acc )
 
 let propagate (tainted : t) (node : Node.t) (strong : bool) : bool =
-  match Hashtbl.find_opt tainted node.loc with
+  match Hashtbl.find_opt tainted.map node.loc with
   | Some (_, strong') -> strong && not strong'
   | None -> true
 
@@ -39,7 +97,6 @@ let rec mark_tainted_nodes (state : State.t) (queue : queue) (tainted : t) :
 
 and mark_tainted_edge (state : State.t) (queue : queue) (tainted : t)
     (strong : bool) (edge : Edge.t) : unit =
-  Log.debug "%a" Edge.pp edge;
   match edge.kind with
   | Dependency -> mark_tainted_next queue tainted edge.tar strong
   | Property _ when strong -> mark_tainted_prop state queue tainted edge
@@ -68,42 +125,46 @@ and mark_tainted_prop (state : State.t) (queue : queue) (tainted : t)
 
 and mark_tainted_call (state : State.t) (queue : queue) (tainted : t)
     (edge : Edge.t) : unit =
-  let call_name = Node.name edge.tar in
-  let segs = String.split_on_char '.' call_name in
-  let segs_len = List.length segs in
-  let func = List.nth segs (segs_len - 1) in
-  let arg_idx = Edge.argument edge in
-  mark_tainted_call_components state queue tainted edge
-    ( if segs_len == 1 then mark_func_call_policy func arg_idx
-      else mark_method_call_policy func arg_idx )
-
-and mark_func_call_policy (func : string) (arg : int) : int list =
-  match (func, arg) with _ -> [ -1 ]
-
-and mark_method_call_policy (func : string) (arg : int) : int list =
-  match (func, arg) with
-  | ("forEach", 0) -> [ 1 ]
-  | ("map", 0) -> [ 1 ]
-  | ("push", 1) -> [ 0 ]
-  | ("get", _) -> [ -1; 2 ]
-  | ("post", _) -> [ 2 ]
-  | _ -> [ -1 ]
-
-and mark_tainted_call_components (state : State.t) (queue : queue) (tainted : t)
-    (edge : Edge.t) (to_mark : int list) : unit =
-  let ls_args = Mdg.get_arguments state.mdg edge.tar in
-  let l_retn = Mdg.get_return_of_call state.mdg edge.tar in
-  let components = (-1, l_retn) :: ls_args in
+  let seg = String.split_on_char '.' (Node.name edge.tar) in
+  let len = List.length seg in
+  let func = List.nth seg (len - 1) in
+  let arg = Edge.argument edge in
+  let args = Mdg.get_arguments state.mdg edge.tar in
+  let retn = Mdg.get_return_of_call state.mdg edge.tar in
+  let args' = (-1, retn) :: args in
+  let targets = mark_tainted_policy state tainted edge.tar func arg in
   set_tainted tainted edge.tar true;
-  Fun.flip List.iter to_mark (fun idx ->
-      let matched = List.find_all (fun (idx', _) -> idx == idx') components in
-      Fun.flip List.iter matched (fun (_, node) ->
-          mark_tainted_next queue tainted node true ) )
+  mark_tainted_policy_targets state queue tainted targets args'
 
-let compute (state : State.t) (exported : Exported.t) : t =
+and mark_tainted_policy (state : State.t) (tainted : t) (l_call : Node.t)
+    (func : string) (arg : int) : Jsmodel.TaintPolicy.target list =
+  let (kind, name) = PolicyTable.resolve state.mdg l_call func in
+  Log.debug "func = %s | name = %s" func name;
+  let policy = PolicyTable.find_all tainted.policies (kind, name) in
+  Fun.flip2 List.fold_left [] policy (fun acc (source, targets) ->
+      match source with
+      | `This when arg == 0 -> targets @ acc
+      | `Arg idx when arg == idx -> targets @ acc
+      | `Args idx when arg >= idx -> targets @ acc
+      | _ -> acc )
+
+and mark_tainted_policy_targets (state : State.t) (queue : queue) (tainted : t)
+    (targets : Jsmodel.TaintPolicy.target list) (args : (int * Node.t) list) =
+  Fun.flip List.iter (List.product targets args) (fun (target, (idx, node)) ->
+      match target with
+      | `This when idx == 0 -> mark_tainted_next queue tainted node true
+      | `Retn when idx == -1 -> mark_tainted_next queue tainted node true
+      | `Arg idx' when idx == idx' -> mark_tainted_next queue tainted node true
+      | `Args idx' when idx >= idx' -> mark_tainted_next queue tainted node true
+      | `FArg (idx', target') when idx == idx' ->
+        let params = Mdg.get_parameters state.mdg node in
+        mark_tainted_policy_targets state queue tainted [ target' ] params
+      | _ -> () )
+
+let compute (state : State.t) (model : Jsmodel.t) (exported : Exported.t) : t =
   let l_taint = Jslib.find state.mdg state.jslib "taint" in
   mark_tainted_exports state exported l_taint;
-  let tainted = create () in
+  let tainted = create model.policies in
   let queue = Queue.create () in
   Queue.push (l_taint, true) queue;
   mark_tainted_nodes state queue tainted;

@@ -560,8 +560,7 @@ and build_return (state : State.t) (arg : 'm Expression.t option) : State.t =
   match (state.curr_parent, ls_arg) with
   | (None, _) | (Some _, None) -> state
   | (Some l_func, Some ls_arg') ->
-    if connect_function_eval state.env then
-      Node.Set.iter (State.add_return_edge state l_func) ls_arg';
+    Node.Set.iter (State.add_return_edge state l_func) ls_arg';
     let curr_return = Node.Set.union state.curr_return ls_arg' in
     { state with curr_return }
 
@@ -675,18 +674,20 @@ module ExtendedMdg = struct
     | (true, false) -> Exported.compute_and_unfold build_f state
     | (false, _) -> Exported.none ()
 
-  let compute_tainted_analysis (state : State.t) (exported : Exported.t) :
-      Tainted.t =
-    if state.env.run_tainted_analysis then Tainted.compute state exported
-    else Tainted.none ()
+  let compute_tainted_analysis (state : State.t) (jsmodel : Jsmodel.t)
+      (exported : Exported.t) : Tainted.t =
+    let connect = connect_function_eval state.env in
+    match (state.env.run_tainted_analysis, connect) with
+    | (true, false) -> Tainted.compute state jsmodel exported
+    | _ -> Tainted.none ()
 
   let compute_cleaner_analysis (state : State.t) : unit =
     if state.env.run_cleaner_analysis then Cleaner.compute state
 
-  let compute_analyses (state : State.t) : t =
+  let compute_analyses (state : State.t) (jsmodel : Jsmodel.t) : t =
     let mdg = state.mdg in
     let exported = compute_exported_analysis state in
-    let tainted = compute_tainted_analysis state exported in
+    let tainted = compute_tainted_analysis state jsmodel exported in
     compute_cleaner_analysis state;
     { mdg; exported; tainted }
 end
@@ -699,4 +700,4 @@ let build_program (env : State.Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) :
   let cbs_builder = Interceptor.cbs_builder build_file in
   Interceptor.initialize state cbs_builder;
   let state' = build_file state main true None in
-  ExtendedMdg.compute_analyses state'
+  ExtendedMdg.compute_analyses state' jsmodel
