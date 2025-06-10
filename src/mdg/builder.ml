@@ -187,11 +187,11 @@ let unfoldable_function (state : State.t) (l_func : Node.t) : bool =
 
 let unfoldable_callbacks (state : State.t) (ls_args : Node.Set.t list) :
     Node.Set.t =
-  let unfoldable_f = unfoldable_function state in
-  let valid_f l_arg = Node.is_function l_arg && unfoldable_f l_arg in
   Fun.flip2 List.fold_right ls_args Node.Set.empty (fun ls_arg acc ->
       Fun.flip2 Node.Set.fold ls_arg acc (fun l_arg acc ->
-          if valid_f l_arg then Node.Set.add l_arg acc else acc ) )
+          if Node.is_function l_arg && unfoldable_function state l_arg then
+            Node.Set.add l_arg acc
+          else acc ) )
 
 let rec unfold_function_call (state : State.t) (call_name : string)
     (retn_name : string) (call_cid : cid) (retn_cid : cid) (new_ : bool)
@@ -214,37 +214,82 @@ let rec unfold_function_call (state : State.t) (call_name : string)
         let curr_parent = Some l_func in
         let state' = { state with store; curr_floc; curr_stack; curr_parent } in
         let unfold_this_arg_f = unfold_this_argument state' retn_name retn_cid in
-        let ls_this = unfold_this_arg_f new_ l_func ls_args in
+        let ls_this = unfold_this_arg_f new_ (List.hd ls_args) in
         Store.replace state'.store "this" ls_this;
         Fun.flip List.iteri (List.tl ls_args) (fun idx ls_arg ->
             Fun.flip Option.iter (List.nth_opt func.params idx) (fun param ->
-                let name = Identifier.name param in
-                Store.replace state'.store name ls_arg ) );
+                let param_name = Identifier.name param in
+                Store.replace state'.store param_name ls_arg ) );
         let state'' = build_sequence state' func.body in
-        let ls_this' = unfold_this_return state'' new_ ls_this in
+        let ls_this' = unfold_this_return state'' l_func ls_this new_ in
         let ls_retn' = Node.Set.union ls_retn ls_this' in
         (state, ls_retn') )
+
+and unfold_this_argument (state : State.t) (retn_name : string) (retn_cid : cid)
+    (new_ : bool) (ls_this : Node.Set.t) : Node.Set.t =
+  if new_ then
+    let l_new = State.add_object_node state retn_cid retn_name in
+    Node.Set.singleton l_new
+  else ls_this
+
+and unfold_this_return (state : State.t) (l_func : Node.t)
+    (ls_this : Node.Set.t) (new_ : bool) : Node.Set.t =
+  unfold_new_properties state l_func ls_this new_;
+  if new_ then Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_this
+  else state.curr_return
+
+and unfold_new_properties (state : State.t) (l_func : Node.t)
+    (ls_this : Node.Set.t) (new_ : bool) : unit =
+  if new_ then
+    let ls_proto = Mdg.object_static_lookup state.mdg l_func "prototype" in
+    Fun.flip Node.Set.iter ls_proto (fun l_proto ->
+        let props = Mdg.object_dynamic_property_lookup state.mdg l_proto in
+        Fun.flip List.iter props (fun (prop, ls_prop) ->
+            Fun.flip Node.Set.iter ls_prop (fun l_prop ->
+                Fun.flip Node.Set.iter ls_this (fun l_this ->
+                    State.add_property_edge state l_this l_prop prop ) ) ) )
 
 and unfold_callbacks (state : State.t) (ls_args : Node.Set.t list) : unit =
   let ls_callbacks = unfoldable_callbacks state ls_args in
   let ls_this = Store.find state.store "this" in
   Fun.flip Node.Set.iter ls_callbacks (fun l_func ->
-      ignore (build_entry_function ~ls_this state l_func) )
+      ignore (unfold_entry_function state l_func ls_this false) )
 
-and unfold_this_argument (state : State.t) (retn_name : string) (retn_cid : cid)
-    (new_ : bool) (l_func : Node.t) (ls_args : Node.Set.t list) : Node.Set.t =
-  if new_ then (
-    let retn_cid' = offset retn_cid 1 in
-    let l_this = State.add_object_node state retn_cid' retn_name in
-    let p_special = Property.Static "$proto" in
-    State.add_property_edge state l_this l_func p_special;
+and unfold_entry_function (state : State.t) (l_func : Node.t)
+    (ls_this : Node.Set.t) (new_ : bool) : State.t * Node.Set.t =
+  match Pcontext.func state.pcontext l_func with
+  | None -> (state, Node.Set.empty)
+  | Some { floc; func; eval_store; _ } ->
+    let store = Store.copy eval_store in
+    let curr_floc = floc in
+    let curr_stack = l_func :: state.curr_stack in
+    let curr_parent = Some l_func in
+    let state' = { state with store; curr_floc; curr_stack; curr_parent } in
+    let ls_this' = unfold_entry_this state' l_func ls_this func new_ in
+    Store.replace state'.store "this" ls_this';
+    Fun.flip List.iteri func.params (fun idx param ->
+        let param_cid = newcid param in
+        let param_name = Identifier.name param in
+        let l_param = State.add_parameter_node state' param_cid param_name in
+        State.add_parameter_edge state' l_func l_param (idx + 1);
+        Store.replace state'.store param_name (Node.Set.singleton l_param) );
+    let state'' = build_sequence state' func.body in
+    let ls_retn = unfold_this_return state'' l_func ls_this' new_ in
+    let ls_retn' = Node.Set.union state''.curr_return ls_retn in
+    (state, ls_retn')
+
+and unfold_entry_this (state : State.t) (l_func : Node.t) (ls_this : Node.Set.t)
+    (func : Region.t FunctionDefinition.t) (new_ : bool) : Node.Set.t =
+  if new_ then
+    let new_cid = newcid func.left in
+    let l_new = State.add_object_node state new_cid (Node.name l_func) in
+    Node.Set.add l_new ls_this
+  else if Node.Set.is_empty ls_this then (
+    let this_cid = newcid func.left in
+    let l_this = State.add_parameter_node state this_cid "this" in
+    State.add_parameter_edge state l_func l_this 0;
     Node.Set.singleton l_this )
-  else List.hd ls_args
-
-and unfold_this_return (state : State.t) (new_ : bool) (ls_this : Node.Set.t) :
-    Node.Set.t =
-  if new_ then Node.Set.map_flat (Mdg.object_tail_versions state.mdg) ls_this
-  else state.curr_return
+  else ls_this
 
 and build_assignment (state : State.t) (left : 'm LeftValue.t)
     (right : 'm Expression.t) : State.t =
@@ -508,37 +553,6 @@ and build_function_definition (state : State.t) (func : 'm FunctionDefinition.t)
     ignore (build_sequence state' func.body) );
   state
 
-and build_entry_function ?(ls_this : Node.Set.t option) (state : State.t)
-    (l_func : Node.t) : State.t =
-  match Pcontext.func state.pcontext l_func with
-  | None -> state
-  | Some { floc; func; eval_store; _ } ->
-    let store = Store.copy eval_store in
-    let curr_floc = floc in
-    let curr_stack = l_func :: state.curr_stack in
-    let curr_parent = Some l_func in
-    let state' = { state with store; curr_floc; curr_stack; curr_parent } in
-    let ls_this' = build_entry_this state' l_func func ls_this in
-    Store.replace state'.store "this" ls_this';
-    Fun.flip List.iteri func.params (fun idx param ->
-        let param_cid = newcid param in
-        let param_name = Identifier.name param in
-        let l_param = State.add_parameter_node state' param_cid param_name in
-        State.add_parameter_edge state' l_func l_param (idx + 1);
-        Store.replace state'.store param_name (Node.Set.singleton l_param) );
-    build_sequence state' func.body
-
-and build_entry_this (state : State.t) (l_func : Node.t)
-    (func : Region.t FunctionDefinition.t) (ls_this : Node.Set.t option) :
-    Node.Set.t =
-  match ls_this with
-  | None ->
-    let this_cid = newcid func.left in
-    let l_this = State.add_parameter_node state this_cid "this" in
-    State.add_parameter_edge state l_func l_this 0;
-    Node.Set.singleton l_this
-  | Some ls_this' -> ls_this'
-
 and build_hoisted_functions (state : State.t) (stmts : 'm Statement.t list) :
     State.t =
   Fun.flip2 List.fold_left state stmts (fun state stmt ->
@@ -667,11 +681,11 @@ module ExtendedMdg = struct
     }
 
   let compute_exported_analysis (state : State.t) : Exported.t =
-    let build_f = build_entry_function in
+    let unfold_f = unfold_entry_function in
     let connect = connect_function_eval state.env in
     match (state.env.run_exported_analysis, connect) with
     | (true, true) -> Exported.compute_from_graph state
-    | (true, false) -> Exported.compute_and_unfold build_f state
+    | (true, false) -> Exported.compute_and_unfold unfold_f state
     | (false, _) -> Exported.none ()
 
   let compute_tainted_analysis (state : State.t) (jsmodel : Jsmodel.t)

@@ -219,26 +219,6 @@ let object_dynamic_traversal (f : Property.t * Node.t -> 'a -> 'a) (mdg : t)
     object_parents_traversal (traverse seen') mdg ls_visited node acc' in
   traverse [] (Node.Set.add node ls_visited) node acc
 
-let object_nested_traversal (f : Property.t list * Node.t -> 'a -> 'a) (mdg : t)
-    (node : Node.t) (acc : 'a) : 'a =
-  let traverse_accumulator_f ls_visited props (prop, l_prop) acc =
-    let ls_tail = object_tail_versions mdg l_prop in
-    Fun.flip2 Node.Set.fold ls_tail acc (fun l_tail acc ->
-        if Node.Set.mem l_tail ls_visited then acc
-        else (props @ [ prop ], l_tail) :: acc ) in
-  let rec traverse ls_visited nodes acc =
-    match nodes with
-    | [] -> acc
-    | (props, node) :: nodes' ->
-      let found_f = traverse_accumulator_f ls_visited props in
-      let found = object_dynamic_traversal found_f mdg Node.Set.empty node [] in
-      let (_, ls_found) = List.split found in
-      let ls_visited' = Node.Set.union ls_visited (Node.Set.of_list ls_found) in
-      let nodes'' = nodes' @ found in
-      let acc' = List.fold_right f found acc in
-      traverse ls_visited' nodes'' acc' in
-  traverse (Node.Set.singleton node) [ ([], node) ] (f ([], node) acc)
-
 let object_static_lookup (mdg : t) (node : Node.t) (p : string) : Node.Set.t =
   let f node acc = Node.Set.add node acc in
   object_static_traversal f mdg Node.Set.empty node p Node.Set.empty
@@ -248,6 +228,13 @@ let object_dynamic_lookup (mdg : t) (node : Node.t) : Node.Set.t =
   let f (_, node) acc = Node.Set.add node acc in
   object_dynamic_traversal f mdg Node.Set.empty node Node.Set.empty
   |> Node.Set.map_flat (object_tail_versions mdg)
+
+let object_dynamic_property_lookup (mdg : t) (node : Node.t) :
+    (Property.t * Node.Set.t) list =
+  let f (prop, node) acc = (prop, node) :: acc in
+  let props = object_dynamic_traversal f mdg Node.Set.empty node [] in
+  Fun.flip2 List.fold_left [] props (fun acc (prop, l_prop) ->
+      (prop, object_tail_versions mdg l_prop) :: acc )
 
 let object_lookup (mdg : t) (node : Node.t) (prop : Property.t) : Node.Set.t =
   match prop with

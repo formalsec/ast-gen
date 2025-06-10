@@ -179,6 +179,7 @@
     { "type": "package", "package": "child_process", "name": "execSync", "source": "arg1", "targets": ["retn"] },
     { "type": "package", "package": "escodegen", "name": "generate", "source": "arg1", "targets": ["retn"] },
     { "type": "package", "package": "estraverse", "name": "replace", "source": "arg1", "targets": ["retn"] },
+    { "type": "package", "package": "fs", "name": "readFileSync", "source": "arg1", "targets": ["retn"] },
     { "type": "package", "package": "path", "name": "join", "source": "arg1...", "targets": ["retn"] },
     { "type": "package", "package": "path", "name": "resolve", "source": "arg1...", "targets": ["retn"] },
     { "type": "package", "package": "path", "name": "basename", "source": "arg1", "targets": ["retn"] },
