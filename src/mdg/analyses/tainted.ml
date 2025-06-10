@@ -139,7 +139,6 @@ and mark_tainted_call (state : State.t) (queue : queue) (tainted : t)
 and mark_tainted_policy (state : State.t) (tainted : t) (l_call : Node.t)
     (func : string) (arg : int) : Jsmodel.TaintPolicy.target list =
   let (kind, name) = PolicyTable.resolve state.mdg l_call func in
-  Log.debug "func = %s | name = %s" func name;
   let policy = PolicyTable.find_all tainted.policies (kind, name) in
   Fun.flip2 List.fold_left [] policy (fun acc (source, targets) ->
       match source with

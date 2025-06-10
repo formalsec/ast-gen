@@ -1,13 +1,25 @@
+module Computed = struct
+  module Tbl = Hashtbl.Make (Node)
+  include Tbl
+
+  type t = Node.Set.t Tbl.t
+end
+
 module Env = struct
-  type cb_unfold_func = State.t -> Node.t -> State.t
+  type cb_unfold_func =
+    State.t -> Node.t -> Node.Set.t -> bool -> State.t * Node.Set.t
 
   type return_handler =
     | GraphEdge
     | Unfold of cb_unfold_func
 
-  type t = { return_handler : return_handler }
+  type t =
+    { computed : Computed.t
+    ; return_handler : return_handler
+    }
 
-  let create (return_handler : return_handler) : t = { return_handler }
+  let create (return_handler : return_handler) : t =
+    { computed = Computed.create Config.(!dflt_htbl_sz); return_handler }
 end
 
 module Interaction = struct
@@ -29,7 +41,7 @@ end
 module Scheme = struct
   type t = Interaction.t list
 
-  let extend (prev : t) (next : t) : t = prev @ next
+  let extend (prev : t) (next : Interaction.t) : t = prev @ [ next ]
 
   let pp (ppf : Fmt.t) (scheme : t) : unit =
     Fmt.fmt ppf "<EObj>%a" Fmt.(pp_lst !>"" Interaction.pp) scheme
@@ -38,11 +50,9 @@ module Scheme = struct
 end
 
 type t = (Location.t, Node.t * Scheme.t) Hashtbl.t
-type acc = (Node.t * Scheme.t) list
 
 let none () : t = Hashtbl.create Config.(!dflt_htbl_sz)
-let create () : t = none ()
-let is_empty (exported : t) : bool = Hashtbl.length exported == 0
+let create () : t = Hashtbl.create Config.(!dflt_htbl_sz)
 let mem (exported : t) (node : Node.t) : bool = Hashtbl.mem exported node.loc
 
 let find (exported : t) (node : Node.t) : Scheme.t option =
@@ -58,6 +68,14 @@ let pp (ppf : Fmt.t) (exported : t) : unit =
 
 let str (exported : t) : string = Fmt.str "%a" pp exported
 
+type stage =
+  | General
+  | Proto
+  | Prototype
+
+type entry = Node.t * Node.Set.t * Scheme.t
+type queue = entry Queue.t
+
 let empty_exports (state : State.t) (ls_exported : Node.Set.t) : bool =
   (* the ls_exported contains one element when empty (jslib exports node) *)
   if Node.Set.cardinal ls_exported == 1 then
@@ -68,64 +86,74 @@ let empty_exports (state : State.t) (ls_exported : Node.Set.t) : bool =
     && Edge.Set.cardinal l_exported_edges == 0
   else false
 
-let compute_function_this (state : State.t) (l_func : Node.t)
-    (scheme : Scheme.t) (entries : acc) : acc =
-  let l_this = Mdg.get_parameter state.mdg l_func 0 in
-  let ls_this = Mdg.object_tail_versions state.mdg l_this in
-  Fun.flip2 Node.Set.fold ls_this entries (fun l_this acc ->
-      (l_this, scheme) :: acc )
+let set_exported (exported : t) ((l_exported, _, scheme) : entry) : unit =
+  (* TODO: What to do with multiple schemes to the same node? *)
+  match find exported l_exported with
+  | None -> replace exported l_exported scheme
+  | Some _ -> ()
 
-let compute_function_return (env : Env.t) (state : State.t) (l_func : Node.t) :
-    Node.Set.t =
+let compute_next_entry (env : Env.t) (queue : queue) (l_next : Node.t)
+    (ls_this : Node.Set.t) (scheme : Scheme.t) : unit =
+  match Computed.find_opt env.computed l_next with
+  | None ->
+    Computed.replace env.computed l_next ls_this;
+    Queue.push (l_next, ls_this, scheme) queue
+  | Some ls_this' ->
+    let ls_this_diff = Node.Set.diff ls_this ls_this' in
+    let ls_this_union = Node.Set.union ls_this ls_this' in
+    Computed.replace env.computed l_next ls_this_union;
+    if not (Node.Set.is_empty ls_this_diff) then
+      Queue.push (l_next, ls_this_diff, scheme) queue
+
+let compute_function_return (env : Env.t) (state : State.t) (l_func : Node.t)
+    (ls_this : Node.Set.t) : Node.Set.t =
   match env.return_handler with
   | GraphEdge -> Mdg.get_function_returns state.mdg l_func |> Node.Set.of_list
-  | Unfold cb_unfold_func -> (cb_unfold_func state l_func).curr_return
+  | Unfold cb_unfold_func -> snd (cb_unfold_func state l_func ls_this true)
 
-let compute_function (env : Env.t) (state : State.t) (l_func : Node.t)
-    (scheme : Scheme.t) (entries : acc) : acc =
-  let ls_retn = compute_function_return env state l_func in
-  let entries' = compute_function_this state l_func scheme entries in
-  Fun.flip2 Node.Set.fold ls_retn entries' (fun l_retn acc ->
-      let scheme' = Scheme.extend scheme [ Call ] in
-      (l_retn, scheme') :: acc )
+let compute_function (state : State.t) (env : Env.t) (queue : queue)
+    ((l_func, ls_this, scheme) : entry) : unit =
+  if Node.is_function l_func then
+    let ls_retn = compute_function_return env state l_func ls_this in
+    Fun.flip Node.Set.iter ls_retn (fun l_retn ->
+        let scheme' = Scheme.extend scheme Call in
+        compute_next_entry env queue l_retn Node.Set.empty scheme' )
 
-let compute_functions (env : Env.t) (state : State.t) (scheme : Scheme.t)
-    (ls_entries : Node.Set.t) : acc =
-  Fun.flip2 Node.Set.fold ls_entries [] (fun l_entry acc ->
-      let acc' = (l_entry, scheme) :: acc in
-      if not (Node.is_function l_entry) then acc'
-      else compute_function env state l_entry scheme acc' )
+let compute_lookups (state : State.t) (env : Env.t) (queue : queue)
+    ((l_obj, _, scheme) : entry) : unit =
+  let f (prop, node) acc = (prop, node) :: acc in
+  let props = Mdg.object_dynamic_traversal f state.mdg Node.Set.empty l_obj [] in
+  Fun.flip List.iter props (fun (prop, l_prop) ->
+      let ls_prop = Mdg.object_tail_versions state.mdg l_prop in
+      let ls_this' = Node.Set.singleton l_obj in
+      let scheme' = Scheme.extend scheme (Lookup prop) in
+      Fun.flip Node.Set.iter ls_prop (fun l_prop' ->
+          compute_next_entry env queue l_prop' ls_this' scheme' ) )
 
-let compute_lookups (state : State.t) (entries : acc) : acc =
-  let props_f prev (props, l_prop) acc =
-    let next = List.map Interaction.lookup props in
-    let scheme = Scheme.extend prev next in
-    (l_prop, scheme) :: acc in
-  Fun.flip2 List.fold_left [] entries (fun acc (l_entry, scheme) ->
-      Mdg.object_nested_traversal (props_f scheme) state.mdg l_entry acc )
+let rec compute_object (state : State.t) (env : Env.t) (queue : queue)
+    (exported : t) : unit =
+  Fun.flip Option.iter (Queue.take_opt queue) (fun entry ->
+      set_exported exported entry;
+      compute_function state env queue entry;
+      compute_lookups state env queue entry;
+      compute_object state env queue exported )
 
-let rec compute_object (env : Env.t) (state : State.t) (exported : t)
-    (scheme : Scheme.t) (ls_entries : Node.Set.t) : unit =
-  compute_functions env state scheme ls_entries
-  |> compute_lookups state
-  |> compute_recursive env state exported
+let compute_exported (state : State.t) (env : Env.t) (exported : t)
+    (ls_exported : Node.Set.t) : unit =
+  let queue = Queue.create () in
+  Fun.flip Node.Set.iter ls_exported (fun l_exported ->
+      Queue.push (l_exported, Node.Set.empty, []) queue );
+  compute_object state env queue exported
 
-and compute_recursive (env : Env.t) (state : State.t) (exported : t)
-    (entries : acc) : unit =
-  Fun.flip List.iter entries (fun (l_entry, scheme) ->
-      if not (mem exported l_entry) then (
-        replace exported l_entry scheme;
-        compute_object env state exported scheme (Node.Set.singleton l_entry) ) )
-
-let compute (env : Env.t) (state : State.t) : t =
+let compute (state : State.t) (env : Env.t) : t =
   let exported = create () in
   let ls_exported = Jslib.exported_object state.mdg state.jslib in
   if not (empty_exports state ls_exported) then
-    compute_object env state exported [] ls_exported;
+    compute_exported state env exported ls_exported;
   exported
 
 let compute_from_graph (state : State.t) : t =
-  compute (Env.create GraphEdge) state
+  compute state (Env.create GraphEdge)
 
 let compute_and_unfold (cb_unfold : Env.cb_unfold_func) (state : State.t) : t =
-  compute (Env.create (Unfold cb_unfold)) state
+  compute state (Env.create (Unfold cb_unfold))
