@@ -1,12 +1,45 @@
 {
   "language-components": [
     { "type": "code-injection", "name": "eval", "args": [1] },
-    { "type": "code-injection", "name": "Function", "args": [1, 2, 3, 4] },
     { "type": "code-injection", "name": "require", "args": [1] }
+  ],
+  "builtin-components": [
+    {
+      "builtin": "Object",
+      "props": [{ "type": "function-summary", "name": "defineProperty", "code": "(o, p, v) => { o[p] = v.value; return o; }" }]
+    },
+    {
+      "builtin": "Function",
+      "self": { "type": "code-injection", "args": [1, 2, 3, 4] }
+    },
+    {
+      "builtin": "Symbol"
+    },
+    {
+      "builtin": "Number"
+    },
+    {
+      "builtin": "BigInt"
+    },
+    {
+      "builtin": "Boolean"
+    },
+    {
+      "builtin": "String"
+    },
+    {
+      "builtin": "RegExp"
+    },
+    {
+      "builtin": "JSON"
+    },
+    {
+      "builtin": "Promise"
+    }
   ],
   "package-components": [
     {
-      "package": "async-execute",
+      "package": "as  ync-execute",
       "props": [{ "type": "command-injection", "name": "execAsync", "args": [1] }]
     },
     {
