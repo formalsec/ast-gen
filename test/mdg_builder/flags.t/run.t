@@ -1,34 +1,36 @@
 Graph.js MDG Builder: tainted analysis flag
   $ graphjs mdg --no-export no_tainted_sources.js
-  module[#5] --< P(exports) >--> exports[#6]
-  exports[#6] --< V(foo) >--> exports[#12]
-  [[function]] foo[#7] --< Param(0) >--> this[#8]
-  [[function]] foo[#7] --< Param(1) >--> x[#9]
-  [[function]] foo[#7] --< Param(2) >--> y[#10]
-  this[#8] -
-  x[#9] -
-  y[#10] --< P(p) >--> y.p[#11]
-  y.p[#11] -
-  exports[#12] --< P(foo) >--> [[function]] foo[#7]
-  exports[#12] --< V(foo) >--> exports[#16]
-  $v2[#13] --< V(q) >--> $v2[#15]
-  $v3[#14] -
-  $v2[#15] --< P(q) >--> $v3[#14]
-  exports[#16] --< P(foo) >--> $v2[#15]
+  [[function]] defineProperty[#5] -
+  module[#15] --< P(exports) >--> exports[#16]
+  exports[#16] --< V(foo) >--> exports[#22]
+  [[function]] foo[#17] --< Param(0) >--> this[#18]
+  [[function]] foo[#17] --< Param(1) >--> x[#19]
+  [[function]] foo[#17] --< Param(2) >--> y[#20]
+  this[#18] -
+  x[#19] -
+  y[#20] --< P(p) >--> y.p[#21]
+  y.p[#21] -
+  exports[#22] --< P(foo) >--> [[function]] foo[#17]
+  exports[#22] --< V(foo) >--> exports[#26]
+  $v2[#23] --< V(q) >--> $v2[#25]
+  $v3[#24] -
+  $v2[#25] --< P(q) >--> $v3[#24]
+  exports[#26] --< P(foo) >--> $v2[#25]
 
   $ graphjs mdg --no-export no_tainted_sources.js --no-tainted-analysis
-  module[#5] --< P(exports) >--> exports[#6]
-  exports[#6] --< V(foo) >--> exports[#12]
-  [[function]] foo[#7] --< Param(0) >--> this[#8]
-  [[function]] foo[#7] --< Param(1) >--> x[#9]
-  [[function]] foo[#7] --< Param(2) >--> y[#10]
-  this[#8] -
-  x[#9] -
-  y[#10] --< P(p) >--> y.p[#11]
-  y.p[#11] -
-  exports[#12] --< P(foo) >--> [[function]] foo[#7]
-  exports[#12] --< V(foo) >--> exports[#16]
-  $v2[#13] --< V(q) >--> $v2[#15]
-  $v3[#14] -
-  $v2[#15] --< P(q) >--> $v3[#14]
-  exports[#16] --< P(foo) >--> $v2[#15]
+  [[function]] defineProperty[#5] -
+  module[#15] --< P(exports) >--> exports[#16]
+  exports[#16] --< V(foo) >--> exports[#22]
+  [[function]] foo[#17] --< Param(0) >--> this[#18]
+  [[function]] foo[#17] --< Param(1) >--> x[#19]
+  [[function]] foo[#17] --< Param(2) >--> y[#20]
+  this[#18] -
+  x[#19] -
+  y[#20] --< P(p) >--> y.p[#21]
+  y.p[#21] -
+  exports[#22] --< P(foo) >--> [[function]] foo[#17]
+  exports[#22] --< V(foo) >--> exports[#26]
+  $v2[#23] --< V(q) >--> $v2[#25]
+  $v3[#24] -
+  $v2[#25] --< P(q) >--> $v3[#24]
+  exports[#26] --< P(foo) >--> $v2[#25]

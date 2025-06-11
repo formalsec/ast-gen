@@ -1,44 +1,47 @@
 Graph.js MDG Builder: simple object
   $ graphjs mdg --no-export object.js
-  foo[#7] -
-  bar[#8] -
-  baz[#9] -
-  qux[#10] -
+  [[function]] defineProperty[#5] -
+  foo[#17] -
+  bar[#18] -
+  baz[#19] -
+  qux[#20] -
 
 Graph.js MDG Builder: simple array
   $ graphjs mdg --no-export array.js
-  foo[#7] -
-  bar[#8] -
-  baz[#9] -
-  qux[#10] -
+  [[function]] defineProperty[#5] -
+  foo[#17] -
+  bar[#18] -
+  baz[#19] -
+  qux[#20] -
 
 Graph.js MDG Builder: this access
   $ graphjs mdg --no-export this.js
-  [[function]] bar[#7] --< Param(0) >--> this[#8]
-  [[function]] bar[#7] --< Param(1) >--> x1[#9]
-  this[#8] --< P(foo) >--> this.foo[#10]
-  this[#8] --< P(bar) >--> this.bar[#12]
-  this[#8] --< Arg(0) >--> this.bar(...)[#13]
-  x1[#9] -
-  this.foo[#10] -
-  "abc"[#11] --< Arg(1) >--> this.bar(...)[#13]
-  this.bar[#12] -
-  this.bar(...)[#13] --< Call >--> this.bar[#12]
-  this.bar(...)[#13] --< D >--> y[#14]
-  y[#14] -
-  obj[#15] --< V(foo) >--> obj[#17]
-  obj[#15] --< P(bar) >--> obj.bar[#23]
-  10[#16] -
-  obj[#17] --< P(foo) >--> 10[#16]
-  obj[#17] --< V(bar) >--> obj[#18]
-  obj[#18] --< P(bar) >--> [[function]] bar[#7]
-  obj[#18] --< Arg(0) >--> obj.bar(...)[#24]
-  10[#19] --< Arg(1) >--> bar(...)[#20]
-  bar(...)[#20] --< Call >--> [[function]] bar[#7]
-  bar(...)[#20] --< D >--> $v1[#21]
-  $v1[#21] -
-  10[#22] --< Arg(1) >--> obj.bar(...)[#24]
-  obj.bar[#23] -
-  obj.bar(...)[#24] --< Call >--> [[function]] bar[#7]
-  obj.bar(...)[#24] --< D >--> $v2[#25]
-  $v2[#25] -
+  [[function]] defineProperty[#5] -
+  [[function]] bar[#17] --< Param(0) >--> this[#18]
+  [[function]] bar[#17] --< Param(1) >--> x1[#19]
+  this[#18] --< P(foo) >--> this.foo[#20]
+  this[#18] --< P(bar) >--> this.bar[#22]
+  this[#18] --< Arg(0) >--> this.bar(...)[#23]
+  x1[#19] -
+  this.foo[#20] -
+  "abc"[#21] --< Arg(1) >--> this.bar(...)[#23]
+  this.bar[#22] -
+  this.bar(...)[#23] --< Call >--> this.bar[#22]
+  this.bar(...)[#23] --< D >--> y[#24]
+  y[#24] -
+  obj[#25] --< V(foo) >--> obj[#27]
+  obj[#25] --< P(bar) >--> obj.bar[#33]
+  10[#26] -
+  obj[#27] --< P(foo) >--> 10[#26]
+  obj[#27] --< V(bar) >--> obj[#28]
+  obj[#28] --< P(bar) >--> [[function]] bar[#17]
+  obj[#28] --< Arg(0) >--> obj.bar(...)[#34]
+  10[#29] --< Arg(1) >--> bar(...)[#30]
+  bar(...)[#30] --< Call >--> [[function]] bar[#17]
+  bar(...)[#30] --< D >--> $v1[#31]
+  $v1[#31] -
+  10[#32] --< Arg(1) >--> obj.bar(...)[#34]
+  obj.bar[#33] -
+  obj.bar(...)[#34] --< Call >--> [[function]] bar[#17]
+  obj.bar(...)[#34] --< D >--> $v2[#35]
+  $v2[#35] -
