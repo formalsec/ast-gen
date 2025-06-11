@@ -11,10 +11,9 @@ module PolicyTable = struct
       match (kind1, kind2) with
       | (`ProtoMethodPolicy, `ProtoMethodPolicy) -> String.equal name1 name2
       | (`BuiltinMethodPolicy builtin1, `BuiltinMethodPolicy builtin2) ->
-        String.equal builtin1 builtin2 && String.equal name1 name2
+        Option.equal String.equal builtin1 builtin2 && String.equal name1 name2
       | (`PackageMethodPolicy package1, `PackageMethodPolicy package2) ->
-        String.equal package1 package2 && String.equal name1 name2
-      | (`PackageSelfPolicy, `PackageSelfPolicy) -> String.equal name1 name2
+        Option.equal String.equal package1 package2 && String.equal name1 name2
       | _ -> false
   end)
 
@@ -25,22 +24,25 @@ module PolicyTable = struct
   type policy = source * target list
   type t = policy Tbl.t
 
+  let is_builtin (name : string) : bool =
+    List.mem name [ "JSON"; "Object"; "String" ]
+
   let resolve_method (mdg : Mdg.t) (l_func : Node.t) (func : string) :
       Jsmodel.TaintPolicy.kind * string =
     match Mdg.get_property_owner mdg l_func with
-    | [ (Static prop, { kind = Module package; _ }) ] ->
-      (`PackageMethodPolicy package, prop)
     (* TODO: Replace this with the Built-In node type *)
-    | [ (Static prop, { kind = Blank "Object"; _ }) ] ->
-      (`BuiltinMethodPolicy "Object", prop)
-    | [ (Static prop, { kind = Blank "JSON"; _ }) ] ->
-      (`BuiltinMethodPolicy "JSON", prop)
+    | [ (Static prop, { kind = Blank builtin; _ }) ] when is_builtin builtin ->
+      (`BuiltinMethodPolicy (Some builtin), prop)
+    | [ (Static prop, { kind = Module package; _ }) ] ->
+      (`PackageMethodPolicy (Some package), prop)
     | _ -> (`ProtoMethodPolicy, func)
 
   let resolve (mdg : Mdg.t) (l_call : Node.t) (func : string) :
       Jsmodel.TaintPolicy.kind * string =
     match Mdg.get_called_functions mdg l_call with
-    | [ { kind = Module package; _ } ] -> (`PackageSelfPolicy, package)
+    | [ { kind = Blank builtin; _ } ] when is_builtin builtin ->
+      (`BuiltinMethodPolicy None, builtin)
+    | [ { kind = Module package; _ } ] -> (`PackageMethodPolicy None, package)
     | [ l_func ] -> resolve_method mdg l_func func
     | _ -> (`ProtoMethodPolicy, func)
 end
