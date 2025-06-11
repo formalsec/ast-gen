@@ -1,4 +1,10 @@
+open Graphjs_ast
+
 exception Exn of (Fmt.t -> unit)
+
+let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
+  let raise_f acc = raise (Exn acc) in
+  Fmt.kdly (fun acc -> raise_f (fun ppf -> Log.fmt_error ppf "%t" acc)) fmt
 
 let pp_indent (pp_v : Fmt.t -> 'a -> unit) (ppf : Fmt.t) (v : 'a) : unit =
   Fmt.fmt ppf "@\n@[<v 2>  %a@]@\n" pp_v v
@@ -15,13 +21,16 @@ let pp_kind (ppf : Fmt.t) (kind : 'a) : unit =
   | `CommandInjection -> Fmt.pp_str ppf "command-injection"
   | `PathTraversal -> Fmt.pp_str ppf "path-traversal"
   | `TaintedSymbol -> Fmt.pp_str ppf "tainted-symbol"
-  | `ProtoMethodPolicy -> Fmt.pp_str ppf "proto"
-  | `BuiltinMethodPolicy _ -> Fmt.pp_str ppf "builtin"
-  | `PackageMethodPolicy _ -> Fmt.pp_str ppf "package"
-  | `PackageSelfPolicy -> Fmt.pp_str ppf "package"
+  | `FunctionSummary -> Fmt.pp_str ppf "function-summary"
+  | `ProtoMethodPolicy -> Fmt.pp_str ppf "proto-policy"
+  | `BuiltinMethodPolicy _ -> Fmt.pp_str ppf "builtin-policy"
+  | `PackageMethodPolicy _ -> Fmt.pp_str ppf "package-policy"
 
 let pp_kind_field (ppf : Fmt.t) (kind : 'a) : unit =
   Fmt.fmt ppf "kind: \"%a\"" pp_kind kind
+
+let pp_name_field (ppf : Fmt.t) (value : string) : unit =
+  if String.length value > 0 then Fmt.fmt ppf ", name: %S" value
 
 module Sink = struct
   type kind =
@@ -38,16 +47,13 @@ module Sink = struct
 
   let name (sink : t) : string = sink.name
 
-  let pp_name (ppf : Fmt.t) (value : string) : unit =
-    if String.length value > 0 then Fmt.fmt ppf ", name: %S" value
-
   let pp_args (ppf : Fmt.t) (args : int list) : unit =
     if List.length args != 0 then
       Fmt.fmt ppf ", args: [%a]" Fmt.(pp_lst !>", " pp_int) args
 
   let pp (ppf : Fmt.t) (sink : t) : unit =
-    Fmt.fmt ppf "{ %a%a%a }" pp_kind_field sink.kind pp_name sink.name pp_args
-      sink.args
+    Fmt.fmt ppf "{ %a%a%a }" pp_kind_field sink.kind pp_name_field sink.name
+      pp_args sink.args
 
   let str (sink : t) : string = Fmt.str "%a" pp sink
 end
@@ -62,30 +68,44 @@ module Source = struct
 
   let name (source : t) : string = source.name
 
-  let pp_name (ppf : Fmt.t) (value : string) : unit =
-    if String.length value > 0 then Fmt.fmt ppf ", name: %S" value
-
   let pp (ppf : Fmt.t) (source : t) : unit =
-    Fmt.fmt ppf "{ %a%a }" pp_kind source.kind pp_name source.name
+    Fmt.fmt ppf "{ %a%a }" pp_kind source.kind pp_name_field source.name
 
   let str (source : t) : string = Fmt.str "%a" pp source
+end
+
+module Function = struct
+  type t =
+    { name : string
+    ; body : Region.t FunctionDefinition.t
+    }
+
+  let name (func : t) : string = func.name
+
+  let pp (ppf : Fmt.t) (func : t) : unit =
+    Fmt.fmt ppf "{ %a%a }" pp_kind `FunctionSummary pp_name_field func.name
+
+  let str (func : t) : string = Fmt.str "%a" pp func
 end
 
 module Component = struct
   type t =
     [ `Sink of Sink.t
     | `Source of Source.t
+    | `Function of Function.t
     ]
 
   let name (component : t) : string =
     match component with
     | `Sink sink -> Sink.name sink
     | `Source source -> Source.name source
+    | `Function func -> Function.name func
 
   let pp (ppf : Fmt.t) (component : t) : unit =
     match component with
     | `Sink sink -> Sink.pp ppf sink
     | `Source source -> Source.pp ppf source
+    | `Function func -> Function.pp ppf func
 
   let str (component : t) : string = Fmt.str "%a" pp component
 end
@@ -121,9 +141,8 @@ end
 module TaintPolicy = struct
   type kind =
     [ `ProtoMethodPolicy
-    | `BuiltinMethodPolicy of string
-    | `PackageMethodPolicy of string
-    | `PackageSelfPolicy
+    | `BuiltinMethodPolicy of string option
+    | `PackageMethodPolicy of string option
     ]
 
   type source =
@@ -153,14 +172,15 @@ module TaintPolicy = struct
     ; targets : target list
     }
 
-  let pp_parent (ppf : Fmt.t) (kind : kind) : unit =
-    match kind with
-    | `BuiltinMethodPolicy builtin -> Fmt.fmt ppf ", builtin: %S" builtin
-    | `PackageMethodPolicy package -> Fmt.fmt ppf ", package: %S" package
+  let pp_reference (ppf : Fmt.t) (policy : t) : unit =
+    match policy.kind with
+    | `BuiltinMethodPolicy None -> Fmt.fmt ppf ", builtin: %S" policy.name
+    | `PackageMethodPolicy None -> Fmt.fmt ppf ", package: %S" policy.name
+    | `BuiltinMethodPolicy (Some package) ->
+      Fmt.fmt ppf ", builtin: %S, name: %S" package policy.name
+    | `PackageMethodPolicy (Some package) ->
+      Fmt.fmt ppf ", package: %S, name: %S" package policy.name
     | _ -> ()
-
-  let pp_name (ppf : Fmt.t) (name : string) : unit =
-    Fmt.fmt ppf ", name: %S" name
 
   let pp_source (ppf : Fmt.t) (source : source) : unit =
     Fmt.fmt ppf ", source: \"%a\"" pp_point source
@@ -170,8 +190,8 @@ module TaintPolicy = struct
     Fmt.fmt ppf ", targets: [%a]" Fmt.(pp_lst !>", " pp_target') targets
 
   let pp (ppf : Fmt.t) (policy : t) : unit =
-    Fmt.fmt ppf "{ %a%a%a%a%a }" pp_kind_field policy.kind pp_parent policy.kind
-      pp_name policy.name pp_source policy.source pp_targets policy.targets
+    Fmt.fmt ppf "{ %a%a%a%a }" pp_kind_field policy.kind pp_reference policy
+      pp_source policy.source pp_targets policy.targets
 
   let str (policy : t) : string = Fmt.str "%a" pp policy
 end
@@ -192,11 +212,22 @@ let pp (ppf : Fmt.t) (model : t) : unit =
 
 let str (model : t) : string = Fmt.str "%a" pp model
 
-module Parser = struct
-  let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
-    let raise_f acc = raise (Exn acc) in
-    Fmt.kdly (fun acc -> raise_f (fun ppf -> Log.fmt_error ppf "%t" acc)) fmt
+module JSParser = struct
+  open Graphjs_parser
+  open Metadata
 
+  let parse_func (code : string) : Region.t FunctionDefinition.t =
+    let normalize_ctx = Normalizer.Ctx.default () in
+    let flow_ast = Flow_parser.parse_code code in
+    let body = Normalizer.normalize_file normalize_ctx flow_ast in
+    match body with
+    | [ { el = `FunctionDefinition func; _ } ] -> func
+    | _ ->
+      let body_pp = Fmt.(pp_lst !>";@\n" Statement.pp) in
+      raise "Unexpected function summary body:@\n%a" body_pp body
+end
+
+module Parser = struct
   let raise_type (field_str : string) (type_str : string) : 'a =
     raise "Expecting '%s' field of type %s." field_str type_str
 
@@ -224,11 +255,18 @@ module Parser = struct
     try config |> Json.member "args" |> parse_list Json.to_int
     with _ -> raise_type "args" "integer list"
 
+  let parse_function_code (config : Json.t) : Region.t FunctionDefinition.t =
+    try config |> Json.member "code" |> Json.to_string |> JSParser.parse_func
+    with _ -> raise_type "code" "string"
+
   let parse_taint_sink (kind : Sink.kind) (config : Json.t) : Sink.t =
     { kind; name = parse_name_opt config; args = parse_args config }
 
   let parse_taint_source (kind : Source.kind) (config : Json.t) : Source.t =
     { kind; name = parse_name_opt config }
+
+  let parse_function_summary (config : Json.t) : Function.t =
+    { name = parse_name_opt config; body = parse_function_code config }
 
   let parse_component (config : Json.t) : Component.t =
     try
@@ -237,6 +275,7 @@ module Parser = struct
       | "command-injection" -> `Sink (parse_taint_sink `CommandInjection config)
       | "path-traversal" -> `Sink (parse_taint_sink `PathTraversal config)
       | "tainted-symbol" -> `Source (parse_taint_source `TaintedSymbol config)
+      | "function-summary" -> `Function (parse_function_summary config)
       | kind -> raise "Unsupported component kind '%s' in model config." kind
     with Json.Exn _ -> raise_type "type" "string"
 
@@ -312,29 +351,34 @@ module Parser = struct
     ; targets = parse_policy_targets config
     }
 
-  let parse_builtin_method_policy (config : Json.t) : TaintPolicy.t =
-    let builtin = parse_name ~field:"builtin" config in
-    { kind = `BuiltinMethodPolicy builtin
-    ; name = parse_name config
-    ; source = parse_policy_source config
-    ; targets = parse_policy_targets config
-    }
+  let parse_self_method_policy (package : string) (name : string) :
+      string option * string =
+    if String.length name == 0 then (None, package) else (Some package, name)
 
-  let parse_package_method_policy (config : Json.t) : TaintPolicy.t =
-    let package = parse_name ~field:"package" config in
-    let name = parse_name_opt config in
+  let parse_builtin_method_policy (config : Json.t) : TaintPolicy.t =
+    let builtin' = parse_name ~field:"builtin" config in
+    let name' = parse_name_opt config in
+    let (builtin, name) = parse_self_method_policy builtin' name' in
+    let kind = `BuiltinMethodPolicy builtin in
     let source = parse_policy_source config in
     let targets = parse_policy_targets config in
-    let self = String.length name == 0 in
-    if self then { kind = `PackageSelfPolicy; name = package; source; targets }
-    else { kind = `PackageMethodPolicy package; name; source; targets }
+    { kind; name; source; targets }
+
+  let parse_package_method_policy (config : Json.t) : TaintPolicy.t =
+    let package' = parse_name ~field:"package" config in
+    let name' = parse_name_opt config in
+    let (package, name) = parse_self_method_policy package' name' in
+    let kind = `PackageMethodPolicy package in
+    let source = parse_policy_source config in
+    let targets = parse_policy_targets config in
+    { kind; name; source; targets }
 
   let parse_taint_policy (config : Json.t) : TaintPolicy.t =
     try
       match config |> Json.member "type" |> Json.to_string with
-      | "proto" -> parse_proto_method_policy config
-      | "builtin" -> parse_builtin_method_policy config
-      | "package" -> parse_package_method_policy config
+      | "proto-policy" -> parse_proto_method_policy config
+      | "builtin-policy" -> parse_builtin_method_policy config
+      | "package-policy" -> parse_package_method_policy config
       | kind -> raise "Unsupported taint policy kind '%s' in model config." kind
     with Json.Exn _ -> raise_type "kind" "string"
 

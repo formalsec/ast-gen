@@ -5,6 +5,7 @@
  (modules
   location
   literal
+  reference
   property
   taint
   node
@@ -25,6 +26,6 @@
   svg_exporter
   builder
   interceptor)
- (libraries graphjs_base graphjs_ast ocamlgraph)
+ (libraries graphjs_base graphjs_parser graphjs_ast ocamlgraph)
  (flags
   (:standard -open Graphjs_base)))

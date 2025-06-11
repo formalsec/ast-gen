@@ -23,6 +23,11 @@ let raise (path : string) (flow_errs : (Loc.t * Parse_error.t) list) : 'a =
   let err = Fmt.dly "%a%a@\n" pp_err_header path pp_flow_errs flow_errs in
   raise (Exn err)
 
+let parse_code (code : string) : (Loc.t, Loc.t) Flow_ast.Program.t =
+  match Parser_flow.program_file ~fail:false code None with
+  | (flow_ast, []) -> flow_ast
+  | (_, flow_errors) -> raise "" flow_errors
+
 let parse_ic (ic : in_channel) (path : string) (rel : string) :
     (Loc.t, Loc.t) Flow_ast.Program.t =
   let ic_sz = in_channel_length ic in
