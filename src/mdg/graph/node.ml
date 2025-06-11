@@ -69,59 +69,66 @@ module Set = struct
   let str (nodes : t) : string = Fmt.str "%a" pp nodes
 end
 
+let create_default (f : 'a -> t option -> Region.t -> t) (a : 'a) : t =
+  f a None (Region.default ())
+
 let create_literal (literal : Literal.t) : t option -> Region.t -> t =
- fun parent at ->
   let loc = Location.create () in
-  create loc (Literal literal) parent at
+  create loc (Literal literal)
 
 let create_blank (name : string) : t option -> Region.t -> t =
- fun parent at ->
   let loc = Location.create () in
-  create loc (Blank name) parent at
+  create loc (Blank name)
 
 let create_object (name : string) : t option -> Region.t -> t =
- fun parent at ->
   let loc = Location.create () in
-  create loc (Object name) parent at
+  create loc (Object name)
 
 let create_function (name : string) : t option -> Region.t -> t =
- fun parent at ->
   let loc = Location.create () in
-  create loc (Function name) parent at
+  create loc (Function name)
 
 let create_parameter (name : string) : t option -> Region.t -> t =
- fun parent at ->
   let loc = Location.create () in
-  create loc (Parameter name) parent at
+  create loc (Parameter name)
 
 let create_call (name : string) : t option -> Region.t -> t =
- fun parent at ->
   let loc = Location.create () in
-  create loc (Call name) parent at
+  create loc (Call name)
 
 let create_return (name : string) : t option -> Region.t -> t =
- fun parent at ->
   let loc = Location.create () in
-  create loc (Return name) parent at
+  create loc (Return name)
 
-let create_builtin (name : string) : t =
+let create_builtin (name : string) : t option -> Region.t -> t =
   let loc = Location.create () in
   let kind = Builtin name in
-  create loc kind None (Region.default ())
+  create loc kind
 
-let create_module (name : string) : t =
+let create_module (name : string) : t option -> Region.t -> t =
   let loc = Location.create () in
   let kind = Module name in
-  create loc kind None (Region.default ())
+  create loc kind
 
 let create_taint_sink (sink : Taint.Sink.t) : t option -> Region.t -> t =
- fun parent at ->
   let loc = Location.create () in
-  create loc (TaintSink sink) parent at
+  create loc (TaintSink sink)
 
-let create_taint_source () : t =
+let create_taint_source () : t option -> Region.t -> t =
   let loc = Location.create () in
-  create loc TaintSource None (Region.default ())
+  create loc TaintSource
+
+let create_literal' = create_default create_literal
+let create_blank' = create_default create_blank
+let create_object' = create_default create_object
+let create_function' = create_default create_function
+let create_parameter' = create_default create_parameter
+let create_call' = create_default create_call
+let create_return' = create_default create_return
+let create_builtin' = create_default create_builtin
+let create_module' = create_default create_module
+let create_taint_sink' = create_default create_taint_sink
+let create_taint_source' = create_default create_taint_source
 
 let is_literal (node : t) : bool =
   match node.kind with Literal _ -> true | _ -> false

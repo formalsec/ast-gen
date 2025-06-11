@@ -24,14 +24,10 @@ module PolicyTable = struct
   type policy = source * target list
   type t = policy Tbl.t
 
-  let is_builtin (name : string) : bool =
-    List.mem name [ "JSON"; "Object"; "String" ]
-
   let resolve_method (mdg : Mdg.t) (l_func : Node.t) (func : string) :
       Jsmodel.TaintPolicy.kind * string =
     match Mdg.get_property_owner mdg l_func with
-    (* TODO: Replace this with the Built-In node type *)
-    | [ (Static prop, { kind = Blank builtin; _ }) ] when is_builtin builtin ->
+    | [ (Static prop, { kind = Builtin builtin; _ }) ] ->
       (`BuiltinMethodPolicy (Some builtin), prop)
     | [ (Static prop, { kind = Module package; _ }) ] ->
       (`PackageMethodPolicy (Some package), prop)
@@ -40,8 +36,7 @@ module PolicyTable = struct
   let resolve (mdg : Mdg.t) (l_call : Node.t) (func : string) :
       Jsmodel.TaintPolicy.kind * string =
     match Mdg.get_called_functions mdg l_call with
-    | [ { kind = Blank builtin; _ } ] when is_builtin builtin ->
-      (`BuiltinMethodPolicy None, builtin)
+    | [ { kind = Builtin builtin; _ } ] -> (`BuiltinMethodPolicy None, builtin)
     | [ { kind = Module package; _ } ] -> (`PackageMethodPolicy None, package)
     | [ l_func ] -> resolve_method mdg l_func func
     | _ -> (`ProtoMethodPolicy, func)
@@ -82,10 +77,7 @@ let propagate (tainted : t) (node : Node.t) (strong : bool) : bool =
 let mark_tainted_exports (state : State.t) (exported : Exported.t)
     (l_taint : Node.t) : unit =
   Fun.flip Hashtbl.iter exported (fun _ (l_exported, _) ->
-      match l_exported.kind with
-      | Blank _ | Object _ | Function _ | Module _ | TaintSink _ ->
-        Mdg.add_edge state.mdg (Edge.create_dependency () l_taint l_exported)
-      | _ -> () )
+      Mdg.add_edge state.mdg (Edge.create_dependency () l_taint l_exported) )
 
 let rec mark_tainted_nodes (state : State.t) (queue : queue) (tainted : t) :
     unit =
@@ -163,7 +155,7 @@ and mark_tainted_policy_targets (state : State.t) (queue : queue) (tainted : t)
       | _ -> () )
 
 let compute (state : State.t) (model : Jsmodel.t) (exported : Exported.t) : t =
-  let l_taint = Jslib.find state.mdg state.jslib "taint" in
+  let l_taint = Jslib.find_node state.mdg state.jslib "taint" in
   mark_tainted_exports state exported l_taint;
   let tainted = create model.policies in
   let queue = Queue.create () in

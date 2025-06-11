@@ -80,7 +80,7 @@ let empty_exports (state : State.t) (ls_exported : Node.Set.t) : bool =
   (* the ls_exported contains one element when empty (jslib exports node) *)
   if Node.Set.cardinal ls_exported == 1 then
     let l_exported = Node.Set.choose ls_exported in
-    let l_exported_orig = Jslib.find state.mdg state.jslib "exports" in
+    let l_exported_orig = Jslib.find_node state.mdg state.jslib "exports" in
     let l_exported_edges = Mdg.get_edges state.mdg l_exported.loc in
     Node.equal l_exported l_exported_orig
     && Edge.Set.cardinal l_exported_edges == 0
