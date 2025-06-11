@@ -21,7 +21,7 @@ module RequireInterceptor = struct
     | _ -> None
 
   let build_module (state : State.t) (mrel : Fpath.t) : Node.t =
-    let l_module = Node.create_module (Fpath.to_string mrel) in
+    let l_module = Node.create_module' (Fpath.to_string mrel) in
     Mdg.add_node state.mdg l_module;
     l_module
 
@@ -51,6 +51,6 @@ module RequireInterceptor = struct
 end
 
 let initialize (state : State.t) (cbs_builder : cbs_builder) : unit =
-  let l_require = Jslib.find state.mdg state.jslib "require" in
+  let l_require = Jslib.find_node state.mdg state.jslib "require" in
   let cb_require = RequireInterceptor.run cbs_builder.build_file in
   State.set_call_interceptor state l_require cb_require

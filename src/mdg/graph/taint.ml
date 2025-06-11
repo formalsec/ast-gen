@@ -1,11 +1,11 @@
 module Sink = struct
   type t =
     { name : string
-    ; kind : Jsmodel.Sink.kind
+    ; kind : Jsmodel.TaintSink.kind
     ; args : int list
     }
 
-  let create (jsmodel : Jsmodel.Sink.t) : t =
+  let create (jsmodel : Jsmodel.TaintSink.t) : t =
     { name = jsmodel.name; kind = jsmodel.kind; args = jsmodel.args }
 
   let pp (ppf : Fmt.t) (sink : t) : unit =
@@ -20,10 +20,10 @@ end
 module Source = struct
   type t =
     { name : string
-    ; kind : Jsmodel.Source.kind
+    ; kind : Jsmodel.TaintSource.kind
     }
 
-  let create (jsmodel : Jsmodel.Source.t) : t =
+  let create (jsmodel : Jsmodel.TaintSource.t) : t =
     { name = jsmodel.name; kind = jsmodel.kind }
 
   let pp (ppf : Fmt.t) (source : t) : unit =

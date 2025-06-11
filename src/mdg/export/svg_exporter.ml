@@ -43,7 +43,6 @@ module Dot = struct
   let rec node_parent (node : Node.t) : Node.t option =
     match (node.kind, node.parent) with
     | (Function _, _) when !env.subgraphs_func -> Some node
-    | (Builtin _, _) when !env.subgraphs_func -> Some node
     | (Module _, _) when !env.subgraphs_file -> Some node
     | (_, Some l_parent) -> node_parent l_parent
     | (_, None) -> None
