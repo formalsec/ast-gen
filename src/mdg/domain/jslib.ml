@@ -29,7 +29,7 @@ let initialize_tainted_source (mdg : Mdg.t) (jslib : t) : unit =
 
 let initialize_tainted_sink (mdg : Mdg.t) (store : Store.t) (jslib : t)
     (sink : Jsmodel.Sink.t) : unit =
-  let taint_sink = Taint.Sink.create Reference.language sink in
+  let taint_sink = Taint.Sink.create sink in
   let name_jslib = resolve_name None sink.name in
   let l_sink = Node.create_taint_sink taint_sink None (Region.default ()) in
   Hashtbl.replace jslib name_jslib l_sink;
