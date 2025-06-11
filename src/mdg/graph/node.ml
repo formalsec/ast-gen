@@ -8,6 +8,7 @@ type kind =
   | Parameter of string
   | Call of string
   | Return of string
+  | Builtin of string
   | Module of string
   | TaintSink of Taint.Sink.t
   | TaintSource
@@ -46,6 +47,7 @@ let pp (ppf : Fmt.t) (node : t) : unit =
   | Parameter name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
   | Call name -> Fmt.fmt ppf "%s(...)[%a]" name Location.pp node.loc
   | Return name -> Fmt.fmt ppf "%s[%a]" name Location.pp node.loc
+  | Builtin name -> Fmt.fmt ppf "[[builtin]] %s[%a]" name Location.pp node.loc
   | Module name -> Fmt.fmt ppf "[[module]] %s[%a]" name Location.pp node.loc
   | TaintSink sink ->
     Fmt.fmt ppf "[[sink]] %s[%a]" (Taint.Sink.name sink) Location.pp node.loc
@@ -102,6 +104,11 @@ let create_return (name : string) : t option -> Region.t -> t =
   let loc = Location.create () in
   create loc (Return name) parent at
 
+let create_builtin (name : string) : t =
+  let loc = Location.create () in
+  let kind = Builtin name in
+  create loc kind None (Region.default ())
+
 let create_module (name : string) : t =
   let loc = Location.create () in
   let kind = Module name in
@@ -137,6 +144,9 @@ let is_call (node : t) : bool =
 let is_return (node : t) : bool =
   match node.kind with Return _ -> true | _ -> false
 
+let is_builtin (node : t) : bool =
+  match node.kind with Builtin _ -> true | _ -> false
+
 let is_module (node : t) : bool =
   match node.kind with Module _ -> true | _ -> false
 
@@ -154,6 +164,8 @@ let name (node : t) : string =
   | Parameter name -> name
   | Call name -> name
   | Return name -> name
+  | Builtin name -> name
+  | Module name -> name
   | TaintSink sink -> Taint.Sink.name sink
   | _ -> Log.fail "unexpected node '%a' without name" pp node
 

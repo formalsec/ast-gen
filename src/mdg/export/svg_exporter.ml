@@ -43,6 +43,7 @@ module Dot = struct
   let rec node_parent (node : Node.t) : Node.t option =
     match (node.kind, node.parent) with
     | (Function _, _) when !env.subgraphs_func -> Some node
+    | (Builtin _, _) when !env.subgraphs_func -> Some node
     | (Module _, _) when !env.subgraphs_file -> Some node
     | (_, Some l_parent) -> node_parent l_parent
     | (_, None) -> None
@@ -56,6 +57,7 @@ module Dot = struct
     | Parameter name -> Fmt.str "%s" name
     | Call name -> Fmt.str "%s(...)" name
     | Return name -> Fmt.str "%s" name
+    | Builtin name -> Fmt.str "%s" name
     | Module name -> Fmt.str "module %s" name
     | TaintSink sink -> Fmt.str "sink %s" (Taint.Sink.name sink)
     | TaintSource -> Fmt.str "{ Taint Source }" )
@@ -109,10 +111,11 @@ module Dot = struct
           [ `Color 12632256; `Fillcolor 14737632; `Fontcolor 12632256 ]
         | Object _ -> [ `Color 2105376; `Fillcolor 12632256 ]
         | Function _ -> [ `Color 26112; `Fillcolor 52224 ]
-        | Parameter "this" -> [ `Color 6684723; `Fillcolor 16764133 ]
+        | Parameter "this" -> [ `Color 6710784; `Fillcolor 16777164 ]
         | Parameter _ -> [ `Color 26112; `Fillcolor 13434828 ]
         | Call _ -> [ `Color 6697728; `Fillcolor 13395456 ]
         | Return _ -> [ `Color 6697728; `Fillcolor 16770508 ]
+        | Builtin _ -> [ `Color 6684723; `Fillcolor 16764133 ]
         | Module _ -> [ `Color 3342438; `Fillcolor 15060223 ]
         | TaintSink _ -> [ `Color 6684672; `Fillcolor 16724787 ]
         | TaintSource -> [ `Color 6684672; `Fillcolor 16764108 ] )
@@ -124,13 +127,15 @@ module Dot = struct
       List.cons
         (`Label (edge_label edge))
         ( match edge.kind with
+        | Dependency when Node.is_literal edge.src ->
+          [ `Style `Dotted; `Color 26214; `Fontcolor 26214 ]
         | Dependency when Node.is_return edge.tar ->
           [ `Style `Dotted; `Color 6697728; `Fontcolor 6697728 ]
         | Dependency when Node.is_taint_source edge.src ->
           [ `Style `Dotted; `Color 6684672; `Fontcolor 6684672 ]
-        | Parameter 0 -> [ `Color 6684723; `Fontcolor 6684723 ]
+        | Parameter 0 -> [ `Color 6710784; `Fontcolor 6710784 ]
         | Parameter _ -> [ `Color 26112; `Fontcolor 26112 ]
-        | Argument 0 -> [ `Style `Dotted; `Color 6684723; `Fontcolor 6684723 ]
+        | Argument 0 -> [ `Style `Dotted; `Color 6710784; `Fontcolor 6710784 ]
         | Caller -> [ `Color 6697728; `Fontcolor 6697728 ]
         | Return -> [ `Style `Dotted; `Color 26112; `Fontcolor 26112 ]
         | _ -> [ `Color 2105376 ] )
