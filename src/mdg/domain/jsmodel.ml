@@ -263,7 +263,9 @@ module Parser = struct
     with _ -> raise_field "args" "integer list"
 
   let parse_code (config : Json.t) : Region.t FunctionDefinition.t =
-    try config |> Json.member "code" |> Json.to_string |> JSParser.parse_func
+    try
+      let code = config |> Json.member "code" |> Json.to_string in
+      JSParser.parse_func code
     with _ -> raise_field "code" "string"
 
   let parse_sink (kind : TaintSink.kind) (config : Json.t) : TaintSink.t =
