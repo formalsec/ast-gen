@@ -10,6 +10,20 @@ let is_excess_module (mdg : Mdg.t) (l_module : Node.t) : bool =
   && Edge.Set.is_empty trans
   && is_excess_exports mdg (Edge.Set.choose edges).tar
 
+let is_excess_builtin_prop (mdg : Mdg.t) (l_prop : Node.t) : bool =
+  let edges = Mdg.get_edges mdg l_prop.loc in
+  let trans = Mdg.get_trans mdg l_prop.loc in
+  Edge.Set.is_empty edges && Edge.Set.cardinal trans == 1
+
+let is_excess_builtin (mdg : Mdg.t) (l_builtin : Node.t) : bool =
+  let edges = Mdg.get_edges mdg l_builtin.loc in
+  let trans = Mdg.get_trans mdg l_builtin.loc in
+  let prop_edges = Edge.Set.filter Edge.is_property edges in
+  Edge.Set.equal edges prop_edges
+  && Edge.Set.is_empty trans
+  && Fun.flip Edge.Set.for_all prop_edges (fun edge ->
+         is_excess_builtin_prop mdg edge.tar )
+
 let is_excess_sink (mdg : Mdg.t) (l_sink : Node.t) : bool =
   let edges = Mdg.get_edges mdg l_sink.loc in
   let trans = Mdg.get_trans mdg l_sink.loc in
@@ -22,6 +36,7 @@ let compute_excess_jslib (state : State.t) (acc : Node.t list) : Node.t list =
         let prop = Property.Static "exports" in
         let l_exports = Mdg.get_property state.mdg node prop in
         (node :: l_exports) @ acc
+      | Builtin _ when is_excess_builtin state.mdg node -> node :: acc
       | TaintSink _ when is_excess_sink state.mdg node -> node :: acc
       | TaintSource -> node :: acc
       | _ -> acc )
