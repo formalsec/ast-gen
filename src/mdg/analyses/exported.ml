@@ -6,20 +6,16 @@ module Computed = struct
 end
 
 module Env = struct
-  type cb_unfold_func =
+  type cb_unfold =
     State.t -> Node.t -> Node.Set.t -> bool -> State.t * Node.Set.t
-
-  type return_handler =
-    | GraphEdge
-    | Unfold of cb_unfold_func
 
   type t =
     { computed : Computed.t
-    ; return_handler : return_handler
+    ; cb_unfold : cb_unfold
     }
 
-  let create (return_handler : return_handler) : t =
-    { computed = Computed.create Config.(!dflt_htbl_sz); return_handler }
+  let create (cb_unfold : cb_unfold) : t =
+    { computed = Computed.create Config.(!dflt_htbl_sz); cb_unfold }
 end
 
 module Interaction = struct
@@ -105,16 +101,10 @@ let compute_next_entry (env : Env.t) (queue : queue) (l_next : Node.t)
     if not (Node.Set.is_empty ls_this_diff) then
       Queue.push (l_next, ls_this_diff, scheme) queue
 
-let compute_function_return (env : Env.t) (state : State.t) (l_func : Node.t)
-    (ls_this : Node.Set.t) : Node.Set.t =
-  match env.return_handler with
-  | GraphEdge -> Mdg.get_function_returns state.mdg l_func |> Node.Set.of_list
-  | Unfold cb_unfold_func -> snd (cb_unfold_func state l_func ls_this true)
-
 let compute_function (state : State.t) (env : Env.t) (queue : queue)
     ((l_func, ls_this, scheme) : entry) : unit =
   if Node.is_function l_func then
-    let ls_retn = compute_function_return env state l_func ls_this in
+    let (_, ls_retn) = env.cb_unfold state l_func ls_this true in
     Fun.flip Node.Set.iter ls_retn (fun l_retn ->
         let scheme' = Scheme.extend scheme Call in
         compute_next_entry env queue l_retn Node.Set.empty scheme' )
@@ -145,15 +135,10 @@ let compute_exported (state : State.t) (env : Env.t) (exported : t)
       Queue.push (l_exported, Node.Set.empty, []) queue );
   compute_object state env queue exported
 
-let compute (state : State.t) (env : Env.t) : t =
+let compute (cb_unfold : Env.cb_unfold) (state : State.t) : t =
+  let env = Env.create cb_unfold in
   let exported = create () in
   let ls_exported = Jslib.exported_object state.mdg state.jslib in
   if not (empty_exports state ls_exported) then
     compute_exported state env exported ls_exported;
   exported
-
-let compute_from_graph (state : State.t) : t =
-  compute state (Env.create GraphEdge)
-
-let compute_and_unfold (cb_unfold : Env.cb_unfold_func) (state : State.t) : t =
-  compute state (Env.create (Unfold cb_unfold))

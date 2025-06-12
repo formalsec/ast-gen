@@ -5,7 +5,7 @@ open Result
 module Options = struct
   type env =
     { jsmodel : Fpath.t
-    ; func_eval_mode : Enums.FuncEvalMode.t
+    ; unfold_depth : int
     ; reset_locations : bool
     ; run_exported_analysis : bool
     ; run_tainted_analysis : bool
@@ -19,7 +19,9 @@ module Options = struct
     ; parse_env : Cmd_parse.Options.env
     }
 
-  let validate_env (env : env) : env = env
+  let validate_env (env : env) : env =
+    let parse_env = Cmd_parse.Options.validate_env env.parse_env in
+    { env with parse_env }
 
   type t =
     { inputs : Fpath.t list
@@ -32,14 +34,14 @@ module Options = struct
     | Some jsmodel' -> jsmodel'
     | None -> Properties.default_jsmodel ()
 
-  let env (jsmodel' : Fpath.t option) (func_eval_mode' : Enums.FuncEvalMode.t)
+  let env (jsmodel' : Fpath.t option) (unfold_depth' : int)
       (no_exported_analysis : bool) (no_tainted_analysis : bool)
       (no_cleaner_analysis : bool) (no_export : bool) (no_subgraphs : bool)
       (no_func_subgraphs : bool) (no_file_subgraphs : bool)
       (export_view' : Export_view.t) (export_timeout' : int)
       (parse_env' : Cmd_parse.Options.env) : env =
     { jsmodel = jsmodel_path jsmodel'
-    ; func_eval_mode = func_eval_mode'
+    ; unfold_depth = unfold_depth'
     ; reset_locations = true
     ; run_exported_analysis = not no_exported_analysis
     ; run_tainted_analysis = not (no_exported_analysis || no_tainted_analysis)
@@ -128,7 +130,7 @@ module Output = struct
 end
 
 let builder_env (env : Options.env) : State.Env.t =
-  { func_eval_mode = env.func_eval_mode
+  { unfold_depth = env.unfold_depth
   ; reset_locations = env.reset_locations
   ; run_exported_analysis = env.run_exported_analysis
   ; run_tainted_analysis = env.run_tainted_analysis

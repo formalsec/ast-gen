@@ -5,12 +5,8 @@ module Options = struct
   type env = { mdg_env : Cmd_mdg.Options.env }
 
   let validate_env (env : env) : env =
-    match env.mdg_env.func_eval_mode with
-    | Connect ->
-      Log.warn "Unable to run built-in queries with 'connect' function eval.";
-      Log.warn "Defaulting function evaluation mode to 'unfold:rec'...";
-      { mdg_env = { env.mdg_env with func_eval_mode = UnfoldRec } }
-    | _ -> env
+    let mdg_env = Cmd_mdg.Options.validate_env env.mdg_env in
+    { mdg_env }
 
   type t =
     { inputs : Fpath.t list

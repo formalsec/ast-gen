@@ -6,9 +6,6 @@ type cid = Allocator.cid
 let newcid (el : ('a, Region.t) Metadata.t) : cid = Allocator.cid el
 let offset (cid : cid) (ofs : int) : cid = Allocator.offset cid ofs
 
-let connect_function_eval (env : State.Env.t) : bool =
-  match env.func_eval_mode with Connect -> true | _ -> false
-
 let convert_literal (literal : LiteralValue.t) : Literal.t =
   match literal.value with
   | Null -> Literal.create Null literal.raw
@@ -129,14 +126,12 @@ let add_dynamic_object_version (state : State.t) (name : string)
   | _ -> dynamic_weak_nv state name ls_obj ls_prop cid
 
 let add_function_call (state : State.t) (call_name : string)
-    (retn_name : string) (call_cid : cid) (retn_cid : cid)
-    (ls_func : Node.Set.t) (ls_args : Node.Set.t list) :
-    State.t * Node.t * Node.t =
+    (retn_name : string) (call_cid : cid) (retn_cid : cid) (l_func : Node.t)
+    (ls_args : Node.Set.t list) : State.t * Node.t * Node.t =
   let l_call = State.add_call_node state call_cid call_name in
   let l_retn = State.add_return_node state retn_cid retn_name in
   let add_arg_f = Fun.flip2 (State.add_argument_edge state) l_call in
-  Fun.flip Node.Set.iter ls_func (fun l_func ->
-      State.add_caller_edge state l_call l_func );
+  State.add_caller_edge state l_call l_func;
   State.add_dependency_edge state l_call l_retn;
   Fun.flip List.iteri ls_args (fun idx ls_arg ->
       Node.Set.iter (add_arg_f idx) ls_arg );
@@ -179,11 +174,8 @@ and eval_store_expr (state : State.t) (id : string) (cid : cid) : Node.Set.t =
   else ls_expr
 
 let unfoldable_function (state : State.t) (l_func : Node.t) : bool =
-  match state.env.func_eval_mode with
-  | Connect -> Log.fail "unexpected 'connect' function evaluation mode"
-  | Unfold -> Log.fail "not implemented (use 'unfold:rec' or 'unfold:<depth>')"
-  | UnfoldRec -> not (List.mem l_func state.curr_stack)
-  | UnfoldDepth depth -> List.length state.curr_stack < depth
+  Node.is_function l_func
+  && List.count (Node.equal l_func) state.curr_stack < state.env.unfold_depth
 
 let unfoldable_callbacks (state : State.t) (ls_args : Node.Set.t list) :
     Node.Set.t =
@@ -204,7 +196,7 @@ let rec unfold_function_call (state : State.t) (call_name : string)
       | (false, _) | (true, None) ->
         unfold_callbacks state (List.tl ls_args);
         let call_f = add_function_call state call_name retn_name in
-        let (state', _, l_retn) = call_f call_cid retn_cid ls_func ls_args in
+        let (state', _, l_retn) = call_f call_cid retn_cid l_func ls_args in
         let ls_retn' = Node.Set.add l_retn ls_retn in
         (state', ls_retn')
       | (true, Some { floc; func; eval_store; _ }) ->
@@ -391,17 +383,6 @@ and build_dynamic_delete (state : State.t) (_left : 'm LeftValue.t)
   (* we treat dynamic property deletes as assigning undefined to the dynamic property *)
   state
 
-and build_call_dispatch (state : State.t) (call_name : string)
-    (retn_name : string) (call_cid : cid) (retn_cid : cid) (new_ : bool)
-    (ls_func : Node.Set.t) (ls_args : Node.Set.t list) : State.t * Node.Set.t =
-  if connect_function_eval state.env then
-    (add_function_call state call_name retn_name call_cid retn_cid)
-      ls_func ls_args
-    |> fun (state', _, l_retn) -> (state', Node.Set.singleton l_retn)
-  else
-    (unfold_function_call state call_name retn_name call_cid retn_cid)
-      new_ ls_func ls_args
-
 and build_new_call (state : State.t) (left : 'm LeftValue.t)
     (callee : 'm Identifier.t) (args : 'm Expression.t list) (call_cid : cid) :
     State.t =
@@ -411,8 +392,8 @@ and build_new_call (state : State.t) (left : 'm LeftValue.t)
   let ls_func = eval_store_expr state call_name (newcid callee) in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = Node.Set.empty :: ls_args in
-  let call_f = build_call_dispatch state call_name retn_name call_cid retn_cid in
-  let (state', ls_retn) = call_f true ls_func ls_args' in
+  let call_f = unfold_function_call state call_name retn_name in
+  let (state', ls_retn) = call_f call_cid retn_cid true ls_func ls_args' in
   Store.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
@@ -425,8 +406,8 @@ and build_function_call (state : State.t) (left : 'm LeftValue.t)
   let ls_func = eval_store_expr state call_name (newcid callee) in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = Node.Set.empty :: ls_args in
-  let call_f = build_call_dispatch state call_name retn_name call_cid retn_cid in
-  let (state', ls_retn) = call_f false ls_func ls_args' in
+  let call_f = unfold_function_call state call_name retn_name in
+  let (state', ls_retn) = call_f call_cid retn_cid false ls_func ls_args' in
   Store.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
@@ -443,8 +424,8 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
   let call_name = object_property_name ls_obj obj prop' in
   add_static_orig_object_property state call_name ls_obj prop' prop_cid;
   let ls_func = lookup_method state call_name call_cid ls_obj prop' in
-  let call_f = build_call_dispatch state call_name retn_name call_cid retn_cid in
-  let (state', ls_retn) = call_f false ls_func ls_args' in
+  let call_f = unfold_function_call state call_name retn_name in
+  let (state', ls_retn) = call_f call_cid retn_cid false ls_func ls_args' in
   Store.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
@@ -462,8 +443,8 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let call_name = object_property_name ls_obj obj prop' in
   add_dynamic_orig_object_property state call_name ls_obj ls_prop prop_cid;
   let ls_func = lookup_method state call_name call_cid ls_obj prop' in
-  let call_f = build_call_dispatch state call_name retn_name call_cid retn_cid in
-  let (state', ls_retn) = call_f false ls_func ls_args' in
+  let call_f = unfold_function_call state call_name retn_name in
+  let (state', ls_retn) = call_f call_cid retn_cid false ls_func ls_args' in
   Store.replace state'.store retn_name ls_retn;
   call_interceptor state' retn_name ls_func ls_args'
 
@@ -497,10 +478,10 @@ and build_forin (state : State.t) (left : 'm LeftValue.t)
   (* TODO: improve the assignment in the forin statement *)
   (* we treat this assignment as a lookup on all properties of the expression *)
   (* the left value should depend of all the properties of the right value *)
-  let left_name = LeftValue.name left in
-  let l_left = State.add_object_node state (newcid left) left_name in
+  let name = LeftValue.name left in
+  let l_left = State.add_object_node state (newcid left) name in
   let ls_right = eval_expr state right in
-  Store.replace state.store left_name (Node.Set.singleton l_left);
+  Store.replace state.store name (Node.Set.singleton l_left);
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_left) ls_right;
   build_loop state body
 
@@ -509,49 +490,25 @@ and build_forof (state : State.t) (left : 'm LeftValue.t)
   (* TODO: improve the assignment in the forof statement *)
   (* we treat this assignment as a lookup on all properties of the expression *)
   (* the left value should depend of all the properties of the right value *)
-  let left_name = LeftValue.name left in
-  let l_left = State.add_object_node state (newcid left) left_name in
+  let name = LeftValue.name left in
+  let l_left = State.add_object_node state (newcid left) name in
   let ls_right = eval_expr state right in
-  Store.replace state.store left_name (Node.Set.singleton l_left);
+  Store.replace state.store name (Node.Set.singleton l_left);
   Node.Set.iter (Fun.flip (State.add_dependency_edge state) l_left) ls_right;
   build_loop state body
 
 and build_function_declaration (state : State.t)
-    (func : 'm FunctionDefinition.t) (func_cid : cid) : State.t =
-  let func_name = LeftValue.name func.left in
-  let l_func = State.add_function_node state func_cid func_name in
-  Store.replace state.store func_name (Node.Set.singleton l_func);
+    (func : 'm FunctionDefinition.t) (cid : cid) : State.t =
+  let name = LeftValue.name func.left in
+  let l_func = State.add_function_node state cid name in
+  Store.replace state.store name (Node.Set.singleton l_func);
   Pcontext.declare_func state.pcontext l_func state.curr_floc func state.store;
-  if connect_function_eval state.env then (
-    let state' = { state with curr_parent = Some l_func } in
-    let this_cid = newcid func.left in
-    let l_this = State.add_parameter_node state' this_cid "this" in
-    State.add_parameter_edge state' l_func l_this 0;
-    Fun.flip List.iteri func.params (fun idx param ->
-        let param_cid = newcid param in
-        let param_name = Identifier.name param in
-        let l_param = State.add_parameter_node state' param_cid param_name in
-        State.add_parameter_edge state' l_func l_param (idx + 1) ) );
   state
 
 and build_function_definition (state : State.t) (func : 'm FunctionDefinition.t)
-    (func_cid : cid) : State.t =
-  if not (FunctionHoisting.hoisted func.hoisted) then
-    ignore (build_function_declaration state func func_cid);
-  if connect_function_eval state.env then (
-    let l_func = State.get_node state func_cid in
-    let store' = Store.copy state.store in
-    let state' = { state with store = store'; curr_parent = Some l_func } in
-    let this_cid = newcid func.left in
-    let l_this = State.get_node state this_cid in
-    Store.replace state'.store "this" (Node.Set.singleton l_this);
-    Fun.flip List.iteri func.params (fun _ param ->
-        let param_cid = newcid param in
-        let param_name = Identifier.name param in
-        let l_param = State.get_node state param_cid in
-        Store.replace state'.store param_name (Node.Set.singleton l_param) );
-    ignore (build_sequence state' func.body) );
-  state
+    (cid : cid) : State.t =
+  if FunctionHoisting.hoisted func.hoisted then state
+  else build_function_declaration state func cid
 
 and build_hoisted_functions (state : State.t) (stmts : 'm Statement.t list) :
     State.t =
@@ -682,18 +639,13 @@ module ExtendedMdg = struct
 
   let compute_exported_analysis (state : State.t) : Exported.t =
     let unfold_f = unfold_entry_function in
-    let connect = connect_function_eval state.env in
-    match (state.env.run_exported_analysis, connect) with
-    | (true, true) -> Exported.compute_from_graph state
-    | (true, false) -> Exported.compute_and_unfold unfold_f state
-    | (false, _) -> Exported.none ()
+    if not state.env.run_exported_analysis then Exported.none ()
+    else Exported.compute unfold_f state
 
   let compute_tainted_analysis (state : State.t) (jsmodel : Jsmodel.t)
       (exported : Exported.t) : Tainted.t =
-    let connect = connect_function_eval state.env in
-    match (state.env.run_tainted_analysis, connect) with
-    | (true, false) -> Tainted.compute state jsmodel exported
-    | _ -> Tainted.none ()
+    if not state.env.run_tainted_analysis then Tainted.none ()
+    else Tainted.compute state jsmodel exported
 
   let compute_cleaner_analysis (state : State.t) : unit =
     if state.env.run_cleaner_analysis then Cleaner.compute state

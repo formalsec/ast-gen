@@ -12,3 +12,6 @@ let split3 (lst : ('a * 'b * 'c) list) : 'a list * 'b list * 'c list =
 
 let product (lst1 : 'a list) (lst2 : 'b list) : ('a * 'b) list =
   flatten (map (fun a -> map (fun b -> (a, b)) lst2) lst1)
+
+let count (f : 'a -> bool) (lst : 'a list) : int =
+  fold_left (fun acc el -> if f el then acc + 1 else acc) 0 lst
