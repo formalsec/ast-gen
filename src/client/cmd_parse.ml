@@ -13,7 +13,9 @@ module Options = struct
     ; deps_env : Cmd_dependencies.Options.env
     }
 
-  let validate_env (env : env) : env = env
+  let validate_env (env : env) : env =
+    let deps_env = Cmd_dependencies.Options.validate_env env.deps_env in
+    { env with deps_env }
 
   type t =
     { inputs : Fpath.t list

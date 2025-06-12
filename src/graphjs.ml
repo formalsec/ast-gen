@@ -64,7 +64,7 @@ let mdg_env =
   let open Term in
   const Cmd_mdg.Options.env
   $ Docs.MdgOpts.jsmodel
-  $ Docs.MdgOpts.func_eval_mode
+  $ Docs.MdgOpts.unfold_depth
   $ Docs.MdgOpts.no_exported_analysis
   $ Docs.MdgOpts.no_tainted_analysis
   $ Docs.MdgOpts.no_cleaner_analysis

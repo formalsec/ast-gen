@@ -216,20 +216,13 @@ module MdgOpts = struct
     let parser = Fs.Parser.valid_file in
     Arg.(value & opt (some parser) None & info [ "jsmodel" ] ~docv ~doc)
 
-  let func_eval_mode =
+  let unfold_depth =
     let doc =
-      "Configures the mode for evaluating function calls during the MDG \
-       construction. Options include: (1) 'connect' [default] for treating \
-       each function as a blackbox, connecting with a call edge every \
-       call-site node to the called function's node; and (2) 'unfold' for \
-       opening each call-site by re-evaluating the function body. The unfold \
-       mode also accepts an optional modifier in the form unfold[:<mod>] to \
-       control how far to unfold: (1) [absent] for unfolding until the \
-       fixpoint is reached; (2) 'unfold:rec' for unfolding until a recursive \
-       call is reached; (3) 'unfold:<depth>' for unfolding until the maximum \
-       depth is reached." in
-    let parse_f = Enums.FuncEvalMode.parse in
-    Arg.(value & opt parse_f Connect & info [ "eval-func" ] ~doc)
+      "Sets the maximum recursion depth for unfolding function calls during \
+       MDG construction. A depth of 1 [default] unfolds functions only if they \
+       are not already in the call stack, effectively preventing recursion. \
+       Higher values permit deeper levels of recursive call unfolding." in
+    Arg.(value & opt int 1 & info [ "unfold-depth" ] ~doc)
 
   let no_exported_analysis =
     let doc =
