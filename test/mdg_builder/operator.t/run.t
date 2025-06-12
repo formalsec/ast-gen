@@ -1,6 +1,5 @@
 Graph.js MDG Builder: unary operator
   $ graphjs mdg --no-export unopt.js
-  [[function]] defineProperty[#5] -
   10[#17] --< D >--> $v1[#18]
   $v1[#18] -
   10[#19] --< D >--> $v2[#20]
@@ -14,7 +13,6 @@ Graph.js MDG Builder: unary operator
 
 Graph.js MDG Builder: binary operator
   $ graphjs mdg --no-export binopt.js
-  [[function]] defineProperty[#5] -
   10[#17] --< D >--> $v1[#19]
   "abc"[#18] --< D >--> $v1[#19]
   $v1[#19] -
@@ -37,7 +35,6 @@ Graph.js MDG Builder: binary operator
 
 Graph.js MDG Builder: template expression
   $ graphjs mdg --no-export template.js
-  [[function]] defineProperty[#5] -
   `abc${10} def${true}`[#17] -
   10[#18] --< D >--> `abc${10} def${true}`[#17]
   true[#19] --< D >--> `abc${10} def${true}`[#17]

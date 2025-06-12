@@ -1,6 +1,5 @@
 Graph.js MDG Builder: while loop
   $ graphjs mdg --no-export while.js
-  [[function]] defineProperty[#5] -
   x1[#17] --< V(p1) >--> x1[#19]
   10[#18] -
   x1[#19] --< P(p1) >--> 10[#18]
@@ -40,7 +39,6 @@ Graph.js MDG Builder: while loop
 
 Graph.js MDG Builder: forin loop
   $ graphjs mdg --no-export forin.js
-  [[function]] defineProperty[#5] -
   $v1[#17] --< D >--> x[#18]
   x[#18] -
   x1[#19] --< V(p1) >--> x1[#21]
@@ -90,7 +88,6 @@ Graph.js MDG Builder: forin loop
 
 Graph.js MDG Builder: forof loop
   $ graphjs mdg --no-export forof.js
-  [[function]] defineProperty[#5] -
   $v1[#17] --< D >--> x[#18]
   x[#18] -
   x1[#19] --< V(p1) >--> x1[#21]

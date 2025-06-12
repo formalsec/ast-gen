@@ -1,15 +1,14 @@
 Graph.js MDG Builder: single-file require
   $ graphjs mdg --no-export main.js
   [[sink]] require[#3] -
-  [[function]] defineProperty[#5] -
-  './foo.js'[#17] --< Arg(1) >--> require(...)[#18]
+  "./foo.js"[#17] --< Arg(1) >--> require(...)[#18]
   require(...)[#18] --< Call >--> [[sink]] require[#3]
   require(...)[#18] --< D >--> foo[#19]
   foo[#19] -
   [[module]] foo[#20] --< P(obj) >--> foo.obj[#25]
   [[module]] foo[#20] --< P(foo) >--> foo.foo[#26]
   [[module]] foo[#20] --< Arg(0) >--> foo.foo(...)[#27]
-  './deps/bar.js'[#21] --< Arg(1) >--> require(...)[#22]
+  "./deps/bar.js"[#21] --< Arg(1) >--> require(...)[#22]
   require(...)[#22] --< Call >--> [[sink]] require[#3]
   require(...)[#22] --< D >--> bar[#23]
   bar[#23] -
@@ -45,122 +44,93 @@ Graph.js MDG Builder: single-file require
 Graph.js MDG Builder: multifile require
   $ graphjs mdg --no-export --multifile main.js
   [[sink]] require[#3] -
-  [[function]] defineProperty[#5] -
-  './foo.js'[#17] --< Arg(1) >--> require(...)[#18]
+  "./foo.js"[#17] --< Arg(1) >--> require(...)[#18]
   require(...)[#18] --< Call >--> [[sink]] require[#3]
   require(...)[#18] --< D >--> foo[#19]
   foo[#19] -
   [[module]] foo.js[#20] --< D >--> module[#21]
   module[#21] --< P(exports) >--> exports[#22]
-  module[#21] --< V(exports) >--> module[#34]
+  module[#21] --< V(exports) >--> module[#30]
   exports[#22] -
   obj[#23] --< V(foo) >--> obj[#25]
   10[#24] -
   obj[#25] --< P(foo) >--> 10[#24]
-  obj[#25] --< Arg(1) >--> $v2.foo(...)[#84]
-  [[function]] foo[#26] --< Param(0) >--> this[#27]
-  [[function]] foo[#26] --< Param(1) >--> x[#28]
-  this[#27] -
-  x[#28] -
-  $v1[#29] --< V(p) >--> $v1[#30]
-  $v1[#30] --< P(p) >--> x[#28]
-  $v2[#31] --< V(obj) >--> $v2[#32]
-  $v2[#31] --< P(foo) >--> $v2.foo[#61]
-  $v2[#31] --< P(obj) >--> $v2.obj[#83]
-  $v2[#32] --< P(obj) >--> obj[#25]
-  $v2[#32] --< V(foo) >--> $v2[#33]
-  $v2[#33] --< P(foo) >--> [[function]] foo[#26]
-  $v2[#33] --< Arg(0) >--> $v2.foo(...)[#62]
-  $v2[#33] --< Arg(0) >--> $v2.foo(...)[#84]
-  module[#34] --< P(exports) >--> $v2[#33]
-  './deps/bar.js'[#35] --< Arg(1) >--> require(...)[#36]
-  require(...)[#36] --< Call >--> [[sink]] require[#3]
-  require(...)[#36] --< D >--> bar[#37]
-  bar[#37] -
-  [[module]] deps/bar.js[#38] --< D >--> module[#39]
-  module[#39] --< P(exports) >--> exports[#40]
-  exports[#40] --< V(bar1) >--> exports[#80]
-  exports[#40] --< P(bar1) >--> exports.bar1[#86]
-  exports[#40] --< P(bar3) >--> exports.bar3[#91]
-  exports[#40] --< P(bar4) >--> exports.bar4[#97]
-  "./baz"[#41] --< Arg(1) >--> require(...)[#42]
-  require(...)[#42] --< Call >--> [[sink]] require[#3]
-  require(...)[#42] --< D >--> baz[#43]
-  baz[#43] -
-  [[module]] deps/baz.js[#44] --< D >--> module[#45]
-  module[#45] --< P(exports) >--> exports[#46]
-  module[#45] --< V(exports) >--> module[#64]
-  exports[#46] -
-  'path'[#47] --< Arg(1) >--> require(...)[#48]
-  require(...)[#48] --< Call >--> [[sink]] require[#3]
-  require(...)[#48] --< D >--> npm[#49]
-  npm[#49] -
-  [[module]] path[#50] --< P(basename) >--> path.basename[#52]
-  [[module]] path[#50] --< Arg(0) >--> path.basename(...)[#53]
-  "abc"[#51] --< Arg(1) >--> path.basename(...)[#53]
-  path.basename[#52] -
-  path.basename(...)[#53] --< Call >--> path.basename[#52]
-  path.basename(...)[#53] --< D >--> $v3[#54]
-  $v3[#54] -
-  '../foo'[#55] --< Arg(1) >--> require(...)[#56]
-  require(...)[#56] --< Call >--> [[sink]] require[#3]
-  require(...)[#56] --< D >--> foo[#57]
-  foo[#57] -
-  [[function]] $v4[#58] --< Param(0) >--> this[#59]
-  [[function]] $v4[#58] --< Param(1) >--> z[#60]
-  this[#59] -
-  z[#60] --< Arg(1) >--> $v2.foo(...)[#62]
-  $v2.foo[#61] -
-  $v2.foo(...)[#62] --< Call >--> [[function]] foo[#26]
-  $v2.foo(...)[#62] --< D >--> $v5[#63]
-  $v5[#63] -
-  module[#64] --< P(exports) >--> [[function]] $v4[#58]
-  bar1[#65] --< V(p) >--> bar1[#71]
-  bar1[#65] --< P(p) >--> bar1.p[#88]
-  [[function]] $v6[#66] --< Param(0) >--> this[#67]
-  [[function]] $v6[#66] --< Param(1) >--> y[#68]
-  this[#67] -
-  y[#68] --< Arg(1) >--> baz(...)[#69]
-  baz(...)[#69] --< Call >--> [[function]] $v4[#58]
-  baz(...)[#69] --< D >--> $v7[#70]
-  $v7[#70] -
-  bar1[#71] --< P(p) >--> [[function]] $v6[#66]
-  bar1[#71] --< Arg(0) >--> bar1.p(...)[#89]
-  bar2[#72] --< V(p) >--> bar2[#75]
-  [[function]] $v8[#73] --< Param(0) >--> this[#74]
-  this[#74] -
-  bar2[#75] --< P(p) >--> [[function]] $v8[#73]
-  bar3[#76] --< V(p) >--> bar3[#79]
-  bar3[#76] --< P(p) >--> bar3.p[#92]
-  $v9[#77] --< V(q) >--> $v9[#78]
-  $v9[#77] --< P(q) >--> $v9.q[#94]
-  $v9[#78] --< P(q) >--> [[function]] $v4[#58]
-  $v9[#78] --< Arg(0) >--> $v9.q(...)[#95]
-  bar3[#79] --< P(p) >--> $v9[#78]
-  exports[#80] --< P(bar1) >--> bar1[#71]
-  exports[#80] --< V(bar2) >--> exports[#81]
-  exports[#81] --< P(bar2) >--> bar2[#75]
-  exports[#81] --< V(bar3) >--> exports[#82]
-  exports[#82] --< P(bar3) >--> bar3[#79]
-  exports[#82] --< Arg(0) >--> exports.bar4(...)[#98]
-  $v2.obj[#83] -
-  $v2.foo(...)[#84] --< Call >--> [[function]] foo[#26]
-  $v2.foo(...)[#84] --< D >--> $v11[#85]
-  $v11[#85] -
-  exports.bar1[#86] -
-  "abc"[#87] --< Arg(1) >--> bar1.p(...)[#89]
-  bar1.p[#88] -
-  bar1.p(...)[#89] --< Call >--> [[function]] $v6[#66]
-  bar1.p(...)[#89] --< D >--> $v13[#90]
-  $v13[#90] -
-  exports.bar3[#91] -
-  bar3.p[#92] -
-  "def"[#93] --< Arg(1) >--> $v9.q(...)[#95]
-  $v9.q[#94] -
-  $v9.q(...)[#95] --< Call >--> [[function]] $v4[#58]
-  $v9.q(...)[#95] --< D >--> $v16[#96]
-  $v16[#96] -
-  exports.bar4[#97] -
-  exports.bar4(...)[#98] --< Call >--> exports.bar4[#97]
-  exports.bar4(...)[#98] --< D >--> $v17[#99]
-  $v17[#99] -
+  [[function]] foo[#26] -
+  $v2[#27] --< V(obj) >--> $v2[#28]
+  $v2[#27] --< P(obj) >--> $v2.obj[#69]
+  $v2[#27] --< P(foo) >--> $v2.foo[#70]
+  $v2[#28] --< P(obj) >--> obj[#25]
+  $v2[#28] --< V(foo) >--> $v2[#29]
+  $v2[#29] --< P(foo) >--> [[function]] foo[#26]
+  module[#30] --< P(exports) >--> $v2[#29]
+  "./deps/bar.js"[#31] --< Arg(1) >--> require(...)[#32]
+  require(...)[#32] --< Call >--> [[sink]] require[#3]
+  require(...)[#32] --< D >--> bar[#33]
+  bar[#33] -
+  [[module]] deps/bar.js[#34] --< D >--> module[#35]
+  module[#35] --< P(exports) >--> exports[#36]
+  exports[#36] --< V(bar1) >--> exports[#66]
+  exports[#36] --< P(bar1) >--> exports.bar1[#73]
+  exports[#36] --< P(bar3) >--> exports.bar3[#78]
+  exports[#36] --< P(bar4) >--> exports.bar4[#84]
+  "./baz"[#37] --< Arg(1) >--> require(...)[#38]
+  require(...)[#38] --< Call >--> [[sink]] require[#3]
+  require(...)[#38] --< D >--> baz[#39]
+  baz[#39] -
+  [[module]] deps/baz.js[#40] --< D >--> module[#41]
+  module[#41] --< P(exports) >--> exports[#42]
+  module[#41] --< V(exports) >--> module[#55]
+  exports[#42] -
+  "path"[#43] --< Arg(1) >--> require(...)[#44]
+  require(...)[#44] --< Call >--> [[sink]] require[#3]
+  require(...)[#44] --< D >--> npm[#45]
+  npm[#45] -
+  [[module]] path[#46] --< P(basename) >--> path.basename[#48]
+  [[module]] path[#46] --< Arg(0) >--> path.basename(...)[#49]
+  "abc"[#47] --< Arg(1) >--> path.basename(...)[#49]
+  path.basename[#48] -
+  path.basename(...)[#49] --< Call >--> path.basename[#48]
+  path.basename(...)[#49] --< D >--> $v3[#50]
+  $v3[#50] -
+  "../foo"[#51] --< Arg(1) >--> require(...)[#52]
+  require(...)[#52] --< Call >--> [[sink]] require[#3]
+  require(...)[#52] --< D >--> foo[#53]
+  foo[#53] -
+  [[function]] $v4[#54] -
+  module[#55] --< P(exports) >--> [[function]] $v4[#54]
+  bar1[#56] --< V(p) >--> bar1[#58]
+  bar1[#56] --< P(p) >--> bar1.p[#75]
+  [[function]] $v6[#57] -
+  bar1[#58] --< P(p) >--> [[function]] $v6[#57]
+  bar2[#59] --< V(p) >--> bar2[#61]
+  [[function]] $v8[#60] -
+  bar2[#61] --< P(p) >--> [[function]] $v8[#60]
+  bar3[#62] --< V(p) >--> bar3[#65]
+  bar3[#62] --< P(p) >--> bar3.p[#79]
+  $v9[#63] --< V(q) >--> $v9[#64]
+  $v9[#63] --< P(q) >--> $v9.q[#81]
+  $v9[#64] --< P(q) >--> [[function]] $v4[#54]
+  bar3[#65] --< P(p) >--> $v9[#64]
+  exports[#66] --< P(bar1) >--> bar1[#58]
+  exports[#66] --< V(bar2) >--> exports[#67]
+  exports[#67] --< P(bar2) >--> bar2[#61]
+  exports[#67] --< V(bar3) >--> exports[#68]
+  exports[#68] --< P(bar3) >--> bar3[#65]
+  exports[#68] --< Arg(0) >--> exports.bar4(...)[#85]
+  $v2.obj[#69] -
+  $v2.foo[#70] -
+  $v1[#71] --< V(p) >--> $v1[#72]
+  $v1[#72] --< P(p) >--> obj[#25]
+  $v1[#72] --< P(p) >--> "abc"[#74]
+  $v1[#72] --< P(p) >--> "def"[#80]
+  exports.bar1[#73] -
+  "abc"[#74] -
+  bar1.p[#75] -
+  exports.bar3[#78] -
+  bar3.p[#79] -
+  "def"[#80] -
+  $v9.q[#81] -
+  exports.bar4[#84] -
+  exports.bar4(...)[#85] --< Call >--> exports.bar4[#84]
+  exports.bar4(...)[#85] --< D >--> $v17[#86]
+  $v17[#86] -
