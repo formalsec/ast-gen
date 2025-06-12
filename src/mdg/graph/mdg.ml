@@ -85,7 +85,7 @@ let remove_edge (mdg : t) (edge : Edge.t) : unit =
 let remove_edges (mdg : t) (edges : Edge.t list) : unit =
   List.iter (remove_edge mdg) edges
 
-let get_dependencies (mdg : t) (node : Node.t) : Node.t list =
+let get_dependents (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_dependency
   |> Edge.Set.map_list Edge.tar
@@ -112,6 +112,12 @@ let get_property_owner (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
   get_trans mdg node.loc
   |> Edge.Set.filter Edge.is_property
   |> Edge.Set.map_list (fun edge -> (Edge.property edge, Edge.tar edge))
+
+let get_object_of_property (mdg : t) (node : Node.t) (prop : Property.t) :
+    Node.t list =
+  get_trans mdg node.loc
+  |> Edge.Set.filter (Edge.is_property ~prop)
+  |> Edge.Set.map_list Edge.tar
 
 let get_versions (mdg : t) (node : Node.t) : (Property.t * Node.t) list =
   get_edges mdg node.loc
