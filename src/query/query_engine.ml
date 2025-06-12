@@ -8,6 +8,9 @@ type t =
 let initialize (e_mdg : Builder.ExtendedMdg.t) : t =
   { mdg = e_mdg.mdg; tainted = e_mdg.tainted }
 
+let is_tainted (engine : t) (node : Node.t) : bool =
+  Tainted.is_tainted engine.tainted node
+
 let tainted_sinks (engine : t) : Node.t list =
   Fun.flip2 Hashtbl.fold engine.mdg.nodes [] (fun _ node acc ->
       if Node.is_taint_sink node then node :: acc else acc )
@@ -25,5 +28,16 @@ let tainted_sink_args (engine : t) (l_call : Node.t) (sink : Taint.Sink.t) :
   |> List.map (fun (_, l_arg) -> l_arg)
   |> Node.Set.of_list
 
-let is_tainted (engine : t) (node : Node.t) : bool =
-  Tainted.is_tainted engine.tainted node
+let dynamic_lookups (engine : t) : Node.Set.t =
+  Fun.flip2 Hashtbl.fold engine.mdg.edges Node.Set.empty (fun _ edges acc ->
+      Fun.flip2 Edge.Set.fold edges acc (fun edge acc ->
+          if Edge.is_property ~prop:Dynamic edge then Node.Set.add edge.tar acc
+          else acc ) )
+
+let dynamic_updates (engine : t) : Node.Set.t =
+  Fun.flip2 Hashtbl.fold engine.mdg.edges Node.Set.empty (fun _ edges acc ->
+      Fun.flip2 Edge.Set.fold edges acc (fun edge acc' ->
+          let equal_f edge = Node.equal (Edge.src edge) (Edge.tar edge) in
+          if Edge.is_version ~prop:Dynamic edge && not (equal_f edge) then
+            Node.Set.add edge.tar acc'
+          else acc' ) )
