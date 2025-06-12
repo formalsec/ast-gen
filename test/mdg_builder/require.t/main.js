@@ -1,7 +1,7 @@
 // module import targetting the 'foo.js' file
-const foo = require('./foo.js');
+const foo = require("./foo.js");
 // module import targetting the 'deps/bar.js' file
-const bar = require('./deps/bar.js');
+const bar = require("./deps/bar.js");
 
 // call to the 'foo' method of the 'foo' module with the module's 'obj' property
 foo.foo(foo.obj);

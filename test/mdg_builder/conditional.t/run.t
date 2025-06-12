@@ -1,6 +1,5 @@
 Graph.js MDG Builder: if statement
   $ graphjs mdg --no-export if.js
-  [[function]] defineProperty[#5] -
   x1[#17] --< V(p1) >--> x1[#19]
   10[#18] -
   x1[#19] --< P(p1) >--> 10[#18]
@@ -37,7 +36,6 @@ Graph.js MDG Builder: if statement
 
 Graph.js MDG Builder: switch statement
   $ graphjs mdg --no-export switch.js
-  [[function]] defineProperty[#5] -
   x1[#17] --< V(p1) >--> x1[#19]
   10[#18] -
   x1[#19] --< P(p1) >--> 10[#18]

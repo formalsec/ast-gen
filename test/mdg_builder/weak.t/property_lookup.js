@@ -1,4 +1,4 @@
-// variable declaration with a weak object initialization 
+// variable declaration with a weak object initialization
 let obj = true ? {} : {};
 // static lookup on a non-exiting identifier property
 obj.foo;

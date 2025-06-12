@@ -1,6 +1,5 @@
 Graph.js MDG Builder: week property lookup
   $ graphjs mdg --no-export property_lookup.js
-  [[function]] defineProperty[#5] -
   $v1[#17] --< P(foo) >--> obj.foo[#19]
   $v1[#17] --< P(bar) >--> obj.bar[#21]
   $v1[#17] --< P(10) >--> obj.10[#24]
@@ -20,7 +19,6 @@ Graph.js MDG Builder: week property lookup
 
 Graph.js MDG Builder: week property update
   $ graphjs mdg --no-export property_update.js
-  [[function]] defineProperty[#5] -
   $v1[#17] --< V(foo) >--> obj[#20]
   $v1[#17] --< P(bar) >--> obj.bar[#23]
   $v2[#18] --< V(foo) >--> obj[#20]
@@ -45,7 +43,6 @@ Graph.js MDG Builder: week property update
 
 Graph.js MDG Builder: week property access
   $ graphjs mdg --no-export property_access.js
-  [[function]] defineProperty[#5] -
   $v1[#17] --< V(foo) >--> obj[#20]
   $v1[#17] --< P(foo) >--> obj.foo[#23]
   $v1[#17] --< P(bar) >--> obj.bar[#26]
@@ -66,47 +63,42 @@ Graph.js MDG Builder: week property access
 
 Graph.js MDG Builder: week method call
   $ graphjs mdg --no-export method_call.js
-  [[function]] defineProperty[#5] -
-  $v1[#17] --< V(foo) >--> $v1[#21]
-  $v1[#17] --< P(foo) >--> obj.foo[#30]
-  $v1[#17] --< P(bar) >--> obj.bar[#37]
+  $v1[#17] --< V(foo) >--> $v1[#19]
+  $v1[#17] --< P(foo) >--> obj.foo[#24]
+  $v1[#17] --< P(bar) >--> obj.bar[#33]
   $v1[#17] --< P(baz) >--> obj.baz[#42]
-  [[function]] $v2[#18] --< Param(0) >--> this[#19]
-  [[function]] $v2[#18] --< Param(1) >--> x1[#20]
-  this[#19] -
-  x1[#20] -
-  $v1[#21] --< P(foo) >--> [[function]] $v2[#18]
-  $v1[#21] --< Arg(0) >--> obj.foo(...)[#32]
-  $v1[#21] --< Arg(0) >--> obj.bar(...)[#39]
-  $v1[#21] --< Arg(0) >--> obj.baz(...)[#44]
-  $v3[#22] --< V(bar) >--> $v3[#28]
-  $v3[#22] --< P(foo) >--> obj.foo[#30]
-  $v3[#22] --< P(bar) >--> obj.bar[#37]
-  $v3[#22] --< P(baz) >--> obj.baz[#42]
-  [[function]] $v4[#23] --< Param(0) >--> this[#24]
-  [[function]] $v4[#23] --< Param(1) >--> y1[#25]
-  [[function]] $v4[#23] --< Param(2) >--> y2[#26]
-  [[function]] $v4[#23] --< Param(3) >--> y3[#27]
-  this[#24] -
-  y1[#25] -
-  y2[#26] -
-  y3[#27] -
-  $v3[#28] --< P(bar) >--> [[function]] $v4[#23]
-  $v3[#28] --< Arg(0) >--> obj.foo(...)[#32]
-  $v3[#28] --< Arg(0) >--> obj.bar(...)[#39]
-  $v3[#28] --< Arg(0) >--> obj.baz(...)[#44]
-  10[#29] --< Arg(1) >--> obj.foo(...)[#32]
-  obj.foo[#30] -
-  obj.foo(...)[#32] --< Call >--> [[function]] $v2[#18]
-  obj.foo(...)[#32] --< Call >--> obj.foo[#30]
-  obj.foo(...)[#32] --< D >--> $v5[#33]
-  $v5[#33] -
-  10[#34] --< Arg(1) >--> obj.bar(...)[#39]
-  "abc"[#35] --< Arg(2) >--> obj.bar(...)[#39]
-  true[#36] --< Arg(3) >--> obj.bar(...)[#39]
-  obj.bar[#37] -
-  obj.bar(...)[#39] --< Call >--> [[function]] $v4[#23]
-  obj.bar(...)[#39] --< Call >--> obj.bar[#37]
+  [[function]] $v2[#18] -
+  $v1[#19] --< P(foo) >--> [[function]] $v2[#18]
+  $v1[#19] --< Arg(0) >--> obj.foo(...)[#28]
+  $v1[#19] --< Arg(0) >--> obj.bar(...)[#39]
+  $v1[#19] --< Arg(0) >--> obj.baz(...)[#44]
+  $v3[#20] --< V(bar) >--> $v3[#22]
+  $v3[#20] --< P(foo) >--> obj.foo[#24]
+  $v3[#20] --< P(bar) >--> obj.bar[#33]
+  $v3[#20] --< P(baz) >--> obj.baz[#42]
+  [[function]] $v4[#21] -
+  $v3[#22] --< P(bar) >--> [[function]] $v4[#21]
+  $v3[#22] --< Arg(0) >--> obj.foo(...)[#28]
+  $v3[#22] --< Arg(0) >--> obj.bar(...)[#39]
+  $v3[#22] --< Arg(0) >--> obj.baz(...)[#44]
+  10[#23] --< Arg(1) >--> obj.foo(...)[#28]
+  obj.foo[#24] -
+  foo[#26] --< V(x1) >--> foo[#27]
+  foo[#27] --< P(x1) >--> 10[#23]
+  obj.foo(...)[#28] --< Call >--> obj.foo[#24]
+  obj.foo(...)[#28] --< D >--> $v5[#29]
+  $v5[#29] -
+  10[#30] --< Arg(1) >--> obj.bar(...)[#39]
+  "abc"[#31] --< Arg(2) >--> obj.bar(...)[#39]
+  true[#32] --< Arg(3) >--> obj.bar(...)[#39]
+  obj.bar[#33] -
+  baz[#35] --< V(y1) >--> baz[#36]
+  baz[#36] --< P(y1) >--> 10[#30]
+  baz[#36] --< V(y2) >--> baz[#37]
+  baz[#37] --< P(y2) >--> "abc"[#31]
+  baz[#37] --< V(y3) >--> baz[#38]
+  baz[#38] --< P(y3) >--> true[#32]
+  obj.bar(...)[#39] --< Call >--> obj.bar[#33]
   obj.bar(...)[#39] --< D >--> $v6[#40]
   $v6[#40] -
   10[#41] --< Arg(1) >--> obj.baz(...)[#44]
@@ -117,7 +109,6 @@ Graph.js MDG Builder: week method call
 
 Graph.js MDG Builder: week property value
   $ graphjs mdg --no-export property_value.js
-  [[function]] defineProperty[#5] -
   $v1[#17] --< V(foo) >--> obj[#20]
   $v1[#17] --< P(foo) >--> obj.foo[#25]
   $v2[#18] --< V(foo) >--> obj[#20]
@@ -136,28 +127,23 @@ Graph.js MDG Builder: week property value
 
 Graph.js MDG Builder: week function call
   $ graphjs mdg --no-export function_call.js
-  [[function]] defineProperty[#5] -
-  [[function]] $v1[#17] --< Param(0) >--> this[#18]
-  [[function]] $v1[#17] --< Param(1) >--> x1[#19]
-  this[#18] -
-  x1[#19] -
-  [[function]] $v2[#20] --< Param(0) >--> this[#21]
-  [[function]] $v2[#20] --< Param(1) >--> y1[#22]
-  [[function]] $v2[#20] --< Param(2) >--> y2[#23]
-  [[function]] $v2[#20] --< Param(3) >--> y3[#24]
-  this[#21] -
-  y1[#22] -
-  y2[#23] -
-  y3[#24] -
-  10[#25] --< Arg(1) >--> foo(...)[#26]
-  foo(...)[#26] --< Call >--> [[function]] $v1[#17]
-  foo(...)[#26] --< Call >--> [[function]] $v2[#20]
-  foo(...)[#26] --< D >--> $v3[#27]
-  $v3[#27] -
-  10[#28] --< Arg(1) >--> foo(...)[#31]
-  "abc"[#29] --< Arg(2) >--> foo(...)[#31]
-  true[#30] --< Arg(3) >--> foo(...)[#31]
-  foo(...)[#31] --< Call >--> [[function]] $v1[#17]
-  foo(...)[#31] --< Call >--> [[function]] $v2[#20]
-  foo(...)[#31] --< D >--> $v4[#32]
-  $v4[#32] -
+  [[function]] $v1[#17] -
+  [[function]] $v2[#18] -
+  10[#19] -
+  bar[#20] --< V(x1) >--> bar[#21]
+  bar[#21] --< P(x1) >--> 10[#19]
+  bar[#21] --< P(x1) >--> 10[#28]
+  baz[#22] --< V(y1) >--> baz[#23]
+  baz[#23] --< P(y1) >--> 10[#19]
+  baz[#23] --< V(y2) >--> baz[#25]
+  baz[#23] --< P(y1) >--> 10[#28]
+  y2[#24] -
+  baz[#25] --< P(y2) >--> y2[#24]
+  baz[#25] --< V(y3) >--> baz[#27]
+  baz[#25] --< P(y2) >--> "abc"[#29]
+  y3[#26] -
+  baz[#27] --< P(y3) >--> y3[#26]
+  baz[#27] --< P(y3) >--> true[#30]
+  10[#28] -
+  "abc"[#29] -
+  true[#30] -

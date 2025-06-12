@@ -1,10 +1,10 @@
 // function assignment with a single parameter
 var bar = function (x1) {
-    // static lookup on a this expression
-    let x = this.foo;
-    // method call on a this expression with a single parameter
-    let y = this.bar("abc");
-}
+  // object initialization containing a property
+  let x = { foo: this.foo };
+  // method call on a this expression with a single parameter
+  let y = this.bar("abc");
+};
 
 // variable declaration with an object initialization containing a property and a method
 let obj = { foo: 10, bar: bar };
