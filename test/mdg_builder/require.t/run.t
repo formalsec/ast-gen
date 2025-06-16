@@ -71,8 +71,8 @@ Graph.js MDG Builder: multifile require
   module[#35] --< P(exports) >--> exports[#36]
   exports[#36] --< V(bar1) >--> exports[#66]
   exports[#36] --< P(bar1) >--> exports.bar1[#73]
-  exports[#36] --< P(bar3) >--> exports.bar3[#78]
-  exports[#36] --< P(bar4) >--> exports.bar4[#84]
+  exports[#36] --< P(bar3) >--> exports.bar3[#79]
+  exports[#36] --< P(bar4) >--> exports.bar4[#85]
   "./baz"[#37] --< Arg(1) >--> require(...)[#38]
   require(...)[#38] --< Call >--> [[sink]] require[#3]
   require(...)[#38] --< D >--> baz[#39]
@@ -106,9 +106,9 @@ Graph.js MDG Builder: multifile require
   [[function]] $v8[#60] -
   bar2[#61] --< P(p) >--> [[function]] $v8[#60]
   bar3[#62] --< V(p) >--> bar3[#65]
-  bar3[#62] --< P(p) >--> bar3.p[#79]
+  bar3[#62] --< P(p) >--> bar3.p[#80]
   $v9[#63] --< V(q) >--> $v9[#64]
-  $v9[#63] --< P(q) >--> $v9.q[#81]
+  $v9[#63] --< P(q) >--> $v9.q[#82]
   $v9[#64] --< P(q) >--> [[function]] $v4[#54]
   bar3[#65] --< P(p) >--> $v9[#64]
   exports[#66] --< P(bar1) >--> bar1[#58]
@@ -116,21 +116,21 @@ Graph.js MDG Builder: multifile require
   exports[#67] --< P(bar2) >--> bar2[#61]
   exports[#67] --< V(bar3) >--> exports[#68]
   exports[#68] --< P(bar3) >--> bar3[#65]
-  exports[#68] --< Arg(0) >--> exports.bar4(...)[#85]
+  exports[#68] --< Arg(0) >--> exports.bar4(...)[#86]
   $v2.obj[#69] -
   $v2.foo[#70] -
   $v1[#71] --< V(p) >--> $v1[#72]
   $v1[#72] --< P(p) >--> obj[#25]
   $v1[#72] --< P(p) >--> "abc"[#74]
-  $v1[#72] --< P(p) >--> "def"[#80]
+  $v1[#72] --< P(p) >--> "def"[#81]
   exports.bar1[#73] -
   "abc"[#74] -
   bar1.p[#75] -
-  exports.bar3[#78] -
-  bar3.p[#79] -
-  "def"[#80] -
-  $v9.q[#81] -
-  exports.bar4[#84] -
-  exports.bar4(...)[#85] --< Call >--> exports.bar4[#84]
-  exports.bar4(...)[#85] --< D >--> $v17[#86]
-  $v17[#86] -
+  exports.bar3[#79] -
+  bar3.p[#80] -
+  "def"[#81] -
+  $v9.q[#82] -
+  exports.bar4[#85] -
+  exports.bar4(...)[#86] --< Call >--> exports.bar4[#85]
+  exports.bar4(...)[#86] --< D >--> $v17[#87]
+  $v17[#87] -

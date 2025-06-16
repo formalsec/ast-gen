@@ -57,3 +57,32 @@ Graph.js MDG Builder: switch statement
   z1[#33] --< V(p3) >--> z1[#35]
   true[#34] -
   z1[#35] --< P(p3) >--> true[#34]
+
+Graph.js MDG Builder: conditional scope
+  $ graphjs mdg --no-export scope.js
+  foo[#17] --< V(x) >--> foo[#19]
+  x[#18] -
+  foo[#19] --< P(x) >--> x[#18]
+  foo[#19] --< V(y) >--> foo[#21]
+  y[#20] -
+  foo[#21] --< P(y) >--> y[#20]
+  foo[#21] --< V(z) >--> foo[#23]
+  z[#22] -
+  foo[#23] --< P(z) >--> z[#22]
+  foo[#23] --< V(w) >--> foo[#25]
+  w[#24] -
+  foo[#25] --< P(w) >--> w[#24]
+  "abc"[#26] -
+  10[#27] -
+  "def"[#28] -
+  true[#29] -
+  null[#30] -
+  bar[#31] --< V(x) >--> bar[#32]
+  bar[#32] --< P(x) >--> 10[#27]
+  bar[#32] --< V(y) >--> bar[#33]
+  bar[#33] --< P(y) >--> "abc"[#26]
+  bar[#33] --< V(z) >--> bar[#35]
+  z[#34] -
+  bar[#35] --< P(z) >--> z[#34]
+  bar[#35] --< V(w) >--> bar[#36]
+  bar[#36] --< P(w) >--> null[#30]
