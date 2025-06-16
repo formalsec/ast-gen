@@ -37,12 +37,13 @@ type t =
   ; curr_return : Node.Set.t
   }
 
-and call_interceptor = t -> string -> Node.t -> Node.Set.t list -> t
+and call_interceptor =
+  t -> Region.t LeftValue.t -> Node.t -> Node.Set.t list -> t
 
 let create (env' : Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) : t =
   let mdg' = Mdg.create () in
   let store' = Store.create () in
-  let pcontext' = Pcontext.create prog store' in
+  let pcontext' = Pcontext.create prog in
   { env = env'
   ; mdg = mdg'
   ; store = store'
@@ -60,7 +61,7 @@ let create (env' : Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) : t =
 let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
     (l_parent : Node.t option) : t =
   let file = if main then None else Some mrel in
-  let store' = Store.copy state.pcontext.init_store in
+  let store' = Store.extend_block state.store in
   Jslib.initialize state.mdg store' state.jslib file l_parent;
   { state with
     store = store'
@@ -70,14 +71,25 @@ let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
   ; curr_return = Node.Set.empty
   }
 
-let copy (state : t) : t =
-  let store = Store.copy state.store in
+let extend_block (state : t) : t =
+  { state with store = Store.extend_block state.store }
+
+let extend_func (state : t) : t =
+  { state with store = Store.extend_func state.store }
+
+let reduce_func (state : t) (state1 : t) : t =
+  let store = Store.reduce_func state.store state1.store in
   { state with store }
 
-let lub (state1 : t) (state2 : t) : t =
-  let store = Store.lub state1.store state2.store in
+let reduce_option (state : t) (state1 : t) : t =
+  let store = Store.reduce_option state.store state1.store in
+  let curr_return = Node.Set.union state.curr_return state1.curr_return in
+  { state with store; curr_return }
+
+let reduce_branch (state : t) (state1 : t) (state2 : t) : t =
+  let store = Store.reduce_branch state.store state1.store state2.store in
   let curr_return = Node.Set.union state1.curr_return state2.curr_return in
-  { state1 with store; curr_return }
+  { state with store; curr_return }
 
 type cid = Allocator.cid
 

@@ -24,6 +24,11 @@ let is_excess_builtin (mdg : Mdg.t) (l_builtin : Node.t) : bool =
   && Fun.flip Edge.Set.for_all prop_edges (fun edge ->
          is_excess_builtin_prop mdg edge.tar )
 
+let is_excess_this (mdg : Mdg.t) (l_this : Node.t) : bool =
+  let edges = Mdg.get_edges mdg l_this.loc in
+  let trans = Mdg.get_trans mdg l_this.loc in
+  Edge.Set.is_empty edges && Edge.Set.cardinal trans == 1
+
 let is_excess_sink (mdg : Mdg.t) (l_sink : Node.t) : bool =
   let edges = Mdg.get_edges mdg l_sink.loc in
   let trans = Mdg.get_trans mdg l_sink.loc in
@@ -44,5 +49,13 @@ let compute_excess_jslib (state : State.t) (acc : Node.t list) : Node.t list =
       | TaintSource -> node :: acc
       | _ -> acc )
 
+let compute_excess_this (state : State.t) (acc : Node.t list) : Node.t list =
+  Fun.flip2 Hashtbl.fold state.mdg.nodes acc (fun _ node acc ->
+      match node.kind with
+      | Parameter "this" when is_excess_this state.mdg node -> node :: acc
+      | _ -> acc )
+
 let compute (state : State.t) : unit =
-  compute_excess_jslib state [] |> Mdg.remove_nodes state.mdg
+  compute_excess_jslib state []
+  |> compute_excess_this state
+  |> Mdg.remove_nodes state.mdg

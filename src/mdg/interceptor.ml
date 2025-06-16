@@ -40,13 +40,16 @@ module RequireInterceptor = struct
       let state' = cb_build_file state file.file false (Some l_module) in
       Jslib.exported_object ~mrel:file.file.mrel state'.mdg state.jslib
 
-  let run (cb_build_file : cb_build_file) (state : State.t) (retn_name : string)
-      (_ : Node.t) (ls_args : Node.Set.t list) : State.t =
+  let run (cb_build_file : cb_build_file) (state : State.t)
+      (left : Region.t LeftValue.t) (_ : Node.t) (ls_args : Node.Set.t list) :
+      State.t =
     match get_module_path state ls_args with
     | None -> state
     | Some path ->
+      let name = LeftValue.name left in
+      let kind = LeftValue.kind left in
       let ls_exports = process_module cb_build_file state path in
-      Store.replace state.store retn_name ls_exports;
+      Store.write ~kind state.store name ls_exports;
       state
 end
 

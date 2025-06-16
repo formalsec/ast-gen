@@ -31,7 +31,7 @@ let create_toplevel_node (store : Store.t) (jslib : t) (toplevel : bool)
     (name : string) (node : Node.t) : unit =
   if toplevel then (
     Hashtbl.replace jslib name node;
-    Store.replace store name (Node.Set.singleton node) )
+    Store.set store name (Node.Set.singleton node) )
 
 let create_tainted_sink (mdg : Mdg.t) (store : Store.t) (jslib : t)
     (toplevel : bool) (sink : Jsmodel.TaintSink.t) : Node.t =
@@ -75,7 +75,7 @@ let create_module (mdg : Mdg.t) (store : Store.t) (jslib : t)
   let l_module = Node.create_object name l_parent (Region.default ()) in
   Hashtbl.replace jslib name_jslib l_module;
   Mdg.add_node mdg l_module;
-  Store.replace store name (Node.Set.singleton l_module);
+  Store.set store name (Node.Set.singleton l_module);
   Fun.flip Option.iter l_parent (fun l_parent' ->
       Mdg.add_edge mdg (Edge.create l_parent' l_module Dependency) );
   l_module
@@ -91,7 +91,7 @@ let create_exports (mdg : Mdg.t) (store : Store.t) (jslib : t)
   Hashtbl.replace jslib name_jslib l_exports;
   Mdg.add_node mdg l_exports;
   Mdg.add_edge mdg (Edge.create l_module l_exports (Property prop));
-  Store.replace store name (Node.Set.singleton l_exports);
+  Store.set store name (Node.Set.singleton l_exports);
   l_exports
 
 let initialize_component ?(toplevel = true) ?(node_f = Node.create_object')
