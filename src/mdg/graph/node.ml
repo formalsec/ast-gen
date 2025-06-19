@@ -73,50 +73,37 @@ let create_default (f : 'a -> t option -> Region.t -> t) (a : 'a) : t =
   f a None (Region.default ())
 
 let create_literal (literal : Literal.t) : t option -> Region.t -> t =
-  let loc = Location.create () in
-  create loc (Literal literal)
+  create (Location.create ()) (Literal literal)
 
 let create_blank (name : string) : t option -> Region.t -> t =
-  let loc = Location.create () in
-  create loc (Blank name)
+  create (Location.create ()) (Blank name)
 
 let create_object (name : string) : t option -> Region.t -> t =
-  let loc = Location.create () in
-  create loc (Object name)
+  create (Location.create ()) (Object name)
 
 let create_function (name : string) : t option -> Region.t -> t =
-  let loc = Location.create () in
-  create loc (Function name)
+  create (Location.create ()) (Function name)
 
 let create_parameter (name : string) : t option -> Region.t -> t =
-  let loc = Location.create () in
-  create loc (Parameter name)
+  create (Location.create ()) (Parameter name)
 
 let create_call (name : string) : t option -> Region.t -> t =
-  let loc = Location.create () in
-  create loc (Call name)
+  create (Location.create ()) (Call name)
 
 let create_return (name : string) : t option -> Region.t -> t =
-  let loc = Location.create () in
-  create loc (Return name)
+  create (Location.create ()) (Return name)
 
 let create_builtin (name : string) : t option -> Region.t -> t =
-  let loc = Location.create () in
-  let kind = Builtin name in
-  create loc kind
+  create (Location.create ()) (Builtin name)
 
 let create_module (name : string) : t option -> Region.t -> t =
-  let loc = Location.create () in
-  let kind = Module name in
-  create loc kind
+  create (Location.create ()) (Module name)
 
 let create_taint_sink (sink : Taint.Sink.t) : t option -> Region.t -> t =
-  let loc = Location.create () in
-  create loc (TaintSink sink)
+  create (Location.create ()) (TaintSink sink)
 
 let create_taint_source () : t option -> Region.t -> t =
-  let loc = Location.create () in
-  create loc TaintSource
+  create (Location.create ()) TaintSource
 
 let create_literal' = create_default create_literal
 let create_blank' = create_default create_blank

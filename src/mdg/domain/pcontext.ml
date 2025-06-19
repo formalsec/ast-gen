@@ -49,9 +49,8 @@ let file (pcontext : 'm t) (path : Fpath.t) : 'm file option =
 
 let build_file (pcontext : 'm t) (path : Fpath.t) : unit =
   let path' = Fpath.rem_ext path in
-  match Hashtbl.find_opt pcontext.files path' with
-  | Some file -> Hashtbl.replace pcontext.files path' { file with built = true }
-  | None -> ()
+  Fun.flip Option.iter (Hashtbl.find_opt pcontext.files path') (fun file ->
+      Hashtbl.replace pcontext.files path' { file with built = true } )
 
 let func (pcontext : 'm t) (l_func : Node.t) : 'm func option =
   Hashtbl.find_opt pcontext.funcs l_func.loc
