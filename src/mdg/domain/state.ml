@@ -26,8 +26,8 @@ type t =
   { env : Env.t
   ; mdg : Mdg.t
   ; store : Store.t
-  ; allocator : Node.t Allocator.t
   ; pcontext : Region.t Pcontext.t
+  ; allocator : Node.t Allocator.t
   ; jslib : Jslib.t
   ; npmlib : Npmlib.t
   ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
@@ -47,8 +47,8 @@ let create (env' : Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) : t =
   { env = env'
   ; mdg = mdg'
   ; store = store'
-  ; allocator = Allocator.create Config.(!dflt_htbl_sz)
   ; pcontext = pcontext'
+  ; allocator = Allocator.create Config.(!dflt_htbl_sz)
   ; jslib = Jslib.create mdg' store' pcontext' jsmodel
   ; npmlib = Npmlib.create jsmodel
   ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
@@ -74,8 +74,9 @@ let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
 let extend_block (state : t) : t =
   { state with store = Store.extend_block state.store }
 
-let extend_func (state : t) : t =
-  { state with store = Store.extend_func state.store }
+let extend_func (state : t) (store : Store.t) : t =
+  let store' = if Store.within store state.store then state.store else store in
+  { state with store = Store.extend_func store' }
 
 let reduce_func (state : t) (state1 : t) : t =
   let store = Store.reduce_func state.store state1.store in

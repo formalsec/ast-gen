@@ -31,13 +31,6 @@ end
 module Entry = struct
   type t = Tag.t * Node.Set.t
 
-  let map (f : Node.Set.t -> Node.Set.t) (entry : t) : t =
-    match entry with
-    | (Var, ls_entry) -> (Var, f ls_entry)
-    | (Let, ls_entry) -> (Let, f ls_entry)
-    | (Const, ls_entry) -> (Const, f ls_entry)
-    | (Outer, ls_entry) -> (Outer, f ls_entry)
-
   let equal ((tag1, ls_entry1) : t) ((tag2, ls_entry2) : t) : bool =
     Tag.equal tag1 tag2 && Node.Set.equal ls_entry1 ls_entry2
 
@@ -48,9 +41,9 @@ module Entry = struct
 end
 
 type t =
-  { map : (string, Entry.t) Hashtbl.t
+  { id : int
+  ; map : (string, Entry.t) Hashtbl.t
   ; scope : scope
-  ; id : int
   }
 
 and scope =
@@ -59,15 +52,15 @@ and scope =
   | Function of t
 
 let create () : t =
-  { map = Hashtbl.create Config.(!dflt_htbl_sz)
+  { id = id_gen.next ()
+  ; map = Hashtbl.create Config.(!dflt_htbl_sz)
   ; scope = Global
-  ; id = id_gen.next ()
   }
 
-let flat_copy (store : t) : t =
-  { map = Hashtbl.copy store.map; scope = store.scope; id = id_gen.next () }
+let copy_flat (store : t) : t =
+  { id = id_gen.next (); map = Hashtbl.copy store.map; scope = store.scope }
 
-let flat_equal (store1 : t) (store2 : t) : bool =
+let equal_flat (store1 : t) (store2 : t) : bool =
   Hashtbl.equal Entry.equal store1.map store2.map
 
 let rec copy (store : t) : t =
@@ -75,9 +68,9 @@ let rec copy (store : t) : t =
     | Global -> Global
     | Block store' -> Block (copy store')
     | Function store' -> Function (copy store') in
-  { map = Hashtbl.copy store.map
+  { id = id_gen.next ()
+  ; map = Hashtbl.copy store.map
   ; scope = scope_f store.scope
-  ; id = id_gen.next ()
   }
 
 let rec equal (store1 : t) (store2 : t) : bool =
@@ -86,12 +79,12 @@ let rec equal (store1 : t) (store2 : t) : bool =
     | (Block store1, Block store2) -> equal store1 store2
     | (Function store1, Function store2) -> equal store1 store2
     | _ -> false in
-  flat_equal store1 store2 && scope_f (store1.scope, store2.scope)
+  equal_flat store1 store2 && scope_f (store1.scope, store2.scope)
 
-let rec within (store1 : t) (store2 : t) : bool =
-  match store2.scope with
-  | _ when store1.id == store2.id -> true
-  | Block store2' -> within store1 store2'
+let rec within (store : t) (store' : t) : bool =
+  match store'.scope with
+  | _ when store.id == store'.id -> true
+  | Block store'' -> within store store''
   | Global | Function _ -> false
 
 let find (store : t) (name : string) : Entry.t option =
@@ -156,9 +149,12 @@ let merge_branch (store : t) (name : string) (entry1 : Entry.t option)
     merge_option store name entry
   | ((None | Some ((Let, _) | (Const, _))), Some entry) ->
     merge_option store name entry
-  | (Some (Var, c1), Some (Var, c2))
-  | (Some (Var, c1), Some (Outer, c2))
-  | (Some (Outer, c1), Some (Var, c2))
+  | (Some (Var, c1), Some (Var, c2)) ->
+    replace store name (Var, Node.Set.union c1 c2)
+  | (Some (Var, c1), Some (Outer, c2)) ->
+    replace store name (Outer, Node.Set.union c1 c2)
+  | (Some (Outer, c1), Some (Var, c2)) ->
+    replace store name (Outer, Node.Set.union c1 c2)
   | (Some (Outer, c1), Some (Outer, c2)) ->
     replace store name (Outer, Node.Set.union c1 c2)
 
@@ -182,16 +178,14 @@ let reduce_branch (store : t) (store1 : t) (store2 : t) : t =
       merge_branch store name entry1 entry2 );
   store
 
-let apply (f : Node.Set.t -> Node.Set.t) (store : t) : unit =
-  Fun.flip Hashtbl.iter store.map (fun name entry ->
-      replace store name (Entry.map f entry) )
-
 let strong_update (store : t) (l_old : Node.t) (l_new : Node.t) : unit =
   let replace_f l_value = if Node.equal l_old l_value then l_new else l_value in
-  apply (Node.Set.map replace_f) store
+  Fun.flip Hashtbl.iter store.map (fun name (tag, ls_value) ->
+      replace store name (tag, Node.Set.map replace_f ls_value) )
 
 let weak_update (store : t) (l_old : Node.t) (ls_new : Node.Set.t) : unit =
   let replace_f l_value acc =
     if Node.equal l_old l_value then Node.Set.union ls_new acc
     else Node.Set.add l_value acc in
-  apply (Fun.flip (Node.Set.fold replace_f) Node.Set.empty) store
+  Fun.flip Hashtbl.iter store.map (fun name (tag, ls_value) ->
+      replace store name (tag, Node.Set.fold replace_f ls_value Node.Set.empty) )

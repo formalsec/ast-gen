@@ -61,13 +61,13 @@ let remove_node (mdg : t) (node : Node.t) : unit =
   let edges = get_edges mdg node.loc in
   let trans = get_trans mdg node.loc in
   Fun.flip Edge.Set.iter edges (fun edge ->
-      let edge' = Edge.transpose edge in
-      let trans = get_trans mdg edge'.src.loc in
-      Hashtbl.replace mdg.trans edge'.src.loc (Edge.Set.remove edge' trans) );
-  Fun.flip Edge.Set.iter trans (fun edge ->
-      let edge' = Edge.transpose edge in
-      let edges = get_edges mdg edge'.src.loc in
-      Hashtbl.replace mdg.edges edge'.src.loc (Edge.Set.remove edge' edges) );
+      let tran = Edge.transpose edge in
+      let trans = get_trans mdg tran.src.loc in
+      Hashtbl.replace mdg.trans tran.src.loc (Edge.Set.remove tran trans) );
+  Fun.flip Edge.Set.iter trans (fun tran ->
+      let edge = Edge.transpose tran in
+      let edges = get_edges mdg edge.src.loc in
+      Hashtbl.replace mdg.edges edge.src.loc (Edge.Set.remove edge edges) );
   Hashtbl.remove mdg.nodes node.loc;
   Hashtbl.remove mdg.edges node.loc;
   Hashtbl.remove mdg.trans node.loc

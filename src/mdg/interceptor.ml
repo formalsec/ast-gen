@@ -20,23 +20,19 @@ module RequireInterceptor = struct
       | _ -> None )
     | _ -> None
 
-  let build_module (state : State.t) (mrel : Fpath.t) : Node.t =
-    let l_module = Node.create_module' (Fpath.to_string mrel) in
-    Mdg.add_node state.mdg l_module;
-    l_module
-
   let process_module (cb_build_file : cb_build_file) (state : State.t)
-      (path : Fpath.t) : Node.Set.t =
-    match Pcontext.file state.pcontext path with
+      (mrel : Fpath.t) : Node.Set.t =
+    match Pcontext.file state.pcontext mrel with
     | None ->
       let State.{ mdg; pcontext; jslib; npmlib; _ } = state in
-      let name = Fpath.filename path in
+      let name = Fpath.filename mrel in
       let l_npmlib = Npmlib.resolve mdg pcontext jslib npmlib name in
       Node.Set.singleton l_npmlib
     | Some file when file.built ->
       Jslib.exported_object ~mrel:file.file.mrel state.mdg state.jslib
     | Some file ->
-      let l_module = build_module state file.file.mrel in
+      let l_module = Node.create_module' (Fpath.to_string file.file.mrel) in
+      Mdg.add_node state.mdg l_module;
       let state' = cb_build_file state file.file false (Some l_module) in
       Jslib.exported_object ~mrel:file.file.mrel state'.mdg state.jslib
 
