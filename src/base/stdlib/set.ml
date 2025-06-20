@@ -18,4 +18,9 @@ module Make (Ord : OrderedType) = struct
 
   let map_list (f : elt -> 'a) (set : t) : 'a list =
     fold (fun elt acc -> f elt :: acc) set []
+
+  let map_opt (f : elt -> elt option) (set : t) : t =
+    let f' elt acc =
+      match f elt with None -> acc | Some elt' -> add elt' acc in
+    fold f' set empty
 end
