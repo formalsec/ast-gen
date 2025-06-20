@@ -39,7 +39,14 @@ type t =
   }
 
 and call_interceptor =
-  t -> Region.t LeftValue.t -> Node.t -> Node.Set.t list -> t
+     t
+  -> Region.t LeftValue.t
+  -> Region.t Expression.t list
+  -> string
+  -> Allocator.cid
+  -> Node.t
+  -> Node.Set.t list
+  -> t
 
 and method_interceptor_matcher = Node.t -> Node.Set.t list -> Property.t -> bool
 and method_interceptor = method_interceptor_matcher * call_interceptor
@@ -179,9 +186,9 @@ let set_function_interceptor (state : t) (node : Node.t)
     (interceptor : call_interceptor) : unit =
   Hashtbl.replace state.function_interceptors node.loc interceptor
 
-let get_method_interceptor (state : t) (node : Node.t)
+let get_method_interceptor (state : t) (l_func : Node.t)
     (ls_args : Node.Set.t list) (prop : Property.t) : call_interceptor option =
-  let matcher_f (matcher, _) = matcher node ls_args prop in
+  let matcher_f (matcher, _) = matcher l_func ls_args prop in
   List.find_opt matcher_f !(state.method_interceptors) |> Option.map snd
 
 let set_method_interceptor (state : t) (matcher : method_interceptor_matcher)
