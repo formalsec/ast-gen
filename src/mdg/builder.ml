@@ -129,11 +129,15 @@ let add_function_call (state : State.t) (call_name : string)
   (state, l_call, l_retn)
 
 let call_interceptor (state : State.t) (left : Region.t LeftValue.t)
-    (ls_func : Node.Set.t) (ls_args : Node.Set.t list) : State.t =
+    ?(prop : Property.t option) (ls_func : Node.Set.t)
+    (ls_args : Node.Set.t list) : State.t =
+  let function_f = State.get_function_interceptor state in
+  let method_f = State.get_method_interceptor state in
   Fun.flip2 Node.Set.fold ls_func state (fun l_func state ->
-      match State.get_call_interceptor state l_func with
-      | Some call_f -> call_f state left l_func ls_args
-      | None -> state )
+      match (Option.bind prop (method_f l_func ls_args), function_f l_func) with
+      | (Some call_f, _) -> call_f state left l_func ls_args
+      | (None, Some call_f) -> call_f state left l_func ls_args
+      | (None, None) -> state )
 
 let connect_prototype_properties (state : State.t) (l_func : Node.t)
     (l_this : Node.t) : unit =
@@ -267,7 +271,8 @@ and unfold_entry_function (state : State.t) (l_func : Node.t)
     let state''' = build_sequence state'' func.body in
     let ls_retn = unfold_function_return state''' new_ l_func ls_this' in
     let ls_retn' = Node.Set.union state'''.curr_return ls_retn in
-    (state, ls_retn')
+    let state'''' = State.reduce_func state state''' in
+    (state'''', ls_retn')
 
 and build_vardecl (state : State.t) (left : 'm LeftValue.t) : State.t =
   let name = LeftValue.name left in
@@ -428,7 +433,7 @@ and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
   let call_f = unfold_function_call state call_name retn_name in
   let (state', ls_retn) = call_f call_cid retn_cid false ls_func ls_args' in
   Store.write state'.store retn_name ~kind:retn_kind ls_retn;
-  call_interceptor state' left ls_func ls_args'
+  call_interceptor state' left ~prop:prop' ls_func ls_args'
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
     (obj : 'm Expression.t) (prop : 'm Expression.t)
@@ -448,7 +453,7 @@ and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
   let call_f = unfold_function_call state call_name retn_name in
   let (state', ls_retn) = call_f call_cid retn_cid false ls_func ls_args' in
   Store.write state'.store retn_name ~kind:retn_kind ls_retn;
-  call_interceptor state' left ls_func ls_args'
+  call_interceptor state' left ~prop:prop' ls_func ls_args'
 
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =

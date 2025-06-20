@@ -30,7 +30,8 @@ type t =
   ; allocator : Node.t Allocator.t
   ; jslib : Jslib.t
   ; npmlib : Npmlib.t
-  ; call_interceptors : (Location.t, call_interceptor) Hashtbl.t
+  ; function_interceptors : (Location.t, call_interceptor) Hashtbl.t
+  ; method_interceptors : method_interceptor list ref
   ; curr_floc : Pcontext.Floc.t
   ; curr_stack : Node.t list
   ; curr_parent : Node.t option
@@ -39,6 +40,9 @@ type t =
 
 and call_interceptor =
   t -> Region.t LeftValue.t -> Node.t -> Node.Set.t list -> t
+
+and method_interceptor_matcher = Node.t -> Node.Set.t list -> Property.t -> bool
+and method_interceptor = method_interceptor_matcher * call_interceptor
 
 let create (env' : Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) : t =
   let mdg' = Mdg.create () in
@@ -51,7 +55,8 @@ let create (env' : Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) : t =
   ; allocator = Allocator.create Config.(!dflt_htbl_sz)
   ; jslib = Jslib.create mdg' store' pcontext' jsmodel
   ; npmlib = Npmlib.create jsmodel
-  ; call_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
+  ; function_interceptors = Hashtbl.create Config.(!dflt_htbl_sz)
+  ; method_interceptors = ref []
   ; curr_floc = Pcontext.Floc.default ()
   ; curr_stack = []
   ; curr_parent = None
@@ -138,6 +143,9 @@ let add_call_node (state : t) (cid : cid) (name : string) : Node.t =
 let add_return_node (state : t) (cid : cid) (name : string) : Node.t =
   add_node state cid (Node.create_return name)
 
+let add_module_node (state : t) (cid : cid) (name : string) : Node.t =
+  add_node state cid (Node.create_module name)
+
 let add_dependency_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state src tar (Edge.create_dependency ()) |> ignore
 
@@ -163,9 +171,20 @@ let add_caller_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
 let add_return_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state src tar (Edge.create_return ()) |> ignore
 
-let get_call_interceptor (state : t) (node : Node.t) : call_interceptor option =
-  Hashtbl.find_opt state.call_interceptors node.loc
+let get_function_interceptor (state : t) (node : Node.t) :
+    call_interceptor option =
+  Hashtbl.find_opt state.function_interceptors node.loc
 
-let set_call_interceptor (state : t) (node : Node.t)
+let set_function_interceptor (state : t) (node : Node.t)
     (interceptor : call_interceptor) : unit =
-  Hashtbl.replace state.call_interceptors node.loc interceptor
+  Hashtbl.replace state.function_interceptors node.loc interceptor
+
+let get_method_interceptor (state : t) (node : Node.t)
+    (ls_args : Node.Set.t list) (prop : Property.t) : call_interceptor option =
+  let matcher_f (matcher, _) = matcher node ls_args prop in
+  List.find_opt matcher_f !(state.method_interceptors) |> Option.map snd
+
+let set_method_interceptor (state : t) (matcher : method_interceptor_matcher)
+    (interceptor : call_interceptor) : unit =
+  let interceptor' = (matcher, interceptor) in
+  state.method_interceptors := interceptor' :: !(state.method_interceptors)
