@@ -578,6 +578,25 @@ and build_labeled (state : State.t) (_label : 'm Identifier.t)
   (* store the labels in the environment, and then use them in the break and continue statements *)
   build_sequence state body
 
+and build_export_decl (state : State.t) (specifier : 'm ExportDecl.specifier)
+    (cid : cid) : State.t =
+  (* TODO: implement the other types of export *)
+  match specifier with
+  | Default expr ->
+    let (mrel, main) = (state.curr_floc.mrel, state.curr_floc.main) in
+    let mrel' = if main then None else Some mrel in
+    let module_jslib = Jslib.resolve_name mrel' "module" in
+    let l_obj = Jslib.find_node state.mdg state.jslib module_jslib in
+    let ls_obj = Mdg.object_tail_versions state.mdg l_obj in
+    let prop = Property.Static "exports" in
+    let ls_export = eval_expr state expr in
+    let ls_new = add_static_object_version state "module" ls_obj prop cid in
+    Fun.flip Node.Set.iter ls_new (fun l_new ->
+        Fun.flip Node.Set.iter ls_export (fun l_export ->
+            State.add_property_edge state l_new l_export prop ) );
+    state
+  | _ -> state
+
 and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
   match stmt.el with
   | `ExprStmt _ -> state
@@ -627,7 +646,8 @@ and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
   | `Labeled { label; body } -> build_labeled state label body
   | `Debugger _ -> state
   | `ImportDecl _ -> state
-  | `ExportDecl _ -> state
+  | `ExportDecl { specifier; _ } ->
+    build_export_decl state specifier (newcid stmt)
 
 and build_sequence (state : State.t) (stmts : 'm Statement.t list) : State.t =
   let state' = build_hoisted_functions state stmts in
