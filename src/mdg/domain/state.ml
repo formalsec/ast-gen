@@ -48,7 +48,9 @@ and call_interceptor =
   -> Node.Set.t list
   -> t
 
-and method_interceptor_matcher = Node.t -> Node.Set.t list -> Property.t -> bool
+and method_interceptor_matcher =
+  t -> Node.t -> Node.Set.t list -> Property.t -> bool
+
 and method_interceptor = method_interceptor_matcher * call_interceptor
 
 let create (env' : Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) : t =
@@ -178,6 +180,10 @@ let add_caller_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
 let add_return_edge (state : t) (src : Node.t) (tar : Node.t) : unit =
   add_edge state src tar (Edge.create_return ()) |> ignore
 
+let add_meta_edge (state : t) (src : Node.t) (tar : Node.t) (meta : string) :
+    unit =
+  add_edge state src tar (Edge.create_meta meta) |> ignore
+
 let get_function_interceptor (state : t) (node : Node.t) :
     call_interceptor option =
   Hashtbl.find_opt state.function_interceptors node.loc
@@ -188,7 +194,7 @@ let set_function_interceptor (state : t) (node : Node.t)
 
 let get_method_interceptor (state : t) (l_func : Node.t)
     (ls_args : Node.Set.t list) (prop : Property.t) : call_interceptor option =
-  let matcher_f (matcher, _) = matcher l_func ls_args prop in
+  let matcher_f (matcher, _) = matcher state l_func ls_args prop in
   List.find_opt matcher_f !(state.method_interceptors) |> Option.map snd
 
 let set_method_interceptor (state : t) (matcher : method_interceptor_matcher)

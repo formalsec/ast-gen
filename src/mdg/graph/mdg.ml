@@ -90,6 +90,11 @@ let get_dependencies (mdg : t) (node : Node.t) : Node.t list =
   |> Edge.Set.filter Edge.is_dependency
   |> Edge.Set.map_list Edge.tar
 
+let has_dependency (mdg : t) (node1 : Node.t) (node2 : Node.t) : bool =
+  get_trans mdg node1.loc
+  |> Edge.Set.filter Edge.is_dependency
+  |> Edge.Set.exists (fun edge -> Node.equal edge.tar node2)
+
 let has_property (mdg : t) (node : Node.t) (prop : Property.t) : bool =
   get_edges mdg node.loc |> Edge.Set.exists (Edge.is_property ~prop)
 
@@ -165,6 +170,17 @@ let get_function_returns (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_return
   |> Edge.Set.map_list Edge.tar
+
+let has_metadata (mdg : t) (node1 : Node.t) (node2 : Node.t) (meta : string) :
+    bool =
+  let meta_f = Edge.is_meta ~meta in
+  get_edges mdg node1.loc
+  |> Edge.Set.exists (fun edge -> meta_f edge && Node.equal edge.tar node2)
+
+let get_metadata (mdg : t) (node : Node.t) : (Node.t * string) list =
+  get_edges mdg node.loc
+  |> Edge.Set.filter Edge.is_meta
+  |> Edge.Set.map_list (fun edge -> (Edge.tar edge, Edge.metadata edge))
 
 let object_lineage_traversal (f : Node.t -> 'a -> 'a) (mdg : t)
     (lineage_f : t -> Node.t -> (Property.t * Node.t) list)
