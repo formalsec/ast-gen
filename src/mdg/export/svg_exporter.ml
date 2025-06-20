@@ -72,7 +72,8 @@ module Dot = struct
     | Argument 0 -> Fmt.str "this"
     | Argument idx -> Fmt.str "Arg:%d" idx
     | Caller -> Fmt.str "Call"
-    | Return -> Fmt.str "Return" )
+    | Return -> Fmt.str "Return"
+    | Meta meta -> Fmt.str "Meta:%s" meta )
     |> String.escaped
 
   let initialize (env' : Env.t) (mdg' : Mdg.t) : unit =
@@ -137,6 +138,7 @@ module Dot = struct
         | Argument 0 -> [ `Style `Dotted; `Color 6710784; `Fontcolor 6710784 ]
         | Caller -> [ `Color 6697728; `Fontcolor 6697728 ]
         | Return -> [ `Style `Dotted; `Color 26112; `Fontcolor 26112 ]
+        | Meta _ -> [ `Style `Invis ]
         | _ -> [ `Color 2105376 ] )
 
     let edge_attributes ((_, edge, _) : Node.t * Edge.t * Node.t) : edge_attrs =

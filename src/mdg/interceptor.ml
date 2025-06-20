@@ -67,10 +67,10 @@ module RequireInterceptor = struct
 end
 
 module FunctionBindInterceptor = struct
-  let matcher (_ : Node.t) (ls_args : Node.Set.t list) (prop : Property.t) :
-      bool =
-    Node.Set.for_all Node.is_function (List.hd ls_args)
-    && Property.equal (Static "bind") prop
+  let matcher (_ : State.t) (_ : Node.t) (ls_args : Node.Set.t list)
+      (prop : Property.t) : bool =
+    Property.equal (Static "bind") prop
+    && Node.Set.for_all Node.is_function (List.hd ls_args)
 
   let get_this_function (state : State.t) (ls_args : Node.Set.t list) :
       'm Pcontext.func option =
@@ -100,10 +100,10 @@ module FunctionBindInterceptor = struct
 end
 
 module FunctionCallInterceptor = struct
-  let matcher (_ : Node.t) (ls_args : Node.Set.t list) (prop : Property.t) :
-      bool =
-    Node.Set.for_all Node.is_function (List.hd ls_args)
-    && Property.equal (Static "call") prop
+  let matcher (_ : State.t) (_ : Node.t) (ls_args : Node.Set.t list)
+      (prop : Property.t) : bool =
+    Property.equal (Static "call") prop
+    && Node.Set.for_all Node.is_function (List.hd ls_args)
 
   let run (cb_unfold_function : cb_unfold_function) (state : State.t)
       (left : Region.t LeftValue.t) (_ : 'm Expression.t list)
@@ -117,10 +117,63 @@ module FunctionCallInterceptor = struct
     unfold_f call_cid retn_cid false ls_func ls_args' |> fst
 end
 
+module Promise = struct
+  let run (state : State.t) (left : Region.t LeftValue.t)
+      (_ : 'm Expression.t list) (_ : string) (_ : Allocator.cid)
+      (l_func : Node.t) (_ : Node.Set.t list) : State.t =
+    let retn_cid = Allocator.cid left in
+    let l_retn = State.get_node state retn_cid in
+    State.add_meta_edge state l_retn l_func "cons";
+    state
+end
+
+module PromiseThen = struct
+  let matcher (state : State.t) (l_func : Node.t) (_ : Node.Set.t list)
+      (prop : Property.t) : bool =
+    if Property.equal (Static "then") prop then
+      match Mdg.get_property_owner state.mdg l_func with
+      | [ (Static "then", l_promise) ] ->
+        let l_builtin = Jslib.find_node state.mdg state.jslib "Promise" in
+        let ls_orig = Mdg.object_orig_versions state.mdg l_promise in
+        Fun.flip Node.Set.exists ls_orig (fun l_orig ->
+            Mdg.has_metadata state.mdg l_orig l_builtin "cons" )
+      | _ -> false
+    else false
+
+  let get_resolves (state : State.t) (ls_promise : Node.Set.t) : Node.Set.t =
+    Node.Set.map_flat (Mdg.object_orig_versions state.mdg) ls_promise
+    |> Node.Set.map (Mdg.get_call_of_return state.mdg)
+    |> Node.Set.map_flat (fun l_call ->
+           Mdg.get_argument state.mdg l_call 1 |> Node.Set.of_list )
+    |> Node.Set.map (fun l_func -> Mdg.get_parameter state.mdg l_func 1)
+    |> Node.Set.map_flat (fun l_resolve ->
+           Mdg.get_function_callers state.mdg l_resolve |> Node.Set.of_list )
+
+  let get_resolve_args (state : State.t) (ls_resolve : Node.Set.t) (idx : int) :
+      Node.Set.t =
+    Fun.flip Node.Set.map_flat ls_resolve (fun l_call ->
+        Mdg.get_argument state.mdg l_call idx |> Node.Set.of_list )
+
+  let run (state : State.t) (_ : Region.t LeftValue.t)
+      (_ : 'm Expression.t list) (_ : string) (_ : Allocator.cid) (_ : Node.t)
+      (ls_args : Node.Set.t list) : State.t =
+    let ls_promise = List.hd ls_args in
+    let ls_callback = List.nth_opt ls_args 1 in
+    let ls_callback' = Option.value ~default:Node.Set.empty ls_callback in
+    let ls_resolve = get_resolves state ls_promise in
+    Fun.flip Node.Set.iter ls_callback' (fun l_callback ->
+        let ls_params = Mdg.get_parameters state.mdg l_callback in
+        Fun.flip List.iter ls_params (fun (idx, l_param) ->
+            let add_dep_f = Fun.flip (State.add_dependency_edge state) l_param in
+            let ls_args = get_resolve_args state ls_resolve idx in
+            Node.Set.iter add_dep_f ls_args ) );
+    state
+end
+
 let initialize_require (state : State.t) (cbs_builder : cbs_builder) : unit =
   let l_require = Jslib.find_node state.mdg state.jslib "require" in
-  let cb_require = RequireInterceptor.run cbs_builder.build_file in
-  State.set_function_interceptor state l_require cb_require
+  let require_run = RequireInterceptor.run cbs_builder.build_file in
+  State.set_function_interceptor state l_require require_run
 
 let initialize_function (state : State.t) (cbs_builder : cbs_builder) : unit =
   let bind_matcher = FunctionBindInterceptor.matcher in
@@ -130,6 +183,15 @@ let initialize_function (state : State.t) (cbs_builder : cbs_builder) : unit =
   State.set_method_interceptor state bind_matcher bind_run;
   State.set_method_interceptor state call_matcher call_run
 
+let initialize_promise (state : State.t) : unit =
+  let l_promise = Jslib.find_node state.mdg state.jslib "Promise" in
+  let promise_run = Promise.run in
+  let then_matcher = PromiseThen.matcher in
+  let then_run = PromiseThen.run in
+  State.set_function_interceptor state l_promise promise_run;
+  State.set_method_interceptor state then_matcher then_run
+
 let initialize (state : State.t) (cbs_builder : cbs_builder) : unit =
   initialize_require state cbs_builder;
-  initialize_function state cbs_builder
+  initialize_function state cbs_builder;
+  initialize_promise state

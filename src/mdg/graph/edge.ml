@@ -6,6 +6,7 @@ type kind =
   | Argument of int
   | Caller
   | Return
+  | Meta of string
 
 let kind_id (kind : kind) : int =
   match kind with
@@ -16,6 +17,7 @@ let kind_id (kind : kind) : int =
   | Argument _ -> 5
   | Caller -> 6
   | Return -> 7
+  | Meta _ -> 8
 
 let equal_kind (kind1 : kind) (kind2 : kind) : bool =
   match (kind1, kind2) with
@@ -26,6 +28,7 @@ let equal_kind (kind1 : kind) (kind2 : kind) : bool =
   | (Argument idx1, Argument idx2) -> Int.equal idx1 idx2
   | (Caller, Caller) -> true
   | (Return, Return) -> true
+  | (Meta meta1, Meta meta2) -> String.equal meta1 meta2
   | _ -> false
 
 let compare_kind_arg (kind1 : kind) (kind2 : kind) : int =
@@ -49,6 +52,7 @@ let pp_kind (ppf : Fmt.t) (kind : kind) : unit =
   | Argument idx -> Fmt.fmt ppf "Arg(%d)" idx
   | Caller -> Fmt.fmt ppf "Call"
   | Return -> Fmt.fmt ppf "Retn"
+  | Meta meta -> Fmt.fmt ppf "Meta(%s)" meta
 
 type t =
   { src : Node.t
@@ -120,6 +124,9 @@ let create_caller () : Node.t -> Node.t -> t =
 let create_return () : Node.t -> Node.t -> t =
  fun src tar -> create src tar Return
 
+let create_meta (meta : string) : Node.t -> Node.t -> t =
+ fun src tar -> create src tar (Meta meta)
+
 let is_dependency (edge : t) : bool =
   match edge.kind with Dependency -> true | _ -> false
 
@@ -153,6 +160,12 @@ let is_caller (edge : t) : bool =
 let is_return (edge : t) : bool =
   match edge.kind with Return -> true | _ -> false
 
+let is_meta ?(meta : string option) (edge : t) : bool =
+  match (meta, edge.kind) with
+  | (None, Meta _) -> true
+  | (Some meta1, Meta meta2) -> String.equal meta1 meta2
+  | _ -> false
+
 let property (edge : t) : Property.t =
   match edge.kind with
   | Property prop | Version prop -> prop
@@ -162,3 +175,8 @@ let argument (edge : t) : int =
   match edge.kind with
   | Parameter idx | Argument idx -> idx
   | _ -> Log.fail "unexpected edge without an associated param/argument"
+
+let metadata (edge : t) : string =
+  match edge.kind with
+  | Meta meta -> meta
+  | _ -> Log.fail "unexpected edge without associated metadata"
