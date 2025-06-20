@@ -128,15 +128,16 @@ let add_function_call (state : State.t) (call_name : string)
       Node.Set.iter (add_arg_f idx) ls_arg );
   (state, l_call, l_retn)
 
-let call_interceptor (state : State.t) (left : Region.t LeftValue.t)
-    ?(prop : Property.t option) (ls_func : Node.Set.t)
-    (ls_args : Node.Set.t list) : State.t =
+let call_interceptor (state : State.t) (left : 'm LeftValue.t)
+    (args : 'm Expression.t list) (call_name : string)
+    (call_cid : Allocator.cid) ?(prop : Property.t option)
+    (ls_func : Node.Set.t) (ls_args : Node.Set.t list) : State.t =
   let function_f = State.get_function_interceptor state in
   let method_f = State.get_method_interceptor state in
   Fun.flip2 Node.Set.fold ls_func state (fun l_func state ->
       match (Option.bind prop (method_f l_func ls_args), function_f l_func) with
-      | (Some call_f, _) -> call_f state left l_func ls_args
-      | (None, Some call_f) -> call_f state left l_func ls_args
+      | (Some f, _) -> f state left args call_name call_cid l_func ls_args
+      | (None, Some f) -> f state left args call_name call_cid l_func ls_args
       | (None, None) -> state )
 
 let connect_prototype_properties (state : State.t) (l_func : Node.t)
@@ -399,7 +400,7 @@ and build_new_call (state : State.t) (left : 'm LeftValue.t)
   let call_f = unfold_function_call state call_name retn_name in
   let (state', ls_retn) = call_f call_cid retn_cid true ls_func ls_args' in
   Store.write state'.store retn_name ~kind:retn_kind ls_retn;
-  call_interceptor state' left ls_func ls_args'
+  call_interceptor state' left args call_name call_cid ls_func ls_args'
 
 and build_function_call (state : State.t) (left : 'm LeftValue.t)
     (callee : 'm Identifier.t) (args : 'm Expression.t list) (call_cid : cid) :
@@ -414,46 +415,46 @@ and build_function_call (state : State.t) (left : 'm LeftValue.t)
   let call_f = unfold_function_call state call_name retn_name in
   let (state', ls_retn) = call_f call_cid retn_cid false ls_func ls_args' in
   Store.write state'.store retn_name ~kind:retn_kind ls_retn;
-  call_interceptor state' left ls_func ls_args'
+  call_interceptor state' left args call_name call_cid ls_func ls_args'
 
 and build_static_method_call (state : State.t) (left : 'm LeftValue.t)
-    (obj : 'm Expression.t) (prop : 'm Prop.t) (args : 'm Expression.t list)
+    (obj : 'm Expression.t) (prop' : 'm Prop.t) (args : 'm Expression.t list)
     (call_cid : cid) : State.t =
-  let prop_cid = newcid prop in
+  let prop_cid = newcid prop' in
   let retn_cid = newcid left in
   let retn_name = LeftValue.name left in
   let retn_kind = LeftValue.kind left in
-  let prop' = Property.Static (Prop.str prop) in
+  let prop = Property.Static (Prop.str prop') in
   let ls_obj = eval_expr state obj in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = ls_obj :: ls_args in
-  let call_name = object_property_name ls_obj obj prop' in
-  add_static_orig_object_property state call_name ls_obj prop' prop_cid;
-  let ls_func = lookup_property state ls_obj prop' in
+  let call_name = object_property_name ls_obj obj prop in
+  add_static_orig_object_property state call_name ls_obj prop prop_cid;
+  let ls_func = lookup_property state ls_obj prop in
   let call_f = unfold_function_call state call_name retn_name in
   let (state', ls_retn) = call_f call_cid retn_cid false ls_func ls_args' in
   Store.write state'.store retn_name ~kind:retn_kind ls_retn;
-  call_interceptor state' left ~prop:prop' ls_func ls_args'
+  call_interceptor state' left args call_name call_cid ~prop ls_func ls_args'
 
 and build_dynamic_method_call (state : State.t) (left : 'm LeftValue.t)
-    (obj : 'm Expression.t) (prop : 'm Expression.t)
+    (obj : 'm Expression.t) (prop' : 'm Expression.t)
     (args : 'm Expression.t list) (call_cid : cid) : State.t =
-  let prop_cid = newcid prop in
+  let prop_cid = newcid prop' in
   let retn_cid = newcid left in
   let retn_name = LeftValue.name left in
   let retn_kind = LeftValue.kind left in
-  let prop' = Property.Dynamic in
+  let prop = Property.Dynamic in
   let ls_obj = eval_expr state obj in
-  let ls_prop = eval_expr state prop in
+  let ls_prop = eval_expr state prop' in
   let ls_args = List.map (eval_expr state) args in
   let ls_args' = ls_obj :: ls_args in
-  let call_name = object_property_name ls_obj obj prop' in
+  let call_name = object_property_name ls_obj obj prop in
   add_dynamic_orig_object_property state call_name ls_obj ls_prop prop_cid;
-  let ls_func = lookup_property state ls_obj prop' in
+  let ls_func = lookup_property state ls_obj prop in
   let call_f = unfold_function_call state call_name retn_name in
   let (state', ls_retn) = call_f call_cid retn_cid false ls_func ls_args' in
   Store.write state'.store retn_name ~kind:retn_kind ls_retn;
-  call_interceptor state' left ~prop:prop' ls_func ls_args'
+  call_interceptor state' left args call_name call_cid ~prop ls_func ls_args'
 
 and build_if (state : State.t) (consequent : 'm Statement.t list)
     (alternate : 'm Statement.t list option) : State.t =
@@ -681,7 +682,7 @@ let build_program (env : State.Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) :
   reset_generators env;
   let main = Prog.main prog in
   let state = State.create env jsmodel prog in
-  let cbs_builder = Interceptor.cbs_builder build_file in
+  let cbs_builder = Interceptor.cbs_builder build_file unfold_function_call in
   Interceptor.initialize state cbs_builder;
   let state' = build_file state main true None in
   ExtendedMdg.compute_analyses state' jsmodel

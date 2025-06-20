@@ -3,9 +3,25 @@ open Graphjs_ast
 type cb_build_file =
   State.t -> Region.t File.t -> bool -> Node.t option -> State.t
 
-type cbs_builder = { build_file : cb_build_file }
+type cb_unfold_function =
+     State.t
+  -> string
+  -> string
+  -> Allocator.cid
+  -> Allocator.cid
+  -> bool
+  -> Node.Set.t
+  -> Node.Set.t list
+  -> State.t * Node.Set.t
 
-let cbs_builder (build_file : cb_build_file) : cbs_builder = { build_file }
+type cbs_builder =
+  { build_file : cb_build_file
+  ; unfold_function : cb_unfold_function
+  }
+
+let cbs_builder (build_file : cb_build_file)
+    (unfold_function : cb_unfold_function) : cbs_builder =
+  { build_file; unfold_function }
 
 module RequireInterceptor = struct
   let get_module_path (state : State.t) (ls_args : Node.Set.t list) :
@@ -37,8 +53,8 @@ module RequireInterceptor = struct
       Jslib.exported_object ~mrel:file.file.mrel state'.mdg state.jslib
 
   let run (cb_build_file : cb_build_file) (state : State.t)
-      (left : Region.t LeftValue.t) (_ : Node.t) (ls_args : Node.Set.t list) :
-      State.t =
+      (left : Region.t LeftValue.t) (_ : 'm Expression.t list) (_ : string)
+      (_ : Allocator.cid) (_ : Node.t) (ls_args : Node.Set.t list) : State.t =
     match get_module_path state ls_args with
     | None -> state
     | Some mrel ->
@@ -63,8 +79,9 @@ module FunctionBindInterceptor = struct
       Pcontext.func state.pcontext (Node.Set.choose ls_this)
     else None
 
-  let run (state : State.t) (left : Region.t LeftValue.t) (l_func : Node.t)
-      (ls_args : Node.Set.t list) : State.t =
+  let run (state : State.t) (left : Region.t LeftValue.t)
+      (_ : 'm Expression.t list) (_ : string) (_ : Allocator.cid)
+      (l_func : Node.t) (ls_args : Node.Set.t list) : State.t =
     let func = get_this_function state ls_args in
     Fun.flip Option.iter func (fun { func; store; _ } ->
         let name = LeftValue.name left in
@@ -82,14 +99,37 @@ module FunctionBindInterceptor = struct
     state
 end
 
+module FunctionCallInterceptor = struct
+  let matcher (_ : Node.t) (ls_args : Node.Set.t list) (prop : Property.t) :
+      bool =
+    Node.Set.for_all Node.is_function (List.hd ls_args)
+    && Property.equal (Static "call") prop
+
+  let run (cb_unfold_function : cb_unfold_function) (state : State.t)
+      (left : Region.t LeftValue.t) (_ : 'm Expression.t list)
+      (call_name : string) (call_cid : Allocator.cid) (_ : Node.t)
+      (ls_args : Node.Set.t list) : State.t =
+    let retn_cid = Allocator.cid left in
+    let retn_name = LeftValue.name left in
+    let ls_func = List.hd ls_args in
+    let ls_args' = List.tl ls_args in
+    let unfold_f = cb_unfold_function state call_name retn_name in
+    unfold_f call_cid retn_cid false ls_func ls_args' |> fst
+end
+
 let initialize_require (state : State.t) (cbs_builder : cbs_builder) : unit =
   let l_require = Jslib.find_node state.mdg state.jslib "require" in
   let cb_require = RequireInterceptor.run cbs_builder.build_file in
   State.set_function_interceptor state l_require cb_require
 
-let initialize_function_props (state : State.t) : unit =
-  FunctionBindInterceptor.(State.set_method_interceptor state matcher run)
+let initialize_function (state : State.t) (cbs_builder : cbs_builder) : unit =
+  let bind_matcher = FunctionBindInterceptor.matcher in
+  let bind_run = FunctionBindInterceptor.run in
+  let call_matcher = FunctionCallInterceptor.matcher in
+  let call_run = FunctionCallInterceptor.run cbs_builder.unfold_function in
+  State.set_method_interceptor state bind_matcher bind_run;
+  State.set_method_interceptor state call_matcher call_run
 
 let initialize (state : State.t) (cbs_builder : cbs_builder) : unit =
   initialize_require state cbs_builder;
-  initialize_function_props state
+  initialize_function state cbs_builder
