@@ -131,13 +131,14 @@ module PromiseThen = struct
   let matcher (state : State.t) (l_func : Node.t) (_ : Node.Set.t list)
       (prop : Property.t) : bool =
     if Property.equal (Static "then") prop then
-      match Mdg.get_property_owner state.mdg l_func with
-      | [ (Static "then", l_promise) ] ->
-        let l_builtin = Jslib.find_node state.mdg state.jslib "Promise" in
-        let ls_orig = Mdg.object_orig_versions state.mdg l_promise in
-        Fun.flip Node.Set.exists ls_orig (fun l_orig ->
-            Mdg.has_metadata state.mdg l_orig l_builtin "cons" )
-      | _ -> false
+      Fun.flip List.exists (Mdg.get_property_owner state.mdg l_func)
+        (fun (prop, l_promise) ->
+          if Property.equal (Static "then") prop then
+            let l_builtin = Jslib.find_node state.mdg state.jslib "Promise" in
+            let ls_orig = Mdg.object_orig_versions state.mdg l_promise in
+            Fun.flip Node.Set.exists ls_orig (fun l_orig ->
+                Mdg.has_metadata state.mdg l_orig l_builtin "cons" )
+          else false )
     else false
 
   let get_resolves (state : State.t) (ls_promise : Node.Set.t) : Node.Set.t =
@@ -145,7 +146,7 @@ module PromiseThen = struct
     |> Node.Set.map (Mdg.get_call_of_return state.mdg)
     |> Node.Set.map_flat (fun l_call ->
            Mdg.get_argument state.mdg l_call 1 |> Node.Set.of_list )
-    |> Node.Set.map (fun l_func -> Mdg.get_parameter state.mdg l_func 1)
+    |> Node.Set.map_opt (fun l_func -> Mdg.get_parameter_opt state.mdg l_func 1)
     |> Node.Set.map_flat (fun l_resolve ->
            Mdg.get_function_callers state.mdg l_resolve |> Node.Set.of_list )
 

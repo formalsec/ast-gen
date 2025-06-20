@@ -129,6 +129,12 @@ let get_parameter (mdg : t) (node : Node.t) (idx : int) : Node.t =
   |> Edge.Set.choose (* functions can only have a single parameter per index *)
   |> Edge.tar
 
+let get_parameter_opt (mdg : t) (node : Node.t) (idx : int) : Node.t option =
+  get_edges mdg node.loc
+  |> Edge.Set.filter (Edge.is_parameter ~idx)
+  |> Edge.Set.choose_opt
+  |> Option.map Edge.tar
+
 let get_parameters (mdg : t) (node : Node.t) : (int * Node.t) list =
   get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_parameter
