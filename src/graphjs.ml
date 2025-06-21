@@ -66,6 +66,7 @@ let mdg_env =
   $ Docs.MdgOpts.jsmodel
   $ Docs.MdgOpts.unfold_depth
   $ Docs.MdgOpts.no_exported_analysis
+  $ Docs.MdgOpts.no_httpserver_analysis
   $ Docs.MdgOpts.no_tainted_analysis
   $ Docs.MdgOpts.no_cleaner_analysis
   $ Docs.MdgOpts.no_export

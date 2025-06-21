@@ -226,11 +226,17 @@ module MdgOpts = struct
 
   let no_exported_analysis =
     let doc =
-      "Run without the exported analysis. This analysis determines calculates \
-       the nodes that are exported by the module and, therefore, controlled by \
-       an attacker. Running without this analysis will prevent the tainted \
-       analysis to be executed." in
+      "Run without the exported analysis. This analysis calculates the nodes \
+       that are exported by the module and, therefore, controlled by an \
+       attacker." in
     Arg.(value & flag & info [ "no-exported-analysis" ] ~doc)
+
+  let no_httpserver_analysis =
+    let doc =
+      "Run without the http server analysis. This analysis calculates the \
+       nodes that are assessable through an http server and, therefore, \
+       controlled by an attacker." in
+    Arg.(value & flag & info [ "no-httpserver-analysis" ] ~doc)
 
   let no_tainted_analysis =
     let doc =

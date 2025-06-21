@@ -6,6 +6,9 @@ let hd_opt (lst : 'a list) : 'a option =
 let tl_opt (lst : 'a list) : 'a list option =
   match lst with [] -> None | _ :: tl -> Some tl
 
+let map_flat (f : 'a -> 'b list) (lst : 'a list) : 'b list =
+  fold_left (fun acc el -> acc @ f el) [] lst
+
 let split3 (lst : ('a * 'b * 'c) list) : 'a list * 'b list * 'c list =
   let split_f (a, b, c) (a', b', c') = (a :: a', b :: b', c :: c') in
   fold_right split_f lst ([], [], [])

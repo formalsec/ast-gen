@@ -583,9 +583,8 @@ and build_export_decl (state : State.t) (specifier : 'm ExportDecl.specifier)
   (* TODO: implement the other types of export *)
   match specifier with
   | Default expr ->
-    let (mrel, main) = (state.curr_floc.mrel, state.curr_floc.main) in
-    let mrel' = if main then None else Some mrel in
-    let module_jslib = Jslib.resolve_name mrel' "module" in
+    let mrel = State.curr_file state in
+    let module_jslib = Jslib.resolve_name mrel "module" in
     let l_obj = Jslib.find_node state.mdg state.jslib module_jslib in
     let ls_obj = Mdg.object_tail_versions state.mdg l_obj in
     let prop = Property.Static "exports" in
@@ -669,6 +668,7 @@ module ExtendedMdg = struct
   type t =
     { mdg : Mdg.t
     ; exported : Exported.t
+    ; httpservers : Httpserver.t list
     ; tainted : Tainted.t
     }
 
@@ -677,10 +677,14 @@ module ExtendedMdg = struct
     if not state.env.run_exported_analysis then Exported.none ()
     else Exported.compute unfold_f state
 
+  let compute_httpserver (state : State.t) : Httpserver.t list =
+    if not state.env.run_httpserver_analysis then Httpserver.none ()
+    else Httpserver.compute state
+
   let compute_tainted_analysis (state : State.t) (jsmodel : Jsmodel.t)
-      (exported : Exported.t) : Tainted.t =
+      (httpservers : Httpserver.t list) (exported : Exported.t) : Tainted.t =
     if not state.env.run_tainted_analysis then Tainted.none ()
-    else Tainted.compute state jsmodel exported
+    else Tainted.compute state jsmodel httpservers exported
 
   let compute_cleaner_analysis (state : State.t) : unit =
     if state.env.run_cleaner_analysis then Cleaner.compute state
@@ -688,21 +692,25 @@ module ExtendedMdg = struct
   let compute_analyses (state : State.t) (jsmodel : Jsmodel.t) : t =
     let mdg = state.mdg in
     let exported = compute_exported_analysis state in
-    let tainted = compute_tainted_analysis state jsmodel exported in
+    let httpservers = compute_httpserver state in
+    let tainted = compute_tainted_analysis state jsmodel httpservers exported in
     compute_cleaner_analysis state;
-    { mdg; exported; tainted }
+    { mdg; exported; httpservers; tainted }
 end
 
 let reset_generators (env : State.Env.t) : unit =
   Store.reset_generator ();
   if env.reset_locations then Location.reset_generator ()
 
+let cbs_builder () : Interceptor.cbs_builder =
+  Interceptor.cbs_builder build_file unfold_function_call
+
 let build_program (env : State.Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) :
     ExtendedMdg.t =
   reset_generators env;
   let main = Prog.main prog in
   let state = State.create env jsmodel prog in
-  let cbs_builder = Interceptor.cbs_builder build_file unfold_function_call in
+  let cbs_builder = cbs_builder () in
   Interceptor.initialize state cbs_builder;
   let state' = build_file state main true None in
   ExtendedMdg.compute_analyses state' jsmodel
