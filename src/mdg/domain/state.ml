@@ -4,6 +4,7 @@ module Env = struct
   type t =
     { unfold_depth : int
     ; reset_locations : bool
+    ; run_httpserver_analysis : bool
     ; run_exported_analysis : bool
     ; run_tainted_analysis : bool
     ; run_cleaner_analysis : bool
@@ -14,6 +15,7 @@ module Env = struct
     let dflt =
       { unfold_depth = 1
       ; reset_locations = true
+      ; run_httpserver_analysis = true
       ; run_exported_analysis = true
       ; run_tainted_analysis = true
       ; run_cleaner_analysis = true
@@ -84,6 +86,9 @@ let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)
   ; curr_parent = l_parent
   ; curr_return = Node.Set.empty
   }
+
+let curr_file (state : t) : Fpath.t option =
+  if state.curr_floc.main then None else Some state.curr_floc.mrel
 
 let extend_block (state : t) : t =
   { state with store = Store.extend_block state.store }

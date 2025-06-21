@@ -18,6 +18,7 @@
   npmlib
   state
   exported
+  httpserver
   tainted
   cleaner
   export_view

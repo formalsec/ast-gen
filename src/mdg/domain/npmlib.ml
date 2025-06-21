@@ -21,6 +21,18 @@ let create (jsmodel : Jsmodel.t) : t =
       Hashtbl.replace npmlib package.name (Package.Template package) );
   npmlib
 
+let find_template (npmlib : t) (name : string) : Node.t =
+  match Hashtbl.find_opt npmlib name with
+  | Some (Built node) -> node
+  | None | Some (Template _) ->
+    Log.fail "expecting  constructed npmlib symbol with name '%s'" name
+
+let find_node (mdg : Mdg.t) (npmlib : t) (name : string) : Node.t =
+  Mdg.get_node mdg (find_template npmlib name).loc
+
+let find_node_opt (mdg : Mdg.t) (npmlib : t) (name : string) : Node.t option =
+  try Some (find_node mdg npmlib name) with _ -> None
+
 let pp (ppf : Fmt.t) (npmlib : t) : unit =
   let pp_package ppf (name, package) =
     Fmt.fmt ppf "%S: %a" name Package.pp package in

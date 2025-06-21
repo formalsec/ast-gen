@@ -74,6 +74,12 @@ let propagate (tainted : t) (node : Node.t) (strong : bool) : bool =
   | Some (_, strong') -> strong && not strong'
   | None -> true
 
+let mark_tainted_httpservers (state : State.t) (httpservers : Httpserver.t list)
+    (l_taint : Node.t) : unit =
+  Fun.flip List.iter httpservers (fun server ->
+      Fun.flip Node.Set.iter server.ls_entry (fun l_entry ->
+          Mdg.add_edge state.mdg (Edge.create_dependency () l_taint l_entry) ) )
+
 let mark_tainted_exports (state : State.t) (exported : Exported.t)
     (l_taint : Node.t) : unit =
   Fun.flip Hashtbl.iter exported (fun _ (l_exported, _) ->
@@ -154,8 +160,10 @@ and mark_tainted_policy_targets (state : State.t) (queue : queue) (tainted : t)
         mark_tainted_policy_targets state queue tainted [ target' ] params
       | _ -> () )
 
-let compute (state : State.t) (model : Jsmodel.t) (exported : Exported.t) : t =
+let compute (state : State.t) (model : Jsmodel.t)
+    (httpservers : Httpserver.t list) (exported : Exported.t) : t =
   let l_taint = Jslib.find_node state.mdg state.jslib "taint" in
+  mark_tainted_httpservers state httpservers l_taint;
   mark_tainted_exports state exported l_taint;
   let tainted = create model.policies in
   let queue = Queue.create () in
