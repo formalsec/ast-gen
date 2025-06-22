@@ -1,7 +1,8 @@
 {
   "language-components": [
     { "type": "code-injection", "name": "eval", "args": [1] },
-    { "type": "code-injection", "name": "require", "args": [1] }
+    { "type": "code-injection", "name": "require", "args": [1] },
+    { "type": "tainted-symbol", "name": "process" }
   ],
   "builtin-components": [
     {
