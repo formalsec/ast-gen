@@ -88,37 +88,40 @@ let set_exported (exported : t) ((l_exported, _, scheme) : entry) : unit =
   | None -> replace exported l_exported scheme
   | Some _ -> ()
 
-let compute_next_entry (env : Env.t) (queue : queue) (l_next : Node.t)
-    (ls_this : Node.Set.t) (scheme : Scheme.t) : unit =
-  match Computed.find_opt env.computed l_next with
-  | None ->
-    Computed.replace env.computed l_next ls_this;
-    Queue.push (l_next, ls_this, scheme) queue
-  | Some ls_this' ->
-    let ls_this_diff = Node.Set.diff ls_this ls_this' in
-    let ls_this_union = Node.Set.union ls_this ls_this' in
-    Computed.replace env.computed l_next ls_this_union;
-    if not (Node.Set.is_empty ls_this_diff) then
-      Queue.push (l_next, ls_this_diff, scheme) queue
+let compute_next_entry (state : State.t) (env : Env.t) (queue : queue)
+    (l_next : Node.t) (ls_this : Node.Set.t) (scheme : Scheme.t) : unit =
+  let ls_next' = Mdg.object_tail_versions state.mdg l_next in
+  Fun.flip Node.Set.iter ls_next' (fun l_next' ->
+      match Computed.find_opt env.computed l_next' with
+      | None ->
+        Computed.replace env.computed l_next' ls_this;
+        Queue.push (l_next', ls_this, scheme) queue
+      | Some ls_this' ->
+        let ls_this_diff = Node.Set.diff ls_this ls_this' in
+        let ls_this_union = Node.Set.union ls_this ls_this' in
+        Computed.replace env.computed l_next' ls_this_union;
+        if not (Node.Set.is_empty ls_this_diff) then
+          Queue.push (l_next', ls_this_diff, scheme) queue )
 
 let compute_function (state : State.t) (env : Env.t) (queue : queue)
     ((l_func, ls_this, scheme) : entry) : unit =
   if Node.is_function l_func then
     let (_, ls_retn) = env.cb_unfold state l_func ls_this true in
-    Fun.flip Node.Set.iter ls_retn (fun l_retn ->
+    let params = Mdg.get_parameters state.mdg l_func in
+    let ls_params = Node.Set.of_list (List.map snd params) in
+    let ls_entries = Node.Set.union ls_params ls_retn in
+    Fun.flip Node.Set.iter ls_entries (fun l_entry ->
         let scheme' = Scheme.extend scheme Call in
-        compute_next_entry env queue l_retn Node.Set.empty scheme' )
+        compute_next_entry state env queue l_entry Node.Set.empty scheme' )
 
 let compute_lookups (state : State.t) (env : Env.t) (queue : queue)
     ((l_obj, _, scheme) : entry) : unit =
   let f (prop, node) acc = (prop, node) :: acc in
   let props = Mdg.object_dynamic_traversal f state.mdg Node.Set.empty l_obj [] in
   Fun.flip List.iter props (fun (prop, l_prop) ->
-      let ls_prop = Mdg.object_tail_versions state.mdg l_prop in
       let ls_this' = Node.Set.singleton l_obj in
       let scheme' = Scheme.extend scheme (Lookup prop) in
-      Fun.flip Node.Set.iter ls_prop (fun l_prop' ->
-          compute_next_entry env queue l_prop' ls_this' scheme' ) )
+      compute_next_entry state env queue l_prop ls_this' scheme' )
 
 let rec compute_object (state : State.t) (env : Env.t) (queue : queue)
     (exported : t) : unit =
