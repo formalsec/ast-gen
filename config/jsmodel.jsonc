@@ -65,6 +65,10 @@
       "props": [{ "type": "command-injection", "name": "shell", "args": [1] }]
     },
     {
+      "package": "filed",
+      "self": { "type": "path-traversal", "args": [1] }
+    },
+    {
       "package": "fs",
       "props": [
         { "type": "path-traversal", "name": "readFile", "args": [1] },
