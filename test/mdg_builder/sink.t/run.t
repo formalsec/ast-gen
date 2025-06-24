@@ -1,41 +1,41 @@
 Graph.js MDG Builder: eval sink  
   $ graphjs mdg --no-export eval.js
   [[sink]] eval[#2] -
-  [[function]] foo[#17] -
-  10[#18] --< Arg(1) >--> eval(...)[#20]
-  eval(...)[#20] --< Call >--> [[sink]] eval[#2]
-  eval(...)[#20] --< D >--> $v1[#21]
-  $v1[#21] -
-  10[#22] --< Arg(1) >--> eval(...)[#23]
-  eval(...)[#23] --< Call >--> [[sink]] eval[#2]
-  eval(...)[#23] --< D >--> $v2[#24]
-  $v2[#24] -
-  "tainted"[#25] --< Arg(1) >--> eval(...)[#20]
+  [[function]] foo[#18] -
+  10[#19] --< Arg(1) >--> eval(...)[#21]
+  eval(...)[#21] --< Call >--> [[sink]] eval[#2]
+  eval(...)[#21] --< D >--> $v1[#22]
+  $v1[#22] -
+  10[#23] --< Arg(1) >--> eval(...)[#24]
+  eval(...)[#24] --< Call >--> [[sink]] eval[#2]
+  eval(...)[#24] --< D >--> $v2[#25]
+  $v2[#25] -
+  "tainted"[#26] --< Arg(1) >--> eval(...)[#21]
 
 Graph.js MDG Builder: npm sink
   $ graphjs mdg --no-export npm.js
   [[sink]] require[#3] -
-  "child_process"[#17] --< Arg(1) >--> require(...)[#18]
-  require(...)[#18] --< Call >--> [[sink]] require[#3]
-  require(...)[#18] --< D >--> dep[#19]
-  dep[#19] -
-  [[module]] child_process[#20] --< P(exec) >--> [[sink]] exec[#21]
-  [[module]] child_process[#20] --< P(execFile) >--> [[sink]] execFile[#22]
-  [[module]] child_process[#20] --< P(execSync) >--> [[sink]] execSync[#23]
-  [[module]] child_process[#20] --< P(spawn) >--> [[sink]] spawn[#24]
-  [[module]] child_process[#20] --< Arg(0) >--> child_process.exec(...)[#28]
-  [[module]] child_process[#20] --< Arg(0) >--> child_process.exec(...)[#31]
-  [[sink]] exec[#21] -
-  [[sink]] execFile[#22] -
-  [[sink]] execSync[#23] -
-  [[sink]] spawn[#24] -
-  [[function]] foo[#25] -
-  10[#26] --< Arg(1) >--> child_process.exec(...)[#28]
-  child_process.exec(...)[#28] --< Call >--> [[sink]] exec[#21]
-  child_process.exec(...)[#28] --< D >--> $v1[#29]
-  $v1[#29] -
-  10[#30] --< Arg(1) >--> child_process.exec(...)[#31]
-  child_process.exec(...)[#31] --< Call >--> [[sink]] exec[#21]
-  child_process.exec(...)[#31] --< D >--> $v2[#32]
-  $v2[#32] -
-  "tainted"[#33] --< Arg(1) >--> child_process.exec(...)[#28]
+  "child_process"[#18] --< Arg(1) >--> require(...)[#19]
+  require(...)[#19] --< Call >--> [[sink]] require[#3]
+  require(...)[#19] --< D >--> dep[#20]
+  dep[#20] -
+  [[module]] child_process[#21] --< P(exec) >--> [[sink]] exec[#22]
+  [[module]] child_process[#21] --< P(execFile) >--> [[sink]] execFile[#23]
+  [[module]] child_process[#21] --< P(execSync) >--> [[sink]] execSync[#24]
+  [[module]] child_process[#21] --< P(spawn) >--> [[sink]] spawn[#25]
+  [[module]] child_process[#21] --< Arg(0) >--> child_process.exec(...)[#29]
+  [[module]] child_process[#21] --< Arg(0) >--> child_process.exec(...)[#32]
+  [[sink]] exec[#22] -
+  [[sink]] execFile[#23] -
+  [[sink]] execSync[#24] -
+  [[sink]] spawn[#25] -
+  [[function]] foo[#26] -
+  10[#27] --< Arg(1) >--> child_process.exec(...)[#29]
+  child_process.exec(...)[#29] --< Call >--> [[sink]] exec[#22]
+  child_process.exec(...)[#29] --< D >--> $v1[#30]
+  $v1[#30] -
+  10[#31] --< Arg(1) >--> child_process.exec(...)[#32]
+  child_process.exec(...)[#32] --< Call >--> [[sink]] exec[#22]
+  child_process.exec(...)[#32] --< D >--> $v2[#33]
+  $v2[#33] -
+  "tainted"[#34] --< Arg(1) >--> child_process.exec(...)[#29]
