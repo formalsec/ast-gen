@@ -199,6 +199,7 @@
     { "type": "proto-policy", "name": "replaceAll", "source": "arg2", "targets": ["retn"] },
     { "type": "proto-policy", "name": "search", "source": "this", "targets": ["retn"] },
     { "type": "proto-policy", "name": "split", "source": "this", "targets": ["retn"] },
+    { "type": "proto-policy", "name": "substr", "source": "this", "targets": ["retn"] },
     { "type": "proto-policy", "name": "substring", "source": "this", "targets": ["retn"] },
     { "type": "proto-policy", "name": "toLocaleLowerCase", "source": "this", "targets": ["retn"] },
     { "type": "proto-policy", "name": "toLocaleUpperCase", "source": "this", "targets": ["retn"] },
@@ -216,6 +217,7 @@
 
     // JavaScript builtins taint policies
     { "type": "builtin-policy", "builtin": "JSON", "name": "stringify", "source": "arg1", "targets": ["retn"] },
+    { "type": "builtin-policy", "builtin": "JSON", "name": "parse", "source": "arg1", "targets": ["retn"] },
     { "type": "builtin-policy", "builtin": "Object", "name": "assign", "source": "arg2", "targets": ["arg1", "retn"] },
     { "type": "builtin-policy", "builtin": "String", "source": "arg1", "targets": ["retn"] },
 
