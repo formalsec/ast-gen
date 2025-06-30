@@ -210,6 +210,8 @@
     { "type": "proto-policy", "name": "trimEnd", "source": "this", "targets": ["retn"] },
     { "type": "proto-policy", "name": "trimStart", "source": "this", "targets": ["retn"] },
     { "type": "proto-policy", "name": "valueOf", "source": "this", "targets": ["retn"] },
+    // Regex.prototype taint policies
+    { "type": "proto-policy", "name": "exec", "source": "arg1", "targets": ["retn"] },
     // Router taint policies
     { "type": "proto-policy", "name": "all", "source": "this", "targets": ["arg2"] },
     { "type": "proto-policy", "name": "get", "source": "this", "targets": ["arg2", "retn"] },
