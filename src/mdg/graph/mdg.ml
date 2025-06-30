@@ -85,15 +85,20 @@ let remove_edge (mdg : t) (edge : Edge.t) : unit =
 let remove_edges (mdg : t) (edges : Edge.t list) : unit =
   List.iter (remove_edge mdg) edges
 
-let get_dependents (mdg : t) (node : Node.t) : Node.t list =
-  get_edges mdg node.loc
-  |> Edge.Set.filter Edge.is_dependency
-  |> Edge.Set.map_list Edge.tar
-
 let has_dependency (mdg : t) (node1 : Node.t) (node2 : Node.t) : bool =
   get_trans mdg node1.loc
   |> Edge.Set.filter Edge.is_dependency
   |> Edge.Set.exists (fun edge -> Node.equal edge.tar node2)
+
+let get_dependencies (mdg : t) (node : Node.t) : Node.t list =
+  get_trans mdg node.loc
+  |> Edge.Set.filter Edge.is_dependency
+  |> Edge.Set.map_list Edge.tar
+
+let get_dependents (mdg : t) (node : Node.t) : Node.t list =
+  get_edges mdg node.loc
+  |> Edge.Set.filter Edge.is_dependency
+  |> Edge.Set.map_list Edge.tar
 
 let has_property (mdg : t) (node : Node.t) (prop : Property.t) : bool =
   get_edges mdg node.loc |> Edge.Set.exists (Edge.is_property ~prop)

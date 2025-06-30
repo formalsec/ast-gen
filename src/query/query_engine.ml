@@ -29,15 +29,19 @@ let tainted_sink_args (engine : t) (l_call : Node.t) (sink : Taint.Sink.t) :
   |> Node.Set.of_list
 
 let dynamic_lookups (engine : t) : Node.Set.t =
-  Fun.flip2 Hashtbl.fold engine.mdg.edges Node.Set.empty (fun _ edges acc ->
-      Fun.flip2 Edge.Set.fold edges acc (fun edge acc ->
-          if Edge.is_property ~prop:Dynamic edge then Node.Set.add edge.tar acc
-          else acc ) )
-
-let dynamic_updates (engine : t) : Node.Set.t =
+  let prop_f edge = Edge.is_property ~prop:Dynamic edge in
   Fun.flip2 Hashtbl.fold engine.mdg.edges Node.Set.empty (fun _ edges acc ->
       Fun.flip2 Edge.Set.fold edges acc (fun edge acc' ->
-          let equal_f edge = Node.equal (Edge.src edge) (Edge.tar edge) in
-          if Edge.is_version ~prop:Dynamic edge && not (equal_f edge) then
-            Node.Set.add edge.tar acc'
-          else acc' ) )
+          if prop_f edge then Node.Set.add edge.tar acc' else acc' ) )
+
+let object_versions (engine : t) (l_obj : Node.t) : Node.Set.t =
+  let version_f acc (prop, node) =
+    if Property.is_dynamic prop && not (Node.Set.mem node acc) then Some node
+    else None in
+  let rec traverse node acc =
+    let versions = Mdg.get_versions engine.mdg node in
+    let versions' = List.filter_map (version_f acc) versions in
+    let ls_lookup = Node.Set.of_list versions' in
+    let acc' = Node.Set.union acc ls_lookup in
+    Node.Set.fold traverse ls_lookup acc' in
+  traverse l_obj (Node.Set.singleton l_obj) |> Node.Set.remove l_obj
