@@ -32,11 +32,26 @@ let compute_server (state : State.t) (l_http : Node.t) : t list =
   |> List.map (Mdg.get_return_of_call state.mdg)
   |> List.map create
 
+let compute_main_use (state : State.t) (server : t) : t =
+  Fun.flip2 Node.Set.fold server.ls_entry server (fun l_entry server ->
+      Mdg.get_callsites state.mdg l_entry 0
+      |> List.map_flat (fun l_cs -> Mdg.get_argument state.mdg l_cs 2)
+      |> Node.Set.of_list
+      |> add_entries server )
+
 let compute_main (state : State.t) (servers : t list) : t list =
   Fun.flip List.map servers (fun server ->
       Mdg.get_call_of_return state.mdg server.l_server |> fun l_call ->
       Mdg.get_argument state.mdg l_call 1 |> Node.Set.of_list |> fun ls_entry ->
-      { server with ls_entry } )
+      compute_main_use state { server with ls_entry } )
+
+let compute_use (state : State.t) (servers : t list) : t list =
+  Fun.flip List.map servers (fun server ->
+      Mdg.get_property state.mdg server.l_server (Static "use")
+      |> List.map_flat (Mdg.get_function_callers state.mdg)
+      |> List.map_flat (fun l_call -> Mdg.get_argument state.mdg l_call 1)
+      |> Node.Set.of_list
+      |> add_entries server )
 
 let compute_on (state : State.t) (servers : t list) : t list =
   Fun.flip List.map servers (fun server ->
@@ -61,5 +76,6 @@ let compute (state : State.t) : t list =
   Option.fold l_http ~none:(none ()) ~some:(fun l_http' ->
       compute_server state l_http'
       |> compute_main state
+      |> compute_use state
       |> compute_on state
       |> compute_listen state )

@@ -25,6 +25,14 @@ let is_excess_object (state : State.t) (l_obj : Node.t) : bool =
   Edge.Set.is_empty edges
   && (Edge.Set.is_empty trans || is_excess_taint_source state l_obj)
 
+let is_excess_function (state : State.t) (l_func : Node.t) : bool =
+  match Pcontext.func state.pcontext l_func with
+  | None ->
+    let edges = Mdg.get_edges state.mdg l_func.loc in
+    let trans = Mdg.get_trans state.mdg l_func.loc in
+    Edge.Set.is_empty edges && Edge.Set.is_empty trans
+  | Some func -> not func.called
+
 let is_excess_builtin_prop (state : State.t) (l_prop : Node.t) : bool =
   let edges = Mdg.get_edges state.mdg l_prop.loc in
   let trans = Mdg.get_trans state.mdg l_prop.loc in
@@ -58,6 +66,7 @@ let compute_excess_jslib (state : State.t) (acc : Node.t list) : Node.t list =
         (node :: l_exports) @ acc
       | Object "exports" -> acc
       | Object _ when is_excess_object state node -> node :: acc
+      | Function _ when is_excess_function state node -> node :: acc
       | Builtin _ when is_excess_builtin state node ->
         let props = Mdg.get_properties state.mdg node in
         let ls_props = List.map snd props in

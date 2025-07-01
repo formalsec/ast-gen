@@ -59,8 +59,6 @@ module PrototypeUnfold = struct
 end
 
 let run (engine : Query_engine.t) : Vulnerability.Set.t =
-  Log.debug "tainted";
   let tainted_vulns = TaintedUnfold.run engine in
-  Log.debug "proto";
   let prototype_vulns = PrototypeUnfold.run engine in
   Vulnerability.Set.union tainted_vulns prototype_vulns

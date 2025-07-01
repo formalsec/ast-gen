@@ -100,9 +100,14 @@ let update (store : t) (name : string) ((tag, _) : Entry.t)
     (ls_entry : Node.Set.t) : unit =
   Hashtbl.replace store.map name (tag, ls_entry)
 
-let pp (ppf : Fmt.t) (store : t) : unit =
+let rec pp (ppf : Fmt.t) (store : t) : unit =
   let pp_bind ppf (name, entry) = Fmt.fmt ppf "%s -> %a" name Entry.pp entry in
-  Fmt.(pp_htbl !>"@\n" pp_bind) ppf store.map
+  let pp_map ppf map = Fmt.(pp_htbl !>"@\n" pp_bind) ppf map in
+  let pp_line ppf () = Fmt.fmt ppf "@\n--------------------@\n" in
+  let pp_scope ppf = function
+    | Global -> ()
+    | Block store | Function store -> pp ppf store in
+  Fmt.fmt ppf "%a@%a%a" pp_map store.map pp_line () pp_scope store.scope
 
 let str (store : t) : string = Fmt.str "%a" pp store
 let extend_block (store : t) : t = { (create ()) with scope = Block store }

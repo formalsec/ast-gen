@@ -65,11 +65,11 @@ let build_taint_source (node_f : Mdg.t -> string -> Node.t option -> Node.t)
   Mdg.add_edge mdg (Edge.create_dependency () l_taint l_source);
   l_source
 
-let build_summary_function (mdg : Mdg.t) (pcontext : 'm Pcontext.t)
+let build_function_summary (mdg : Mdg.t) (pcontext : 'm Pcontext.t)
     (func : Jsmodel.FunctionSummary.t) (l_parent : Node.t option) : Node.t =
   let l_func = build_node mdg (Node.create_function func.name) l_parent in
   let floc = Pcontext.Floc.default () in
-  Pcontext.declare_func pcontext l_func floc func.body (Store.create ());
+  Pcontext.declare_func pcontext l_func floc func.body pcontext.store;
   l_func
 
 let build_package_self (mdg : Mdg.t) (pcontext : 'm Pcontext.t)
@@ -80,7 +80,7 @@ let build_package_self (mdg : Mdg.t) (pcontext : 'm Pcontext.t)
     match Jsmodel.Component.rename package.name self with
     | `Sink sink -> build_taint_sink mdg sink None
     | `Source source -> build_taint_source build_module mdg jslib source None
-    | `Function func -> build_summary_function mdg pcontext func None )
+    | `Function func -> build_function_summary mdg pcontext func None )
 
 let build_package_prop (mdg : Mdg.t) (pcontext : 'm Pcontext.t)
     (jslib : Jslib.t) (component : Jsmodel.Component.t)
@@ -88,7 +88,7 @@ let build_package_prop (mdg : Mdg.t) (pcontext : 'm Pcontext.t)
   match component with
   | `Sink sink -> build_taint_sink mdg sink l_parent
   | `Source source -> build_taint_source build_object mdg jslib source l_parent
-  | `Function func -> build_summary_function mdg pcontext func l_parent
+  | `Function func -> build_function_summary mdg pcontext func l_parent
 
 let build_unknown_package (mdg : Mdg.t) (npmlib : t) (name : string) : Node.t =
   let l_npmlib = build_module mdg name None in

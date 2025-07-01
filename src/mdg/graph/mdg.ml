@@ -161,6 +161,11 @@ let get_arguments (mdg : t) (node : Node.t) : (int * Node.t) list =
   |> Edge.Set.filter Edge.is_argument
   |> Edge.Set.map_list (fun edge -> (Edge.argument edge, Edge.tar edge))
 
+let get_callsites (mdg : t) (node : Node.t) (idx : int) : Node.t list =
+  get_edges mdg node.loc
+  |> Edge.Set.filter (Edge.is_argument ~idx)
+  |> Edge.Set.map_list Edge.tar
+
 let get_called_functions (mdg : t) (node : Node.t) : Node.t list =
   get_edges mdg node.loc
   |> Edge.Set.filter Edge.is_caller

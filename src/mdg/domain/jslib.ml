@@ -57,7 +57,7 @@ let create_function_summary (mdg : Mdg.t) (store : Store.t)
   let l_func = Node.create_function' func.name in
   let floc = Pcontext.Floc.default () in
   Mdg.add_node mdg l_func;
-  Pcontext.declare_func pcontext l_func floc func.body (Store.create ());
+  Pcontext.declare_func pcontext l_func floc func.body store;
   set_toplevel_node store jslib toplevel func.name l_func;
   l_func
 
@@ -95,42 +95,41 @@ let create_exports (mdg : Mdg.t) (store : Store.t) (jslib : t)
   l_exports
 
 let initialize_component ?(toplevel = true) ?(node_f = Node.create_object')
-    (mdg : Mdg.t) (store : Store.t) (jslib : t) (pcontext : 'm Pcontext.t)
+    (mdg : Mdg.t) (jslib : t) (pcontext : 'm Pcontext.t)
     (component : Jsmodel.Component.t) : Node.t =
   match component with
-  | `Sink sink -> create_tainted_sink mdg store jslib toplevel sink
+  | `Sink sink -> create_tainted_sink mdg pcontext.store jslib toplevel sink
   | `Source source ->
-    create_tainted_source mdg store jslib toplevel node_f source
+    create_tainted_source mdg pcontext.store jslib toplevel node_f source
   | `Function func ->
-    create_function_summary mdg store pcontext jslib toplevel func
+    create_function_summary mdg pcontext.store pcontext jslib toplevel func
 
-let initialize_builtin_self (mdg : Mdg.t) (store : Store.t) (jslib : t)
-    (pcontext : 'm Pcontext.t) (builtin : Jsmodel.Collection.t) : Node.t =
+let initialize_builtin_self (mdg : Mdg.t) (jslib : t) (pcontext : 'm Pcontext.t)
+    (builtin : Jsmodel.Collection.t) : Node.t =
   match builtin.self with
-  | None -> create_builtin mdg store jslib true builtin.name
+  | None -> create_builtin mdg pcontext.store jslib true builtin.name
   | Some self ->
     let node_f = Node.create_builtin' in
     let self' = Jsmodel.Component.rename builtin.name self in
-    initialize_component ~node_f mdg store jslib pcontext self'
+    initialize_component ~node_f mdg jslib pcontext self'
 
-let initialize_builtin (mdg : Mdg.t) (store : Store.t) (jslib : t)
-    (pcontext : 'm Pcontext.t) (builtin : Jsmodel.Collection.t) : unit =
-  let l_builtin = initialize_builtin_self mdg store jslib pcontext builtin in
+let initialize_builtin (mdg : Mdg.t) (jslib : t) (pcontext : 'm Pcontext.t)
+    (builtin : Jsmodel.Collection.t) : unit =
+  let l_builtin = initialize_builtin_self mdg jslib pcontext builtin in
   let component_f = initialize_component ~toplevel:false in
   Fun.flip List.iter builtin.props (fun component ->
       let name = Jsmodel.Component.name component in
       let prop = Property.Static name in
-      let l_component = component_f mdg store jslib pcontext component in
+      let l_component = component_f mdg jslib pcontext component in
       Mdg.add_edge mdg (Edge.create_property prop l_builtin l_component) )
 
-let create (mdg : Mdg.t) (store : Store.t) (pcontext : 'm Pcontext.t)
-    (jsmodel : Jsmodel.t) : t =
+let create (mdg : Mdg.t) (pcontext : 'm Pcontext.t) (jsmodel : Jsmodel.t) : t =
   let jslib = Hashtbl.create Config.(!dflt_htbl_sz) in
   ignore (create_main_taint_source mdg jslib);
   Fun.flip List.iter jsmodel.language (fun component ->
-      ignore (initialize_component mdg store jslib pcontext component) );
+      ignore (initialize_component mdg jslib pcontext component) );
   Fun.flip List.iter jsmodel.builtins (fun builtin ->
-      ignore (initialize_builtin mdg store jslib pcontext builtin) );
+      ignore (initialize_builtin mdg jslib pcontext builtin) );
   jslib
 
 let initialize (mdg : Mdg.t) (store : Store.t) (jslib : t)

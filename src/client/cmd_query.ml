@@ -20,6 +20,11 @@ module Options = struct
     { inputs; output; env }
 end
 
+module Graphjs = struct
+  let queries (engine : Query_engine.t) : Vulnerability.Set.t Exec.result =
+    Exec.graphjs (fun () -> Builtin_queries.run engine)
+end
+
 module Output = struct
   let pp_mrel (ppf : Fmt.t) (mrel : Fpath.t option) : unit =
     match mrel with
@@ -48,7 +53,7 @@ let run ?(mrel : Fpath.t option) (env : Options.env) (w : Workspace.t)
   let* e_mdg = Cmd_mdg.run env.mdg_env (Workspace.side_perm w) input in
   let engine = Query_engine.initialize e_mdg in
   Output.engine mrel;
-  let vulns = Builtin_queries.run engine in
+  let* vulns = Graphjs.queries engine in
   Output.main w input mrel vulns;
   Ok vulns
 

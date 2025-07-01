@@ -119,6 +119,25 @@ module FunctionCallInterceptor = struct
     unfold_f call_cid retn_cid false ls_func ls_args' |> fst
 end
 
+module FunctionApplyInterceptor = struct
+  let matcher (_ : State.t) (_ : Node.t) (ls_args : Node.Set.t list)
+      (prop : Property.t) : bool =
+    if Property.equal (Static "apply") prop then
+      Node.Set.for_all Node.is_function (List.hd ls_args)
+    else false
+
+  let run (cb_unfold_function : cb_unfold_function) (state : State.t)
+      (left : 'm LeftValue.t) (_ : 'm Expression.t list) (call_name : string)
+      (call_cid : Allocator.cid) (_ : Node.t) (ls_args : Node.Set.t list) :
+      State.t =
+    let retn_cid = Allocator.cid left in
+    let retn_name = LeftValue.name left in
+    let ls_func = List.hd ls_args in
+    let ls_args' = List.tl ls_args in
+    let unfold_f = cb_unfold_function state call_name retn_name in
+    unfold_f call_cid retn_cid false ls_func ls_args' |> fst
+end
+
 module PromiseInterceptor = struct
   let run (state : State.t) (left : 'm LeftValue.t) (_ : 'm Expression.t list)
       (_ : string) (_ : Allocator.cid) (l_func : Node.t) (_ : Node.Set.t list) :
@@ -175,94 +194,6 @@ module PromiseThenInterceptor = struct
     state
 end
 
-(* module HttpServerCreateInterceptor = struct
-  let matcher (state : State.t) (_ : Node.t) (ls_args : Node.Set.t list)
-      (prop : Property.t) : bool =
-    if Property.equal (Static "createServer") prop then
-      let l_module = Npmlib.find_node_opt state.mdg state.npmlib "http" in
-      Option.fold l_module ~none:false ~some:(fun l_module' ->
-          Node.Set.for_all (Node.equal l_module') (List.hd ls_args) )
-    else false
-
-  let run (state : State.t) (left : 'm LeftValue.t) (_ : 'm Expression.t list)
-      (_ : string) (_ : Allocator.cid) (_ : Node.t) (_ : Node.Set.t list) :
-      State.t =
-    let l_module = Npmlib.find_node state.mdg state.npmlib "http" in
-    let l_retn = State.get_node state (Allocator.cid left) in
-    State.add_meta_edge state l_retn l_module "cons";
-    state
-end
-
-module HttpServerListenInterceptor = struct
-  let matcher (state : State.t) (_ : Node.t) (ls_args : Node.Set.t list)
-      (prop : Property.t) : bool =
-    if Property.equal (Property.Static "listen") prop then
-      Fun.flip Node.Set.exists (List.hd ls_args) (fun l_server ->
-          let l_module = Npmlib.find_node_opt state.mdg state.npmlib "http" in
-          Option.fold l_module ~none:false ~some:(fun l_module' ->
-              let ls_orig = Mdg.object_orig_versions state.mdg l_server in
-              Fun.flip Node.Set.exists ls_orig (fun l_orig ->
-                  Mdg.has_metadata state.mdg l_orig l_module' "cons" ) ) )
-    else false
-
-  let get_exports (state : State.t) : Node.Set.t =
-    match State.curr_file state with
-    | None -> Jslib.exported_object state.mdg state.jslib
-    | Some mrel -> Jslib.exported_object ~mrel state.mdg state.jslib
-
-  let run (cb_static_nv : cb_static_nv) (state : State.t)
-      (left : 'm LeftValue.t) (_ : 'm Expression.t list) (_ : string)
-      (_ : Allocator.cid) (_ : Node.t) (ls_args : Node.Set.t list) : State.t =
-    let listen_cid = Allocator.cid left in
-    let prop = Property.Static "$http" in
-    let ls_exports = get_exports state in
-    let ls_exports' = cb_static_nv state "exports" ls_exports prop listen_cid in
-    Fun.flip Node.Set.iter (List.hd ls_args) (fun l_server ->
-        let l_create = Mdg.get_call_of_return_opt state.mdg l_server in
-        Fun.flip Option.iter l_create (fun l_create' ->
-            let ls_callback = Mdg.get_arguments state.mdg l_create' in
-            Fun.flip Node.Set.iter ls_exports' (fun l_export ->
-                Fun.flip List.iter ls_callback (fun (_, l_callback) ->
-                    if Node.is_function l_callback then
-                      State.add_property_edge state l_export l_callback prop ) ) ) );
-    state
-end
-
-module HttpServerOnInterceptor = struct
-  let matcher (state : State.t) (_ : Node.t) (ls_args : Node.Set.t list)
-      (prop : Property.t) : bool =
-    if Property.equal (Property.Static "on") prop then
-      Fun.flip Node.Set.exists (List.hd ls_args) (fun l_server ->
-          let l_module = Npmlib.find_node_opt state.mdg state.npmlib "http" in
-          Option.fold l_module ~none:false ~some:(fun l_module' ->
-              let ls_orig = Mdg.object_orig_versions state.mdg l_server in
-              Fun.flip Node.Set.exists ls_orig (fun l_orig ->
-                  Mdg.has_metadata state.mdg l_orig l_module' "cons" ) ) )
-    else false
-
-  let get_exports (state : State.t) : Node.Set.t =
-    match State.curr_file state with
-    | None -> Jslib.exported_object state.mdg state.jslib
-    | Some mrel -> Jslib.exported_object ~mrel state.mdg state.jslib
-
-  let run (cb_static_nv : cb_static_nv) (state : State.t)
-      (left : 'm LeftValue.t) (_ : 'm Expression.t list) (_ : string)
-      (_ : Allocator.cid) (_ : Node.t) (ls_args : Node.Set.t list) : State.t =
-    let listen_cid = Allocator.cid left in
-    let prop = Property.Static "$http" in
-    let ls_exports = get_exports state in
-    let ls_exports' = cb_static_nv state "exports" ls_exports prop listen_cid in
-    Fun.flip Node.Set.iter (List.hd ls_args) (fun l_server ->
-        let l_create = Mdg.get_call_of_return_opt state.mdg l_server in
-        Fun.flip Option.iter l_create (fun l_create' ->
-            let ls_callback = Mdg.get_arguments state.mdg l_create' in
-            Fun.flip Node.Set.iter ls_exports' (fun l_export ->
-                Fun.flip List.iter ls_callback (fun (_, l_callback) ->
-                    if Node.is_function l_callback then
-                      State.add_property_edge state l_export l_callback prop ) ) ) );
-    state
-end *)
-
 let initialize_require (state : State.t) (cbs_builder : cbs_builder) : unit =
   let l_require = Jslib.find_node state.mdg state.jslib "require" in
   let require_run = RequireInterceptor.run cbs_builder.build_file in
@@ -284,16 +215,7 @@ let initialize_promise (state : State.t) : unit =
   State.set_function_interceptor state l_promise promise_run;
   State.set_method_interceptor state then_matcher then_run
 
-(* let initialize_httpserver (state : State.t) (cbs_builder : cbs_builder) : unit =
-  let create_matcher = HttpServerCreateInterceptor.matcher in
-  let create_run = HttpServerCreateInterceptor.run in
-  let listen_matcher = HttpServerListenInterceptor.matcher in
-  let listen_run = HttpServerListenInterceptor.run cbs_builder.static_nv in
-  State.set_method_interceptor state create_matcher create_run;
-  State.set_method_interceptor state listen_matcher listen_run *)
-
 let initialize (state : State.t) (cbs_builder : cbs_builder) : unit =
   initialize_require state cbs_builder;
   initialize_function state cbs_builder;
   initialize_promise state
-(* initialize_httpserver state cbs_builder *)

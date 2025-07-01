@@ -2,7 +2,8 @@
   "language-components": [
     { "type": "code-injection", "name": "eval", "args": [1] },
     { "type": "code-injection", "name": "require", "args": [1] },
-    { "type": "tainted-symbol", "name": "process" }
+    { "type": "tainted-symbol", "name": "process" },
+    { "type": "function-summary", "name": "decodeURIComponent", "code": "(uri) => { return uri; }" }
   ],
   "builtin-components": [
     {
@@ -40,7 +41,7 @@
   ],
   "package-components": [
     {
-      "package": "as  ync-execute",
+      "package": "async-execute",
       "props": [{ "type": "command-injection", "name": "execAsync", "args": [1] }]
     },
     {
@@ -63,6 +64,10 @@
     {
       "package": "execa",
       "props": [{ "type": "command-injection", "name": "shell", "args": [1] }]
+    },
+    {
+      "package": "express",
+      "self": { "type": "function-summary", "code": "() => { return require('http').createServer(); }" }
     },
     {
       "package": "filed",
@@ -236,6 +241,7 @@
     { "type": "package-policy", "package": "estraverse", "name": "replace", "source": "arg1", "targets": ["retn"] },
     { "type": "package-policy", "package": "fs", "name": "readFileSync", "source": "arg1", "targets": ["retn"] },
     { "type": "package-policy", "package": "merge", "source": "arg2...", "targets": ["retn"] },
+    { "type": "package-policy", "package": "minimist", "source": "arg1", "targets": ["retn"] },
     { "type": "package-policy", "package": "path", "name": "basename", "source": "arg1", "targets": ["retn"] },
     { "type": "package-policy", "package": "path", "name": "dirname", "source": "arg1", "targets": ["retn"] },
     { "type": "package-policy", "package": "path", "name": "join", "source": "arg1...", "targets": ["retn"] },

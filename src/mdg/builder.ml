@@ -193,7 +193,7 @@ let rec unfold_function_call (state : State.t) (call_name : string)
   Fun.flip2 Node.Set.fold ls_func (state, Node.Set.empty)
     (fun l_func (state, ls_retn) ->
       let unfoldable = unfoldable_function state l_func in
-      let func = Pcontext.func state.pcontext l_func in
+      let func = Pcontext.func ~call:true state.pcontext l_func in
       match (unfoldable, func) with
       | (false, _) | (true, None) ->
         unfold_callbacks state (List.tl ls_args);
@@ -250,7 +250,7 @@ and unfold_callbacks (state : State.t) (ls_args : Node.Set.t list) : unit =
 
 and unfold_entry_function (state : State.t) (l_func : Node.t)
     (ls_this : Node.Set.t) (new_ : bool) : State.t * Node.Set.t =
-  match Pcontext.func state.pcontext l_func with
+  match Pcontext.func ~call:true state.pcontext l_func with
   | None -> (state, Node.Set.empty)
   | Some { floc; func; store; _ } ->
     let retn_name = Node.name l_func in
