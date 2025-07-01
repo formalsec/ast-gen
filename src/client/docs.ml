@@ -61,6 +61,14 @@ module CommonOpts = struct
     let docs = Manpage.s_common_options in
     Arg.(value & flag & info [ "v"; "verbose" ] ~doc ~docs)
 
+  let timeout =
+    let doc =
+      "Time (in seconds) allocated for the analysis of each file. This flag \
+       may not work exactly as expected due to the way timeouts are \
+       implemented in Graph.js." in
+    let docs = Manpage.s_common_options in
+    Arg.(value & opt float Float.max_float & info [ "timeout" ] ~doc ~docs)
+
   let override =
     let doc = "Override existing files when outputing to the provided path." in
     let docs = Manpage.s_common_options in

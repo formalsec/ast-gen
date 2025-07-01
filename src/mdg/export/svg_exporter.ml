@@ -1,11 +1,8 @@
 exception Exn of (Fmt.t -> unit)
-exception Timeout
 
 let raise (fmt : ('b, Fmt.t, unit, 'a) format4) : 'b =
   let raise_f acc = raise (Exn acc) in
   Fmt.kdly (fun acc -> raise_f (fun ppf -> Log.fmt_error ppf "%t" acc)) fmt
-
-let timeout () : 'a = Stdlib.raise Timeout
 
 type graph_attrs = Graph.Graphviz.DotAttributes.graph list
 type vertex_attrs = Graph.Graphviz.DotAttributes.vertex list
@@ -197,7 +194,7 @@ let output_svg (env : Env.t) (svg : string) (dot : string) : unit =
   let cmd = svg_cmd env svg dot in
   match Sys.command cmd with
   | 0 -> ()
-  | 124 -> timeout ()
+  | 124 -> Time.timeout ()
   | _ -> raise "Unable to generate the %S file." svg
 
 let export_dot ?(env = Env.default ()) (dot : Fpath.t) (mdg : Mdg.t) : unit =

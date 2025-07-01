@@ -5,6 +5,7 @@ module TaintedUnfold = struct
     let vulns = Vulnerability.Set.empty in
     let l_sink_calls = Query_engine.tainted_sink_calls engine in
     Fun.flip2 List.fold_left vulns l_sink_calls (fun vulns (l_call, l_sink) ->
+        Time.timeout_check engine.curr_time;
         let sink = Node.sink l_sink in
         let ls_args = Query_engine.tainted_sink_args engine l_call sink in
         if Node.Set.exists (Query_engine.is_tainted engine) ls_args then
@@ -50,6 +51,7 @@ module PrototypeUnfold = struct
     let ls_lookup = Query_engine.dynamic_lookups engine in
     let ls_update = find_polluted_lookup_versions engine ls_lookup in
     Fun.flip2 Node.Set.fold ls_update vulns (fun l_update vulns ->
+        Time.timeout_check engine.curr_time;
         if has_polluted_update engine l_update then
           let vuln = Vulnerability.pollution l_update in
           Vulnerability.Set.add vuln vulns
@@ -57,6 +59,8 @@ module PrototypeUnfold = struct
 end
 
 let run (engine : Query_engine.t) : Vulnerability.Set.t =
+  Log.debug "tainted";
   let tainted_vulns = TaintedUnfold.run engine in
+  Log.debug "proto";
   let prototype_vulns = PrototypeUnfold.run engine in
   Vulnerability.Set.union tainted_vulns prototype_vulns
