@@ -41,6 +41,10 @@
   ],
   "package-components": [
     {
+      "package": "async",
+      "props": [{ "type": "function-summary", "name": "waterfall", "code": "(fs, _) => { module.exports['$async'] = fs; }" }]
+    },
+    {
       "package": "async-execute",
       "props": [{ "type": "command-injection", "name": "execAsync", "args": [1] }]
     },

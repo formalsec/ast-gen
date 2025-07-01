@@ -120,7 +120,7 @@ and mark_tainted_next (queue : queue) (tainted : t) (node : Node.t)
 and mark_tainted_prop (state : State.t) (queue : queue) (tainted : t)
     (edge : Edge.t) : unit =
   let ls_orig = Mdg.object_orig_versions state.mdg edge.src in
-  if Node.Set.mem edge.src ls_orig then
+  if Node.Set.mem edge.src ls_orig || Node.is_blank edge.tar then
     mark_tainted_next queue tainted edge.tar true
 
 and mark_tainted_call (state : State.t) (queue : queue) (tainted : t)
