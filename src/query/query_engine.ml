@@ -1,12 +1,15 @@
 open Graphjs_mdg
 
+exception Timeout
+
 type t =
   { mdg : Mdg.t
   ; tainted : Tainted.t
+  ; curr_time : Time.t
   }
 
 let initialize (e_mdg : Builder.ExtendedMdg.t) : t =
-  { mdg = e_mdg.mdg; tainted = e_mdg.tainted }
+  { mdg = e_mdg.mdg; tainted = e_mdg.tainted; curr_time = e_mdg.curr_time }
 
 let is_tainted (engine : t) (node : Node.t) : bool =
   Tainted.is_tainted engine.tainted node

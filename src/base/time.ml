@@ -35,3 +35,16 @@ let pp (ppf : Fmt.t) (time : t) : unit =
   Fmt.fmt ppf "%d.%03ds" ftime.secs ftime.ms
 
 let str (time : t) : string = Fmt.str "%a" pp time
+
+module Config = struct
+  include Config
+
+  let timeout = static Float.max_float
+end
+
+exception Timeout
+
+let timeout () : 'a = Stdlib.raise Timeout
+
+let timeout_check (time : t) : unit =
+  if finish time > Config.(!timeout) then timeout ()

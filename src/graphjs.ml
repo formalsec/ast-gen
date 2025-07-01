@@ -4,12 +4,13 @@ open Cmdliner
 type status = (unit Exec.result Cmd.eval_ok, Cmd.eval_error) Result.t
 
 let set_copts (colorless : bool) (lvl : Enums.DebugLvl.t) (verbose : bool)
-    (override' : bool) : unit =
+    (timeout' : Time.t) (override' : bool) : unit =
   Font.Config.(colored := not colorless);
   Log.Config.(log_warns := lvl >= Warn);
   Log.Config.(log_infos := verbose || lvl >= Info);
   Log.Config.(log_debugs := lvl >= All);
   Log.Config.(log_verbose := verbose);
+  Time.Config.(timeout := timeout');
   Workspace.Config.(override := override')
 
 let copts =
@@ -18,6 +19,7 @@ let copts =
   $ Docs.CommonOpts.colorless
   $ Docs.CommonOpts.debug
   $ Docs.CommonOpts.verbose
+  $ Docs.CommonOpts.timeout
   $ Docs.CommonOpts.override
 
 let dependencies_env =

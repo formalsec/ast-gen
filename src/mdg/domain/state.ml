@@ -1,5 +1,7 @@
 open Graphjs_ast
 
+exception Timeout
+
 module Env = struct
   type t =
     { unfold_depth : int
@@ -38,6 +40,7 @@ type t =
   ; curr_stack : Node.t list
   ; curr_parent : Node.t option
   ; curr_return : Node.Set.t
+  ; curr_time : Time.t
   }
 
 and call_interceptor =
@@ -72,6 +75,7 @@ let create (env' : Env.t) (jsmodel : Jsmodel.t) (prog : 'm Prog.t) : t =
   ; curr_stack = []
   ; curr_parent = None
   ; curr_return = Node.Set.empty
+  ; curr_time = Time.start ()
   }
 
 let initialize (state : t) (path : Fpath.t) (mrel : Fpath.t) (main : bool)

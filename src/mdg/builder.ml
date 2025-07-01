@@ -597,6 +597,7 @@ and build_export_decl (state : State.t) (specifier : 'm ExportDecl.specifier)
   | _ -> state
 
 and build_statement (state : State.t) (stmt : 'm Statement.t) : State.t =
+  Time.timeout_check state.curr_time;
   match stmt.el with
   | `ExprStmt _ -> state
   | `VarDecl left -> build_vardecl state (left @> stmt.md)
@@ -670,6 +671,7 @@ module ExtendedMdg = struct
     ; exported : Exported.t
     ; httpservers : Httpserver.t list
     ; tainted : Tainted.t
+    ; curr_time : Time.t
     }
 
   let compute_exported_analysis (state : State.t) : Exported.t =
@@ -694,8 +696,9 @@ module ExtendedMdg = struct
     let exported = compute_exported_analysis state in
     let httpservers = compute_httpserver state in
     let tainted = compute_tainted_analysis state jsmodel httpservers exported in
+    let curr_time = state.curr_time in
     compute_cleaner_analysis state;
-    { mdg; exported; httpservers; tainted }
+    { mdg; exported; httpservers; tainted; curr_time }
 end
 
 let reset_generators (env : State.Env.t) : unit =

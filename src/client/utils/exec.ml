@@ -32,8 +32,6 @@ let error (fmt : ('b, Fmt.t, unit, 'a result) format4) : 'b =
 let fail (fmt : ('b, Fmt.t, unit, 'a result) format4) : 'b =
   Fmt.kdly (fun acc -> exn (`Failure acc)) fmt
 
-let timeout () : 'b = exn `Timeout
-
 let bos (res : ('a, [< `Msg of string ]) Result.t) : 'a result =
   match res with
   | Ok _ as res' -> res'
@@ -41,12 +39,12 @@ let bos (res : ('a, [< `Msg of string ]) Result.t) : 'a result =
 
 let graphjs (exec_f : unit -> 'a) : 'a result =
   try Ok (exec_f ()) with
+  | Graphjs_base.Time.Timeout -> exn `Timeout
   | Graphjs_parser.Dependency_tree.Exn fmt -> exn (`DepTree fmt)
   | Graphjs_parser.Flow_parser.Exn fmt -> exn (`ParseJS fmt)
   | Graphjs_mdg.Jsmodel.Exn fmt -> exn (`Jsmodel fmt)
   | Graphjs_mdg.Export_view.Exn fmt -> exn (`ExportMDG fmt)
   | Graphjs_mdg.Svg_exporter.Exn fmt -> exn (`ExportMDG fmt)
-  | Graphjs_mdg.Svg_exporter.Timeout -> exn `Timeout
   | err ->
     let msg = Printexc.to_string err in
     let trace = Printexc.get_backtrace () in
