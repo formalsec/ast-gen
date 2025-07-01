@@ -97,7 +97,7 @@ module Csv_exporter = struct
     match result with
     | Error _ -> Fmt.fmt ppf "-,-,-,-,-"
     | Ok valid ->
-      Fmt.fmt ppf "%d,%d,%d,%d,%d" valid.tp valid.tpe valid.tfp valid.e_tp
+      Fmt.fmt ppf "%d,%d,%d,%d,%d" valid.tp valid.tpe valid.fp valid.e_tp
         valid.e_tpe
 
   let pp_instance (ppf : Fmt.t) (instance : Query_validation.t Bulk.Instance.t)

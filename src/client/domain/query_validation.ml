@@ -4,13 +4,13 @@ module Expected = Query_expected.Entry
 type t =
   { tp : int
   ; tpe : int
-  ; tfp : int
+  ; fp : int
   ; e_tp : int
   ; e_tpe : int
   }
 
 let default =
-  let dflt = { tp = 0; tpe = 0; tfp = 0; e_tp = 0; e_tpe = 0 } in
+  let dflt = { tp = 0; tpe = 0; fp = 0; e_tp = 0; e_tpe = 0 } in
   fun () -> dflt
 
 let create (expected : Expected.t list) : t =
@@ -20,14 +20,14 @@ let create (expected : Expected.t list) : t =
 
 let tp (valid : t) : t = { valid with tp = valid.tp + 1 }
 let tpe (valid : t) : t = { valid with tpe = valid.tpe + 1 }
-let tfp (valid : t) : t = { valid with tfp = valid.tfp + 1 }
+let fp (valid : t) : t = { valid with fp = valid.fp + 1 }
 
 let pp (ppf : Fmt.t) (valid : t) : unit =
   Fmt.fmt ppf "True Positives: %d@\n" valid.tp;
   Fmt.fmt ppf "True Positives (Extended): %d@\n" valid.tpe;
   Fmt.fmt ppf "True Positives (All): %d@\n@\n" (valid.tp + valid.tpe);
-  Fmt.fmt ppf "False Positives (True): %d@\n" valid.tfp;
-  Fmt.fmt ppf "False Positives (All): %d@\n@\n" (valid.tpe + valid.tfp);
+  Fmt.fmt ppf "False Positives (True): %d@\n" valid.fp;
+  Fmt.fmt ppf "False Positives (All): %d@\n@\n" (valid.tpe + valid.fp);
   Fmt.fmt ppf "False Negatives: %d@\n" (max (valid.e_tp - valid.tp) 0);
   Fmt.fmt ppf "False Negatives (Extended): %d@\n"
     (max (valid.e_tpe - valid.tpe) 0);
@@ -41,6 +41,6 @@ let validate (expected : Expected.t list) (vulns : Vulnerability.Set.t) : t =
   Fun.flip2 Vulnerability.Set.fold vulns valid (fun vuln valid' ->
       let vuln' = Expected.of_vuln vuln in
       let matched = List.find_all (Expected.equal vuln') expected in
-      if List.is_empty matched then tfp valid'
+      if List.is_empty matched then fp valid'
       else if List.exists Expected.main matched then tp valid'
       else tpe valid' )
