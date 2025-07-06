@@ -477,12 +477,12 @@ and build_switch (state : State.t) (cases : 'm SwitchCase.t list) : State.t =
   List.map SwitchCase.body cases |> List.fold_left build_sequence state
 
 and build_loop (state : State.t) (body : 'm Statement.t list) : State.t =
-  let rec loop_f state store =
+  let rec loop_f counter state store =
     let state' = build_sequence state body in
-    if Store.equal_flat store state'.store then state'
-    else loop_f state' (Store.copy_flat state'.store) in
+    if Store.equal_flat store state'.store || counter > 2 then state'
+    else loop_f (counter + 1) state' (Store.copy_flat state'.store) in
   let state' = State.extend_block state in
-  let state'' = loop_f state' (Store.copy_flat state'.store) in
+  let state'' = loop_f 1 state' (Store.copy_flat state'.store) in
   State.reduce_option state state''
 
 and build_forin (state : State.t) (left : 'm LeftValue.t)

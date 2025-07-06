@@ -2,7 +2,7 @@ module Computed = struct
   module Tbl = Hashtbl.Make (Node)
   include Tbl
 
-  type t = Node.Set.t Tbl.t
+  type t = (Node.Set.t * int) Tbl.t
 end
 
 module Env = struct
@@ -94,14 +94,15 @@ let compute_next_entry (state : State.t) (env : Env.t) (queue : queue)
   Fun.flip Node.Set.iter ls_next' (fun l_next' ->
       match Computed.find_opt env.computed l_next' with
       | None ->
-        Computed.replace env.computed l_next' ls_this;
+        Computed.replace env.computed l_next' (ls_this, 1);
         Queue.push (l_next', ls_this, scheme) queue
-      | Some ls_this' ->
+      | Some (ls_this', counter) when counter < 2 ->
         let ls_this_diff = Node.Set.diff ls_this ls_this' in
         let ls_this_union = Node.Set.union ls_this ls_this' in
-        Computed.replace env.computed l_next' ls_this_union;
+        Computed.replace env.computed l_next' (ls_this_union, counter + 1);
         if not (Node.Set.is_empty ls_this_diff) then
-          Queue.push (l_next', ls_this_diff, scheme) queue )
+          Queue.push (l_next', ls_this_diff, scheme) queue
+      | Some _ -> () )
 
 let compute_function (state : State.t) (env : Env.t) (queue : queue)
     ((l_func, ls_this, scheme) : entry) : unit =
